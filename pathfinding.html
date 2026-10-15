@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="description" content="画一道墙，给算法出道题。在同一张地图上对比广度优先搜索和 A*，亲手试出寻路的不同。">
+ <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pathfinding.css">
+ <script type="module" src="./pathfinding.mjs"></script>
+ <title>算法游乐场 · 寻路竞技场</title>
+</head>
+<body>
+ <a class="skip-link" href="#arena">跳到寻路地图</a>
+ <header class="site-header">
+  <a class="brand" href="./" aria-label="算法游乐场首页"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a>
+  <div class="header-actions"><button class="quiet-button" id="about">怎么玩 <span aria-hidden="true">↗</span></button><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div>
+ </header>
+ <nav class="experiment-nav" aria-label="选择算法实验"><a href="./">01 推荐系统</a><a href="./pathfinding.html" aria-current="page">02 寻路竞技场</a></nav>
+ <main class="path-main">
+  <section class="path-intro"><p class="eyebrow">同一张地图，两种找路的直觉</p><h1>你出题，<span>算法找路。</span></h1><p class="intro-copy">画一道墙，把出口藏远一点。看看谁在四处寻找，谁更有方向感。</p></section>
+  <section class="map-toolbar" aria-label="地图与播放工具">
+   <div class="tool-row">
+    <div class="map-presets" role="group" aria-label="选择地图"><button data-map="empty" aria-pressed="false">空白地图</button><button data-map="detour" aria-pressed="true">绕个远路</button><button data-map="maze" aria-pressed="false">曲折迷宫</button></div>
+    <div class="drawing-tools" role="group" aria-label="绘图工具"><button data-tool="wall" aria-pressed="true">画墙</button><button data-tool="erase" aria-pressed="false">橡皮</button><button data-tool="start" aria-pressed="false">移起点 S</button><button data-tool="goal" aria-pressed="false">移终点 G</button></div>
+    <button id="clear-walls" class="clear-button">清空墙</button>
+   </div>
+   <div class="play-row">
+    <button class="play-button" id="play">开始找路 <span aria-hidden="true">▶</span></button>
+    <button class="secondary-button" id="step">走一步</button><button class="secondary-button" id="finish">直接看结果</button>
+    <label class="speed-control" for="speed">播放速度 <select id="speed"><option value="90">慢一点</option><option value="40" selected>正常</option><option value="12">快一点</option></select></label>
+    <span id="play-status" role="status">地图就绪，等你出题。</span>
+   </div>
+  </section>
+  <div class="map-instructions"><p id="map-help">在任一地图上点按或拖动画墙，两边同步。键盘：方向键移动，空格编辑。</p><span id="wall-count">9 格墙</span></div>
+  <section class="arena" id="arena" aria-label="算法对照地图">
+   <article class="algorithm-board bfs-board">
+    <div class="board-heading"><div><span class="algorithm-name">BFS</span><h2>一圈一圈地找</h2></div><span id="bfs-status" class="search-status">等待出发</span></div>
+    <p class="board-description">广度优先搜索，把附近的岔路都看一遍。</p>
+    <div class="path-grid" id="bfs-grid" role="group" aria-label="BFS 可编辑地图" aria-describedby="map-help"></div>
+    <div class="board-metrics"><div><strong id="bfs-explored">0</strong><span>已探索格子</span></div><div><strong id="bfs-distance">待揭晓</strong><span>最短路线步数</span></div><p>不预判方向，按离起点的距离探索。</p></div>
+   </article>
+   <article class="algorithm-board astar-board">
+    <div class="board-heading"><div><span class="algorithm-name">A*</span><h2>朝着目标试探</h2></div><span id="astar-status" class="search-status">等待出发</span></div>
+    <p class="board-description">A* 搜索，同时考虑已走距离与预计余程。</p>
+    <div class="path-grid" id="astar-grid" role="group" aria-label="A* 可编辑地图" aria-describedby="map-help"></div>
+    <div class="board-metrics"><div><strong id="astar-explored">0</strong><span>已探索格子</span></div><div><strong id="astar-distance">待揭晓</strong><span>最短路线步数</span></div><p>方向只是线索，遇到墙也要绕路。</p></div>
+   </article>
+  </section>
+  <div class="map-legend" aria-label="地图图例"><span><i class="legend-start">S</i>起点</span><span><i class="legend-goal">G</i>终点</span><span><i class="legend-wall"></i>墙</span><span><i class="legend-visited"></i>已探索</span><span><i class="legend-frontier"></i>待探索</span><span><i class="legend-path"></i>最终路径</span></div>
+  <section class="race-summary" aria-labelledby="summary-title">
+   <div class="summary-main"><p class="eyebrow">这一局，发现了什么</p><h2 id="summary-title">最短的路，不止一种找法。</h2><p id="result-copy">先跑一轮，再挪动一块墙。地图里的一个小改变，就可能让算法换一种走法。</p></div>
+   <div class="map-challenge"><h3>给你一个出题挑战</h3><p>亲手改一张地图，让 A* 少探索至少一半格子，还能找到出口。</p><p id="challenge-status">先改一笔，再试试。</p></div>
+  </section>
+  <details class="algorithm-notes"><summary>为什么都能找到最短路？这个比较又有什么边界？</summary><div><p>这里只能上下左右走，每一步成本相同。广度优先搜索按层展开，所以第一次找到终点就是最短路。</p><p>A* 使用「已走步数 + 曼哈顿距离」排序。曼哈顿距离是不考虑墙时的横向加纵向距离，在这张地图里不会高估余程，所以也能保证最短路。分数相同优先预计余程更短的节点，再按入队顺序。</p><p>两边每一拍各展开一个格子，找到终点后各自停止。探索数包括起终点，不包括仅进入待探索队列的格子；路线步数不包括起点。探索更少不等于实际运行更快，A* 还要维护排序。</p><p>相同地图必得相同结果。A* 不保证在每张地图上都省下一半搜索；路线可能不同，但最短长度相同。刷新会重置地图，无账号、上传或追踪。</p></div></details>
+  <section class="bottom-note"><span>自己出题，才有新发现。</span><p>四向移动，每步成本为 1。动画用来理解过程，不代表性能跑分。</p><span class="signature">MADE BY CHEN QUAN</span></section>
+ </main>
+<dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">给算法出道题。</h2><ol><li>先点「开始找路」，看看两种搜索的不同。</li><li>用「画墙」或「橡皮」改地图，也可以移动 S 起点和 G 终点。</li><li>再跑一次，看看路线和探索数量怎么变。</li><li>想看清过程？暂停后「走一步」。堵死出口也没关系，擦开一条路就能继续。</li></ol><p>手机可以在网格上直接画。网格外可正常滑动页面；支持键盘方向键和空格。改图会清除上轮结果。</p></dialog>
+ <noscript><p>请开启 JavaScript 后体验可编辑地图和寻路实验。</p></noscript>
+</body>
+</html>

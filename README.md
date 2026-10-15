@@ -1,12 +1,14 @@
 # 算法游乐场
 
-**首页，交给你了。** 一个能玩的推荐算法小实验，由陈全（Chen Quan）创作。
+**把算法变成能玩的实验。** 由陈全（Chen Quan）创作。
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
 
-An interactive recommendation playground. Tune click preference, diversity, and newcomer exposure, then compare the tradeoffs. Synthetic data only. No account required.
+Interactive algorithm experiments: recommendation tradeoffs and an editable BFS vs A* pathfinding arena. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
+
+第二个实验是「寻路竞技场」：亲手画墙、移动起终点，让两种真实算法在同一张地图上找路。可暂停、单步、重放，比较探索格数与最短路长。两个实验可从页面上方切换。
 
 ## 本地运行
 
@@ -24,7 +26,7 @@ npm start
 npm run verify
 ```
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有五个运行文件，可放在静态站点的子目录中。
+此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有九个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`。
 
 ## 在线演示与更新
 
@@ -41,6 +43,18 @@ npm run verify
 5. 跑一轮对照。修改设置后，上轮结果会保留并标记为旧结果，不会假装是新实验。
 
 ## 模型边界
+
+### 寻路实验
+
+- 15 × 11 网格，只允许上下左右移动，每步成本为 1。墙不可穿越。
+- BFS 按层展开；A* 使用 `已走步数 + 曼哈顿距离`。A* 分数相同先取预计余程更短的节点，再按入队顺序。两者均保证本模型的最短路线。
+- 「已探索」指已出队展开的唯一格子，包括起点和找到的终点，不包含仅入队的格子。路径长度是移动次数。
+- 每拍两边各展开一个格子，先找到终点的一方独立停止。动画速度可调，不代表计算耗时；探索少也不能直接证明运行更快，A* 需要维护排序。
+- 编辑任一张地图会同步另一张，并清除过期结果。起终点不会被画墙覆盖，也不能重合；移动端点会清除落点上的墙。
+- 挑战要求亲手编辑地图、留有通路，并让 A* 的探索格数不超过 BFS 一半。这是玩法目标，不是对 A* 在任意地图上的承诺。
+- 触屏可直接画墙；键盘 Tab 进入网格，方向键移动，空格或 Enter 应用工具。页面后台自动暂停；系统偏好减少动画时，开始按钮直接显示结果，单步仍可使用。
+
+### 推荐实验
 
 这是透明、确定性的教学模型，不是训练好的推荐系统。
 
@@ -61,6 +75,8 @@ npm run verify
 - `data.mjs`：合成内容、主题和初始口味。
 - `app.mjs`：交互状态与渲染。
 - `index.html` / `style.css`：原生、响应式界面，含深浅色与减少动画支持。
+- `pathfinding-core.mjs`：寻路、地图编辑与重放快照的纯函数。
+- `pathfinding.html` / `pathfinding.css` / `pathfinding.mjs`：寻路竞技场界面与交互。
 - `scripts/`：只提供白名单静态文件的本地服务和打包流程。
 - `tests/`：Node 内置测试，无外部测试依赖。
 

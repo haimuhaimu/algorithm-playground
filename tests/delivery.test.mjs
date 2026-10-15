@@ -7,7 +7,7 @@ import {createAppServer} from '../scripts/serve.mjs';
 import {build} from '../scripts/build.mjs';
 
 const root=new URL('../',import.meta.url).pathname;
-const files=['app.mjs','core.mjs','data.mjs','index.html','style.css'];
+const files=['app.mjs','core.mjs','data.mjs','index.html','pathfinding-core.mjs','pathfinding.css','pathfinding.html','pathfinding.mjs','style.css'];
 test('server serves only runtime assets with correct types, headers and methods',async()=>{
  const server=createAppServer(root);
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -16,12 +16,13 @@ test('server serves only runtime assets with correct types, headers and methods'
   const home=await fetch(base+'/?v=test');assert.equal(home.status,200);assert.match(await home.text(),/算法游乐场/);
   assert.match(home.headers.get('content-type'),/text\/html/);assert.equal(home.headers.get('x-content-type-options'),'nosniff');
   const module=await fetch(base+'/core.mjs');assert.match(module.headers.get('content-type'),/javascript/);
+  for(const file of files){const asset=await fetch(base+'/'+file);assert.equal(asset.status,200,file);assert.deepEqual(Buffer.from(await asset.arrayBuffer()),await readFile(join(root,file)));}
   const head=await fetch(base+'/style.css',{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'');
   assert.equal((await fetch(base+'/index.html',{method:'POST'})).status,405);
   for(const path of ['/package.json','/docs/spec.md','/.git/config','/%2e%2e%2fpackage.json','/%252e%252e/package.json','/%zz'])assert.equal((await fetch(base+path)).status,404,path);
  }finally{await new Promise(resolve=>server.close(resolve));}
 });
-test('build ships exactly five runtime files with byte-for-byte source parity',async()=>{
+test('build ships both experiments and all runtime files with byte-for-byte source parity',async()=>{
  const out=await mkdtemp(join(tmpdir(),'algorithm-build-'));
  try{
   const result=await build(root,out);assert.deepEqual(result.sort(),files);
