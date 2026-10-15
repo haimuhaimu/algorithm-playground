@@ -4,13 +4,15 @@
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
 
-Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, and a falling-sand cellular automaton sandbox. No account required.
+Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, and a firefly phase-synchronization playground. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
 
 第二个实验是「寻路竞技场」：亲手画墙、移动起终点，让两种真实算法在同一张地图上找路。可暂停、单步、重放，比较探索格数与最短路长。
 
-第三个实验是「落沙实验室」：倒沙、放水、画墙、挖开堤坝。在分流器、沙漏或空白画布上，观察简单规则如何产生流动和堆积。支持暂停、逐拍观察和可调笔刷。三个实验可从页面上方切换。[直接玩落沙实验室 →](https://haimuhaimu.github.io/algorithm-playground/sand.html)
+第三个实验是「落沙实验室」：倒沙、放水、画墙、挖开堤坝。在分流器、沙漏或空白画布上，观察简单规则如何产生流动和堆积。支持暂停、逐拍观察和可调笔刷。[直接玩落沙实验室 →](https://haimuhaimu.github.io/algorithm-playground/sand.html)
+
+第四个实验是「萤火虫合奏」：点乱或点亮一片节拍，调节相互影响和可见范围，看看 80 个各有节奏的亮点如何逐渐合拍。试试「两群对唱」，再把两群连起来。四个实验可从页面上方切换。[直接玩萤火虫合奏 →](https://haimuhaimu.github.io/algorithm-playground/firefly.html)
 
 ## 本地运行
 
@@ -28,7 +30,7 @@ npm start
 npm run verify
 ```
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有十三个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`。
+此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有十七个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`。
 
 ## 在线演示与更新
 
@@ -45,6 +47,15 @@ npm run verify
 5. 跑一轮对照。修改设置后，上轮结果会保留并标记为旧结果，不会假装是新实验。
 
 ## 模型边界
+
+### 萤火虫合奏
+
+- 80 个位置固定的相位振子；在有限距离内按相位差的正弦相互影响。这是局部邻居版本的 Kuramoto 模型，使用同时更新的 Euler 积分，每步 1/60 秒。无邻居或影响为 0 时各走各的节拍。
+- 合拍度是单位圆上的平均相位向量长度，不是已经同步的个体占比，不保证一直上升。两群对唱可以局部同步而全局不同步。
+- 萤火只是数学模型的视觉比喻，不是生物学模拟。没有声音或全屏闪光；减少动画偏好下初始暂停，页面隐藏后暂停，返回不自动播放。
+- 点按打乱或对齐局部相位；画布可纵向滚动，拖动/取消不干预。键盘方向键移动光标、空格/Enter 点按、1/2 切换动作。
+- 不保存作品。切换场景恢复默认参数；重置保留参数回到初始节拍；重新散开保留位置和参数、换一组确定性种子生成的相位。无新依赖或第三方素材。
+- 参考：[Strogatz, From Kuramoto to Crawford (2000)](https://web.mit.edu/~jadbabai/www/ESE680/Strogatz_Kuramoto.pdf)。邻居半径、场景和交互是本项目的教学改编。
 
 ### 落沙实验
 
@@ -89,6 +100,8 @@ npm run verify
 - `pathfinding-core.mjs`：寻路、地图编辑与重放快照的纯函数。
 - `pathfinding.html` / `pathfinding.css` / `pathfinding.mjs`：寻路竞技场界面与交互。
 - `sand-core.mjs`：落沙规则、连续笔刷、材料计数和场景的纯函数。
+- `firefly-core.mjs`：确定性相位同步、局部干预和合拍度的纯函数。
+- `firefly.html` / `firefly.css` / `firefly.mjs`：萤火虫合奏与观察视图。
 - `sand.html` / `sand.css` / `sand.mjs`：落沙实验室画布与交互。
 - `scripts/`：只提供白名单静态文件的本地服务和打包流程。
 - `tests/`：Node 内置测试，无外部测试依赖。
