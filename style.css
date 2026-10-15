@@ -1,4 +1,6 @@
 @layer reset,base,components,responsive;
+@layer components{.experiment-nav{max-width:1440px;margin:auto;padding:0 44px;display:flex;gap:28px;border-bottom:1px solid var(--line)}.experiment-nav a{padding:14px 2px 12px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent}.experiment-nav a[aria-current=page]{color:var(--ink);border-color:var(--ink);font-weight:600}.experiment-nav a:hover{color:var(--ink)}}
+@layer responsive{@media(max-width:760px){.experiment-nav{padding:0 18px;gap:24px}.experiment-nav a{font-size:11px;padding:12px 0 10px}}}
 @layer reset{*{box-sizing:border-box}body,h1,h2,h3,p{margin:0}button,input{font:inherit}button,a,input,summary{-webkit-tap-highlight-color:transparent}button{cursor:pointer;color:inherit;border:0;background:none}a{color:inherit;text-decoration:none}button:disabled{cursor:default}ul,ol{padding-left:1.3rem}button,input,summary,a{touch-action:manipulation}}
 @layer base{
  :root{color-scheme:light;--paper:#f5f5ee;--surface:#fdfdf8;--ink:#25271f;--muted:#66695d;--line:#dddfd2;--soft:#eeefe5;--accent:#e2ed80;--accent-ink:#30351b;--good:#496337;--shadow:0 8px 24px #33361908;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;font-synthesis:none}
