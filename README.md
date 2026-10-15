@@ -4,7 +4,7 @@
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
 
-Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, and a firefly phase-synchronization playground. No account required.
+Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, and a genetic racing route optimizer. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
 
@@ -12,7 +12,9 @@ Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs 
 
 第三个实验是「落沙实验室」：倒沙、放水、画墙、挖开堤坝。在分流器、沙漏或空白画布上，观察简单规则如何产生流动和堆积。支持暂停、逐拍观察和可调笔刷。[直接玩落沙实验室 →](https://haimuhaimu.github.io/algorithm-playground/sand.html)
 
-第四个实验是「萤火虫合奏」：点乱或点亮一片节拍，调节相互影响和可见范围，看看 80 个各有节奏的亮点如何逐渐合拍。试试「两群对唱」，再把两群连起来。四个实验可从页面上方切换。[直接玩萤火虫合奏 →](https://haimuhaimu.github.io/algorithm-playground/firefly.html)
+第四个实验是「萤火虫合奏」：点乱或点亮一片节拍，调节相互影响和可见范围，看看 80 个各有节奏的亮点如何逐渐合拍。试试「两群对唱」，再把两群连起来。[直接玩萤火虫合奏 →](https://haimuhaimu.github.io/algorithm-playground/firefly.html)
+
+第五个实验是「遗传赛车」：画一条赛道、放几个路障，让 48 辆小车的路线基因不断交叉和变异。可以快进 10 代，对照第一代的最佳路线。五个实验均可从上方导航切换。[直接玩遗传赛车 →](https://haimuhaimu.github.io/algorithm-playground/evolution.html)
 
 ## 本地运行
 
@@ -30,7 +32,7 @@ npm start
 npm run verify
 ```
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有十七个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`。
+此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有二十一个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`。
 
 ## 在线演示与更新
 
@@ -47,6 +49,16 @@ npm run verify
 5. 跑一轮对照。修改设置后，上轮结果会保留并标记为旧结果，不会假装是新实验。
 
 ## 模型边界
+
+### 遗传赛车
+
+- 48 条候选路线，24 个局部左右偏移基因。固定种子可重放；保留两个精英，用锦标赛选择、均匀交叉和有界随机变异产生后代。
+- 路线按实际长度和转弯幅度计算用时。碰撞检查沿线最多每 2 个世界单位采样，并留 1 单位保守余量；路障和道路边界都是实测约束。
+- 优先完成，再比较用时；未完成则比较按顺序走过的路线段比例。不是神经网络、自动驾驶或物理车辆模型；可能陷入局部最优，不保证每代更快。
+- 普通播放只展示已经到达的车辆与用时；快进计算完整比赛。基因条显示当前领跑车，不提前指定赢家。第一代对照只在这一代完整计算后可见。
+- 自画赛道、路障编辑会清空旧比赛证据；无效、取消的笔画保留原赛道。路障最多 12 个，起终点周围留空。变异概率在下一代生效。
+- 画赛道独占画布手势；看比赛/放路障允许纵向滚动，路障拖动不落笔。预设按钮和路障编辑支持键盘。隐藏与减少动画状态暂停，返回不自动开始。
+- 无第三方素材、依赖、上传或保存。
 
 ### 萤火虫合奏
 
@@ -103,6 +115,8 @@ npm run verify
 - `firefly-core.mjs`：确定性相位同步、局部干预和合拍度的纯函数。
 - `firefly.html` / `firefly.css` / `firefly.mjs`：萤火虫合奏与观察视图。
 - `sand.html` / `sand.css` / `sand.mjs`：落沙实验室画布与交互。
+- `evolution-core.mjs`：可重放的遗传路线优化、碰撞和比赛采样。
+- `evolution.html` / `evolution.css` / `evolution.mjs`：遗传赛车、赛道绘画与进化观察。
 - `scripts/`：只提供白名单静态文件的本地服务和打包流程。
 - `tests/`：Node 内置测试，无外部测试依赖。
 
