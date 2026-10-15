@@ -8,6 +8,7 @@ const TYPES={'index.html':'text/html; charset=utf-8','style.css':'text/css; char
 Object.assign(TYPES,{'pathfinding.html':'text/html; charset=utf-8','pathfinding.css':'text/css; charset=utf-8','pathfinding.mjs':'text/javascript; charset=utf-8','pathfinding-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'sand.html':'text/html; charset=utf-8','sand.css':'text/css; charset=utf-8','sand.mjs':'text/javascript; charset=utf-8','sand-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'firefly.html':'text/html; charset=utf-8','firefly.css':'text/css; charset=utf-8','firefly.mjs':'text/javascript; charset=utf-8','firefly-core.mjs':'text/javascript; charset=utf-8'});
+Object.assign(TYPES,{'evolution.html':'text/html; charset=utf-8','evolution.css':'text/css; charset=utf-8','evolution.mjs':'text/javascript; charset=utf-8','evolution-core.mjs':'text/javascript; charset=utf-8'});
 export function createAppServer(root=ROOT){
  const canonicalRoot=realpath(root);
  return createServer(async(req,res)=>{

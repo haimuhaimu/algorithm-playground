@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="description" content="画一条赛道，让小车一代代试出更好的路线。可以放路障、调变异、快进进化的遗传算法实验。">
+ <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./evolution.css">
+ <script type="module" src="./evolution.mjs"></script><title>算法游乐场 · 遗传赛车</title>
+</head>
+<body>
+ <a class="skip-link" href="#race">跳到赛道</a>
+ <header class="site-header">
+  <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a>
+  <div class="header-actions"><button class="quiet-button" id="about">怎么玩 ↗</button><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div>
+ </header>
+ <nav class="experiment-nav" aria-label="选择算法实验"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html" aria-current="page">05 遗传赛车</a></nav>
+ <main class="evolution-main">
+  <section class="race-intro"><h1>这一代，<span>能跑得更顺吗？</span></h1><p>画条赛道，给小车一点时间。看试错如何变成一条更好的路线。</p></section>
+  <section class="evolution-lab" aria-label="遗传赛车实验">
+   <div class="race-column">
+    <div class="raceboard">
+     <div class="race-tools"><span id="track-name">大回环</span><div role="group" aria-label="赛道操作"><button data-mode="watch" aria-pressed="true">看比赛</button><button data-mode="draw" aria-pressed="false">画赛道</button><button data-mode="obstacle" aria-pressed="false">放路障</button></div></div>
+     <canvas id="race" width="900" height="480" tabindex="0" role="application" aria-label="遗传赛车互动画布" aria-describedby="race-help cursor-status">需要支持 Canvas 的浏览器。</canvas>
+     <div class="race-timeline"><span id="race-clock">0.0 秒</span><span id="race-state">这一代正在尝试</span></div>
+     <div class="race-transport"><button class="primary" id="play" aria-pressed="true">暂停</button><button id="next">下一代</button><button id="evolve">快进 10 代</button><label for="speed">速度<select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option></select></label></div>
+    </div>
+    <div class="race-results" aria-label="当前比赛结果"><div><span>第几代</span><strong id="generation">1</strong></div><div><span>已经跑完</span><strong id="finish-count">0 / 48</strong></div><div><span>本代最快</span><strong class="time-value" id="best-time">未到终点</strong></div><div class="race-history"><span>历代最佳表现 <small>更高更好</small></span><canvas id="history" width="320" height="100" aria-label="已完成各代的最佳适应度曲线"></canvas></div></div>
+    <p id="status" class="race-status" role="status">先看一轮，再试着给它们加个路障。</p>
+   </div>
+   <aside class="race-controls" aria-label="进化控制">
+    <h2>先选一条路</h2>
+    <div class="track-presets" role="group" aria-label="预设赛道"><button data-preset="sweep" aria-pressed="true"><b>大回环</b><small>先学会顺着弯走</small></button><button data-preset="hairpin" aria-pressed="false"><b>发卡弯</b><small>别急，掉头要慢一点</small></button><button data-preset="slalom" aria-pressed="false"><b>连续弯</b><small>一弯接着一弯</small></button></div>
+    <label class="mutation-label" for="mutation">变异概率 <output id="mutation-value">18%</output><input type="range" id="mutation" min="0" max="100" value="18" step="1"><small>下一代有多少机会尝试新走法。</small></label>
+    <div class="gene-panel"><div><h2>领跑车的路线基因</h2><span>24 段偏移</span></div><canvas id="genes" width="480" height="80" aria-label="当前领跑车的路线偏移基因"></canvas><p>每一格决定一段路靠左还是靠右。不是神经网络，也不是预先写好的最佳路线。</p></div>
+    <label class="ghost-control"><input id="ghost" type="checkbox" checked>对照第一代的最佳路线</label>
+    <div class="race-reset"><button id="clear-obstacles">清空路障</button><button id="reset">重新进化</button></div>
+    <p class="race-challenge">试试看：等它跑顺了，在路中央放一个障碍。新一轮的后代会从哪边绕过去？</p>
+   </aside>
+  </section>
+  <p class="race-help" id="race-help">「画赛道」时拖出一条长线；「放路障」时点一下添加，再点一次移除。键盘：方向键移动路障光标，空格 / Enter 放置。<span id="cursor-status" class="sr-only" aria-live="polite"></span></p>
+  <details class="race-notes"><summary>它真的在进化吗？</summary><div><p>是一个简化的遗传算法。每代 48 条路线，用 24 个左右偏移量作为基因。路线会按实际长度和转弯幅度计算行驶时间，撞到路沿或路障就停下；先比较跑完的路程，完成后再比较用时。</p><p>保留最好的 2 辆车；其余从比赛中挑选父代，交叉组合基因，再按概率随机变异。这里只优化路线，小车沿候选路线播放，并不是自动驾驶或强化学习。可能进步，也可能卡住，不保证找到全局最快路线。</p><p>图表只记录已完成的模拟代。快进会计算完整比赛，普通播放中的到达数量和最快用时则只显示已经发生的结果。变异设置在下一代生效；每次改赛道或路障，代数、成绩和第一代对照都会重新开始。</p><p>道路可能交叉，车辆仍按路线段顺序通过。过于尖锐或完全堵死的赛道可能无人跑完。绘画太短、超过长度限制或被取消时保留原赛道。预设赛道也可完全用键盘选择。</p><p>纯本地计算，无上传、账号、追踪或自动保存。页面离开后暂停，回来需手动继续；减少动画偏好下默认暂停。刷新会恢复初始状态。</p></div></details>
+  <footer class="bottom-note"><span>好的路线，是试出来的。</span><span class="signature">MADE BY CHEN QUAN</span></footer>
+ </main>
+ <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">给进化出一道题。</h2><ol><li>先看小车跑一轮。亮绿色是当前领跑车，不是预定冠军。</li><li>点「快进 10 代」，看看用时和路线有什么变化。</li><li>选「放路障」，点在路上。新比赛会从第一代开始。</li><li>选「画赛道」，按住拖一条足够长的线，松手开始新实验。</li></ol><p>变异太少可能停滞，太多也不一定更好。打开说明会暂停比赛，关闭后由你继续。</p></dialog>
+ <noscript><p>请开启 JavaScript 后体验遗传赛车。</p></noscript>
+</body></html>
