@@ -4,11 +4,13 @@
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
 
-Interactive algorithm experiments: recommendation tradeoffs and an editable BFS vs A* pathfinding arena. No account required.
+Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, and a falling-sand cellular automaton sandbox. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
 
-第二个实验是「寻路竞技场」：亲手画墙、移动起终点，让两种真实算法在同一张地图上找路。可暂停、单步、重放，比较探索格数与最短路长。两个实验可从页面上方切换。
+第二个实验是「寻路竞技场」：亲手画墙、移动起终点，让两种真实算法在同一张地图上找路。可暂停、单步、重放，比较探索格数与最短路长。
+
+第三个实验是「落沙实验室」：倒沙、放水、画墙、挖开堤坝。在分流器、沙漏或空白画布上，观察简单规则如何产生流动和堆积。支持暂停、逐拍观察和可调笔刷。三个实验可从页面上方切换。[直接玩落沙实验室 →](https://haimuhaimu.github.io/algorithm-playground/sand.html)
 
 ## 本地运行
 
@@ -26,7 +28,7 @@ npm start
 npm run verify
 ```
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有九个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`。
+此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有十三个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`。
 
 ## 在线演示与更新
 
@@ -43,6 +45,15 @@ npm run verify
 5. 跑一轮对照。修改设置后，上轮结果会保留并标记为旧结果，不会假装是新实验。
 
 ## 模型边界
+
+### 落沙实验
+
+- 72 × 48 有限网格，只有空、沙、水、墙四种状态。沙向下或斜下移动，也可与水交换；水向下、斜下或横向流动；墙不动。斜向移动还要检查同侧相邻格不是墙，不能穿过墙角。
+- 每拍从下向上扫描，横向扫描方向交替；每个粒子一拍最多移动一次。固定初始状态和操作顺序可完全重放。没有绘画操作时，各种材料数量守恒。
+- 这是元胞自动机，不是物理流体求解器：没有压力、惯性和真实刚体碰撞，也不完整模拟连通器。动画速度不是性能测试。
+- 按住持续添加沙或水，拖动画墙或擦除。沙和水只填空格；墙可替换已有材料。暂停仍可绘画。切换场景、重置和刷新会替换当前作品，没有自动保存。
+- 键盘 Tab 进入画布，方向键移动光标，空格 / Enter 落笔，1–4 切换材料。后台自动暂停；系统偏好减少动画时初始暂停，仍可手动播放或单步。
+- 画布外正常滚动；未测真实手机硬件或设备性能。所有场景与像素均由代码生成。
 
 ### 寻路实验
 
@@ -77,6 +88,8 @@ npm run verify
 - `index.html` / `style.css`：原生、响应式界面，含深浅色与减少动画支持。
 - `pathfinding-core.mjs`：寻路、地图编辑与重放快照的纯函数。
 - `pathfinding.html` / `pathfinding.css` / `pathfinding.mjs`：寻路竞技场界面与交互。
+- `sand-core.mjs`：落沙规则、连续笔刷、材料计数和场景的纯函数。
+- `sand.html` / `sand.css` / `sand.mjs`：落沙实验室画布与交互。
 - `scripts/`：只提供白名单静态文件的本地服务和打包流程。
 - `tests/`：Node 内置测试，无外部测试依赖。
 
