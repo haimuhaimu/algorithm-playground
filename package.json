@@ -1,0 +1,17 @@
+{
+  "name": "algorithm-playground",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "author": "Chen Quan",
+  "license": "UNLICENSED",
+  "homepage": "https://haimuhaimu.github.io/algorithm-playground/",
+  "repository": { "type": "git", "url": "https://github.com/haimuhaimu/algorithm-playground.git" },
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "verify": "node --check app.mjs && node --check core.mjs && node --check data.mjs && npm test && npm run build"
+  }
+}
