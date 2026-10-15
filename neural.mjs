@@ -1,0 +1,174 @@
+import {createModel,predict,metrics,train,makeDataset,editPoints,MAX_POINTS,MAX_EPOCHS} from './neural-core.mjs';
+const $=id=>document.getElementById(id),field=$('field'),ctx=field.getContext('2d'),chart=$('history').getContext('2d');
+const tools=[...document.querySelectorAll('[data-tool]')],presets=[...document.querySelectorAll('[data-preset]')],guesses=[...document.querySelectorAll('[data-guess]')];
+const names={diagonal:'一分为二',islands:'四个小岛',ring:'甜甜圈',custom:'我的涂鸦'};
+const W=900,H=560,percent=v=>(v*100).toFixed(0)+'%';
+let dataset=makeDataset('islands'),points=dataset.train,testPoints=dataset.test,preset='islands';
+let model=createModel(),rate=.15,tool='probe',guess=null,history=[],undo=[],gesture=null;
+let running=false,remaining=0,raf=null,token=0,cursor={x:0,y:0},showCursor=false,probeActive=false;
+let ink,muted,line,surface,paper,dark=false,manualTheme=false;
+
+function theme(){
+ if(!manualTheme)dark=matchMedia('(prefers-color-scheme:dark)').matches;
+ document.documentElement.dataset.theme=dark?'dark':'light';
+ $('theme').setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');
+ const css=getComputedStyle(document.documentElement),color=k=>css.getPropertyValue('--'+k).trim();
+ ink=color('ink');muted=color('muted');line=color('line');surface=color('surface');paper=color('paper');
+ if(ctx&&chart)draw();
+}
+$('theme').addEventListener('click',()=>{manualTheme=true;dark=!dark;theme();});
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',theme);
+
+function announce(text){$('status').textContent=text;}
+function controls(){
+ $('model').value=model.kind;$('rate').value=String(rate);
+ $('play').textContent=running?'暂停':'开始训练';$('play').setAttribute('aria-pressed',String(running));
+ $('fast').textContent=remaining?'快进中 '+remaining+' 步':'快进 500 步';$('fast').disabled=remaining>0;
+ $('undo').disabled=!undo.length;$('dataset-name').textContent=names[preset];
+ $('epoch').textContent=String(model.epoch);$('point-count').textContent=points.length+' / '+MAX_POINTS+' 个点';
+ field.dataset.editing=String(tool!=='probe');
+ tools.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===tool)));
+ presets.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.preset===preset)));
+ guesses.forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.guess===guess));b.disabled=model.epoch>0;});
+ const trainScore=metrics(model,points),testScore=testPoints?metrics(model,testPoints):null;
+ $('accuracy').textContent=trainScore?percent(trainScore.accuracy):'无样本';
+ $('test-accuracy').textContent=testScore?percent(testScore.accuracy):'未设答案';
+ $('loss').textContent=trainScore?trainScore.loss.toFixed(3):'无样本';
+ if(guess)$('prediction-result').textContent='你猜：'+(guess==='yes'?'能分开':'可能分不开')+'。'+(model.epoch?'已走 '+model.epoch+' 步，练习题 '+percent(trainScore.accuracy)+'。再换个模型比较。':'开始训练来看看。');
+ else $('prediction-result').textContent=model.epoch?'先观察这一轮。想留个预测，可以重新训练。':'可跳过。先留一个判断，再看实验。';
+}
+function path(context,pts){context.beginPath();pts.forEach((p,i)=>i?context.lineTo(p.x,p.y):context.moveTo(p.x,p.y));}
+function draw(){
+ ctx.fillStyle=paper;ctx.fillRect(0,0,W,H);
+ const cols=75,rows=46;
+ for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+  const x=(col+.5)/cols*2-1,y=1-(row+.5)/rows*2,p=predict(model,x,y);
+  // Neutral at 0.5; saturation represents model tendency, not calibrated certainty.
+  const strength=Math.abs(p-.5)*2;
+  ctx.globalAlpha=(dark?.42:.52)*strength;
+  ctx.fillStyle=p<.5?'#dc725f':'#419c9b';
+  const left=Math.floor(col*W/cols),top=Math.floor(row*H/rows);
+  ctx.fillRect(left,top,Math.floor((col+1)*W/cols)-left,Math.floor((row+1)*H/rows)-top);
+ }
+ ctx.globalAlpha=1;
+ ctx.strokeStyle=line;ctx.lineWidth=1;
+ for(let i=1;i<5;i++){path(ctx,[{x:W*i/5,y:0},{x:W*i/5,y:H}]);ctx.stroke();path(ctx,[{x:0,y:H*i/5},{x:W,y:H*i/5}]);ctx.stroke();}
+ const displayed=gesture?gesture.draft:points;
+ for(const p of displayed){
+  const x=(p.x+1)/2*W,y=(1-p.y)/2*H;
+  ctx.fillStyle=p.label?'#419c9b':'#dc725f';ctx.strokeStyle=surface;ctx.lineWidth=2;
+  ctx.beginPath();if(p.label)ctx.rect(x-5,y-5,10,10);else ctx.arc(x,y,5.6,0,Math.PI*2);ctx.fill();ctx.stroke();
+  if(!gesture&&Number(predict(model,p.x,p.y)>=.5)!==p.label){
+   ctx.strokeStyle=ink;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(x,y,9,0,Math.PI*2);ctx.stroke();
+  }
+ }
+ if(showCursor){
+  const x=(cursor.x+1)/2*W,y=(1-cursor.y)/2*H;
+  ctx.strokeStyle=ink;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,13,0,Math.PI*2);ctx.stroke();
+  path(ctx,[{x:x-20,y},{x:x-10,y}]);ctx.stroke();path(ctx,[{x:x+10,y},{x:x+20,y}]);ctx.stroke();
+ }
+ if(!displayed.length){ctx.fillStyle=muted;ctx.textAlign='center';ctx.font='18px sans-serif';ctx.fillText('给它画一个有两种答案的世界。',W/2,H/2);}
+ chart.clearRect(0,0,320,80);chart.strokeStyle=line;chart.lineWidth=1;path(chart,[{x:0,y:72},{x:320,y:72}]);chart.stroke();
+ if(history.length){
+  const max=Math.max(.1,...history.map(p=>p.loss)),last=Math.max(1,history.at(-1).epoch);
+  chart.strokeStyle=ink;chart.lineWidth=2;
+  path(chart,history.map(p=>({x:3+p.epoch/last*314,y:72-p.loss/max*65})));chart.stroke();
+ }
+}
+function render(){controls();refreshProbe();draw();}
+function pause(){running=false;remaining=0;token++;if(raf!==null)cancelAnimationFrame(raf);raf=null;controls();}
+function cancelGesture(){if(gesture){const {id,previousCursor}=gesture;gesture=null;showCursor=previousCursor;try{field.releasePointerCapture(id);}catch{}draw();}}
+function stop(){pause();cancelGesture();}
+function restart(){model=createModel(model.kind);guess=null;history=[];probeActive=false;showCursor=false;stop();const s=metrics(model,points);if(s)history.push({epoch:0,loss:s.loss});$('probe-result').textContent='点一下画面，看看它会怎么猜。';render();}
+function canTrain(){
+ if(!points.some(p=>p.label===0)||!points.some(p=>p.label===1)){announce('需要两类样本。先各画至少一个圆点和方点。');return false;}
+ if(model.epoch>=MAX_EPOCHS){announce('本轮已走 4000 步。可以换模型、改题目，或重新训练。');return false;}
+ return !document.hidden;
+}
+function advance(count){
+ train(model,points,rate,Math.min(count,MAX_EPOCHS-model.epoch));
+ history.push({epoch:model.epoch,loss:metrics(model,points).loss});
+ if(history.length>600)history=history.filter((_,i)=>i%2===0);
+ render();
+}
+function schedule(){
+ const ownToken=token;
+ raf=requestAnimationFrame(()=>{
+  if(ownToken!==token||!running||document.hidden)return;
+  raf=null;const count=Math.min(remaining||8,remaining?25:8,MAX_EPOCHS-model.epoch);
+  advance(count);if(remaining)remaining-=count;
+  if(model.epoch>=MAX_EPOCHS||(count>0&&remaining===0&&batch)){
+   pause();announce(model.epoch>=MAX_EPOCHS?'本轮 4000 步结束。试着改变题目或模型。':'这 500 步算完了。看看分错的点，再决定怎么改。');
+  }else schedule();
+ });
+}
+let batch=false;
+function start(fast=false){
+ if(gesture)cancelGesture();
+ if(fast&&remaining)return;
+ pause();if(!canTrain())return;
+ batch=fast;remaining=fast?Math.min(500,MAX_EPOCHS-model.epoch):0;running=true;
+ announce(fast?'正在计算 500 次参数更新。':'正在学习你给的标签。随时可以暂停或改题目。');controls();schedule();
+}
+function snapshot(){return {points,testPoints,preset};}
+function commit(next){
+ if(next.length===points.length&&next.every((p,i)=>p===points[i]))return;
+ undo.push(snapshot());if(undo.length>30)undo.shift();
+ points=next;testPoints=null;preset='custom';restart();
+ announce('题目变了，从头学习。自定义涂鸦没有标准答案，因此不显示新题成绩。');
+}
+function refreshProbe(){
+ if(!probeActive)return;
+ const v=predict(model,cursor.x,cursor.y);
+ $('probe-result').textContent='这里更像'+(v>=.5?'方点':'圆点')+'：模型倾向 '+percent(v>=.5?v:1-v)+'，不是正确率。';
+}
+function probe(p){cursor=p;showCursor=true;probeActive=true;refreshProbe();draw();}
+function position(e){const r=field.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*2-1,y:1-(e.clientY-r.top)/r.height*2};}
+function applyDraft(p){
+ if(!gesture)return;
+ gesture.draft=editPoints(gesture.draft,p,tool);draw();
+}
+if(!ctx||!chart){
+ announce('这个浏览器暂不支持 Canvas。请换用现代浏览器；上方其他实验仍可访问。');
+ for(const id of ['play','step','fast','reset','undo','clear','model','rate'])$(id).disabled=true;
+ for(const b of [...tools,...presets,...guesses])b.disabled=true;
+ theme();
+}else{
+ theme();restart();
+ $('play').addEventListener('click',()=>{if(running){pause();announce('已暂停。可以用探针看看分界两侧。');}else start();});
+ $('fast').addEventListener('click',()=>start(true));
+ $('step').addEventListener('click',()=>{stop();if(canTrain()){advance(1);announce('更新了一次参数。');}});
+ $('reset').addEventListener('click',()=>{restart();announce('保留题目，模型回到同一个起点。');});
+ $('clear').addEventListener('click',()=>{stop();commit([]);announce('空白画布准备好了。圆点和方点都需要至少一个。');});
+ $('undo').addEventListener('click',()=>{stop();const prev=undo.pop();if(prev){points=prev.points;testPoints=prev.testPoints;preset=prev.preset;restart();announce('已撤销上一笔，按恢复的题目重新训练。');}});
+ $('model').addEventListener('change',()=>{const kind=$('model').value;if(!['linear','network'].includes(kind))return;model=createModel(kind);restart();announce('换了一个脑袋，题目保留，从头训练。');});
+ $('rate').addEventListener('change',()=>{const next=Number($('rate').value);if(![.03,.15,.6].includes(next))return;stop();rate=next;render();announce('步子已调整，保留已有学习结果。点开始训练继续。');});
+ presets.forEach(b=>b.addEventListener('click',()=>{stop();undo=[];preset=b.dataset.preset;dataset=makeDataset(preset);points=dataset.train;testPoints=dataset.test;restart();announce('新题目准备好了。先猜，再训练。');}));
+ tools.forEach(b=>b.addEventListener('click',()=>{cancelGesture();tool=b.dataset.tool;controls();draw();}));
+ guesses.forEach(b=>b.addEventListener('click',()=>{if(model.epoch)return;guess=b.dataset.guess;controls();}));
+ field.addEventListener('pointerdown',e=>{
+  if(e.isPrimary===false||e.button!==0||gesture)return;
+  const p=position(e);
+  if(tool==='probe'){probe(p);return;}
+  pause();gesture={id:e.pointerId,draft:points,previousCursor:showCursor};showCursor=false;
+  field.setPointerCapture(e.pointerId);applyDraft(p);
+ });
+ field.addEventListener('pointermove',e=>{if(gesture?.id===e.pointerId)applyDraft(position(e));});
+ field.addEventListener('pointerup',e=>{
+  if(!gesture||e.pointerId!==gesture.id)return;
+  applyDraft(position(e));const next=gesture.draft,id=gesture.id;gesture=null;
+  try{field.releasePointerCapture(id);}catch{}
+  commit(next);render();if(points.length>=MAX_POINTS)announce('已到 160 个点。可以擦掉一些，或撤销后继续。');
+ });
+ field.addEventListener('pointercancel',e=>{if(gesture?.id===e.pointerId){cancelGesture();announce('这一笔已取消，原来的题目和成绩保留。');}});
+ field.addEventListener('lostpointercapture',e=>{if(gesture?.id===e.pointerId)cancelGesture();});
+ field.addEventListener('keydown',e=>{
+  const moves={ArrowLeft:[-.05,0],ArrowRight:[.05,0],ArrowUp:[0,.05],ArrowDown:[0,-.05]};
+  if(moves[e.key]){e.preventDefault();cursor={x:Math.max(-.95,Math.min(.95,cursor.x+moves[e.key][0])),y:Math.max(-.95,Math.min(.95,cursor.y+moves[e.key][1]))};showCursor=true;$('cursor-status').textContent='横向 '+Math.round((cursor.x+1)*50)+'%，纵向 '+Math.round((1-cursor.y)*50)+'%。';refreshProbe();draw();}
+  else if(e.key==='Enter'||e.key===' '){e.preventDefault();if(e.repeat)return;if(tool==='probe')probe(cursor);else{stop();commit(editPoints(points,cursor,tool));render();}}
+  else if(e.key==='Escape'){cancelGesture();draw();}
+ });
+ $('about').addEventListener('click',()=>{stop();$('guide').showModal();});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+ window.addEventListener('pagehide',stop);
+}
