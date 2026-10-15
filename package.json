@@ -12,6 +12,6 @@
     "start": "node scripts/serve.mjs",
     "test": "node --test tests/*.test.mjs",
     "build": "node scripts/build.mjs",
-    "verify": "node --check app.mjs && node --check core.mjs && node --check data.mjs && node --check pathfinding.mjs && node --check pathfinding-core.mjs && node --check sand.mjs && node --check sand-core.mjs && node --check firefly.mjs && node --check firefly-core.mjs && node --check evolution.mjs && node --check evolution-core.mjs && npm test && npm run build"
+    "verify": "node --check app.mjs && node --check core.mjs && node --check data.mjs && node --check pathfinding.mjs && node --check pathfinding-core.mjs && node --check sand.mjs && node --check sand-core.mjs && node --check firefly.mjs && node --check firefly-core.mjs && node --check evolution.mjs && node --check evolution-core.mjs && node --check neural.mjs && node --check neural-core.mjs && npm test && npm run build"
   }
 }

@@ -4,7 +4,7 @@
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
 
-Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, and a genetic racing route optimizer. No account required.
+Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, and a neural doodle classifier you can train in your browser. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
 
@@ -14,7 +14,9 @@ Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs 
 
 第四个实验是「萤火虫合奏」：点乱或点亮一片节拍，调节相互影响和可见范围，看看 80 个各有节奏的亮点如何逐渐合拍。试试「两群对唱」，再把两群连起来。[直接玩萤火虫合奏 →](https://haimuhaimu.github.io/algorithm-playground/firefly.html)
 
-第五个实验是「遗传赛车」：画一条赛道、放几个路障，让 48 辆小车的路线基因不断交叉和变异。可以快进 10 代，对照第一代的最佳路线。五个实验均可从上方导航切换。[直接玩遗传赛车 →](https://haimuhaimu.github.io/algorithm-playground/evolution.html)
+第五个实验是「遗传赛车」：画一条赛道、放几个路障，让 48 辆小车的路线基因不断交叉和变异。可以快进 10 代，对照第一代的最佳路线。[直接玩遗传赛车 →](https://haimuhaimu.github.io/algorithm-playground/evolution.html)
+
+第六个实验是「涂鸦训练场」：画两类样本，让一个小神经网络现场学习。可比较直线与弯曲分界、添加反例、看新题正确率；学习方式借鉴 [GenAI Learning OS](https://haimuhaimu.github.io/genai-learning-os/)，实现与文案独立创作。六个实验可从导航切换。[直接玩涂鸦训练场 →](https://haimuhaimu.github.io/algorithm-playground/neural.html)
 
 ## 本地运行
 
@@ -32,7 +34,7 @@ npm start
 npm run verify
 ```
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有二十一个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`。
+此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有二十五个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`。
 
 ## 在线演示与更新
 
@@ -68,6 +70,15 @@ npm run verify
 - 点按打乱或对齐局部相位；画布可纵向滚动，拖动/取消不干预。键盘方向键移动光标、空格/Enter 点按、1/2 切换动作。
 - 不保存作品。切换场景恢复默认参数；重置保留参数回到初始节拍；重新散开保留位置和参数、换一组确定性种子生成的相位。无新依赖或第三方素材。
 - 参考：[Strogatz, From Kuramoto to Crawford (2000)](https://web.mit.edu/~jadbabai/www/ESE680/Strogatz_Kuramoto.pdf)。邻居半径、场景和交互是本项目的教学改编。
+
+### 涂鸦训练场
+
+- 真实的线性分类器 / 2-8-1 tanh 神经网络，BCE 与全批量梯度下降，固定种子可复现。
+- 48 个预设训练点、120 个独立测验点。测验从不参与训练；编辑后不再显示原题测验分数。
+- 最多 160 个点、每轮 4000 步。可画点、擦除、撤销、探针、单步、暂停及分帧快进 500 步。
+- 背景与成绩来自当前模型，不是预渲染效果。倾向不是校准概率，玩具模型不代表真实 AI 能力。
+- 画布支持键盘和指针；取消手势保留旧题目和成绩。刷新不保存数据；无网络、存储或上传。
+- `neural-core.mjs` 是纯模型，`neural.mjs` 是交互控制；数值梯度、训练表现和控制器生命周期有回归测试。
 
 ### 落沙实验
 
@@ -117,6 +128,8 @@ npm run verify
 - `sand.html` / `sand.css` / `sand.mjs`：落沙实验室画布与交互。
 - `evolution-core.mjs`：可重放的遗传路线优化、碰撞和比赛采样。
 - `evolution.html` / `evolution.css` / `evolution.mjs`：遗传赛车、赛道绘画与进化观察。
+- `neural-core.mjs`：确定性分类器、反向传播、梯度下降与独立测验数据。
+- `neural.html` / `neural.css` / `neural.mjs`：涂鸦训练场、画布编辑、模型对照与学习入口。
 - `scripts/`：只提供白名单静态文件的本地服务和打包流程。
 - `tests/`：Node 内置测试，无外部测试依赖。
 

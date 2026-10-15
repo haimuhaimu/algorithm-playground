@@ -7,7 +7,7 @@ import {createAppServer} from '../scripts/serve.mjs';
 import {build} from '../scripts/build.mjs';
 
 const root=new URL('../',import.meta.url).pathname;
-const files=['app.mjs','core.mjs','data.mjs','evolution-core.mjs','evolution.css','evolution.html','evolution.mjs','firefly-core.mjs','firefly.css','firefly.html','firefly.mjs','index.html','pathfinding-core.mjs','pathfinding.css','pathfinding.html','pathfinding.mjs','sand-core.mjs','sand.css','sand.html','sand.mjs','style.css'];
+const files=['app.mjs','core.mjs','data.mjs','evolution-core.mjs','evolution.css','evolution.html','evolution.mjs','firefly-core.mjs','firefly.css','firefly.html','firefly.mjs','index.html','neural-core.mjs','neural.css','neural.html','neural.mjs','pathfinding-core.mjs','pathfinding.css','pathfinding.html','pathfinding.mjs','sand-core.mjs','sand.css','sand.html','sand.mjs','style.css'];
 test('server serves only runtime assets with correct types, headers and methods',async()=>{
  const server=createAppServer(root);
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -22,7 +22,7 @@ test('server serves only runtime assets with correct types, headers and methods'
   for(const path of ['/package.json','/docs/spec.md','/.git/config','/%2e%2e%2fpackage.json','/%252e%252e/package.json','/%zz'])assert.equal((await fetch(base+path)).status,404,path);
  }finally{await new Promise(resolve=>server.close(resolve));}
 });
-test('build ships all five experiments and all runtime files with byte-for-byte source parity',async()=>{
+test('build ships all six experiments and all runtime files with byte-for-byte source parity',async()=>{
  const out=await mkdtemp(join(tmpdir(),'algorithm-build-'));
  try{
   const result=await build(root,out);assert.deepEqual(result.sort(),files);
