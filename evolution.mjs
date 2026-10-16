@@ -113,12 +113,13 @@ if(!ctx||!chart||!geneCanvas){
  }
  function beginBatch(){
   pause();mode='watch';batchLeft=10;const version=token;
+  $('status').textContent='正在快进 · 已完成 0 / 10 代。可以随时暂停。';
   const tick=()=>{
    if(version!==token||document.hidden)return;raf=null;advance();batchLeft--;elapsed=duration();draw();controls();
-   if(batchLeft){raf=requestAnimationFrame(tick);}
-   else{$('status').textContent='已完整模拟 10 代。可以继续比赛，也可以加个路障考考它们。';}
+   if(batchLeft){$('status').textContent='正在快进 · 已完成 '+(10-batchLeft)+' / 10 代。可以随时暂停。';raf=requestAnimationFrame(tick);}
+   else{$('status').textContent='已完成 10 代完整模拟。可以继续比赛，也可以加个路障考考它们。';}
   };
-  controls();raf=requestAnimationFrame(tick);
+  controls();draw();raf=requestAnimationFrame(tick);
  }
  function point(e){
   const b=field.getBoundingClientRect();return {x:clamp((e.clientX-b.left)/b.width*WIDTH,45,WIDTH-45),y:clamp((e.clientY-b.top)/b.height*HEIGHT,45,HEIGHT-45)};
@@ -174,7 +175,7 @@ if(!ctx||!chart||!geneCanvas){
  document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{mode='watch';reset(presetTrack(b.dataset.preset),[],b.dataset.preset,'已换赛道，从第 1 代重新开始。点继续开跑。');}));
  $('play').addEventListener('click',()=>{
   if(playing||batchLeft)pause('已暂停。比赛和进化都不会在后台继续。');
-  else{cancelGesture();mode='watch';playing=true;last=null;controls();draw();schedule();}
+  else{cancelGesture();mode='watch';playing=true;last=null;$('status').textContent='正在比赛。观察这一代的路线，也可以随时暂停或快进。';controls();draw();schedule();}
  });
  $('next').addEventListener('click',()=>{pause();mode='watch';advance();$('status').textContent='上一代已完整计算，新一代等待出发。点继续看比赛。';controls();draw();});
  $('evolve').addEventListener('click',beginBatch);

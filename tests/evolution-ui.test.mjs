@@ -53,6 +53,18 @@ test('pause and backgrounding cancel racing and fast-forward without automatic r
   assert.equal(ui.elements.get('generation').textContent,'2');assert.equal(ui.frames.size,0);
  }finally{ui.restore();}
 });
+test('fast-forward replaces the paused status immediately, reports progress and cannot overwrite a later pause',async()=>{
+ const u=await boot();try{
+  u.click('play');assert.match(u.elements.get('status').textContent,/已暂停/);u.click('evolve');
+  assert.match(u.elements.get('status').textContent,/正在快进/);assert.doesNotMatch(u.elements.get('status').textContent,/已暂停/);
+  u.frame();assert.match(u.elements.get('status').textContent,/1.*10/);const stale=[...u.frames.values()][0];
+  u.click('play');const paused=u.elements.get('status').textContent;stale(1000);assert.equal(u.elements.get('status').textContent,paused);
+  u.click('evolve');for(let i=0;i<10;i++)u.frame();assert.match(u.elements.get('status').textContent,/完成.*10|10.*完成/);assert.equal(u.frames.size,0);
+ }finally{u.restore();}
+});
+test('resuming a paused race reports playing before the next generation finishes',async()=>{
+ const u=await boot();try{u.click('play');u.click('play');assert.match(u.elements.get('status').textContent,/正在比赛/);assert.equal(u.frames.size,1);}finally{u.restore();}
+});
 test('editing a track cancels a queued fast-forward generation and resets evidence',async()=>{
  const ui=await boot({reduced:true});
  try{

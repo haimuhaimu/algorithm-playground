@@ -30,3 +30,12 @@
  .compare-action p{max-width:20em}
  .compare-action button{white-space:normal;flex:0 0 124px}
 }
+.model-comparison{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden;margin-bottom:18px}
+.model-comparison[hidden]{display:none}
+.model-comparison header{padding:15px 16px;border-bottom:1px solid var(--line)}
+.model-comparison h2{font-size:13px;margin:0}.model-comparison header p{font-size:10px;color:var(--muted);margin:5px 0 0}
+.comparison-columns{display:grid;grid-template-columns:1fr 1fr}.comparison-columns article{padding:16px;min-width:0}.comparison-current{border-left:1px solid var(--line);background:var(--soft)}
+.comparison-label{font-size:10px;color:var(--muted)}.comparison-columns h3{font-size:16px;margin:7px 0 4px}.comparison-steps{font:12px ui-monospace,monospace;color:var(--muted)}
+.comparison-columns dl{margin:14px 0 0;display:grid;gap:10px}.comparison-columns dl>div{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.comparison-columns dt{font-size:10px;color:var(--muted)}.comparison-columns dd{font:14px ui-monospace,monospace;margin:0;text-align:right;overflow-wrap:anywhere}
+.comparison-note{font-size:10px;color:var(--muted);line-height:1.8;margin:0;padding:12px 16px;border-top:1px solid var(--line)}
+@media(max-width:760px){.comparison-columns article{padding:13px 12px}.comparison-columns h3{font-size:14px}.comparison-columns dl>div{display:block}.comparison-columns dd{text-align:left;margin-top:3px;font-size:15px}.comparison-columns dl{grid-template-columns:1fr 1fr;gap:12px 6px}.comparison-columns dl>div:last-child{grid-column:1/-1}}

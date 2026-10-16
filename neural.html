@@ -16,6 +16,7 @@
   <section class="neural-intro"><h1>你来出题，<span>它来找规律。</span></h1><p>画两种点，看小神经网络怎么分开它们。也可以故意教错，看看会发生什么。</p></section>
   <section class="neural-lab" aria-label="神经网络分类实验">
    <div class="drawing-column">
+    <div class="local-draft"><p id="draft-status" role="status">草稿仅在此浏览器保留，不上传。</p><button id="forget-draft" type="button">删除本地草稿</button></div>
     <div class="drawing-board">
      <div class="drawing-toolbar"><strong id="dataset-name">四个小岛</strong><div role="group" aria-label="画布工具"><button data-tool="0" aria-pressed="false"><i class="class-a"></i>画圆点</button><button data-tool="1" aria-pressed="false"><i class="class-b"></i>画方点</button><button data-tool="erase" aria-pressed="false">擦除</button><button data-tool="probe" aria-pressed="true">探针</button></div></div>
      <canvas id="field" width="900" height="560" tabindex="0" role="application" aria-label="两类样本与模型分界画布" aria-describedby="canvas-help probe-result">需要支持 Canvas 的浏览器。</canvas>
@@ -25,19 +26,26 @@
     </div>
     <div class="training-stats" aria-label="实际计算结果"><div><span>训练步数</span><strong id="epoch">0</strong></div><div><span>练习题正确率</span><strong id="accuracy">尚未计算</strong></div><div><span>新题正确率 <small>120 道</small></span><strong id="test-accuracy">尚未计算</strong></div><div class="loss-chart"><span>犯错代价 <b id="loss">待计算</b></span><canvas id="history" width="320" height="80" aria-label="本轮真实训练损失曲线"></canvas></div></div>
     <p class="neural-status" id="status" role="status">按「开始训练」，让分界线慢慢长出来。</p>
-    <div class="compare-action"><div><strong>同一道题，换个脑袋。</strong><p>保留你画的点和步子大小，看看另一种模型会怎样。</p></div><button id="compare-model" disabled>换直线模型试试 ↗</button></div>
+    <div class="compare-action"><div><strong>同一道题，换个脑袋。</strong><p>把上轮成绩留在下面，不用靠记忆比较。</p></div><button id="compare-model" disabled>换直线模型试试 ↗</button></div>
+    <section class="model-comparison" id="model-comparison" aria-labelledby="comparison-title" hidden>
+     <header><h2 id="comparison-title">同题对照</h2><p id="comparison-question"></p></header>
+     <div class="comparison-columns">
+      <article><span class="comparison-label">上轮留档</span><h3 id="previous-model"></h3><p class="comparison-steps" id="previous-steps"></p><dl><div><dt>练习题</dt><dd id="previous-train"></dd></div><div><dt>新题</dt><dd id="previous-test"></dd></div><div><dt>犯错代价</dt><dd id="previous-loss"></dd></div><div><dt>用过的步子</dt><dd id="previous-rate"></dd></div></dl></article>
+      <article class="comparison-current"><span class="comparison-label">当前模型</span><h3 id="current-model"></h3><p class="comparison-steps" id="current-steps"></p><dl><div><dt>练习题</dt><dd id="current-train"></dd></div><div><dt>新题</dt><dd id="current-test"></dd></div><div><dt>犯错代价</dt><dd id="current-loss"></dd></div><div><dt>用过的步子</dt><dd id="current-rate"></dd></div></dl></article>
+     </div><p class="comparison-note" id="comparison-note"></p>
+    </section>
    </div>
    <aside class="neural-controls" aria-label="实验设置">
     <h2>换一道题</h2>
     <div class="dataset-presets" role="group" aria-label="预设题目"><button data-preset="diagonal" aria-pressed="false"><b>一分为二</b><span>一条直线就够吗？</span></button><button data-preset="islands" aria-pressed="true"><b>四个小岛</b><span>同类隔着对角线</span></button><button data-preset="ring" aria-pressed="false"><b>甜甜圈</b><span>里面和外面不一样</span></button></div>
-    <label for="model">用什么脑袋来想？<select id="model"><option value="linear">直线脑袋 · 线性模型</option><option value="network" selected>会拐弯 · 8 个神经元</option></select><small>切换后从头训练，题目不变。</small></label>
+    <label for="model">用什么脑袋来想？<select id="model"><option value="linear">直线脑袋 · 线性模型</option><option value="network" selected>会拐弯 · 8 个神经元</option></select><small>题目不变，上轮成绩留档；尚未训练时切回，可恢复上轮模型。</small></label>
     <label for="rate">每次改多少<select id="rate"><option value="0.03">慢慢来 · 0.03</option><option value="0.15" selected>稳着走 · 0.15</option><option value="0.6">迈大步 · 0.60</option></select><small>步子大不一定学得更好。</small></label>
     <div class="reset-actions"><button id="reset">重新训练</button><button id="clear">空白画布</button></div>
    </aside>
   </section>
   <p class="canvas-help" id="canvas-help">圆点是珊瑚色，方点是青绿色；带深色外圈的样本是当前分错的。选画笔后拖动绘制，最多 160 点。键盘方向键移动光标，Enter / 空格使用工具。<span id="cursor-status" class="sr-only" aria-live="polite"></span></p>
   <section class="learning-bridge" aria-labelledby="bridge-title"><div><h2 id="bridge-title">玩过以后，再认识它。</h2><p>从你的 GenAI Learning OS 接过来的一种学法：先判断，动手试，再解释。</p><a href="https://haimuhaimu.github.io/genai-learning-os/?page=decision-math" target="_blank" rel="noopener noreferrer">去 AI 决策数学继续学 ↗</a></div><ol><li><b>直线卡住了？</b><span>在「四个小岛」里换个脑袋。同一组数据，模型能表达的边界不一样。</span></li><li><b>教错会怎样？</b><span>往另一类的领地画几个反例。它只看你给的标签，不会知道你在捣乱。</span></li><li><b>熟题会做就够了？</b><span>比较练习题与新题。新题从不参与训练，自定义画布则不冒充有标准答案。</span></li></ol></section>
-  <details class="neural-notes"><summary>这里的神经网络，是真的在学习吗？</summary><div><p>是。每个点的位置是两个输入，你画的圆或方是标签。线性模型使用一条直线；神经网络用 8 个 tanh 隐藏神经元和 1 个 sigmoid 输出。每一步计算全部练习题的二元交叉熵，再用反向传播与梯度下降更新参数。背景颜色是各位置的模型输出，不是预画的分区。</p><p>预设有 48 个训练样本和另外生成的 120 个固定测验样本，测验不参与参数更新。改动画布后，原题答案不再适用，因此清空新题成绩。正确率不等于真实世界能力；探针显示的是模型的倾向，不是校准过的可靠度。</p><p>相同预设、结构和步子会复现同样过程。每轮上限 4000 步，不保证学会任意涂鸦或找到最优答案。修改样本、切换结构会重新训练；撤销恢复上一笔之前的题目，然后重新训练。取消手势保留之前的数据与成绩。</p><p>灵感来自陈全的 GenAI Learning OS，算法与界面在此独立实现。纯浏览器本地计算，没有大模型接口、上传、账号或自动保存。离开页面、打开帮助会暂停，回来需手动继续。刷新会回到初始题目。</p></div></details>
+  <details class="neural-notes"><summary>这里的神经网络，是真的在学习吗？</summary><div><p>是。每个点的位置是两个输入，你画的圆或方是标签。线性模型使用一条直线；神经网络用 8 个 tanh 隐藏神经元和 1 个 sigmoid 输出。每一步计算全部练习题的二元交叉熵，再用反向传播与梯度下降更新参数。背景颜色是各位置的模型输出，不是预画的分区。</p><p>预设有 48 个训练样本和另外生成的 120 个固定测验样本，测验不参与参数更新。改动画布后，原题答案不再适用，因此清空新题成绩。正确率不等于真实世界能力；探针显示的是模型的倾向，不是校准过的可靠度。</p><p>相同预设、结构和步子会复现同样过程。每轮上限 4000 步，不保证学会任意涂鸦或找到最优答案。修改样本、切换结构会重新训练；撤销恢复上一笔之前的题目，然后重新训练。取消手势保留之前的数据与成绩。</p><p>灵感来自陈全的 GenAI Learning OS，算法与界面在此独立实现。纯浏览器本地计算，没有大模型接口、上传或账号。本地草稿保留题目、模型与撤销记录；暂停或正常离开时保存训练进度。刷新后恢复为暂停，仍需手动继续。仅限此浏览器、此站点，不是云备份。</p></div></details>
   <footer class="bottom-note"><span>它学到的世界，是你画给它的。</span><span class="signature">MADE BY CHEN QUAN</span></footer>
  </main>
  <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">教它，也考考它。</h2><ol><li>先猜当前模型能不能分开两类（可跳过），再点「快进 500 步」。</li><li>看完结果，点「换直线模型试试」，用同一道题比较两种脑袋。</li><li>选「画圆点」或「画方点」，在对方区域添几笔，重新训练。</li><li>想自己出题，选「空白画布」。至少画两类点，才能开始。</li></ol><p>「探针」可以点击或用键盘询问任意位置。按 Escape 可取消正在画的一笔。关闭帮助后不会自动继续训练。</p></dialog>
