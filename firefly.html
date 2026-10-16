@@ -20,18 +20,13 @@
   <section class="chorus-lab" aria-label="萤火虫同步实验">
    <div class="habitat-column">
     <div class="habitat">
-     <div class="habitat-heading"><span id="habitat-label">一起合拍</span><span id="elapsed">0.0 秒</span></div>
+     <div class="habitat-heading"><span id="habitat-label">一起合拍</span><span id="elapsed">0.0 秒</span><label class="phase-toggle"><input type="checkbox" id="show-phase">看小节拍</label></div>
     <div class="touch-modes"><h2>你来插一手</h2><div role="group" aria-label="点按动作"><button data-mode="scatter" aria-pressed="true">打乱一片 <kbd>1</kbd></button><button data-mode="align" aria-pressed="false">点亮一片 <kbd>2</kbd></button></div><p id="interaction-status" role="status">试着点一下画布。</p></div>
      <canvas id="fireflies" width="960" height="600" tabindex="0" role="application" aria-label="萤火虫合奏互动画布" aria-describedby="field-help cursor-status">需要支持 Canvas 的浏览器。</canvas>
      <p class="field-caption" id="field-caption">点一下，把附近的节拍打乱</p>
-     <div class="chorus-transport"><button id="play" class="primary" aria-pressed="true">暂停</button><button id="step">走一拍</button><button id="shuffle">重新散开</button><button id="reset">重置</button><label><input type="checkbox" id="show-phase">看小节拍</label></div>
+     <div class="chorus-transport"><button id="play" class="primary" aria-pressed="true">暂停</button><button id="step">走一拍</button><button id="shuffle">重新散开</button><button id="reset">重置</button></div>
     </div>
     <p class="near-play-status" id="play-status" role="status">运行中 · 点按可以干预</p>
-    <div class="chorus-observation">
-     <div class="coherence-value"><span>合拍度</span><strong id="coherence">0<small>%</small></strong><p id="coherence-label">各有节奏</p></div>
-     <div class="phase-view"><canvas id="phase-clock" width="180" height="180" aria-label="当前 80 个相位在圆周上的分布"></canvas><span>越聚在一起，越合拍</span></div>
-     <div class="history-view"><div><span>合拍度的变化</span><small>最近 30 秒</small></div><canvas id="history" width="600" height="120" aria-label="合拍度随模拟时间变化的曲线"></canvas></div>
-    </div>
    </div>
    <aside class="chorus-controls" aria-label="合奏控制">
     <h2>换一种相处方式</h2>
@@ -43,6 +38,11 @@
     </div>
     <p class="chorus-tip" id="scene-tip">先等它们合拍，再点乱一小片。它们会自己找回节奏吗？</p>
    </aside>
+   <div class="chorus-observation">
+    <div class="coherence-value"><span>合拍度</span><strong id="coherence">0<small>%</small></strong><p id="coherence-label">各有节奏</p></div>
+    <div class="phase-view"><canvas id="phase-clock" width="180" height="180" aria-label="当前 80 个相位在圆周上的分布"></canvas><span>越聚在一起，越合拍</span></div>
+    <div class="history-view"><div><span>合拍度的变化</span><small>最近 30 秒</small></div><canvas id="history" width="600" height="120" aria-label="合拍度随模拟时间变化的曲线"></canvas></div>
+   </div>
   </section>
   <p class="field-help" id="field-help">点按画布干预，滑动页面不落笔。键盘：方向键移动，空格 / Enter 点一下，1 / 2 切换动作。</p><p id="cursor-status" class="sr-only" aria-live="polite"></p>
   <details class="chorus-notes"><summary>为什么会合拍？这个数字又是什么？</summary><div><p>每个亮点有自己的节拍，也会稍微向范围内其他亮点的相位靠拢。这里使用局部邻居版本的 Kuramoto 相位耦合模型，没有隐藏的总指挥，也没有预设的同步时间。</p><p>「合拍度」是所有相位在单位圆上的平均向量长度（0 到 1，显示成百分数），不是已经同步的萤火虫占比。两群内部很整齐、却反着闪时，总合拍度也可能很低；它不保证一直上升。</p><p>位置固定，只模拟节拍。萤火虫是这个数学模型的视觉比喻，不是生物学复现。每秒 60 个固定步长，单步推进 1/60 秒；页面离开后暂停，回来需要手动继续。闪光是缓慢的局部亮暗变化，无声音。</p><p>无账号、上传、追踪或自动保存。切换场景会恢复该场景默认参数；重置保留参数并恢复初始节拍；「重新散开」保留参数和位置，换一组节拍。刷新会回到初始状态。</p><p>模型参考：<a href="https://web.mit.edu/~jadbabai/www/ESE680/Strogatz_Kuramoto.pdf" target="_blank" rel="noreferrer">Strogatz, From Kuramoto to Crawford（2000）↗</a></p></div></details>

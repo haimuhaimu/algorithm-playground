@@ -5,6 +5,12 @@ import {readFile} from 'node:fs/promises';
 // Execute the actual controller and model. Only browser I/O is represented here;
 // this checks lifecycle state, not canvas pixels or real browser backgrounding.
 const html=await readFile(new URL('../firefly.html',import.meta.url),'utf8');
+test('mobile reading order reaches scene settings before secondary observation charts',()=>{
+ assert.ok(html.indexOf('class="chorus-controls"')<html.indexOf('class="chorus-observation"'),'settings must not sit beyond the observation charts');
+ for(const id of ['fireflies','play','step','shuffle','reset','show-phase','coupling','radius','spread']){
+  assert.equal([...html.matchAll(new RegExp('id="'+id+'"','g'))].length,1,id+' must not be duplicated for a responsive view');
+ }
+});
 let bootNumber=0;
 async function boot({hidden=false,reducedMotion=false}={}){
  const frames=new Map();let nextFrame=0;
