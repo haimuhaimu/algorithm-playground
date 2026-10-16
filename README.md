@@ -4,7 +4,7 @@
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
 
-Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, and a neural doodle classifier you can train in your browser. No account required.
+Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, and a blind-box mining game about exploration vs exploitation. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
 
@@ -16,7 +16,9 @@ Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs 
 
 第五个实验是「遗传赛车」：画一条赛道、放几个路障，让 48 辆小车的路线基因不断交叉和变异。可以快进 10 代，对照第一代的最佳路线。[直接玩遗传赛车 →](https://haimuhaimu.github.io/algorithm-playground/evolution.html)
 
-第六个实验是「涂鸦训练场」：画两类样本，让一个小神经网络现场学习。可比较直线与弯曲分界、添加反例、看新题正确率；学习方式借鉴 [GenAI Learning OS](https://haimuhaimu.github.io/genai-learning-os/)，实现与文案独立创作。六个实验可从导航切换。[直接玩涂鸦训练场 →](https://haimuhaimu.github.io/algorithm-playground/neural.html)
+第六个实验是「涂鸦训练场」：画两类样本，让一个小神经网络现场学习。可比较直线与弯曲分界、添加反例、看新题正确率；学习方式借鉴 [GenAI Learning OS](https://haimuhaimu.github.io/genai-learning-os/)，实现与文案独立创作。[直接玩涂鸦训练场 →](https://haimuhaimu.github.io/algorithm-playground/neural.html)
+
+第七个实验是「盲盒探矿」：30 次探测、5 颗未知星球，玩完再和 greedy、ε-greedy、UCB1 比一比。开局预生成同一套潜在结果，不安排算法必胜；复盘局明确标记，不冒充首次盲测。原生 CSS 插画，无新依赖或第三方素材。七个实验可从导航切换。[直接玩盲盒探矿 →](https://haimuhaimu.github.io/algorithm-playground/mining.html)
 
 ## 本地运行
 
@@ -34,7 +36,7 @@ npm start
 npm run verify
 ```
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有二十五个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`。
+此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有二十九个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`，探矿入口为 `mining.html`。
 
 ## 在线演示与更新
 
@@ -51,6 +53,14 @@ npm run verify
 5. 跑一轮对照。修改设置后，上轮结果会保留并标记为旧结果，不会假装是新实验。
 
 ## 模型边界
+
+### 盲盒探矿
+
+- 5 颗星球、30 次探测；每次产出 0 或 1 块矿石。每局先生成固定的成功率与 30 × 5 潜在结果表，同一轮、同一颗星球在所有策略中得到相同结果。
+- 比较纯贪心、ε-greedy（ε = 0.2）和 UCB1；算法只使用已观测记录，不读取隐藏成功率。30 轮的小样本不保证任何策略必胜。
+- 直到游戏完成才揭示成功率与算法成绩。重玩同一矿区会标记为复盘局；新矿区重置世界与记录。
+- 鼠标、触屏按钮与数字键 1–5 均可选择星球。取消或中断飞行不扣次数；减少动画模式立即结算。
+- 无网络、存储或上传。页面刷新后重置；这是本地教学游戏，不提供防作弊或真实采矿预测。
 
 ### 遗传赛车
 
@@ -130,6 +140,8 @@ npm run verify
 - `evolution.html` / `evolution.css` / `evolution.mjs`：遗传赛车、赛道绘画与进化观察。
 - `neural-core.mjs`：确定性分类器、反向传播、梯度下降与独立测验数据。
 - `neural.html` / `neural.css` / `neural.mjs`：涂鸦训练场、画布编辑、模型对照与学习入口。
+- `mining-core.mjs`：可复现的多臂老虎机环境、探矿记录与三种对照策略。
+- `mining.html` / `mining.css` / `mining.mjs`：盲盒探矿界面、探测动画与复盘。
 - `scripts/`：只提供白名单静态文件的本地服务和打包流程。
 - `tests/`：Node 内置测试，无外部测试依赖。
 
