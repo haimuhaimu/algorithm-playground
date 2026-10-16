@@ -1,4 +1,5 @@
 import {createModel,predict,metrics,train,makeDataset,editPoints,MAX_POINTS,MAX_EPOCHS} from './neural-core.mjs';
+import {DRAFT_KEYS,readDraft,writeDraft,clearDraft,validateNeuralDraft,draftMessage} from './local-drafts.mjs';
 const $=id=>document.getElementById(id),field=$('field'),ctx=field.getContext('2d'),chart=$('history').getContext('2d');
 const tools=[...document.querySelectorAll('[data-tool]')],presets=[...document.querySelectorAll('[data-preset]')],guesses=[...document.querySelectorAll('[data-guess]')];
 const names={diagonal:'一分为二',islands:'四个小岛',ring:'甜甜圈',custom:'我的涂鸦'};
@@ -7,6 +8,17 @@ let dataset=makeDataset('islands'),points=dataset.train,testPoints=dataset.test,
 let model=createModel(),rate=.15,tool='probe',guess=null,history=[],undo=[],gesture=null;
 let running=false,remaining=0,raf=null,token=0,cursor={x:0,y:0},showCursor=false,probeActive=false;
 let ink,muted,line,surface,paper,dark=false,manualTheme=false;
+let initialized=false,dirty=false,usedRates=[],previous=null;
+function saveDraft(){
+ if(!initialized)return;
+ const ok=writeDraft(DRAFT_KEYS.neural,{points,preset,model,rate,tool,guess,history,undo,rates:usedRates,previous},validateNeuralDraft);
+ dirty=!ok;
+ $('draft-status').textContent=ok?'草稿已保留 · 仅在此浏览器，不上传。':'草稿未保存：浏览器存储不可用或空间不足。当前仍可继续玩。';
+}
+$('forget-draft').addEventListener('click',()=>{
+ const ok=clearDraft(DRAFT_KEYS.neural);if(ok)dirty=false;
+ $('draft-status').textContent=ok?'已删除本地草稿，当前画面不变；继续操作会重新保存。':'无法删除本地草稿，请在浏览器设置中清理此站点数据。';
+});
 
 function theme(){
  if(!manualTheme)dark=matchMedia('(prefers-color-scheme:dark)').matches;
@@ -79,10 +91,10 @@ function draw(){
  }
 }
 function render(){controls();refreshProbe();draw();}
-function pause(){running=false;remaining=0;token++;if(raf!==null)cancelAnimationFrame(raf);raf=null;controls();}
+function pause(){running=false;remaining=0;token++;if(raf!==null)cancelAnimationFrame(raf);raf=null;controls();if(dirty)saveDraft();}
 function cancelGesture(){if(gesture){const {id,previousCursor}=gesture;gesture=null;showCursor=previousCursor;try{field.releasePointerCapture(id);}catch{}draw();}}
 function stop(){pause();cancelGesture();}
-function restart(){model=createModel(model.kind);guess=null;history=[];probeActive=false;showCursor=false;stop();const s=metrics(model,points);if(s)history.push({epoch:0,loss:s.loss});$('probe-result').textContent='点一下画面，看看它会怎么猜。';render();}
+function restart(){dirty=false;model=createModel(model.kind);usedRates=[];guess=null;history=[];probeActive=false;showCursor=false;stop();const s=metrics(model,points);if(s)history.push({epoch:0,loss:s.loss});$('probe-result').textContent='点一下画面，看看它会怎么猜。';render();saveDraft();}
 function canTrain(){
  if(!points.some(p=>p.label===0)||!points.some(p=>p.label===1)){announce('需要两类样本。先各画至少一个圆点和方点。');return false;}
  if(model.epoch>=MAX_EPOCHS){announce('本轮已走 4000 步。可以换模型、改题目，或重新训练。');return false;}
@@ -90,6 +102,8 @@ function canTrain(){
 }
 function advance(count){
  train(model,points,rate,Math.min(count,MAX_EPOCHS-model.epoch));
+ if(!usedRates.includes(rate))usedRates.push(rate);dirty=true;
+ $('draft-status').textContent='训练中 · 暂停或离开页面时保留进度。';
  history.push({epoch:model.epoch,loss:metrics(model,points).loss});
  if(history.length>600)history=history.filter((_,i)=>i%2===0);
  render();
@@ -137,10 +151,17 @@ if(!ctx||!chart){
  for(const b of [...tools,...presets,...guesses])b.disabled=true;
  theme();
 }else{
- theme();restart();
+ const draft=readDraft(DRAFT_KEYS.neural,validateNeuralDraft);
+ if(draft.value){
+  ({points,preset,model,rate,tool,guess,history,undo,previous}=draft.value);usedRates=draft.value.rates;
+  testPoints=preset==='custom'?null:makeDataset(preset).test;
+  undo=undo.map(s=>({...s,testPoints:s.preset==='custom'?null:makeDataset(s.preset).test}));
+  theme();render();announce('已恢复上次的题目和学习结果。训练已暂停，想继续时再开始。');
+ }else{theme();restart();}
+ initialized=true;$('draft-status').textContent=draftMessage(draft.status);
  $('play').addEventListener('click',()=>{if(running){pause();announce('已暂停。可以用探针看看分界两侧。');}else start();});
  $('fast').addEventListener('click',()=>start(true));
- $('step').addEventListener('click',()=>{stop();if(canTrain()){advance(1);announce('更新了一次参数。');}});
+ $('step').addEventListener('click',()=>{stop();if(canTrain()){advance(1);saveDraft();announce('更新了一次参数。');}});
  $('reset').addEventListener('click',()=>{restart();announce('保留题目，模型回到同一个起点。');});
  $('clear').addEventListener('click',()=>{stop();commit([]);announce('空白画布准备好了。圆点和方点都需要至少一个。');});
  $('undo').addEventListener('click',()=>{stop();const prev=undo.pop();if(prev){points=prev.points;testPoints=prev.testPoints;preset=prev.preset;restart();announce('已撤销上一笔，按恢复的题目重新训练。');}});
@@ -150,10 +171,10 @@ if(!ctx||!chart){
   model=createModel(model.kind==='linear'?'network':'linear');restart();
   announce('题目和步子大小都保留了。再猜一次，训练后比较两种模型。');
  });
- $('rate').addEventListener('change',()=>{const next=Number($('rate').value);if(![.03,.15,.6].includes(next))return;stop();rate=next;render();announce('步子已调整，保留已有学习结果。点开始训练继续。');});
+ $('rate').addEventListener('change',()=>{const next=Number($('rate').value);if(![.03,.15,.6].includes(next))return;stop();rate=next;render();saveDraft();announce('步子已调整，保留已有学习结果。点开始训练继续。');});
  presets.forEach(b=>b.addEventListener('click',()=>{stop();undo=[];preset=b.dataset.preset;dataset=makeDataset(preset);points=dataset.train;testPoints=dataset.test;restart();announce('新题目准备好了。先猜，再训练。');}));
- tools.forEach(b=>b.addEventListener('click',()=>{cancelGesture();tool=b.dataset.tool;controls();draw();}));
- guesses.forEach(b=>b.addEventListener('click',()=>{if(model.epoch)return;guess=b.dataset.guess;controls();}));
+ tools.forEach(b=>b.addEventListener('click',()=>{cancelGesture();tool=b.dataset.tool;controls();draw();saveDraft();}));
+ guesses.forEach(b=>b.addEventListener('click',()=>{if(model.epoch)return;guess=b.dataset.guess;controls();saveDraft();}));
  field.addEventListener('pointerdown',e=>{
   if(e.isPrimary===false||e.button!==0||gesture)return;
   const p=position(e);

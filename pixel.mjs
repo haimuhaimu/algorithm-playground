@@ -1,4 +1,5 @@
 import { encode, decode, preset, stroke } from './pixel-core.mjs';
+import {DRAFT_KEYS,readDraft,writeDraft,clearDraft,validatePixelDraft,draftMessage} from './local-drafts.mjs';
 
 const $ = id => document.getElementById(id);
 const editor = $('editor'), receiver = $('receiver');
@@ -9,6 +10,13 @@ let pixels = preset('cat'), color = 1, cursor = { x: 0, y: 0 }, focused = false;
 let gesture = null, history = [], received = null, job = null, frame = 0;
 const equal = (a, b) => a.length === b.length && a.every((value, i) => value === b[i]);
 const available = () => context && receivedContext && !document.hidden && !$('guide').open;
+function saveDraft(){
+  const ok=writeDraft(DRAFT_KEYS.pixel,{pixels,color,history,received:received?.pixels??null},validatePixelDraft);
+  $('draft-status').textContent=ok?'草稿已保留 · 仅在此浏览器，不上传。':'草稿未保存：浏览器存储不可用或空间不足。当前仍可继续玩。';
+}
+$('forget-draft').addEventListener('click',()=>{
+  $('draft-status').textContent=clearDraft(DRAFT_KEYS.pixel)?'已删除本地草稿，当前画纸不变；继续操作会重新保存。':'无法删除本地草稿，请在浏览器设置中清理此站点数据。';
+});
 
 function draw(ctx, data, showCursor = false) {
   if (!ctx) return;
@@ -69,7 +77,7 @@ function commit(next, message) {
   if (equal(pixels, next)) { render(); return; }
   cancelSend(); history.push(pixels); if (history.length > 30) history.shift(); pixels = next;
   for (const name of ['cat', 'heart', 'noise', 'blank']) $('preset-' + name).setAttribute('aria-pressed', equal(pixels, preset(name)));
-  $('status').textContent = message; render();
+  $('status').textContent = message; render(); saveDraft();
 }
 function cell(event) {
   const box = editor.getBoundingClientRect();
@@ -95,7 +103,7 @@ editor.addEventListener('focus', () => { focused = true; render(); });
 editor.addEventListener('blur', () => { focused = false; cancelStroke(); render(); });
 editor.addEventListener('keydown', event => {
   if (!available() || gesture || event.ctrlKey || event.metaKey || event.altKey) return;
-  if (/^[1-4]$/.test(event.key)) color = Number(event.key) - 1;
+  if (/^[1-4]$/.test(event.key)) { color = Number(event.key) - 1; saveDraft(); }
   else if (event.key.startsWith('Arrow')) {
     const delta = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
     if (!delta) return;
@@ -105,7 +113,7 @@ editor.addEventListener('keydown', event => {
   } else return;
   event.preventDefault(); $('cursor-status').textContent = `第 ${cursor.y + 1} 行，第 ${cursor.x + 1} 列；${names[color]}画笔`; render();
 });
-for (let i = 0; i < 4; i++) $('color-' + i).addEventListener('click', () => { cancelStroke(); color = i; render(); });
+for (let i = 0; i < 4; i++) $('color-' + i).addEventListener('click', () => { cancelStroke(); color = i; render(); saveDraft(); });
 for (const name of ['cat', 'heart', 'noise', 'blank']) $('preset-' + name).addEventListener('click', () => {
   if (!available()) return; cancelStroke(); commit(preset(name), '换好画纸了。这次修改也可以撤销。');
 });
@@ -113,7 +121,7 @@ $('undo').addEventListener('click', () => {
   if (!available() || !history.length) return;
   cancelStroke(); cancelSend(); pixels = history.pop(); $('status').textContent = '已撤销一次修改。';
   for (const name of ['cat', 'heart', 'noise', 'blank']) $('preset-' + name).setAttribute('aria-pressed', equal(pixels, preset(name)));
-  render();
+  render(); saveDraft();
 });
 $('send').addEventListener('click', () => {
   if (!available() || job) return;
@@ -135,7 +143,7 @@ $('send').addEventListener('click', () => {
     const matches = decoded.reduce((n, value, i) => n + (value === snapshot[i]), 0);
     if (matches !== 256) { $('status').textContent = '还原校验未通过，保留上次来信。'; draw(receivedContext, received?.pixels); render(); return; }
     received = { pixels: decoded, bytes: encoded.packet.length }; draw(receivedContext, decoded);
-    $('status').textContent = `送达了！${encoded.packet.length} 字节，256 格一格不少。`; render();
+    $('status').textContent = `送达了！${encoded.packet.length} 字节，256 格一格不少。`; render(); saveDraft();
   }
   $('status').textContent = '正在模拟寄送，收件端只从真实字节包解码。'; render();
   if (motion.matches) advance(0); else frame = requestAnimationFrame(advance);
@@ -149,8 +157,15 @@ $('theme').addEventListener('click', () => {
   const dark = document.documentElement.dataset.theme !== 'dark'; document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   $('theme').setAttribute('aria-label', dark ? '切换浅色模式' : '切换深色模式');
 });
-$('preset-cat').setAttribute('aria-pressed', 'true');
-draw(receivedContext, null); render();
+const draft=readDraft(DRAFT_KEYS.pixel,validatePixelDraft);
+if(draft.value){
+  ({pixels,color,history}=draft.value);
+  if(draft.value.received)received={pixels:draft.value.received,bytes:encode(draft.value.received).packet.length};
+  $('status').textContent='画纸和上次来信已恢复。可以接着画，或重新寄出。';
+}
+$('draft-status').textContent=draftMessage(draft.status);
+for(const name of ['cat','heart','noise','blank'])$('preset-'+name).setAttribute('aria-pressed',equal(pixels,preset(name)));
+draw(receivedContext, received?.pixels); render();
 if (!context || !receivedContext) {
   $('status').textContent = '此浏览器无法打开 Canvas 画布，请换用支持 Canvas 的浏览器。';
   $('send').disabled = true; $('undo').disabled = true; editor.setAttribute('aria-disabled', 'true');

@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { memoryStorage } from './storage-helper.mjs';
 let serial = 0;
-async function boot({ reduced = false, missingCanvas = false } = {}) {
+async function boot({ reduced = false, missingCanvas = false, storage = memoryStorage() } = {}) {
   const html = await readFile(new URL('../pixel.html', import.meta.url), 'utf8').catch(() => '');
   assert.ok(html.includes('id="editor"'), 'playable pixel page must exist');
   class Element extends EventTarget {
@@ -17,7 +18,7 @@ async function boot({ reduced = false, missingCanvas = false } = {}) {
   const doc = Object.assign(new EventTarget(), { hidden: false, documentElement: new Element(), getElementById: id => els.get(id) });
   const media = Object.assign(new EventTarget(), { matches: reduced });
   const frames = new Map(); let seq = 0;
-  const globals = { document: doc, window: new EventTarget(), matchMedia: () => media, requestAnimationFrame: fn => { frames.set(++seq, fn); return seq; }, cancelAnimationFrame: id => frames.delete(id) };
+  const globals = { document: doc, window: Object.assign(new EventTarget(), { localStorage: storage }), matchMedia: () => media, requestAnimationFrame: fn => { frames.set(++seq, fn); return seq; }, cancelAnimationFrame: id => frames.delete(id) };
   const old = new Map(Object.keys(globals).map(k => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
   const restore = () => { for (const [k, d] of old) if (d) Object.defineProperty(globalThis, k, d); else delete globalThis[k]; };
   Object.assign(globalThis, globals);
@@ -31,6 +32,26 @@ async function boot({ reduced = false, missingCanvas = false } = {}) {
     pixels: id => [...els.get(id).ctx.pixels.values()],
   };
 }
+test('reload restores drawing, brush, undo and only the last successfully delivered postcard',async()=>{
+ const storage=memoryStorage();let drawing,received;
+ const u=await boot({storage});try{
+  u.click('color-3');u.key(' ');u.click('send');u.finish();received=u.pixels('receiver');
+  u.click('preset-heart');drawing=u.pixels('editor');u.click('send');
+  const writes=storage.writes;u.pointer('pointerdown',1,1);u.pointer('pointermove',230,1);u.pointer('pointercancel',230,1);
+  assert.equal(storage.writes,writes,'incomplete strokes and delivery must not be saved');u.hide();
+ }finally{u.restore();}
+ const v=await boot({storage});try{
+  assert.deepEqual(v.pixels('editor'),drawing);assert.deepEqual(v.pixels('receiver'),received);
+  assert.equal(v.els.get('color-3').getAttribute('aria-pressed'),'true');assert.equal(v.frames.size,0);
+  assert.match(v.els.get('receipt').textContent,/上次|待重新/);assert.match(v.els.get('draft-status').textContent,/恢复/);
+  v.click('undo');assert.deepEqual(v.pixels('editor'),received);
+  v.click('forget-draft');assert.equal(storage.records.size,0);assert.deepEqual(v.pixels('editor'),received);v.hide();assert.equal(storage.records.size,0);
+ }finally{v.restore();}
+});
+test('unavailable storage leaves the postcard playable with an honest warning',async()=>{
+ const storage={getItem(){throw Error('blocked');},setItem(){throw Error('quota');},removeItem(){throw Error('blocked');}};
+ const u=await boot({storage,reduced:true});try{u.click('preset-heart');u.click('send');assert.deepEqual(u.pixels('receiver'),u.pixels('editor'));assert.match(u.els.get('draft-status').textContent,/无法|未保存/);}finally{u.restore();}
+});
 test('the drawing-side parcel size follows committed edits, cancellation and undo', async () => {
   const u = await boot(); try {
     const badge = u.els.get('drawing-size'); assert.ok(badge, 'parcel size must be visible beside the drawing');

@@ -12,6 +12,7 @@ test('decorative mining orbits are clipped without a programmatically scrollable
  assert.match(css,/\.starfield\{[^}]*overflow:clip/);
 });
 const files=['app.mjs','core.mjs','data.mjs','evolution-core.mjs','evolution.css','evolution.html','evolution.mjs','firefly-core.mjs','firefly.css','firefly.html','firefly.mjs','index.html','mining-core.mjs','mining.css','mining.html','mining.mjs','navigation.css','navigation.mjs','neural-core.mjs','neural.css','neural.html','neural.mjs','pathfinding-core.mjs','pathfinding.css','pathfinding.html','pathfinding.mjs','pixel-core.mjs','pixel.css','pixel.html','pixel.mjs','sand-core.mjs','sand.css','sand.html','sand.mjs','style.css'];
+files.push('local-drafts.mjs');files.sort();
 test('server serves only runtime assets with correct types, headers and methods',async()=>{
  const server=createAppServer(root);
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));

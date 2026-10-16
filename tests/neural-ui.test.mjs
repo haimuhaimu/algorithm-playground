@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {memoryStorage} from './storage-helper.mjs';
 let serial=0;
-async function boot({noCanvas=false,hidden=false}={}){
+async function boot({noCanvas=false,hidden=false,storage=memoryStorage()}={}){
  const html=await readFile(new URL('../neural.html',import.meta.url),'utf8').catch(()=>'');
  assert.ok(html.includes('id="field"'),'new playable page must exist');
  const frames=new Map();let next=0;
@@ -19,7 +20,7 @@ async function boot({noCanvas=false,hidden=false}={}){
  const groups={};
  for(const key of ['tool','preset','guess'])groups[key]=[...html.matchAll(new RegExp('data-'+key+'="([^"]+)"','g'))].map(([,v])=>Object.assign(new Element(),{dataset:{[key]:v}}));
  const doc=Object.assign(new EventTarget(),{hidden,documentElement:new Element(),getElementById:id=>elements.get(id),querySelectorAll:s=>groups[s.match(/data-(\w+)/)?.[1]]??[]});
- const globals={document:doc,window:new EventTarget(),matchMedia:()=>Object.assign(new EventTarget(),{matches:false}),getComputedStyle:()=>({getPropertyValue:()=>'#25271f'}),requestAnimationFrame:fn=>{frames.set(++next,fn);return next;},cancelAnimationFrame:id=>frames.delete(id)};
+ const globals={document:doc,window:Object.assign(new EventTarget(),{localStorage:storage}),matchMedia:()=>Object.assign(new EventTarget(),{matches:false}),getComputedStyle:()=>({getPropertyValue:()=>'#25271f'}),requestAnimationFrame:fn=>{frames.set(++next,fn);return next;},cancelAnimationFrame:id=>frames.delete(id)};
  const old=new Map(Object.keys(globals).map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
  const restore=()=>{for(const[k,d]of old)if(d)Object.defineProperty(globalThis,k,d);else delete globalThis[k];};
  Object.assign(globalThis,globals);
@@ -31,6 +32,35 @@ async function boot({noCanvas=false,hidden=false}={}){
   frame(){const first=frames.entries().next().value;if(first){frames.delete(first[0]);first[1](100);}},
   hide(){doc.hidden=true;fire(doc,'visibilitychange');},show(){doc.hidden=false;fire(doc,'visibilitychange');}};
 }
+test('reload restores committed custom work, trained model, learning rate and undo, always paused',async()=>{
+ const storage=memoryStorage();let expected;
+ const u=await boot({storage});try{
+  u.choose('tool','0');u.pointer('pointerdown');u.pointer('pointerup');u.change('rate','0.6');u.click('fast');
+  for(let i=0;i<20;i++)u.frame();
+  expected=['epoch','accuracy','loss','point-count','test-accuracy'].map(id=>u.elements.get(id).textContent);
+  const before=storage.writes;u.pointer('pointerdown',300,100);u.pointer('pointermove',500,100);u.pointer('pointercancel',500,100);
+  assert.equal(storage.writes,before,'transient strokes are not saved');
+ }finally{u.restore();}
+ const v=await boot({storage});try{
+  assert.deepEqual(['epoch','accuracy','loss','point-count','test-accuracy'].map(id=>v.elements.get(id).textContent),expected);
+  assert.equal(v.elements.get('rate').value,'0.6');assert.equal(v.frames.size,0);
+  assert.match(v.elements.get('draft-status').textContent,/恢复/);
+  v.click('undo');assert.equal(v.elements.get('dataset-name').textContent,'四个小岛');
+ }finally{v.restore();}
+});
+test('hiding checkpoints training, deleting the draft keeps current work and does not resave on hide',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  u.click('play');u.frame();u.hide();assert.equal(u.elements.get('epoch').textContent,'8');u.show();
+  assert.ok(storage.records.size);assert.ok(u.elements.get('forget-draft'));
+  u.click('forget-draft');assert.equal(storage.records.size,0);assert.equal(u.elements.get('epoch').textContent,'8');
+  u.hide();assert.equal(storage.records.size,0);
+ }finally{u.restore();}
+ const v=await boot({storage});try{assert.equal(v.elements.get('epoch').textContent,'0');}finally{v.restore();}
+});
+test('storage failure cannot prevent learning and never claims a draft was saved',async()=>{
+ const storage={getItem(){throw Error('denied');},setItem(){throw Error('quota');},removeItem(){throw Error('denied');}};
+ const u=await boot({storage});try{u.click('step');assert.equal(u.elements.get('epoch').textContent,'1');assert.match(u.elements.get('draft-status').textContent,/无法|未保存/);}finally{u.restore();}
+});
 test('comparison action changes only the model, retaining the same question and clearing the old prediction',async()=>{
  const ui=await boot();try{
   const compare=ui.elements.get('compare-model');assert.ok(compare,'a nearby model comparison action must exist');
