@@ -59,3 +59,15 @@ test('keyboard choices ignore repeats, modifiers, hidden page and help',async()=
   u.els.get('guide').close();u.key('3');assert.equal(u.els.get('remaining').textContent,'29');assert.match(u.els.get('sample-2').textContent,/1 次/);
  }finally{u.restore();}
 });
+
+test('results shortcut appears only after the final arrival and resets for a new attempt',async()=>{
+ const u=await boot();try{
+  assert.equal(u.els.get('view-results')?.hidden,true);
+  for(let i=0;i<29;i++){u.click('planet-'+i%5);u.finish();}
+  u.click('planet-0');assert.equal(u.els.get('view-results').hidden,true);
+  u.finish();assert.equal(u.els.get('view-results').hidden,false);
+  u.click('replay');assert.equal(u.els.get('view-results').hidden,true);
+  for(let i=0;i<30;i++){u.click('planet-0');u.finish();}
+  u.click('new');assert.equal(u.els.get('view-results').hidden,true);
+ }finally{u.restore();}
+});

@@ -21,12 +21,12 @@
    <div class="race-column">
     <div class="raceboard">
      <div class="race-tools"><span id="track-name">大回环</span><div role="group" aria-label="赛道操作"><button data-mode="watch" aria-pressed="true">看比赛</button><button data-mode="draw" aria-pressed="false">画赛道</button><button data-mode="obstacle" aria-pressed="false">放路障</button></div></div>
+    <p id="status" class="race-status" role="status">先看一轮，再试着给它们加个路障。</p>
      <canvas id="race" width="900" height="480" tabindex="0" role="application" aria-label="遗传赛车互动画布" aria-describedby="race-help cursor-status">需要支持 Canvas 的浏览器。</canvas>
      <div class="race-timeline"><span id="race-clock">0.0 秒</span><span id="race-state">这一代正在尝试</span></div>
      <div class="race-transport"><button class="primary" id="play" aria-pressed="true">暂停</button><button id="next">下一代</button><button id="evolve">快进 10 代</button><label for="speed">速度<select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option></select></label></div>
     </div>
     <div class="race-results" aria-label="当前比赛结果"><div><span>第几代</span><strong id="generation">1</strong></div><div><span>已经跑完</span><strong id="finish-count">0 / 48</strong></div><div><span>本代最快</span><strong class="time-value" id="best-time">未到终点</strong></div><div class="race-history"><span>历代最佳表现 <small>更高更好</small></span><canvas id="history" width="320" height="100" aria-label="已完成各代的最佳适应度曲线"></canvas></div></div>
-    <p id="status" class="race-status" role="status">先看一轮，再试着给它们加个路障。</p>
    </div>
    <aside class="race-controls" aria-label="进化控制">
     <h2>先选一条路</h2>

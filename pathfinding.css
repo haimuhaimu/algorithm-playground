@@ -16,3 +16,19 @@
  .cell{scroll-margin-top:205px;scroll-margin-bottom:20px}.arena{scroll-margin-top:205px}
 }
 @media(prefers-reduced-motion:reduce){.cell,button{transition:none}}
+/* Fold only the editing tools, leaving playback within reach of both boards. */
+.map-editing>summary{cursor:pointer;font-size:12px;min-height:44px;align-content:center}
+.map-editing>summary span{float:right;color:var(--good);margin-right:8px}
+.map-editing[open]>summary{margin-bottom:8px}
+.map-editing .tool-row{border-bottom:0}
+.map-toolbar .play-row{border-top:1px solid var(--line)}
+@media(min-width:761px){.map-editing>summary{font-size:11px;min-height:32px}}
+@media(max-width:760px){
+ .map-toolbar .map-presets button,.map-toolbar .drawing-tools button,.map-toolbar .clear-button,.map-toolbar .secondary-button,.map-toolbar .play-button,.map-toolbar select{min-height:44px}
+ .map-toolbar .drawing-tools{width:100%;flex:auto}
+ .map-toolbar .clear-button{margin-left:auto}
+ .map-toolbar .play-row{padding-top:8px}
+ .map-toolbar:has(.map-editing[open]){position:static}
+ .cell{scroll-margin-top:175px}
+ .arena{scroll-margin-top:175px}
+}

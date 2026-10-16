@@ -3,3 +3,15 @@
 @media(max-width:760px){.firefly-main{padding:0 18px}.firefly-intro{padding:23px 0 20px}.firefly-intro h1{font-size:28px;letter-spacing:-.8px}.firefly-intro h1 span{display:block}.firefly-intro>p:last-child{font-size:11px}.firefly-intro .eyebrow{font-size:9px}.chorus-lab{display:flex;flex-direction:column;gap:12px}.habitat-column,.chorus-controls{width:100%}.habitat-heading{padding:12px 13px 0;font-size:10px}.habitat-heading>span:last-child{font-size:10px}.field-caption{font-size:10px;padding-bottom:10px}.chorus-transport button{min-height:38px;padding:8px 10px;font-size:11px}.chorus-transport .primary{min-width:64px}.chorus-transport label{font-size:10px;margin-left:auto}.chorus-observation{grid-template-columns:90px 86px minmax(0,1fr);gap:10px;padding:12px 0}.coherence-value strong{font-size:30px}.history-view{padding-left:10px}.history-view>div{display:block}.history-view small{display:block;margin-top:2px}.history-view canvas{height:48px;margin-top:4px}.chorus-presets{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0 18px}.chorus-presets button{padding:10px 5px;text-align:center}.chorus-presets b{font-size:11px}.chorus-presets small{font-size:8px}.chorus-sliders{grid-template-columns:1fr 1fr;gap:14px 18px}.chorus-sliders label:last-child{grid-column:1/-1}.chorus-sliders label{font-size:11px}.chorus-sliders small{font-size:9px}.touch-modes{margin-top:18px;padding-top:15px}.touch-modes>div{margin-top:10px}.touch-modes button{font-size:12px}.touch-modes p{min-height:20px}.chorus-tip{padding-top:9px;font-size:11px}.field-help{padding-top:14px}.chorus-notes{font-size:11px}.chorus-controls h2{font-size:12px}}
 @media(max-width:390px){.chorus-transport label{margin-left:0;min-height:26px}.chorus-transport{gap:6px}.chorus-observation{grid-template-columns:82px 75px minmax(0,1fr);gap:8px}.phase-view canvas{width:70px;height:70px}.phase-view span{font-size:8px}}
 @media(max-height:520px) and (min-width:761px){.firefly-intro{padding:16px 0}.firefly-intro h1{font-size:27px}.chorus-lab{grid-template-columns:minmax(0,1fr) 230px}.habitat-column{max-width:650px}.chorus-transport label{margin-left:0}}
+/* Direct interventions belong with the canvas, not below the settings panel. */
+.habitat .touch-modes{margin:0;padding:10px 14px 0;border:0}
+.habitat .touch-modes h2{display:none}
+.habitat .touch-modes>div{display:flex;gap:8px;margin:0}
+.habitat .touch-modes button{flex:1;min-height:44px;border:1px solid #78836c;background:transparent;color:#e8eddb;border-radius:6px;font-size:12px}
+.habitat .touch-modes button[aria-pressed=true]{background:#dfe99b;color:#25301e;border-color:#dfe99b}
+.habitat .touch-modes kbd{color:inherit}
+.habitat .touch-modes p{font-size:11px;line-height:1.6;color:#d2dcc6;margin:7px 0;min-height:18px}
+.near-play-status{font-size:11px;color:var(--muted);padding:10px 0 0;min-height:28px}
+.chorus-transport button,.chorus-transport label{min-height:44px}
+.chorus-transport label{display:flex;align-items:center}
+.chorus-sliders input{min-height:30px}

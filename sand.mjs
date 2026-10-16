@@ -6,6 +6,8 @@ let scene='splitter',world=createWorld(scene),material=SAND,radius=2,stroke=null
 let playing=!matchMedia('(prefers-reduced-motion:reduce)').matches,raf=null,lastTick=performance.now(),lastPour=0;
 const unit=canvas.width/world.width;
 function render(){
+ const brushHint=names[material]+' · '+sizes[radius]+'笔刷'+(material===EMPTY?'，拖动擦除':material===WALL?'，拖动筑墙':'，按住持续倒下');
+ if($('brush-preview').textContent!==brushHint)$('brush-preview').textContent=brushHint;
  ctx.fillStyle='#152023';ctx.fillRect(0,0,canvas.width,canvas.height);
  ctx.strokeStyle='#243236';ctx.lineWidth=1;ctx.beginPath();
  for(let x=0;x<=world.width;x+=6){ctx.moveTo(x*unit,0);ctx.lineTo(x*unit,canvas.height);}

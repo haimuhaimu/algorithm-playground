@@ -27,13 +27,14 @@
     </div></div>
     <label class="brush-control" for="brush">笔刷大小 <output id="brush-size">中</output><input id="brush" type="range" min="0" max="4" value="2" aria-valuetext="中，半径 2 格"></label>
     <div class="scene-group"><h2><span>02</span> 换个小世界</h2><div class="scene-buttons" role="group" aria-label="场景"><button data-scene="splitter" aria-pressed="true">分流器</button><button data-scene="hourglass" aria-pressed="false">沙漏</button><button data-scene="empty" aria-pressed="false">空白</button></div></div>
-    <div class="lab-suggestion"><span class="eyebrow">动手试一试</span><p id="scene-tip">往屋顶尖端倒水，再擦掉一小段斜坡。两边的去向会怎么变？</p><p class="paint-rule">沙和水只填空格；画墙会替换材料。想放走它们，就用橡皮开一道口。</p></div>
    </aside>
    <div class="sand-stage">
     <div class="stage-top"><span><i class="live-dot"></i> YOUR LITTLE WORLD</span><span id="tick-count">第 0 拍</span></div>
+    <p id="brush-preview" class="brush-preview" aria-live="polite">沙子 · 中笔刷</p>
     <div class="canvas-wrap"><canvas id="sandbox" width="864" height="576" tabindex="0" role="application" aria-label="可绘画的落沙实验画布" aria-describedby="canvas-help cursor-status">浏览器需要支持 Canvas 才能显示落沙画布。</canvas><span class="canvas-caption" aria-hidden="true">按住倒下 · 拖动改变世界</span></div>
     <div class="transport" aria-label="播放控制"><button id="play" class="sand-play" aria-pressed="true">暂停 <span aria-hidden="true">Ⅱ</span></button><button id="step">走一拍</button><button id="reset">重置场景</button><label for="speed"><span>速度</span><select id="speed" aria-label="速度"><option value="100">慢速</option><option value="40" selected>正常</option><option value="16">快速</option></select></label></div>
     <div class="stage-bottom"><p id="lab-status" role="status">运行中 · 你可以直接画</p><div class="particle-counts" aria-label="当前材料数量"><span>沙 <b id="sand-count">0</b></span><span>水 <b id="water-count">0</b></span><span>墙 <b id="wall-count">0</b></span></div></div>
+    <div class="lab-suggestion"><span class="eyebrow">动手试一试</span><p id="scene-tip">往屋顶尖端倒水，再擦掉一小段斜坡。两边的去向会怎么变？</p><p class="paint-rule">沙和水只填空格；画墙会替换材料。想放走它们，就用橡皮开一道口。</p></div>
    </div>
   </section>
   <p class="canvas-help" id="canvas-help">鼠标或手指在画布上绘画，画布外可滚动。键盘：Tab 进入画布，方向键移动，空格 / Enter 落笔；1–4 换材料。</p><p class="sr-only" id="cursor-status" aria-live="polite"></p>
