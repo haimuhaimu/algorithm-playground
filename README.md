@@ -4,7 +4,7 @@
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
 
-Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, and a blind-box mining game about exploration vs exploitation. No account required.
+Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, a blind-box mining game about exploration vs exploitation, and a pixel postcard editor with real lossless Huffman encoding. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
 
@@ -18,7 +18,9 @@ Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs 
 
 第六个实验是「涂鸦训练场」：画两类样本，让一个小神经网络现场学习。可比较直线与弯曲分界、添加反例、看新题正确率；学习方式借鉴 [GenAI Learning OS](https://haimuhaimu.github.io/genai-learning-os/)，实现与文案独立创作。[直接玩涂鸦训练场 →](https://haimuhaimu.github.io/algorithm-playground/neural.html)
 
-第七个实验是「盲盒探矿」：30 次探测、5 颗未知星球，玩完再和 greedy、ε-greedy、UCB1 比一比。开局预生成同一套潜在结果，不安排算法必胜；复盘局明确标记，不冒充首次盲测。原生 CSS 插画，无新依赖或第三方素材。七个实验可从导航切换。[直接玩盲盒探矿 →](https://haimuhaimu.github.io/algorithm-playground/mining.html)
+第七个实验是「盲盒探矿」：30 次探测、5 颗未知星球，玩完再和 greedy、ε-greedy、UCB1 比一比。开局预生成同一套潜在结果，不安排算法必胜；复盘局明确标记，不冒充首次盲测。原生 CSS 插画，无新依赖或第三方素材。[直接玩盲盒探矿 →](https://haimuhaimu.github.io/algorithm-playground/mining.html)
+
+第八个实验是「像素邮局」：在 16×16 四色画纸上涂画，以真实 Huffman 字节包模拟寄送并逐格解码。灵感连接学习页的熵与信息量；支持触摸、键盘、30 次撤销与减少动画。包大小包含编码树和补齐，不冒充 PNG 文件体积；相同颜色频率的不同图案大小相同。八个实验可从导航切换。[直接玩像素邮局 →](https://haimuhaimu.github.io/algorithm-playground/pixel.html)
 
 ## 本地运行
 
@@ -36,7 +38,7 @@ npm start
 npm run verify
 ```
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有二十九个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`，探矿入口为 `mining.html`。
+此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只有三十三个运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`，探矿入口为 `mining.html`，像素入口为 `pixel.html`。
 
 ## 在线演示与更新
 
@@ -143,6 +145,8 @@ npm run verify
 - `mining-core.mjs`：可复现的多臂老虎机环境、探矿记录与三种对照策略。
 - `mining.html` / `mining.css` / `mining.mjs`：盲盒探矿界面、探测动画与复盘。
 - `scripts/`：只提供白名单静态文件的本地服务和打包流程。
+- `pixel-core.mjs`：确定性 Huffman 编码、独立字节解码、像素预设与线段绘画。
+- `pixel.html` / `pixel.css` / `pixel.mjs`：像素邮局、画纸编辑、打包解释与无损收件校验。
 - `tests/`：Node 内置测试，无外部测试依赖。
 
 已验证桌面浏览器及响应式窗口模拟，未完成真实手机/原生容器验收。刷新页面会重置会话。
