@@ -19,10 +19,14 @@
     <div class="local-draft"><p id="draft-status" role="status">草稿仅在此浏览器保留，不上传。</p><button id="forget-draft" type="button">删除本地草稿</button></div>
     <div class="drawing-board">
      <div class="drawing-toolbar"><strong id="dataset-name">四个小岛</strong><div role="group" aria-label="画布工具"><button data-tool="0" aria-pressed="false"><i class="class-a"></i>画圆点</button><button data-tool="1" aria-pressed="false"><i class="class-b"></i>画方点</button><button data-tool="erase" aria-pressed="false">擦除</button><button data-tool="probe" aria-pressed="true">探针</button></div></div>
-     <canvas id="field" width="900" height="560" tabindex="0" role="application" aria-label="两类样本与模型分界画布" aria-describedby="canvas-help probe-result">需要支持 Canvas 的浏览器。</canvas>
+     <div class="neural-stage"><canvas id="field" width="900" height="560" tabindex="0" role="application" aria-label="两类样本与模型分界画布" aria-describedby="canvas-help probe-result">需要支持 Canvas 的浏览器。</canvas></div>
      <div class="drawing-caption"><span id="probe-result">点一下画面，看看它会怎么猜。</span><span id="point-count">48 / 160 个点</span></div>
-     <div class="prediction"><div class="prediction-question"><h2>先猜一下 <small>可跳过</small></h2><p><span id="prediction-model">会拐弯 · 8 个神经元</span>，能分开这两类吗？</p></div><div class="guess-options" role="group" aria-label="训练前预测"><button data-guess="yes" aria-pressed="false">我猜能</button><button data-guess="no" aria-pressed="false">可能分不开</button></div><p id="prediction-result">可跳过。先留一个判断，再看实验。</p></div>
+     <div class="training-settings" role="group" aria-label="模型与训练步子">
+      <label for="model">用什么脑袋来想？<select id="model"><option value="linear">直线脑袋</option><option value="network" selected>会拐弯 · 8 神经元</option></select><small>题目不变，成绩留档。未训练前切回可恢复上轮。</small></label>
+      <label for="rate">每次改多少<select id="rate"><option value="0.03">慢慢来 · 0.03</option><option value="0.15" selected>稳着走 · 0.15</option><option value="0.6">迈大步 · 0.60</option></select><small>步子大不一定学得更好。</small></label>
+     </div>
      <div class="training-actions"><button class="primary" id="play" aria-pressed="false">开始训练</button><button id="step">走一步</button><button id="fast">快进 500 步</button><button id="undo" disabled>撤销一笔</button></div>
+     <div class="prediction"><div class="prediction-question"><h2>先猜一下 <small>可跳过</small></h2><p><span id="prediction-model">会拐弯 · 8 个神经元</span>，能分开这两类吗？</p></div><div class="guess-options" role="group" aria-label="训练前预测"><button data-guess="yes" aria-pressed="false">我猜能</button><button data-guess="no" aria-pressed="false">可能分不开</button></div><p id="prediction-result">可跳过。先留一个判断，再看实验。</p></div>
     </div>
     <div class="training-stats" aria-label="实际计算结果"><div><span>训练步数</span><strong id="epoch">0</strong></div><div><span>练习题正确率</span><strong id="accuracy">尚未计算</strong></div><div><span>新题正确率 <small>120 道</small></span><strong id="test-accuracy">尚未计算</strong></div><div class="loss-chart"><span>犯错代价 <b id="loss">待计算</b></span><canvas id="history" width="320" height="80" aria-label="本轮真实训练损失曲线"></canvas></div></div>
     <p class="neural-status" id="status" role="status">按「开始训练」，让分界线慢慢长出来。</p>
@@ -38,8 +42,6 @@
    <aside class="neural-controls" aria-label="实验设置">
     <h2>换一道题</h2>
     <div class="dataset-presets" role="group" aria-label="预设题目"><button data-preset="diagonal" aria-pressed="false"><b>一分为二</b><span>一条直线就够吗？</span></button><button data-preset="islands" aria-pressed="true"><b>四个小岛</b><span>同类隔着对角线</span></button><button data-preset="ring" aria-pressed="false"><b>甜甜圈</b><span>里面和外面不一样</span></button></div>
-    <label for="model">用什么脑袋来想？<select id="model"><option value="linear">直线脑袋 · 线性模型</option><option value="network" selected>会拐弯 · 8 个神经元</option></select><small>题目不变，上轮成绩留档；尚未训练时切回，可恢复上轮模型。</small></label>
-    <label for="rate">每次改多少<select id="rate"><option value="0.03">慢慢来 · 0.03</option><option value="0.15" selected>稳着走 · 0.15</option><option value="0.6">迈大步 · 0.60</option></select><small>步子大不一定学得更好。</small></label>
     <div class="reset-actions"><button id="reset">重新训练</button><button id="clear">空白画布</button></div>
    </aside>
   </section>

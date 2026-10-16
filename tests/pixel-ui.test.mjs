@@ -32,6 +32,59 @@ async function boot({ reduced = false, missingCanvas = false, storage = memorySt
     pixels: id => [...els.get(id).ctx.pixels.values()],
   };
 }
+test('restoring an unchanged delivered draft restores actual wire bits without sending again',async()=>{
+ const storage=memoryStorage();let bits,count;
+ const u=await boot({storage,reduced:true});try{
+  u.click('preset-blank');u.click('send');
+  bits=u.els.get('wire-bits').textContent;count=u.els.get('wire-count').textContent;
+  assert.match(bits,/^[01]+$/);assert.match(count,/264/);
+ }finally{u.restore();}
+ const v=await boot({storage});try{
+  assert.equal(v.els.get('wire-bits').textContent,bits);
+  assert.equal(v.els.get('wire-count').textContent,count);
+  assert.equal(v.els.get('wire-progress').style.width,'100%');
+  assert.match(v.els.get('receipt').textContent,/256.*256/);
+  assert.equal(v.frames.size,0);
+ }finally{v.restore();}
+});
+test('edited draft shows its unsent packet while retaining the previous receipt; undo reconciles both',async()=>{
+ const storage=memoryStorage();let originalBits;
+ const u=await boot({storage,reduced:true});try{
+  u.click('preset-blank');u.click('send');originalBits=u.els.get('wire-bits').textContent;
+  u.click('preset-noise');
+  assert.match(u.els.get('wire-count').textContent,/待寄出.*528/);
+  assert.notEqual(u.els.get('wire-bits').textContent,originalBits);
+  assert.match(u.els.get('wire-bits').textContent,/^[01]+$/);
+  assert.equal(u.els.get('wire-progress').style.width,'0%');
+ }finally{u.restore();}
+ const v=await boot({storage});try{
+  assert.match(v.els.get('receipt').textContent,/上次.*画纸已改/);
+  assert.match(v.els.get('wire-count').textContent,/待寄出.*528/);
+  assert.match(v.els.get('wire-caption').textContent,/收件处保留上次来信/,'receipt location must stay meaningful in stacked phone layouts');
+  assert.equal(v.frames.size,0);
+  v.click('undo');assert.equal(v.els.get('wire-bits').textContent,originalBits);
+  assert.match(v.els.get('wire-count').textContent,/已送达.*264/);
+  assert.equal(v.els.get('wire-progress').style.width,'100%');
+ }finally{v.restore();}
+});
+test('cancelled resend returns to current unsent packet and cannot replace the prior receipt',async()=>{
+ const u=await boot();try{
+  u.click('preset-blank');u.click('send');u.finish();const old=u.pixels('receiver');
+  u.click('preset-noise');u.click('send');const stale=[...u.frames.values()][0];u.hide();
+  assert.match(u.els.get('wire-count').textContent,/待寄出.*528/);
+  assert.match(u.els.get('wire-bits').textContent,/^[01]+$/);
+  stale(9999);assert.deepEqual(u.pixels('receiver'),old);assert.equal(u.frames.size,0);
+ }finally{u.restore();}
+});
+test('restoring a draft without any receipt never claims a previous delivery',async()=>{
+ const storage=memoryStorage();const u=await boot({storage});try{u.click('preset-noise');}finally{u.restore();}
+ const v=await boot({storage});try{
+  assert.match(v.els.get('receipt').textContent,/没有来信/);
+  assert.doesNotMatch(v.els.get('status').textContent,/上次来信已恢复/);
+  assert.match(v.els.get('wire-count').textContent,/待寄出.*528/);
+  assert.equal(v.frames.size,0);
+ }finally{v.restore();}
+});
 test('reload restores drawing, brush, undo and only the last successfully delivered postcard',async()=>{
  const storage=memoryStorage();let drawing,received;
  const u=await boot({storage});try{

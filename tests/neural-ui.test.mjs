@@ -3,6 +3,26 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {memoryStorage} from './storage-helper.mjs';
 let serial=0;
+test('canvas layout never overrides its intrinsic proportions with an independent height',async()=>{
+ const css=await readFile(new URL('../neural.css',import.meta.url),'utf8');
+ const rules=[...css.matchAll(/#field\s*\{([^}]+)\}/g)].map(([,body])=>body);
+ assert.ok(rules.length);
+ for(const body of rules){
+  const height=body.match(/(?:^|;)\s*height\s*:\s*([^;]+)/)?.[1];
+  if(height)assert.equal(height.trim(),'auto','canvas height must follow its width, including desktop overrides');
+  assert.doesNotMatch(body,/aspect-ratio\s*:\s*auto/);
+ }
+});
+test('model and learning-rate controls occur once beside the canvas, before training and results',async()=>{
+ const html=await readFile(new URL('../neural.html',import.meta.url),'utf8');
+ const canvas=html.indexOf('id="field"'),actions=html.indexOf('class="training-actions"');
+ for(const id of ['model','rate']){
+  assert.equal([...html.matchAll(new RegExp('id="'+id+'"','g'))].length,1);
+  const control=html.indexOf('id="'+id+'"');
+  assert.ok(control>canvas&&control<actions,id+' must stay between canvas and training actions');
+ }
+ assert.ok(actions<html.indexOf('class="prediction"'),'optional guess must not separate settings from training');
+});
 async function boot({noCanvas=false,hidden=false,storage=memoryStorage()}={}){
  const html=await readFile(new URL('../neural.html',import.meta.url),'utf8').catch(()=>'');
  assert.ok(html.includes('id="field"'),'new playable page must exist');
