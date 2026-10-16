@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {memoryStorage} from './storage-helper.mjs';
+import {DRAFT_KEYS} from '../local-drafts.mjs';
 let serial=0;
 test('canvas layout never overrides its intrinsic proportions with an independent height',async()=>{
  const css=await readFile(new URL('../neural.css',import.meta.url),'utf8');
@@ -52,6 +53,57 @@ async function boot({noCanvas=false,hidden=false,storage=memoryStorage()}={}){
   frame(){const first=frames.entries().next().value;if(first){frames.delete(first[0]);first[1](100);}},
   hide(){doc.hidden=true;fire(doc,'visibilitychange');},show(){doc.hidden=false;fire(doc,'visibilitychange');}};
 }
+test('undoing a preset change restores exact custom samples and cancels obsolete training',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});
+ const saved=()=>JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value;
+ try{
+  u.choose('tool','0');u.pointer('pointerdown',240,110);u.pointer('pointerup',240,110);
+  const original=saved().points;
+  u.click('step');u.click('compare-model');u.click('fast');
+  const stale=[...u.frames.values()][0];
+  u.choose('preset','ring');stale(100);
+  assert.equal(u.elements.get('undo').disabled,false,'switching questions must remain recoverable');
+  u.click('undo');
+  assert.deepEqual(saved().points,original);
+  assert.equal(u.elements.get('dataset-name').textContent,'我的涂鸦');
+  assert.equal(u.elements.get('test-accuracy').textContent,'未设答案');
+  assert.equal(u.elements.get('epoch').textContent,'0');assert.equal(u.frames.size,0);
+  assert.equal(u.elements.get('model-comparison').hidden,true);
+  assert.match(u.elements.get('status').textContent,/撤销.*题目|撤销.*改题/);
+ }finally{u.restore();}
+});
+test('several question switches survive reload and undo in reverse order before the original stroke',async()=>{
+ const storage=memoryStorage();let original;
+ const u=await boot({storage});try{
+  u.choose('tool','1');u.pointer('pointerdown',240,110);u.pointer('pointerup',240,110);
+  original=JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value.points;
+  u.choose('preset','ring');u.choose('preset','diagonal');
+ }finally{u.restore();}
+ const v=await boot({storage});try{
+  assert.equal(v.elements.get('dataset-name').textContent,'一分为二');
+  v.click('undo');assert.equal(v.elements.get('dataset-name').textContent,'甜甜圈');
+  assert.notEqual(v.elements.get('test-accuracy').textContent,'未设答案');
+  v.click('undo');assert.equal(v.elements.get('dataset-name').textContent,'我的涂鸦');
+  assert.deepEqual(JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value.points,original);
+  assert.equal(v.elements.get('test-accuracy').textContent,'未设答案');
+  v.click('undo');assert.equal(v.elements.get('dataset-name').textContent,'四个小岛');
+  assert.equal(v.elements.get('undo').disabled,true);assert.equal(v.frames.size,0);
+ }finally{v.restore();}
+});
+test('preset history is bounded and does not include a cancelled in-progress stroke',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});
+ try{
+  u.choose('tool','0');u.pointer('pointerdown',240,110);
+  u.choose('preset','ring');u.pointer('pointerup',240,110);u.click('undo');
+  assert.equal(u.elements.get('dataset-name').textContent,'四个小岛');
+  assert.equal(u.elements.get('point-count').textContent,'48 / 160 个点');
+  for(let i=0;i<35;i++)u.choose('preset',i%2?'diagonal':'ring');
+  const saved=JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value;
+  assert.equal(saved.undo.length,30);assert.match(u.elements.get('draft-status').textContent,/已保留/);
+  for(let i=0;i<30;i++)u.click('undo');
+  assert.equal(u.elements.get('undo').disabled,true);
+ }finally{u.restore();}
+});
 test('reload restores committed custom work, trained model, learning rate and undo, always paused',async()=>{
  const storage=memoryStorage();let expected;
  const u=await boot({storage});try{

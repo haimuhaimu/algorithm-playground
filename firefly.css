@@ -15,3 +15,55 @@
 .chorus-transport button,.chorus-transport label{min-height:44px}
 .chorus-transport label{display:flex;align-items:center}
 .chorus-sliders input{min-height:30px}
+/* One set of controls, in canvas -> settings -> observations reading order. */
+.chorus-lab{grid-template-areas:"habitat controls" "observations controls";row-gap:0}
+.habitat-column{grid-area:habitat}
+.chorus-controls{grid-area:controls;min-width:0}
+.chorus-observation{grid-area:observations;min-width:0}
+.habitat-heading{align-items:center;gap:12px;padding:0 14px;min-height:44px}
+.habitat-heading #elapsed{font:11px ui-monospace,monospace;margin-left:auto}
+.phase-toggle{display:flex;gap:6px;align-items:center;min-height:44px;font-size:11px;cursor:pointer}
+.phase-toggle input{accent-color:#dce87a;width:15px;height:15px;margin:0}
+@media(max-width:760px){
+ .chorus-lab{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"habitat" "controls" "observations";gap:12px}
+ .chorus-controls{padding:12px 0 0;border-top:1px solid var(--line)}
+ .chorus-presets{margin-bottom:14px}
+ .chorus-sliders{gap:12px 18px}
+ .chorus-sliders input{margin:6px 0 4px}
+ .chorus-observation{border-top:1px solid var(--line)}
+ .chorus-transport{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+ .chorus-transport button{padding:8px 4px}
+ .chorus-transport .primary{min-width:0}
+ .habitat-heading{gap:8px;padding:0 10px}
+ .habitat-heading #elapsed,.phase-toggle{font-size:10px}
+}
+/* Short landscape: reserve room for 44px actions, without stretching the scene. */
+@media(orientation:landscape) and (max-height:520px) and (min-width:568px){
+ .firefly-main{padding:0 18px}
+ .firefly-intro{padding:14px 0}
+ .firefly-intro h1{font-size:27px;margin:6px 0}
+ .firefly-intro h1 span{display:inline}
+ .chorus-lab{display:grid;grid-template-columns:minmax(0,1fr) 264px;grid-template-areas:"habitat controls" "observations observations";gap:0 18px;scroll-margin-top:8px}
+ .habitat-column{max-width:none}
+ .habitat-heading{padding:0 10px;min-height:44px}
+ .habitat .touch-modes{padding:0 10px}
+ .habitat .touch-modes p{margin:4px 0;padding:0;min-height:18px;line-height:18px}
+ #fireflies{width:min(100%,max(204.8px,calc((100svh - 214px)*1.6)));height:auto;margin:auto;scroll-margin-top:120px}
+ .field-caption{display:none}
+ .chorus-transport{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:8px}
+ .chorus-transport button{padding:8px 2px;font-size:11px}
+ .chorus-transport .primary{min-width:0}
+ .near-play-status{padding-top:5px;min-height:24px}
+ .chorus-controls{padding:0;border:0}
+ .chorus-controls h2{font-size:12px}
+ .chorus-presets{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:8px 0 10px}
+ .chorus-presets button{min-height:44px;padding:8px 3px;text-align:center}
+ .chorus-presets b{font-size:11px}
+ .chorus-presets small{display:none}
+ .chorus-sliders{grid-template-columns:1fr;gap:7px}
+ .chorus-sliders label{font-size:11px}
+ .chorus-sliders input{margin:1px 0 0;min-height:30px}
+ .chorus-sliders small{display:none}
+ .chorus-tip{padding-top:9px;font-size:11px;line-height:1.6}
+ .chorus-observation{padding-top:14px;border-top:1px solid var(--line)}
+}

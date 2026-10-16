@@ -158,9 +158,10 @@ function start(fast=false){
  announce(fast?'正在计算 500 次参数更新。':'正在学习你给的标签。随时可以暂停或改题目。');controls();schedule();
 }
 function snapshot(){return {points,testPoints,preset};}
+function rememberQuestion(){undo.push(snapshot());if(undo.length>30)undo.shift();}
 function commit(next){
  if(next.length===points.length&&next.every((p,i)=>p===points[i]))return;
- undo.push(snapshot());if(undo.length>30)undo.shift();
+ rememberQuestion();
  points=next;testPoints=null;preset='custom';previous=null;restart();
  announce('题目变了，从头学习。自定义涂鸦没有标准答案，因此不显示新题成绩。');
 }
@@ -194,14 +195,14 @@ if(!ctx||!chart){
  $('step').addEventListener('click',()=>{stop();if(canTrain()){advance(1);saveDraft();announce('更新了一次参数。');}});
  $('reset').addEventListener('click',()=>{restart();announce('保留题目，模型回到同一个起点。');});
  $('clear').addEventListener('click',()=>{stop();commit([]);announce('空白画布准备好了。圆点和方点都需要至少一个。');});
- $('undo').addEventListener('click',()=>{stop();const prev=undo.pop();if(prev){points=prev.points;testPoints=prev.testPoints;preset=prev.preset;previous=null;restart();announce('已撤销上一笔，按恢复的题目重新训练。');}});
+ $('undo').addEventListener('click',()=>{stop();const prev=undo.pop();if(prev){points=prev.points;testPoints=prev.testPoints;preset=prev.preset;previous=null;restart();announce('已撤销改题，找回「'+names[preset]+'」。训练从头开始。');}});
  $('model').addEventListener('change',()=>{const kind=$('model').value;if(!['linear','network'].includes(kind))return;switchModel(kind);});
  $('compare-model').addEventListener('click',()=>{
   if(running||model.epoch===0)return;
   switchModel(model.kind==='linear'?'network':'linear');
  });
  $('rate').addEventListener('change',()=>{const next=Number($('rate').value);if(![.03,.15,.6].includes(next))return;stop();rate=next;render();saveDraft();announce('步子已调整，保留已有学习结果。点开始训练继续。');});
- presets.forEach(b=>b.addEventListener('click',()=>{stop();undo=[];previous=null;preset=b.dataset.preset;dataset=makeDataset(preset);points=dataset.train;testPoints=dataset.test;restart();announce('新题目准备好了。先猜，再训练。');}));
+ presets.forEach(b=>b.addEventListener('click',()=>{stop();rememberQuestion();previous=null;preset=b.dataset.preset;dataset=makeDataset(preset);points=dataset.train;testPoints=dataset.test;restart();announce('新题目准备好了。「撤销上一步」可以找回换题前的样本，训练从头开始。');}));
  tools.forEach(b=>b.addEventListener('click',()=>{cancelGesture();tool=b.dataset.tool;controls();draw();saveDraft();}));
  guesses.forEach(b=>b.addEventListener('click',()=>{if(model.epoch)return;guess=b.dataset.guess;controls();saveDraft();}));
  field.addEventListener('pointerdown',e=>{
