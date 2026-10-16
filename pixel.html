@@ -5,25 +5,37 @@
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pixel.css">
  <script type="module" src="./pixel.mjs"></script><title>算法游乐场 · 像素邮局</title>
+ <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
 </head><body>
  <a class="skip-link" href="#editor">跳到明信片画纸</a>
  <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><button class="quiet-button" id="about">怎么玩 ↗</button><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div></header>
- <nav class="experiment-nav" aria-label="选择算法实验"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html" aria-current="page">08 像素邮局</a></nav>
+ <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html" aria-current="page">08 像素邮局</a></div></nav>
  <main class="pixel-main">
   <section class="pixel-intro"><div><p class="eyebrow">08 / A LITTLE LESS, EXACTLY THE SAME</p><h1>把一张画，<span>装进几枚字节。</span></h1><p>画点什么，交给 0 和 1。看看它能不能轻装到达。</p></div><div class="postmark" aria-hidden="true"><span>PIXEL POST</span><strong>16 × 16</strong><span>LOSSLESS DELIVERY</span></div></section>
   <section class="post-office" aria-label="像素明信片工作台">
    <div class="drawing-desk">
     <div class="section-label"><h2>寄件处</h2><span>4 色 · 256 格</span></div>
     <div class="preset-row" role="group" aria-label="选择明信片"><button id="preset-cat">小猫</button><button id="preset-heart">爱心</button><button id="preset-noise">杂色</button><button id="preset-blank">空白纸</button></div>
-    <div class="paper-frame"><canvas id="editor" width="512" height="512" tabindex="0" role="application" aria-label="像素画纸" aria-describedby="paint-help cursor-status">浏览器需要支持 Canvas 才能绘画。</canvas></div>
+    <div class="paper-frame"><canvas id="editor" width="512" height="512" tabindex="0" role="application" aria-label="像素画纸" aria-describedby="paint-help cursor-status">浏览器需要支持 Canvas 才能绘画。</canvas><div class="drawing-size-note"><span>这张画的邮包</span><strong id="drawing-size">— B</strong><span>原始 64 B</span></div></div>
     <div class="paint-tools"><div class="swatches" role="group" aria-label="画笔颜色"><button id="color-0" class="swatch color-0" aria-label="1 米白画笔" aria-pressed="false"><span>1</span></button><button id="color-1" class="swatch color-1" aria-label="2 墨黑画笔" aria-pressed="true"><span>2</span></button><button id="color-2" class="swatch color-2" aria-label="3 苔绿画笔" aria-pressed="false"><span>3</span></button><button id="color-3" class="swatch color-3" aria-label="4 珊瑚画笔" aria-pressed="false"><span>4</span></button></div><button id="undo" class="undo" disabled>↶ 撤销</button></div>
     <p class="paint-help" id="paint-help">按住涂画，米白可擦除。Tab 进入画纸后，方向键移动，空格落笔，1–4 换色。</p><span id="cursor-status" class="visually-hidden" role="status"></span>
    </div>
-   <div class="packing-desk">
-    <div class="section-label"><h2>打包台</h2><span>Huffman 编码</span></div>
+   <div class="dispatch-desk">
+    <div class="section-label"><h2>打包寄出</h2><span>真实字节 · 无损还原</span></div>
     <div class="size-comparison"><div><span>原始像素</span><strong>64<small>B</small></strong></div><span class="size-arrow" aria-hidden="true">→</span><div><span>打包后</span><strong id="packed-size">—</strong><small class="unit">B</small></div></div>
     <p id="saving" class="saving"></p>
-    <p class="packing-caption">常见颜色，分配短暗号。<br>每一格都在，不删细节。</p>
+    <button id="send" class="send-button">打包寄出 <span aria-hidden="true">↗</span></button><p class="local-note">只在本页模拟寄送，没有网络上传</p>
+    <div class="receiving-desk">
+     <div class="received-postcard"><canvas id="receiver" width="512" height="512" aria-label="从二进制包解码还原的明信片"></canvas><span class="postcard-address" aria-hidden="true">TO: THE OTHER SIDE</span></div>
+     <div class="receipt-copy"><h2>收件处 <span>逐格验收</span></h2><p id="receipt" role="status">还没有来信</p><p class="challenge" id="challenge">小挑战：画一张你喜欢的图，让它不超过 48 B。</p></div>
+    </div>
+    <p class="dispatch-hint">改几笔，再寄一次。邮包大小会变，画里的每一格都不会少。</p>
+   </div>
+  </section>
+  <details class="packing-details">
+   <summary><span>拆开邮包，看看它怎么变小</span><small>颜色暗号 · 信息量 · 真实字节</small></summary>
+   <div class="packing-interior"><div>
+    <p class="packing-caption">常见颜色，分配短暗号。每一格都在，不删细节。</p>
     <div class="codebook" aria-label="当前图案的颜色编码表">
      <div class="codebook-head"><span>颜色 / 格数</span><span>二进制暗号</span></div>
      <div class="code-row"><i class="color-0"></i><span id="count-0"></span><code id="code-0"></code></div>
@@ -32,20 +44,13 @@
      <div class="code-row"><i class="color-3"></i><span id="count-3"></span><code id="code-3"></code></div>
     </div>
     <dl class="packet-details"><div><dt>颜色信息量（熵）</dt><dd id="entropy"></dd></div><div><dt>图案编码</dt><dd id="payload"></dd></div><div><dt>编码树 + 补齐</dt><dd id="overhead"></dd></div></dl>
-    <button id="send" class="send-button">打包寄出 <span aria-hidden="true">↗</span></button><p class="local-note">只在本页模拟寄送，没有网络上传</p>
-   </div>
-   <div class="receiving-desk">
-    <div class="section-label"><h2>收件处</h2><span>逐格验收</span></div>
-    <div class="received-postcard"><div class="postcard-top"><span>TO: THE OTHER SIDE</span><span class="pixel-stamp" aria-hidden="true">P<br>08</span></div><canvas id="receiver" width="512" height="512" aria-label="从二进制包解码还原的明信片"></canvas><p id="receipt" role="status">还没有来信</p><div class="postcard-lines" aria-hidden="true"></div></div>
-    <div class="wire"><div class="wire-heading"><span>电线上的 0 和 1</span><span id="wire-count">等待寄出</span></div><code id="wire-bits">画好了，就寄出吧。</code><div class="wire-track"><i id="wire-progress"></i></div></div>
-    <p class="challenge" id="challenge">小挑战：画一张你喜欢的图，让它不超过 48 B。</p>
-   </div>
-  </section>
+   </div><div class="wire"><div class="wire-heading"><span>电线上的 0 和 1</span><span id="wire-count">等待寄出</span></div><code id="wire-bits">画好了，就寄出吧。</code><div class="wire-track"><i id="wire-progress"></i></div><p class="packing-caption">左边按出现次数给颜色分配暗号；这里展示实际邮包的二进制片段。树和补齐也计入体积。</p></div></div>
+  </details>
   <p class="post-status" id="status" role="status">这只小猫已经准备好了。也可以添几笔，再寄出去。</p>
   <section class="pixel-bridge"><div><p class="eyebrow">玩过以后，再认识它</p><h2>越容易猜到，<br><span>越不需要说那么多。</span></h2><a href="https://haimuhaimu.github.io/genai-learning-os/?page=strategy-case&amp;case=entropy-kl-tradeoff" target="_blank" rel="noopener noreferrer">回到算法学习页：熵与信息量 ↗</a></div><div><h3>试试只画两种颜色。</h3><p>出现得越频繁的颜色，通常能用越短的暗号表示。这是 Huffman 编码的想法。</p><h3>再换成「杂色」，看邮包变大。</h3><p>当四种颜色一样常见，就没什么便宜可占；再加上编码表，甚至会比原图大。压缩不是魔法。</p><h3>漂亮，不一定更省空间。</h3><p>这里的算法只数颜色，不理解图案。把格子打乱，只要颜色数量一样，包的大小就一样。</p></div></section>
   <details class="pixel-notes"><summary>邮包里究竟装了什么？算法与边界</summary><div><p>固定 16×16、四种颜色的共享协议，原始像素每格 2 bit，共 64 B。Huffman 树按频次构建；同频时按子树最小颜色编号排序。单色图仍为每格分配 1 bit，因此不等于零字节。</p><p>编码树先序存入包：内部节点是 0，叶子是 1 加 2 bit 颜色编号；后面是实际像素编码，再补零至整字节。展示大小包含树和补齐。收件端只用这些字节与固定格数解码，不从原画复制。这不是 PNG/JPEG 文件大小；尺寸、共享调色板、文件头与网络协议不在两边比较范围内。</p><p>熵为 −Σ p log₂p，单位 bit/格；是当前颜色分布的信息量，不是当前文件体积或图画质量分。动画只是观察过程，不代表运算速度。所有图案和代码独立创作，算法参考 <a href="https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1252/assignments/7-huffman/huffman" target="_blank" rel="noopener noreferrer">Stanford CS106B 的 Huffman 教学 ↗</a>。</p><p>纯本地计算，无上传、账号或保存。撤销最多保留 30 次修改，换预设也可以撤销；刷新会恢复小猫。取消笔画保留原画；切后台或打开说明会取消寄送，保留上一张收到的明信片，回来不会自动重寄。减少动画时立即解码。</p></div></details>
   <footer class="bottom-note"><span>少说一点，意思一点不少。</span><span class="signature">MADE BY CHEN QUAN</span></footer>
  </main>
- <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">寄一张很轻的明信片。</h2><ol><li>选一个图案，或在 16×16 画纸上自由涂画。</li><li>观察四种颜色的数量与暗号，看看邮包变轻还是变重。</li><li>点「打包寄出」，另一端会从真实字节重新拼出你的画。</li><li>试试把一幅喜欢的图压进 48 B；没有美术评分，玩得开心就好。</li></ol><p>画纸支持鼠标和触摸。Tab 进入画纸，方向键移动，空格 / Enter 落笔，1–4 换色。撤销保留 30 次修改，刷新不保存。</p></dialog>
+ <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">寄一张很轻的明信片。</h2><ol><li>选一个图案，或在 16×16 画纸上自由涂画。</li><li>画纸下方会显示邮包大小。先看它变轻还是变重；想看暗号，再展开「拆开邮包」。</li><li>点「打包寄出」，另一端会从真实字节重新拼出你的画。</li><li>试试把一幅喜欢的图压进 48 B；没有美术评分，玩得开心就好。</li></ol><p>画纸支持鼠标和触摸。Tab 进入画纸，方向键移动，空格 / Enter 落笔，1–4 换色。撤销保留 30 次修改，刷新不保存。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验像素邮局。</p></noscript>
 </body></html>

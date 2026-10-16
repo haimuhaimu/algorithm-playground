@@ -34,6 +34,7 @@ function render() {
   draw(context, gesture?.draft || pixels, focused);
   const packet = encode(pixels), size = packet.packet.length;
   $('packed-size').textContent = String(size);
+  $('drawing-size').textContent = size + ' B';
   $('saving').textContent = size <= 64 ? `比原始像素少 ${64 - size} B` : `反而多了 ${size - 64} B，杂色也有代价。`;
   $('saving').dataset.larger = String(size > 64);
   for (let i = 0; i < 4; i++) {
