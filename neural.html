@@ -26,12 +26,19 @@
     </div>
     <div class="training-stats" aria-label="实际计算结果"><div><span>训练步数</span><strong id="epoch">0</strong></div><div><span>练习题正确率</span><strong id="accuracy">尚未计算</strong></div><div><span>新题正确率 <small>120 道</small></span><strong id="test-accuracy">尚未计算</strong></div><div class="loss-chart"><span>犯错代价 <b id="loss">待计算</b></span><canvas id="history" width="320" height="80" aria-label="本轮真实训练损失曲线"></canvas></div></div>
     <p class="neural-status" id="status" role="status">按「开始训练」，让分界线慢慢长出来。</p>
-    <div class="compare-action"><div><strong>同一道题，换个脑袋。</strong><p>保留你画的点和步子大小，看看另一种模型会怎样。</p></div><button id="compare-model" disabled>换直线模型试试 ↗</button></div>
+    <div class="compare-action"><div><strong>同一道题，换个脑袋。</strong><p>把上轮成绩留在下面，不用靠记忆比较。</p></div><button id="compare-model" disabled>换直线模型试试 ↗</button></div>
+    <section class="model-comparison" id="model-comparison" aria-labelledby="comparison-title" hidden>
+     <header><h2 id="comparison-title">同题对照</h2><p id="comparison-question"></p></header>
+     <div class="comparison-columns">
+      <article><span class="comparison-label">上轮留档</span><h3 id="previous-model"></h3><p class="comparison-steps" id="previous-steps"></p><dl><div><dt>练习题</dt><dd id="previous-train"></dd></div><div><dt>新题</dt><dd id="previous-test"></dd></div><div><dt>犯错代价</dt><dd id="previous-loss"></dd></div><div><dt>用过的步子</dt><dd id="previous-rate"></dd></div></dl></article>
+      <article class="comparison-current"><span class="comparison-label">当前模型</span><h3 id="current-model"></h3><p class="comparison-steps" id="current-steps"></p><dl><div><dt>练习题</dt><dd id="current-train"></dd></div><div><dt>新题</dt><dd id="current-test"></dd></div><div><dt>犯错代价</dt><dd id="current-loss"></dd></div><div><dt>用过的步子</dt><dd id="current-rate"></dd></div></dl></article>
+     </div><p class="comparison-note" id="comparison-note"></p>
+    </section>
    </div>
    <aside class="neural-controls" aria-label="实验设置">
     <h2>换一道题</h2>
     <div class="dataset-presets" role="group" aria-label="预设题目"><button data-preset="diagonal" aria-pressed="false"><b>一分为二</b><span>一条直线就够吗？</span></button><button data-preset="islands" aria-pressed="true"><b>四个小岛</b><span>同类隔着对角线</span></button><button data-preset="ring" aria-pressed="false"><b>甜甜圈</b><span>里面和外面不一样</span></button></div>
-    <label for="model">用什么脑袋来想？<select id="model"><option value="linear">直线脑袋 · 线性模型</option><option value="network" selected>会拐弯 · 8 个神经元</option></select><small>切换后从头训练，题目不变。</small></label>
+    <label for="model">用什么脑袋来想？<select id="model"><option value="linear">直线脑袋 · 线性模型</option><option value="network" selected>会拐弯 · 8 个神经元</option></select><small>题目不变，上轮成绩留档；尚未训练时切回，可恢复上轮模型。</small></label>
     <label for="rate">每次改多少<select id="rate"><option value="0.03">慢慢来 · 0.03</option><option value="0.15" selected>稳着走 · 0.15</option><option value="0.6">迈大步 · 0.60</option></select><small>步子大不一定学得更好。</small></label>
     <div class="reset-actions"><button id="reset">重新训练</button><button id="clear">空白画布</button></div>
    </aside>

@@ -52,6 +52,12 @@ test('unavailable storage leaves the postcard playable with an honest warning',a
  const storage={getItem(){throw Error('blocked');},setItem(){throw Error('quota');},removeItem(){throw Error('blocked');}};
  const u=await boot({storage,reduced:true});try{u.click('preset-heart');u.click('send');assert.deepEqual(u.pixels('receiver'),u.pixels('editor'));assert.match(u.els.get('draft-status').textContent,/无法|未保存/);}finally{u.restore();}
 });
+test('forgetting a draft cancels active delivery so it cannot recreate deleted storage',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  u.click('preset-heart');u.click('send');const pending=[...u.frames.values()][0];u.click('forget-draft');
+  assert.equal(u.frames.size,0);pending(2000);u.finish();assert.equal(storage.records.size,0);assert.match(u.els.get('receipt').textContent,/没有/);
+ }finally{u.restore();}
+});
 test('the drawing-side parcel size follows committed edits, cancellation and undo', async () => {
   const u = await boot(); try {
     const badge = u.els.get('drawing-size'); assert.ok(badge, 'parcel size must be visible beside the drawing');

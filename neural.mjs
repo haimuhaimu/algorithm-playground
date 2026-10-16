@@ -1,5 +1,5 @@
 import {createModel,predict,metrics,train,makeDataset,editPoints,MAX_POINTS,MAX_EPOCHS} from './neural-core.mjs';
-import {DRAFT_KEYS,readDraft,writeDraft,clearDraft,validateNeuralDraft,draftMessage} from './local-drafts.mjs';
+import {DRAFT_KEYS,readDraft,writeDraft,clearDraft,validateNeuralDraft,draftMessage,questionKey} from './local-drafts.mjs';
 const $=id=>document.getElementById(id),field=$('field'),ctx=field.getContext('2d'),chart=$('history').getContext('2d');
 const tools=[...document.querySelectorAll('[data-tool]')],presets=[...document.querySelectorAll('[data-preset]')],guesses=[...document.querySelectorAll('[data-guess]')];
 const names={diagonal:'一分为二',islands:'四个小岛',ring:'甜甜圈',custom:'我的涂鸦'};
@@ -16,6 +16,7 @@ function saveDraft(){
  $('draft-status').textContent=ok?'草稿已保留 · 仅在此浏览器，不上传。':'草稿未保存：浏览器存储不可用或空间不足。当前仍可继续玩。';
 }
 $('forget-draft').addEventListener('click',()=>{
+ if(ctx&&chart){stop();announce('已暂停。删除本地草稿不会改变当前题目与成绩。');}
  const ok=clearDraft(DRAFT_KEYS.neural);if(ok)dirty=false;
  $('draft-status').textContent=ok?'已删除本地草稿，当前画面不变；继续操作会重新保存。':'无法删除本地草稿，请在浏览器设置中清理此站点数据。';
 });
@@ -51,6 +52,35 @@ function controls(){
  $('loss').textContent=trainScore?trainScore.loss.toFixed(3):'无样本';
  if(guess)$('prediction-result').textContent='你猜：'+(guess==='yes'?'能分开':'可能分不开')+'。'+(model.epoch?'已走 '+model.epoch+' 步，练习题 '+percent(trainScore.accuracy)+'。再换个模型比较。':'开始训练来看看。');
  else $('prediction-result').textContent=model.epoch?'先观察这一轮。想留个预测，可以重新训练。':'可跳过。先留一个判断，再看实验。';
+ comparison();
+}
+function comparison(){
+ $('model-comparison').hidden=!previous;
+ if(!previous)return;
+ $('comparison-question').textContent=names[preset]+' · '+points.length+' 道练习题'+(testPoints?' · 120 道固定新题':'');
+ for(const [prefix,m,rs]of [['previous',previous.model,previous.rates],['current',model,usedRates]]){
+  const a=metrics(m,points),b=testPoints?metrics(m,testPoints):null;
+  $(prefix+'-model').textContent=m.kind==='linear'?'直线脑袋':'小神经网络';
+  $(prefix+'-steps').textContent=m.epoch+' 步';
+  $(prefix+'-rate').textContent=rs.length?rs.join(' / '):'尚未使用';
+  $(prefix+'-train').textContent=m.epoch?percent(a.accuracy):'待训练';
+  $(prefix+'-test').textContent=!testPoints?'未设答案':m.epoch?percent(b.accuracy):'待训练';
+  $(prefix+'-loss').textContent=m.epoch?a.loss.toFixed(3):'待训练';
+ }
+ const same=model.epoch===previous.model.epoch&&usedRates.length===1&&previous.rates.length===1&&usedRates[0]===previous.rates[0];
+ $('comparison-note').textContent=(!model.epoch?'上轮成绩已留档。训练当前模型，再看同题表现。':same?'相同步数与固定步子，可观察两种模型的表达差异；一次结果不代表普遍优劣。':'训练条件不同（步数或使用过的步子），仅供观察，不判胜负。')+(testPoints?'':' 自定义题目没有标准答案，不比较新题成绩。');
+}
+function switchModel(kind){
+ if(kind===model.kind)return;
+ stop();
+ if(!model.epoch&&previous?.model.kind===kind){
+  model=structuredClone(previous.model);usedRates=[...previous.rates];previous=null;guess=null;
+  history=[{epoch:model.epoch,loss:metrics(model,points).loss}];render();saveDraft();
+  announce('切回上轮已经训练的模型，成绩保留。曲线从恢复点继续记录。');return;
+ }
+ previous=model.epoch?{question:questionKey({points,preset}),model:structuredClone(model),rates:[...usedRates]}:null;
+ model=createModel(kind);restart();
+ announce(previous?'上轮成绩已留在对照卡。题目和步子不变，再训练这个脑袋看看。':'换了一个脑袋，题目保留，从头训练。');
 }
 function path(context,pts){context.beginPath();pts.forEach((p,i)=>i?context.lineTo(p.x,p.y):context.moveTo(p.x,p.y));}
 function draw(){
@@ -131,7 +161,7 @@ function snapshot(){return {points,testPoints,preset};}
 function commit(next){
  if(next.length===points.length&&next.every((p,i)=>p===points[i]))return;
  undo.push(snapshot());if(undo.length>30)undo.shift();
- points=next;testPoints=null;preset='custom';restart();
+ points=next;testPoints=null;preset='custom';previous=null;restart();
  announce('题目变了，从头学习。自定义涂鸦没有标准答案，因此不显示新题成绩。');
 }
 function refreshProbe(){
@@ -164,15 +194,14 @@ if(!ctx||!chart){
  $('step').addEventListener('click',()=>{stop();if(canTrain()){advance(1);saveDraft();announce('更新了一次参数。');}});
  $('reset').addEventListener('click',()=>{restart();announce('保留题目，模型回到同一个起点。');});
  $('clear').addEventListener('click',()=>{stop();commit([]);announce('空白画布准备好了。圆点和方点都需要至少一个。');});
- $('undo').addEventListener('click',()=>{stop();const prev=undo.pop();if(prev){points=prev.points;testPoints=prev.testPoints;preset=prev.preset;restart();announce('已撤销上一笔，按恢复的题目重新训练。');}});
- $('model').addEventListener('change',()=>{const kind=$('model').value;if(!['linear','network'].includes(kind))return;model=createModel(kind);restart();announce('换了一个脑袋，题目保留，从头训练。');});
+ $('undo').addEventListener('click',()=>{stop();const prev=undo.pop();if(prev){points=prev.points;testPoints=prev.testPoints;preset=prev.preset;previous=null;restart();announce('已撤销上一笔，按恢复的题目重新训练。');}});
+ $('model').addEventListener('change',()=>{const kind=$('model').value;if(!['linear','network'].includes(kind))return;switchModel(kind);});
  $('compare-model').addEventListener('click',()=>{
   if(running||model.epoch===0)return;
-  model=createModel(model.kind==='linear'?'network':'linear');restart();
-  announce('题目和步子大小都保留了。再猜一次，训练后比较两种模型。');
+  switchModel(model.kind==='linear'?'network':'linear');
  });
  $('rate').addEventListener('change',()=>{const next=Number($('rate').value);if(![.03,.15,.6].includes(next))return;stop();rate=next;render();saveDraft();announce('步子已调整，保留已有学习结果。点开始训练继续。');});
- presets.forEach(b=>b.addEventListener('click',()=>{stop();undo=[];preset=b.dataset.preset;dataset=makeDataset(preset);points=dataset.train;testPoints=dataset.test;restart();announce('新题目准备好了。先猜，再训练。');}));
+ presets.forEach(b=>b.addEventListener('click',()=>{stop();undo=[];previous=null;preset=b.dataset.preset;dataset=makeDataset(preset);points=dataset.train;testPoints=dataset.test;restart();announce('新题目准备好了。先猜，再训练。');}));
  tools.forEach(b=>b.addEventListener('click',()=>{cancelGesture();tool=b.dataset.tool;controls();draw();saveDraft();}));
  guesses.forEach(b=>b.addEventListener('click',()=>{if(model.epoch)return;guess=b.dataset.guess;controls();saveDraft();}));
  field.addEventListener('pointerdown',e=>{

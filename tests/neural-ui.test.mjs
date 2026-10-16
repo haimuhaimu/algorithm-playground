@@ -61,6 +61,48 @@ test('storage failure cannot prevent learning and never claims a draft was saved
  const storage={getItem(){throw Error('denied');},setItem(){throw Error('quota');},removeItem(){throw Error('denied');}};
  const u=await boot({storage});try{u.click('step');assert.equal(u.elements.get('epoch').textContent,'1');assert.match(u.elements.get('draft-status').textContent,/无法|未保存/);}finally{u.restore();}
 });
+test('same-question card freezes prior model scores and survives reload without automatically training',async()=>{
+ const storage=memoryStorage();let previousScore,previousLoss;
+ const u=await boot({storage});try{
+  assert.ok(u.elements.get('model-comparison'),'comparison card exists');assert.equal(u.elements.get('model-comparison').hidden,true);
+  u.click('fast');for(let i=0;i<20;i++)u.frame();previousScore=u.elements.get('test-accuracy').textContent;previousLoss=u.elements.get('loss').textContent;
+  u.click('compare-model');assert.equal(u.elements.get('model-comparison').hidden,false);
+  assert.equal(u.elements.get('previous-test').textContent,previousScore);assert.equal(u.elements.get('current-test').textContent,'待训练');
+  u.click('fast');for(let i=0;i<20;i++)u.frame();
+  assert.equal(u.elements.get('previous-test').textContent,previousScore);assert.equal(u.elements.get('previous-loss').textContent,previousLoss);
+  assert.equal(u.elements.get('current-test').textContent,u.elements.get('test-accuracy').textContent);
+  assert.match(u.elements.get('comparison-note').textContent,/相同步数.*固定步子/);
+ }finally{u.restore();}
+ const v=await boot({storage});try{
+  assert.equal(v.elements.get('previous-test').textContent,previousScore);assert.equal(v.elements.get('epoch').textContent,'500');assert.equal(v.frames.size,0);
+  v.change('rate','0.6');v.click('step');assert.match(v.elements.get('comparison-note').textContent,/条件不同|多种/);
+  v.choose('tool','0');v.pointer('pointerdown');v.pointer('pointercancel');assert.equal(v.elements.get('model-comparison').hidden,false);
+  v.pointer('pointerdown');v.pointer('pointerup');assert.equal(v.elements.get('model-comparison').hidden,true);
+  v.click('undo');assert.equal(v.elements.get('model-comparison').hidden,true,'undo cannot resurrect an old comparison');
+ }finally{v.restore();}
+});
+test('dropdown switching preserves a trained result, while custom questions never invent test answers',async()=>{
+ const u=await boot();try{
+  u.choose('tool','0');u.pointer('pointerdown');u.pointer('pointerup');u.click('step');u.change('model','linear');
+  assert.ok(u.elements.get('previous-test'));assert.equal(u.elements.get('previous-test').textContent,'未设答案');
+  u.click('step');assert.equal(u.elements.get('current-test').textContent,'未设答案');
+  assert.match(u.elements.get('comparison-note').textContent,/没有标准答案/);
+  u.choose('preset','ring');assert.equal(u.elements.get('model-comparison').hidden,true);
+ }finally{u.restore();}
+});
+test('switching back before training recovers the retained model instead of discarding its learned result',async()=>{
+ const u=await boot();try{
+  u.click('step');const score=u.elements.get('loss').textContent;u.change('model','linear');u.change('model','network');
+  assert.equal(u.elements.get('epoch').textContent,'1');assert.equal(u.elements.get('loss').textContent,score);assert.equal(u.frames.size,0);
+  assert.equal(u.elements.get('model-comparison').hidden,true);
+ }finally{u.restore();}
+});
+test('forgetting a draft pauses active training so an old callback cannot recreate it',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  u.click('play');u.frame();const pending=[...u.frames.values()][0];u.click('forget-draft');
+  assert.equal(u.frames.size,0);pending(100);u.hide();assert.equal(storage.records.size,0);
+ }finally{u.restore();}
+});
 test('comparison action changes only the model, retaining the same question and clearing the old prediction',async()=>{
  const ui=await boot();try{
   const compare=ui.elements.get('compare-model');assert.ok(compare,'a nearby model comparison action must exist');
