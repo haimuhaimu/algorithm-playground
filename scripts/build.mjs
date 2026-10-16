@@ -2,7 +2,7 @@ import {mkdir,readdir,readFile,writeFile,lstat,realpath} from 'node:fs/promises'
 import {join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const ROOT=fileURLToPath(new URL('../',import.meta.url));
-const FILES=['index.html','style.css','app.mjs','core.mjs','data.mjs','pathfinding.html','pathfinding.css','pathfinding.mjs','pathfinding-core.mjs','sand.html','sand.css','sand.mjs','sand-core.mjs','firefly.html','firefly.css','firefly.mjs','firefly-core.mjs','evolution.html','evolution.css','evolution.mjs','evolution-core.mjs','neural.html','neural.css','neural.mjs','neural-core.mjs'];
+const FILES=['index.html','style.css','app.mjs','core.mjs','data.mjs','pathfinding.html','pathfinding.css','pathfinding.mjs','pathfinding-core.mjs','sand.html','sand.css','sand.mjs','sand-core.mjs','firefly.html','firefly.css','firefly.mjs','firefly-core.mjs','evolution.html','evolution.css','evolution.mjs','evolution-core.mjs','neural.html','neural.css','neural.mjs','neural-core.mjs','mining.html','mining.css','mining.mjs','mining-core.mjs'];
 export async function build(root=ROOT,out=join(root,'dist')){
  await mkdir(out,{recursive:true});
  if(await realpath(root)===await realpath(out))throw Error('Build output must differ from source');

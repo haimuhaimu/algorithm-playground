@@ -10,6 +10,7 @@ Object.assign(TYPES,{'sand.html':'text/html; charset=utf-8','sand.css':'text/css
 Object.assign(TYPES,{'firefly.html':'text/html; charset=utf-8','firefly.css':'text/css; charset=utf-8','firefly.mjs':'text/javascript; charset=utf-8','firefly-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'evolution.html':'text/html; charset=utf-8','evolution.css':'text/css; charset=utf-8','evolution.mjs':'text/javascript; charset=utf-8','evolution-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'neural.html':'text/html; charset=utf-8','neural.css':'text/css; charset=utf-8','neural.mjs':'text/javascript; charset=utf-8','neural-core.mjs':'text/javascript; charset=utf-8'});
+Object.assign(TYPES,{'mining.html':'text/html; charset=utf-8','mining.css':'text/css; charset=utf-8','mining.mjs':'text/javascript; charset=utf-8','mining-core.mjs':'text/javascript; charset=utf-8'});
 export function createAppServer(root=ROOT){
  const canonicalRoot=realpath(root);
  return createServer(async(req,res)=>{
