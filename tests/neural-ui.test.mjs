@@ -31,6 +31,29 @@ async function boot({noCanvas=false,hidden=false}={}){
   frame(){const first=frames.entries().next().value;if(first){frames.delete(first[0]);first[1](100);}},
   hide(){doc.hidden=true;fire(doc,'visibilitychange');},show(){doc.hidden=false;fire(doc,'visibilitychange');}};
 }
+test('comparison action changes only the model, retaining the same question and clearing the old prediction',async()=>{
+ const ui=await boot();try{
+  const compare=ui.elements.get('compare-model');assert.ok(compare,'a nearby model comparison action must exist');
+  assert.equal(compare.disabled,true);assert.match(ui.elements.get('prediction-model').textContent,/8/);
+  ui.choose('guess','yes');ui.click('fast');for(let i=0;i<25;i++)ui.frame();
+  const count=ui.elements.get('point-count').textContent;
+  assert.equal(compare.disabled,false);ui.click('compare-model');
+  assert.equal(ui.elements.get('model').value,'linear');assert.equal(ui.elements.get('epoch').textContent,'0');
+  assert.equal(ui.elements.get('point-count').textContent,count);assert.equal(ui.elements.get('dataset-name').textContent,'四个小岛');
+  assert.notEqual(ui.elements.get('test-accuracy').textContent,'未设答案');assert.doesNotMatch(ui.elements.get('prediction-result').textContent,/你猜/);
+  assert.equal(ui.frames.size,0);assert.match(ui.elements.get('prediction-model').textContent,/直线/);
+  ui.click('step');ui.click('compare-model');assert.equal(ui.elements.get('model').value,'network');
+ }finally{ui.restore();}
+});
+test('comparison keeps custom drawings and undo history instead of restoring a preset',async()=>{
+ const ui=await boot();try{
+  assert.ok(ui.elements.get('compare-model'),'comparison action exists');
+  ui.choose('tool','0');ui.pointer('pointerdown');ui.pointer('pointerup');
+  const count=ui.elements.get('point-count').textContent;ui.click('step');ui.click('compare-model');
+  assert.equal(ui.elements.get('point-count').textContent,count);assert.equal(ui.elements.get('test-accuracy').textContent,'未设答案');
+  ui.click('undo');assert.equal(ui.elements.get('dataset-name').textContent,'四个小岛');
+ }finally{ui.restore();}
+});
 test('starts paused, trains by real model steps, and pauses without an extra loop',async()=>{
  const ui=await boot();try{
   assert.equal(ui.frames.size,0);assert.equal(ui.elements.get('epoch').textContent,'0');

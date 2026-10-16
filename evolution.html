@@ -6,6 +6,7 @@
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./evolution.css">
  <script type="module" src="./evolution.mjs"></script><title>算法游乐场 · 遗传赛车</title>
+ <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
 </head>
 <body>
  <a class="skip-link" href="#race">跳到赛道</a>
@@ -13,7 +14,7 @@
   <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a>
   <div class="header-actions"><button class="quiet-button" id="about">怎么玩 ↗</button><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div>
  </header>
- <nav class="experiment-nav" aria-label="选择算法实验"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html" aria-current="page">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a></nav>
+ <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html" aria-current="page">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a></div></nav>
  <main class="evolution-main">
   <section class="race-intro"><h1>这一代，<span>能跑得更顺吗？</span></h1><p>画条赛道，给小车一点时间。看试错如何变成一条更好的路线。</p></section>
   <section class="evolution-lab" aria-label="遗传赛车实验">

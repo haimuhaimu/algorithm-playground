@@ -22,6 +22,9 @@ matchMedia('(prefers-color-scheme:dark)').addEventListener('change',theme);
 function announce(text){$('status').textContent=text;}
 function controls(){
  $('model').value=model.kind;$('rate').value=String(rate);
+ $('prediction-model').textContent=model.kind==='linear'?'直线脑袋':'会拐弯 · 8 个神经元';
+ $('compare-model').disabled=model.epoch===0||running;
+ $('compare-model').textContent=model.kind==='linear'?'换神经网络试试 ↗':'换直线模型试试 ↗';
  $('play').textContent=running?'暂停':'开始训练';$('play').setAttribute('aria-pressed',String(running));
  $('fast').textContent=remaining?'快进中 '+remaining+' 步':'快进 500 步';$('fast').disabled=remaining>0;
  $('undo').disabled=!undo.length;$('dataset-name').textContent=names[preset];
@@ -130,7 +133,7 @@ function applyDraft(p){
 }
 if(!ctx||!chart){
  announce('这个浏览器暂不支持 Canvas。请换用现代浏览器；上方其他实验仍可访问。');
- for(const id of ['play','step','fast','reset','undo','clear','model','rate'])$(id).disabled=true;
+ for(const id of ['play','step','fast','reset','undo','clear','model','rate','compare-model'])$(id).disabled=true;
  for(const b of [...tools,...presets,...guesses])b.disabled=true;
  theme();
 }else{
@@ -142,6 +145,11 @@ if(!ctx||!chart){
  $('clear').addEventListener('click',()=>{stop();commit([]);announce('空白画布准备好了。圆点和方点都需要至少一个。');});
  $('undo').addEventListener('click',()=>{stop();const prev=undo.pop();if(prev){points=prev.points;testPoints=prev.testPoints;preset=prev.preset;restart();announce('已撤销上一笔，按恢复的题目重新训练。');}});
  $('model').addEventListener('change',()=>{const kind=$('model').value;if(!['linear','network'].includes(kind))return;model=createModel(kind);restart();announce('换了一个脑袋，题目保留，从头训练。');});
+ $('compare-model').addEventListener('click',()=>{
+  if(running||model.epoch===0)return;
+  model=createModel(model.kind==='linear'?'network':'linear');restart();
+  announce('题目和步子大小都保留了。再猜一次，训练后比较两种模型。');
+ });
  $('rate').addEventListener('change',()=>{const next=Number($('rate').value);if(![.03,.15,.6].includes(next))return;stop();rate=next;render();announce('步子已调整，保留已有学习结果。点开始训练继续。');});
  presets.forEach(b=>b.addEventListener('click',()=>{stop();undo=[];preset=b.dataset.preset;dataset=makeDataset(preset);points=dataset.train;testPoints=dataset.test;restart();announce('新题目准备好了。先猜，再训练。');}));
  tools.forEach(b=>b.addEventListener('click',()=>{cancelGesture();tool=b.dataset.tool;controls();draw();}));

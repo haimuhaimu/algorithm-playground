@@ -4,3 +4,29 @@
 @media(max-width:760px){.neural-main{padding:0 18px}.neural-intro{padding:22px 0 18px}.neural-intro h1{font-size:28px;letter-spacing:-.8px}.neural-intro p{font-size:11px;line-height:1.8;max-width:32em}.neural-lab{display:flex;flex-direction:column;gap:8px}.drawing-column,.neural-controls{width:100%}.drawing-toolbar{flex-wrap:wrap;gap:4px;padding:8px 10px}.drawing-toolbar strong{font-size:10px}.drawing-toolbar>div{gap:2px}.drawing-toolbar button{font-size:10px;padding:7px;gap:4px;min-height:36px}.drawing-toolbar i{width:7px;height:7px}.drawing-caption{padding:8px 10px;gap:8px;font-size:9px;min-height:43px}.training-actions{padding:9px;gap:5px}.training-actions button{padding:7px 9px;min-height:39px;font-size:10px}.training-actions .primary{min-width:76px}#undo{margin-left:0}.training-stats{grid-template-columns:.8fr 1fr 1fr;padding:13px 0 0;gap:10px}.training-stats strong{font-size:22px}.training-stats span{font-size:9px}.loss-chart{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);padding:9px 0 0;display:flex;align-items:center;gap:18px}.loss-chart>span{display:block;flex-shrink:0}.loss-chart b{display:block;font-size:10px;margin-top:4px}#history{min-width:0;height:30px;margin:0}.neural-status{font-size:10px;min-height:35px;padding:9px 0}.neural-controls h2{font-size:12px}.dataset-presets{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0 16px}.dataset-presets button{padding:10px 5px;text-align:center}.dataset-presets b{font-size:11px}.dataset-presets span{font-size:8px}.neural-controls>label{font-size:11px}.prediction{margin-top:19px}.canvas-help{padding:16px 0 22px;font-size:9px}.learning-bridge{grid-template-columns:1fr;gap:22px;padding:24px 0}.learning-bridge h2{font-size:18px}.learning-bridge li{grid-template-columns:95px 1fr;gap:14px;font-size:10px}.neural-notes{font-size:11px}.learning-bridge p{font-size:11px}.neural-main .bottom-note{margin-top:5px}}
 @media(max-width:370px){.drawing-toolbar{display:block}.drawing-toolbar>div{justify-content:space-between;margin-top:4px}.training-actions button{padding:7px}.neural-intro h1{font-size:25px}.training-stats strong{font-size:20px}}
 @media(max-height:520px) and (min-width:761px){.neural-intro{padding:16px 0}.neural-intro h1{font-size:26px}.drawing-column{max-width:660px}}
+
+/* Keep prediction, training and the next experiment in one reading path. */
+.drawing-board .prediction{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 16px;margin:0;padding:14px 16px;border-top:1px solid var(--line);background:var(--soft)}
+.prediction .prediction-question,.prediction .guess-options{margin:0}
+.prediction .prediction-question{display:block}
+.prediction h2{font-size:12px;margin:0}
+.prediction h2 small{font-size:10px;font-weight:400;color:var(--muted);margin-left:6px}
+.prediction p{margin:4px 0 0}
+.prediction .guess-options{display:flex;gap:7px}
+.prediction button{min-height:44px;background:var(--surface)}
+.prediction #prediction-result{grid-column:1/-1;min-height:18px;margin:0;font-size:10px}
+.training-actions button,.drawing-toolbar button,.reset-actions button{min-height:44px}
+.compare-action{display:flex;justify-content:space-between;align-items:center;gap:18px;border-top:1px solid var(--line);padding:14px 0}
+.compare-action strong{font-size:12px}
+.compare-action p{font-size:10px;color:var(--muted);line-height:1.8;margin:4px 0 0}
+.compare-action button{border:1px solid var(--line);border-radius:7px;padding:10px 12px;min-height:44px;font-size:11px;white-space:nowrap}
+.compare-action button:not(:disabled):hover{border-color:var(--ink)}
+@media(max-width:760px){
+ .drawing-board .prediction{grid-template-columns:1fr;padding:12px;gap:8px}
+ .prediction .guess-options{display:grid;grid-template-columns:1fr 1fr}
+ .training-actions{display:grid;grid-template-columns:1fr 1fr}
+ .training-actions button{font-size:11px}
+ .compare-action{align-items:flex-start;gap:12px}
+ .compare-action p{max-width:20em}
+ .compare-action button{white-space:normal;flex:0 0 124px}
+}

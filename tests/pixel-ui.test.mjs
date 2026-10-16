@@ -31,6 +31,18 @@ async function boot({ reduced = false, missingCanvas = false } = {}) {
     pixels: id => [...els.get(id).ctx.pixels.values()],
   };
 }
+test('the drawing-side parcel size follows committed edits, cancellation and undo', async () => {
+  const u = await boot(); try {
+    const badge = u.els.get('drawing-size'); assert.ok(badge, 'parcel size must be visible beside the drawing');
+    const original = badge.textContent; assert.equal(original, u.els.get('packed-size').textContent + ' B');
+    u.click('preset-noise'); assert.equal(badge.textContent, '66 B');
+    u.click('preset-blank'); assert.equal(badge.textContent, '33 B');
+    u.pointer('pointerdown', 1, 1); u.pointer('pointermove', 220, 1); u.pointer('pointercancel', 220, 1);
+    assert.equal(badge.textContent, '33 B');
+    u.click('undo'); assert.equal(badge.textContent, '66 B');
+    u.click('undo'); assert.equal(badge.textContent, original);
+  } finally { u.restore(); }
+});
 test('send decodes all 256 actual pixels, commits only on arrival, and ignores repeat sends', async () => {
   const u = await boot(); try {
     const expected = u.pixels('editor'); u.click('send'); u.click('send');
