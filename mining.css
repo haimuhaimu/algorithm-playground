@@ -4,3 +4,9 @@
 @media(prefers-reduced-motion:reduce){.planet,.planet-body{transition:none}}
 .planet[aria-disabled=true]{cursor:default}.planet[aria-disabled=true]:hover{transform:none}#bar-you{background:var(--good)}
 .starfield{overflow:clip}
+/* Results are an explicit next step, never an unexpected automatic jump. */
+.view-results{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 14px;border-radius:6px;background:var(--ink);color:var(--paper);font-size:12px;white-space:nowrap;margin-left:auto}
+.view-results[hidden]{display:none}
+.return-mission{display:inline-flex;align-items:center;min-height:44px;font-size:12px;color:var(--good);text-decoration:underline;text-underline-offset:4px;margin-top:12px}
+#results-title,#mission-actions{scroll-margin-top:24px}
+@media(max-width:760px){.mission-feedback{flex-wrap:wrap}.mission-feedback p{flex:1}.view-results{width:100%;margin-left:0}.mission-feedback p,.mission-actions p{font-size:11px}.planet-sample{font-size:10px}.planet-truth{font-size:10px}}

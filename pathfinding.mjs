@@ -3,6 +3,7 @@ const $=id=>document.getElementById(id),names=['bfs','astar'];
 let map=makeMap(),preset='detour',tool='wall',traces=null,step=0,playing=false,timer=null,edited=false,stroke=null;
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const cells={};
+$('map-editing').open=!matchMedia('(max-width:760px)').matches;
 for(const name of names){
  cells[name]=Array.from({length:map.cols*map.rows},(_,index)=>{
   const button=document.createElement('button');button.className='cell';button.dataset.index=index;button.tabIndex=index===map.start?0:-1;
@@ -33,6 +34,7 @@ function render(){
  }
  $('play').innerHTML=playing?'暂停 <span aria-hidden="true">Ⅱ</span>':done?'重放这张图 <span aria-hidden="true">↻</span>':step>0?'继续找路 <span aria-hidden="true">▶</span>':'开始找路 <span aria-hidden="true">▶</span>';
  $('play').dataset.playing=playing;$('step').disabled=playing;
+ $('editing-label').textContent=({wall:'画墙',erase:'橡皮',start:'移起点',goal:'移终点'})[tool];
  $('wall-count').textContent=`${map.walls.length} 格墙`;
  $('play-status').textContent=done?'本轮完成，可以改图再试。':playing?`正在展开第 ${step} 步`:
   traces?`已暂停在第 ${step} 步`:edited?'地图已改变，上轮结果已清除。':'地图就绪，等你出题。';

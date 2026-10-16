@@ -24,7 +24,7 @@ function render(){
   const label=move?`第 ${i+1} 趟，${names[move.arm]}，${move.reward} 块矿石`:`第 ${i+1} 趟，尚未出发`;
   item.setAttribute('aria-label',label);item.title=label;return item;
  }));
- $('results').hidden=!completed();
+ $('results').hidden=!completed();$('view-results').hidden=!completed();
 }
 function reveal(){
  const entries=[['you',record],...['greedy','epsilon','ucb'].map(key=>[key,runPolicy(world,key)])];
