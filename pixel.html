@@ -45,7 +45,7 @@
      <div class="code-row"><i class="color-3"></i><span id="count-3"></span><code id="code-3"></code></div>
     </div>
     <dl class="packet-details"><div><dt>颜色信息量（熵）</dt><dd id="entropy"></dd></div><div><dt>图案编码</dt><dd id="payload"></dd></div><div><dt>编码树 + 补齐</dt><dd id="overhead"></dd></div></dl>
-   </div><div class="wire"><div class="wire-heading"><span>电线上的 0 和 1</span><span id="wire-count">等待寄出</span></div><code id="wire-bits">画好了，就寄出吧。</code><div class="wire-track"><i id="wire-progress"></i></div><p class="packing-caption">左边按出现次数给颜色分配暗号；这里展示实际邮包的二进制片段。树和补齐也计入体积。</p></div></div>
+   </div><div class="wire"><div class="wire-heading"><span>当前邮包的 0 和 1</span><span id="wire-count">正在准备邮包</span></div><code id="wire-bits">正在读取画纸…</code><div class="wire-track"><i id="wire-progress"></i></div><p class="packing-caption" id="wire-caption">这里展示当前画纸的实际邮包片段，树和补齐也计入体积。</p></div></div>
   </details>
   <p class="post-status" id="status" role="status">这只小猫已经准备好了。也可以添几笔，再寄出去。</p>
   <section class="pixel-bridge"><div><p class="eyebrow">玩过以后，再认识它</p><h2>越容易猜到，<br><span>越不需要说那么多。</span></h2><a href="https://haimuhaimu.github.io/genai-learning-os/?page=strategy-case&amp;case=entropy-kl-tradeoff" target="_blank" rel="noopener noreferrer">回到算法学习页：熵与信息量 ↗</a></div><div><h3>试试只画两种颜色。</h3><p>出现得越频繁的颜色，通常能用越短的暗号表示。这是 Huffman 编码的想法。</p><h3>再换成「杂色」，看邮包变大。</h3><p>当四种颜色一样常见，就没什么便宜可占；再加上编码表，甚至会比原图大。压缩不是魔法。</p><h3>漂亮，不一定更省空间。</h3><p>这里的算法只数颜色，不理解图案。把格子打乱，只要颜色数量一样，包的大小就一样。</p></div></section>

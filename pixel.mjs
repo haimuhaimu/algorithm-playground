@@ -39,6 +39,19 @@ function receipt() {
   else if (!received) $('receipt').textContent = '还没有来信';
   else $('receipt').textContent = equal(received.pixels, pixels) ? `完整收到 · 256 / 256 格一致 · ${received.bytes} B` : `上次收到 ${received.bytes} B · 画纸已改，待重新寄出`;
 }
+function renderIdleWire(packet) {
+  if (job) return;
+  const bits = [...packet.packet].map(byte => byte.toString(2).padStart(8, '0')).join('');
+  const delivered = received && equal(received.pixels, pixels);
+  $('wire-count').textContent = delivered ? `已送达 · ${bits.length} / ${bits.length} bit` : `当前画纸待寄出 · ${bits.length} bit`;
+  $('wire-bits').textContent = bits.slice(-96);
+  $('wire-progress').style.width = delivered ? '100%' : '0%';
+  $('wire-caption').textContent = delivered
+    ? '当前画纸与来信一致。这里是已送达邮包的最后 96 位；刷新不会重新寄送。'
+    : received
+      ? '这里是当前画纸待寄邮包的最后 96 位。收件处保留上次来信，寄出后才会更新。'
+      : '这里是当前画纸待寄邮包的最后 96 位。尚未寄送，树和补齐也计入体积。';
+}
 function render() {
   draw(context, gesture?.draft || pixels, focused);
   const packet = encode(pixels), size = packet.packet.length;
@@ -58,13 +71,12 @@ function render() {
   $('send').setAttribute('aria-disabled', !!job);
   $('challenge').textContent = size <= 48 ? `轻装达成 · ${size} B / 48 B。还能画点什么？` : `小挑战：把一张喜欢的画装进 48 B。还差 ${size - 48} B。`;
   receipt();
+  renderIdleWire(packet);
 }
 function cancelSend(message) {
   if (!job) return;
   job = null; cancelAnimationFrame(frame); frame = 0;
   draw(receivedContext, received?.pixels);
-  $('wire-progress').style.width = '0%'; $('wire-count').textContent = '寄送已取消';
-  $('wire-bits').textContent = '画纸和上次来信都还在。';
   if (message) $('status').textContent = message;
   render();
 }
@@ -130,6 +142,10 @@ $('send').addEventListener('click', () => {
   const snapshot = [...pixels], encoded = encode(snapshot), decoded = decode(encoded.packet, 256);
   const current = { snapshot, decoded, encoded, start: null }; job = current;
   const bits = [...encoded.packet].map(byte => byte.toString(2).padStart(8, '0')).join('');
+  $('wire-count').textContent = `0 / ${bits.length} bit`;
+  $('wire-bits').textContent = '正在把编码树与图案装进字节…';
+  $('wire-progress').style.width = '0%';
+  $('wire-caption').textContent = '正在模拟寄送当前邮包。这里只展示最近经过的 96 位，新信送达前保留上次来信。';
   function advance(time) {
     if (job !== current) return;
     if (current.start === null) current.start = time;
@@ -162,7 +178,7 @@ const draft=readDraft(DRAFT_KEYS.pixel,validatePixelDraft);
 if(draft.value){
   ({pixels,color,history}=draft.value);
   if(draft.value.received)received={pixels:draft.value.received,bytes:encode(draft.value.received).packet.length};
-  $('status').textContent='画纸和上次来信已恢复。可以接着画，或重新寄出。';
+  $('status').textContent=received?'画纸和上次来信已恢复。可以接着画，或重新寄出。':'画纸已恢复，还没有来信。画好了就寄出吧。';
 }
 $('draft-status').textContent=draftMessage(draft.status);
 for(const name of ['cat','heart','noise','blank'])$('preset-'+name).setAttribute('aria-pressed',equal(pixels,preset(name)));
