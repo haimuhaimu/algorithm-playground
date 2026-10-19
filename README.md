@@ -4,7 +4,7 @@
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
 
-Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, a blind-box mining game about exploration vs exploitation, a pixel postcard editor with real lossless Huffman encoding, and a tiny learned world-model flight lab. No account required.
+Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, a blind-box mining game about exploration vs exploitation, a pixel postcard editor with real lossless Huffman encoding, a tiny learned world-model flight lab, and an evolving AI art studio about local edits, reusable workflows, and improvement methods. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
 
@@ -22,7 +22,9 @@ Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs 
 
 第八个实验是「像素邮局」：在 16×16 四色画纸上涂画，以真实 Huffman 字节包模拟寄送并逐格解码。灵感连接学习页的熵与信息量；支持触摸、键盘、30 次撤销与减少动画。包大小包含编码树和补齐，不冒充 PNG 文件体积；相同颜色频率的不同图案大小相同。[直接玩像素邮局 →](https://haimuhaimu.github.io/algorithm-playground/pixel.html)
 
-第九个实验是「脑内预演室」：教小飞船从试飞经历中预测运动，在脑内选路线，再用真实试飞检验。先跟着完成四趟试飞，再面对“只换目标，要不要重新学习”的独立选择；结尾保留实际轨迹，回顾学习、世界变化和重新规划的区别。九个实验可从导航切换。[直接玩脑内预演室 →](https://haimuhaimu.github.io/algorithm-playground/world-model.html)
+第九个实验是「脑内预演室」：教小飞船从试飞经历中预测运动，在脑内选路线，再用真实试飞检验。先跟着完成四趟试飞，再面对“只换目标，要不要重新学习”的独立选择；结尾保留实际轨迹，回顾学习、世界变化和重新规划的区别。[直接玩脑内预演室 →](https://haimuhaimu.github.io/algorithm-playground/world-model.html)
+
+第十个实验是「会进化的 AI 创作室」：为虚构角色挑选海报、局部返修，再比较助手寻找改法的方式。相同任务与预算下，选择会改变实际作品；新委托继续使用你保留的方法，最后由你决定采用候选还是保留原版。十个实验可从导航切换。[直接玩 AI 创作室 →](https://haimuhaimu.github.io/algorithm-playground/rsi.html)
 
 ## 本地运行
 
@@ -40,7 +42,7 @@ npm start
 npm run verify
 ```
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只包含白名单中的运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`，探矿入口为 `mining.html`，像素入口为 `pixel.html`，脑内预演室入口为 `world-model.html`。
+此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只包含白名单中的运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`，探矿入口为 `mining.html`，像素入口为 `pixel.html`，脑内预演室入口为 `world-model.html`，AI 创作室入口为 `rsi.html`。
 
 ## 在线演示与更新
 
@@ -57,6 +59,15 @@ npm run verify
 5. 跑一轮对照。修改设置后，上轮结果会保留并标记为旧结果，不会假装是新实验。
 
 ## 模型边界
+
+### 会进化的 AI 创作室
+
+- 角色、服装、动作与场景参数直接驱动原创 SVG 插画；没有真实生图服务、大模型调用或私有角色素材。局部返修只改变选中的一处，整张重画在三种确定性组合中切换；分数仅检查是否符合委托，不评价审美。
+- 首批有三次操作预算，精选与撤回免费。无变化的返修会说明预算消耗并保留精选；真正改变作品后需要重新精选。原始出图与历史独立保留。
+- 单图返修不改变下一组的出图规则。两套改进器在同一批任务上各试最多两次：固定顺序依次尝试规则，诊断法统计失败类型后选择规则。只有合格张数严格增加的候选会被保留。
+- 用户选择的改进器会用于下一批未参加上轮试验的动作委托，最多再试一次。候选展示不等于已经安装，采用或拒绝会改变最终版本；结尾分别报告试验结果与实际采用结果，不替未运行的方法填成绩。
+- 这是 RSI 思想的有限教学模型，不是开放式自主 RSI。任务、错误类型、规则与诊断方法都已预设；选择预设改进器不等同于系统自主发明新算法，也不证明能无限变强。
+- 全部本地计算，无上传、追踪、外部素材或自动保存；刷新重置。完成浏览器桌面与手机/横屏视口验收，未做实体手机验收。
 
 ### 脑内预演室
 
@@ -163,6 +174,8 @@ npm run verify
 - `world-model-environment.mjs` / `world-model-session.mjs`：独立真实环境、试飞快照和学习生命周期。
 - `world-model-lesson.mjs`：引导、独立判断、同基线重试和实验结尾的状态流程。
 - `world-model.html` / `world-model.css` / `world-model.mjs`：脑内预演室、轨迹可视化、分步控制与学习回顾。
+- `rsi-core.mjs` / `rsi-session.mjs`：有限插画解释器、返修、候选评估与学习流程。
+- `rsi.html` / `rsi.css` / `rsi.mjs`：AI 创作室、作品前后对照与基于实际选择的实验结尾。
 - `tests/`：Node 内置测试，无外部测试依赖。
 
 已验证桌面浏览器及响应式窗口模拟，未完成真实手机/原生容器验收。只有涂鸦与像素邮局保留本地草稿：不跨浏览器、设备或站点同步，也不是云备份。禁用存储、空间不足或损坏的旧草稿会显示提示但不阻止游玩；删除本地草稿不改变当前画面，下一次操作会重新保存。清理站点数据会移除草稿；异常退出可能丢失尚未暂停的训练进度。

@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 
-test('every experiment includes a direct link to the world-model preview and one current page',async()=>{
- for(const file of ['index','pathfinding','sand','firefly','evolution','neural','mining','pixel','world-model']){
+test('every experiment links to the world model and AI creation studio with one current page',async()=>{
+ for(const file of ['index','pathfinding','sand','firefly','evolution','neural','mining','pixel','world-model','rsi']){
   const html=await readFile(new URL(`../${file}.html`,import.meta.url),'utf8');
   const nav=html.match(/<nav class="experiment-nav"[\s\S]*?<\/nav>/)[0];
   assert.match(nav,/href="\.\/world-model\.html"/,file);
+  assert.match(nav,/href="\.\/rsi\.html"[^>]*>10 AI 创作室<\/a>/,file);
   assert.equal([...nav.matchAll(/aria-current="page"/g)].length,1,file);
  }
 });

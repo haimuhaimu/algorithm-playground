@@ -15,6 +15,8 @@ Object.assign(TYPES,{'pixel.html':'text/html; charset=utf-8','pixel.css':'text/c
 TYPES['local-drafts.mjs']='text/javascript; charset=utf-8';
 for(const file of ['world-model','world-model-core','world-model-environment','world-model-session','world-model-lesson'])TYPES[file+'.mjs']='text/javascript; charset=utf-8';
 TYPES['world-model.html']='text/html; charset=utf-8';TYPES['world-model.css']='text/css; charset=utf-8';
+for(const file of ['rsi','rsi-core','rsi-session'])TYPES[file+'.mjs']='text/javascript; charset=utf-8';
+TYPES['rsi.html']='text/html; charset=utf-8';TYPES['rsi.css']='text/css; charset=utf-8';
 export function createAppServer(root=ROOT){
  const canonicalRoot=realpath(root);
  return createServer(async(req,res)=>{
