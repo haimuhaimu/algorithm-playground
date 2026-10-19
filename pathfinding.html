@@ -24,6 +24,11 @@
     <div class="drawing-tools" role="group" aria-label="绘图工具"><button data-tool="wall" aria-pressed="true">画墙</button><button data-tool="erase" aria-pressed="false">橡皮</button><button data-tool="start" aria-pressed="false">移起点 S</button><button data-tool="goal" aria-pressed="false">移终点 G</button></div>
     <button id="clear-walls" class="clear-button">清空墙</button>
    </div></details>
+   <div class="map-history" role="group" aria-label="地图编辑历史">
+    <button id="undo-map" class="secondary-button" aria-label="撤销改图" aria-keyshortcuts="Control+z Meta+z" disabled>↶ 撤销</button>
+    <button id="redo-map" class="secondary-button" aria-label="重做改图" aria-keyshortcuts="Control+Shift+z Meta+Shift+z Control+y" disabled>↷ 重做</button>
+    <span id="history-status">画错也没关系</span>
+   </div>
    <div class="play-row">
     <button class="play-button" id="play">开始找路 <span aria-hidden="true">▶</span></button>
     <button class="secondary-button" id="step">走一步</button><button class="secondary-button" id="finish">直接看结果</button>
@@ -31,7 +36,7 @@
     <span id="play-status" role="status">地图就绪，等你出题。</span>
    </div>
   </section>
-  <div class="map-instructions"><p id="map-help">在任一地图上点按或拖动画墙，两边同步。键盘：方向键移动，空格编辑。</p><span id="wall-count">9 格墙</span></div>
+  <div class="map-instructions"><p id="map-help">两边同步，整笔可撤销。键盘：方向键移动，空格编辑，Ctrl / ⌘ Z 撤销。</p><span id="wall-count">9 格墙</span></div>
   <section class="arena" id="arena" aria-label="算法对照地图">
    <article class="algorithm-board bfs-board">
     <div class="board-heading"><div><span class="algorithm-name">BFS</span><h2>一圈一圈地找</h2></div><span id="bfs-status" class="search-status">等待出发</span></div>
@@ -54,7 +59,7 @@
   <details class="algorithm-notes"><summary>为什么都能找到最短路？这个比较又有什么边界？</summary><div><p>这里只能上下左右走，每一步成本相同。广度优先搜索按层展开，所以第一次找到终点就是最短路。</p><p>A* 使用「已走步数 + 曼哈顿距离」排序。曼哈顿距离是不考虑墙时的横向加纵向距离，在这张地图里不会高估余程，所以也能保证最短路。分数相同优先预计余程更短的节点，再按入队顺序。</p><p>两边每一拍各展开一个格子，找到终点后各自停止。探索数包括起终点，不包括仅进入待探索队列的格子；路线步数不包括起点。探索更少不等于实际运行更快，A* 还要维护排序。</p><p>相同地图必得相同结果。A* 不保证在每张地图上都省下一半搜索；路线可能不同，但最短长度相同。刷新会重置地图，无账号、上传或追踪。</p></div></details>
   <section class="bottom-note"><span>自己出题，才有新发现。</span><p>四向移动，每步成本为 1。动画用来理解过程，不代表性能跑分。</p><span class="signature">MADE BY CHEN QUAN</span></section>
  </main>
-<dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">给算法出道题。</h2><ol><li>先点「开始找路」，看看两种搜索的不同。</li><li>用「画墙」或「橡皮」改地图，也可以移动 S 起点和 G 终点。</li><li>再跑一次，看看路线和探索数量怎么变。</li><li>想看清过程？暂停后「走一步」。堵死出口也没关系，擦开一条路就能继续。</li></ol><p>手机可以在网格上直接画。网格外可正常滑动页面；支持键盘方向键和空格。改图会清除上轮结果。</p></dialog>
+<dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">给算法出道题。</h2><ol><li>先点「开始找路」，看看两种搜索的不同。</li><li>用「画墙」或「橡皮」改地图，也可以移动 S 起点和 G 终点。</li><li>画错、清空或换错地图，点「撤销」找回来；一次拖画只算一步，保留最近 30 步。按 Esc 可取消还没松手的一笔。</li><li>再跑一次，看看路线和探索数量怎么变。想看清过程？暂停后「走一步」。</li></ol><p>手机可以在网格上直接画，网格外可正常滑动。键盘方向键移动、空格编辑，Ctrl / ⌘ Z 撤销，Ctrl / ⌘ Shift Z 重做。改图和撤销都会清除上轮结果，刷新会清空地图与编辑历史。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验可编辑地图和寻路实验。</p></noscript>
 </body>
 </html>
