@@ -32,18 +32,50 @@
   </section>
   <div class="mission-actions" id="mission-actions"><p>每趟消耗 1 次机会。按 <kbd>1</kbd>–<kbd>5</kbd> 也能出发。<br><span>不是越漂亮越富矿，星球外观与产量无关。</span></p><div><button id="replay">重玩这局</button><button id="new" class="new-region">换片星域 ↗</button></div></div>
   <section class="mining-results" id="results" hidden aria-labelledby="results-title">
-   <div class="result-heading"><div><p class="eyebrow">MISSION COMPLETE</p><h2 id="results-title" tabindex="-1">如果换个思路，会怎样？</h2></div><p id="result-caption"></p></div>
+   <div class="result-heading"><div><p class="eyebrow">MISSION COMPLETE</p><h2 id="results-title" tabindex="-1">如果换个思路，会怎样？</h2><a class="replay-shortcut" href="#decision-title">逐趟看选择与理由 ↓</a></div><p id="result-caption"></p></div>
     <div class="score-row"><div><h3>你</h3><p>每一次都是你的判断</p></div><div class="score-track"><i id="bar-you"></i></div><strong id="score-you">—</strong><p class="visits" id="visits-you"></p></div>
     <div class="score-row"><div><h3>守成派</h3><p>先各试一次，之后只挖实测最好的</p></div><div class="score-track"><i id="bar-greedy"></i></div><strong id="score-greedy">—</strong><p class="visits" id="visits-greedy"></p></div>
     <div class="score-row"><div><h3>冒险派</h3><p>先各试一次，之后 20% 随机探索</p></div><div class="score-track"><i id="bar-epsilon"></i></div><strong id="score-epsilon">—</strong><p class="visits" id="visits-epsilon"></p></div>
     <div class="score-row"><div><h3>好奇派</h3><p>UCB1：奖励高，也照顾还没摸清的</p></div><div class="score-track"><i id="bar-ucb"></i></div><strong id="score-ucb">—</strong><p class="visits" id="visits-ucb"></p></div>
    <a class="return-mission" href="#mission-actions">再试一种选择 ↑</a>
    <p class="result-note">同一轮、同一颗星球，所有人的潜在收获相同；但各自只能看到自己探到的结果。30 次是一局小游戏，不是算法排名。运气会影响输赢。</p>
+   <section class="decision-replay" id="decision-replay" hidden aria-labelledby="decision-title">
+    <div class="decision-heading"><div><p class="eyebrow">回到做决定的那一刻</p><h3 id="decision-title" tabindex="-1">这一趟，为什么去那里？</h3></div><label for="replay-actor">看谁的选择<select id="replay-actor"><option value="ucb">好奇派 · UCB1</option><option value="epsilon">冒险派 · 20% 探索</option><option value="greedy">守成派 · 实测最优</option><option value="you">我自己的选择</option></select></label></div>
+    <p class="decision-intro">让算法亲自飞一遍：看样本、选星球、带回矿石，再更新判断。这是本局真实选择的演示，不会改动你的成绩。</p>
+    <div class="policy-theater" id="policy-theater">
+     <div class="policy-scene">
+      <div class="simulation-heading"><span id="sim-phase">准备出发</span><span>已带回 <b id="sim-total">0</b> 块矿</span></div>
+      <div class="starfield sim-field" id="sim-field" aria-label="所选策略的探测航行">
+       <div class="orbit orbit-one" aria-hidden="true"></div><div class="orbit orbit-two" aria-hidden="true"></div>
+       <div class="planets sim-planets">
+        <div class="planet planet-0" id="sim-planet-0"><span class="planet-body" aria-hidden="true"><i></i></span><span class="planet-name">苔原</span><span class="planet-sample" id="sim-sample-0"></span><small id="sim-score-0"></small></div>
+        <div class="planet planet-1" id="sim-planet-1"><span class="planet-body" aria-hidden="true"><i></i></span><span class="planet-name">珊瑚</span><span class="planet-sample" id="sim-sample-1"></span><small id="sim-score-1"></small></div>
+        <div class="planet planet-2" id="sim-planet-2"><span class="planet-body" aria-hidden="true"><i></i></span><span class="planet-name">琥珀</span><span class="planet-sample" id="sim-sample-2"></span><small id="sim-score-2"></small></div>
+        <div class="planet planet-3" id="sim-planet-3"><span class="planet-body" aria-hidden="true"><i></i></span><span class="planet-name">雾蓝</span><span class="planet-sample" id="sim-sample-3"></span><small id="sim-score-3"></small></div>
+        <div class="planet planet-4" id="sim-planet-4"><span class="planet-body" aria-hidden="true"><i></i></span><span class="planet-name">月白</span><span class="planet-sample" id="sim-sample-4"></span><small id="sim-score-4"></small></div>
+       </div>
+       <div class="launchpad" id="sim-launchpad" aria-hidden="true"><span>⌁</span><small>算法探测站</small></div>
+       <div class="probe" id="sim-probe" hidden aria-hidden="true"><svg viewBox="0 0 32 44" width="28" height="38"><path d="M16 2 Q3 14 8 30 L24 30 Q29 14 16 2Z" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.8"/><circle cx="16" cy="16" r="4" fill="var(--accent)" stroke="var(--ink)" stroke-width="1.5"/><path d="M8 23 L3 33 L10 31 M24 23 L29 33 L22 31" fill="var(--ink)"/><path d="M12 33 L16 42 L20 33" fill="var(--accent)" stroke="var(--ink)" stroke-width="1.5"/></svg></div>
+      </div>
+     </div>
+     <div class="simulation-console">
+      <div class="simulation-narration" role="status" aria-atomic="true"><p class="eyebrow" id="sim-round"></p><h4 id="sim-choice"></h4><p id="sim-reason"></p><p id="sim-feedback" class="sim-feedback"></p></div>
+      <div class="simulation-controls"><button id="sim-play">连续演示</button><button id="sim-step">只演这一趟</button><button id="sim-restart">从头开始</button><label for="sim-speed">速度<select id="sim-speed"><option value="1">1×</option><option value="2">2×</option></select></label></div>
+      <p class="sim-hint" id="sim-hint">从当前趟开始；想看完整过程，先点「从头开始」。</p>
+     </div>
+    </div>
+    <div class="replay-timeline"><button id="replay-prev" aria-label="查看上一趟">← 上一趟</button><label for="replay-round"><output id="replay-round-label" for="replay-round">第 6 / 30 趟</output><input id="replay-round" type="range" min="1" max="30" step="1" value="6" aria-label="复盘第几趟"></label><button id="replay-next" aria-label="查看下一趟">下一趟 →</button></div>
+    <details class="decision-details"><summary>查看这一趟的完整依据与结果</summary>
+    <div class="decision-layout">
+     <div class="decision-evidence"><h4>01 · 出发前，只知道这些</h4><p id="replay-knowledge"></p><table class="decision-table"><caption class="sr-only">当前策略在出发前的观测；均值是样本平均，不是真实产矿概率。</caption><thead><tr><th scope="col">星球</th><th scope="col">矿 / 次</th><th scope="col">实测均值</th><th scope="col" id="replay-score-heading">UCB 分数</th></tr></thead><tbody id="replay-observations"></tbody></table><p class="replay-footnote">实测均值 = 已获矿石 ÷ 已探次数。它是有限样本，不是真实产矿概率。</p><p id="replay-formula" class="replay-footnote">UCB 分数 = 实测均值 + 探索加分；加分照顾样本较少的星球，不是产矿概率。展示四舍五入，选择使用完整精度。</p></div>
+     <div class="decision-story" aria-live="polite" aria-atomic="true"><h4>02 · 当时的选择</h4><p id="replay-choice" class="replay-choice"></p><span id="replay-kind" class="replay-kind"></span><p id="replay-reason"></p><div class="decision-arrival"><h4>03 · 到达后，才知道结果</h4><p id="replay-outcome"></p><p class="replay-footnote">一次挖空不能证明选错，一次收获也不能证明策略更好。</p></div></div>
+    </div></details>
+   </section>
   </section>
   <section class="mining-bridge"><div><p class="eyebrow">玩过以后，再认识它</p><h2>好结果，不一定来自好判断。<br><span>坏结果，也未必是坏选择。</span></h2><a href="https://haimuhaimu.github.io/genai-learning-os/?page=decision-math" target="_blank" rel="noopener noreferrer">去 AI 决策数学继续学 ↗</a></div><ol><li><b>刚才挖空了，还去吗？</b><p>一次空手，不代表没有矿。你看到的是样本，不是星球真正的产量。</p></li><li><b>总去最赚的，会错过什么？</b><p>探索花掉眼前的机会，也可能发现更好的去处。这就是「探索与利用」。</p></li><li><b>算法也在猜。</b><p>它们没有矿藏地图，只是用不同方法把已有反馈变成下一次选择。</p></li></ol></section>
   <details class="mining-notes"><summary>这局游戏背后的算法与边界</summary><div><p>这是多臂老虎机（multi-armed bandit）的矿星比喻，不涉及真实金钱。每颗星球的产矿概率在一局内固定，五个概率是 15%、30%、45%、60%、80%，开局随机分配。每趟收获是独立的 0 或 1 块矿石，不存在越挖越少或保底。</p><p>三个策略都先按顺序各探一次。守成派（greedy）选实测平均收获最高的；冒险派（ε-greedy）每次有 20% 概率均匀随机选星球，否则选实测最好的；好奇派（UCB1）选「平均收获 + √(2 ln 总次数 / 该星球次数)」最大的。相同分数优先选编号小的星球。这里固定 ε=0.2，不宣称渐减 ε 策略的理论保证。</p><p>所有 30×5 个潜在结果在开局时生成。相同星域和选择顺序可以复现；赛后才运行并展示对照，策略无法偷看未来或真实概率。赛后显示的产矿概率是模拟器设定，不是由这 30 次实验准确估计出来的。</p><p>灵感延续陈全 GenAI Learning OS 的「先判断、看反馈、再解释」，算法和界面独立实现。UCB1 参考 <a href="https://homes.di.unimi.it/~cesabian/Pubblicazioni/ml-02.pdf" target="_blank" rel="noopener noreferrer">Auer、Cesa-Bianchi 与 Fischer（2002）↗</a>。原生 HTML/CSS 插画，没有第三方素材。</p><p>纯浏览器本地计算，无账号、上传、追踪或自动保存。切换标签页或打开帮助会取消尚未到达的探测，不扣次数；回来不会自动出发。减少动画时点击立即结算。刷新会开始新局；重玩同一局会标记为复盘，不再作为盲测。</p></div></details>
   <footer class="bottom-note"><span>好奇心，也是一种策略。</span><span class="signature">MADE BY CHEN QUAN</span></footer>
  </main>
- <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">带着好奇心出发。</h2><ol><li>点一颗星球，花 1 次机会，带回 0 或 1 块矿石。</li><li>观察「矿石 / 探测次数」。刚开始的数据很少，不一定靠谱。</li><li>选择继续挖，或试试别处。你有 30 次机会。</li><li>结束后揭晓矿藏，也看看三种算法在这局拿到了多少。</li></ol><p>数字键 1–5 可以选择星球，Tab 和 Enter 同样可用。重玩同一局是已知历史的复盘；换片星域才是新一轮探索。没有自动保存。</p></dialog>
+ <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">带着好奇心出发。</h2><ol><li>点一颗星球，花 1 次机会，带回 0 或 1 块矿石。</li><li>观察「矿石 / 探测次数」。刚开始的数据很少，不一定靠谱。</li><li>选择继续挖，或试试别处。你有 30 次机会。</li><li>结束后揭晓矿藏，也看看三种算法在这局拿到了多少。</li><li>点「逐趟看选择与理由」，切换策略和回合。先看出发前的样本，再看选择理由，最后看实际收获。</li></ol><p>数字键 1–5 可以选择星球，Tab 和 Enter 同样可用。重玩同一局是已知历史的复盘；换片星域才是新一轮探索。没有自动保存。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验盲盒探矿。</p></noscript>
 </body></html>
