@@ -13,6 +13,7 @@ Object.assign(TYPES,{'neural.html':'text/html; charset=utf-8','neural.css':'text
 Object.assign(TYPES,{'mining.html':'text/html; charset=utf-8','mining.css':'text/css; charset=utf-8','mining.mjs':'text/javascript; charset=utf-8','mining-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'pixel.html':'text/html; charset=utf-8','pixel.css':'text/css; charset=utf-8','pixel.mjs':'text/javascript; charset=utf-8','pixel-core.mjs':'text/javascript; charset=utf-8'});
 TYPES['local-drafts.mjs']='text/javascript; charset=utf-8';
+TYPES['evolution-birth.mjs']='text/javascript; charset=utf-8';
 for(const file of ['world-model','world-model-core','world-model-environment','world-model-session','world-model-lesson'])TYPES[file+'.mjs']='text/javascript; charset=utf-8';
 TYPES['world-model.html']='text/html; charset=utf-8';TYPES['world-model.css']='text/css; charset=utf-8';
 for(const file of ['rsi','rsi-core','rsi-session'])TYPES[file+'.mjs']='text/javascript; charset=utf-8';

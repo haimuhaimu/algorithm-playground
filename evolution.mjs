@@ -1,4 +1,5 @@
 import {WIDTH,HEIGHT,POPULATION,ROAD_RADIUS,presetTrack,makeTrack,createRace,nextGeneration,positionAt} from './evolution-core.mjs';
+import {createBirthView} from './evolution-birth.mjs';
 
 const $=id=>document.getElementById(id),field=$('race'),ctx=field.getContext('2d');
 const chart=$('history').getContext('2d'),geneCanvas=$('genes').getContext('2d');
@@ -13,6 +14,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 if(!ctx||!chart||!geneCanvas){
  document.querySelector('.raceboard').innerHTML='<p class="race-error" role="alert">这个浏览器暂时无法绘制赛道。请换用支持 Canvas 的浏览器，上方的其他实验仍可访问。</p>';
  document.querySelector('.race-controls').hidden=true;
+ $('inspect-birth').disabled=true;
 }else{
  function controls(){
   $('play').textContent=playing||batchLeft?'暂停':'继续';$('play').setAttribute('aria-pressed',String(playing||batchLeft>0));
@@ -195,5 +197,12 @@ if(!ctx||!chart||!geneCanvas){
  }
  $('theme').addEventListener('click',()=>{explicitTheme=true;setTheme(document.documentElement.dataset.theme!=='dark');});
  theme.addEventListener('change',e=>{if(!explicitTheme)setTheme(e.matches);});
+ const birthView=createBirthView();
+ $('birth-dialog').addEventListener('close',()=>{$('status').textContent='已返回比赛，仍然暂停。你可以继续观察，或手动继续比赛。';});
+ $('inspect-birth').addEventListener('click',()=>{
+  pause();mode='watch';if(!race.births)advance();
+  $('status').textContent='出生观察中，比赛已暂停。第 1 代随机出生；这里从第 2 代开始保留真实父母与变异记录。';
+  controls();draw();birthView.open(race);
+ });
  controls();setTheme(theme.matches);schedule();
 }

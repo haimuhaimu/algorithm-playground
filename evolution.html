@@ -16,7 +16,7 @@
  </header>
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html" aria-current="page">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="evolution-main">
-  <section class="race-intro"><h1>这一代，<span>能跑得更顺吗？</span></h1><p>画条赛道，给小车一点时间。看试错如何变成一条更好的路线。</p></section>
+  <section class="race-intro"><h1>这一代，<span>能跑得更顺吗？</span></h1><p>画条赛道，给小车一点时间。看试错如何变成一条更好的路线。</p><button id="inspect-birth" class="birth-entry">看一辆车怎么出生 <span>父母 → 继承 → 变异 → 实跑 ↗</span></button></section>
   <section class="evolution-lab" aria-label="遗传赛车实验">
    <div class="race-column">
     <div class="raceboard">
@@ -32,7 +32,7 @@
     <h2>先选一条路</h2>
     <div class="track-presets" role="group" aria-label="预设赛道"><button data-preset="sweep" aria-pressed="true"><b>大回环</b><small>先学会顺着弯走</small></button><button data-preset="hairpin" aria-pressed="false"><b>发卡弯</b><small>别急，掉头要慢一点</small></button><button data-preset="slalom" aria-pressed="false"><b>连续弯</b><small>一弯接着一弯</small></button></div>
     <label class="mutation-label" for="mutation">变异概率 <output id="mutation-value">18%</output><input type="range" id="mutation" min="0" max="100" value="18" step="1"><small>下一代有多少机会尝试新走法。</small></label>
-    <div class="gene-panel"><div><h2>领跑车的路线基因</h2><span>24 段偏移</span></div><canvas id="genes" width="480" height="80" aria-label="当前领跑车的路线偏移基因"></canvas><p>每一格决定一段路靠左还是靠右。不是神经网络，也不是预先写好的最佳路线。</p></div>
+    <div class="gene-panel"><div><h2>领跑车的路线基因</h2><span>24 个路标偏移</span></div><canvas id="genes" width="480" height="80" aria-label="当前领跑车的路线偏移基因"></canvas><p>每一格决定一个路标的左右偏移，连起来就是候选路线。不是神经网络，也不是预先写好的最佳路线。</p></div>
     <label class="ghost-control"><input id="ghost" type="checkbox" checked>对照第一代的最佳路线</label>
     <div class="race-reset"><button id="clear-obstacles">清空路障</button><button id="reset">重新进化</button></div>
     <p class="race-challenge">试试看：等它跑顺了，在路中央放一个障碍。新一轮的后代会从哪边绕过去？</p>
@@ -44,4 +44,18 @@
  </main>
  <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">给进化出一道题。</h2><ol><li>先看小车跑一轮。亮绿色是当前领跑车，不是预定冠军。</li><li>点「快进 10 代」，看看用时和路线有什么变化。</li><li>选「放路障」，点在路上。新比赛会从第一代开始。</li><li>选「画赛道」，按住拖一条足够长的线，松手开始新实验。</li></ol><p>变异太少可能停滞，太多也不一定更好。打开说明会暂停比赛，关闭后由你继续。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验遗传赛车。</p></noscript>
+ <dialog id="birth-dialog" class="birth-dialog" aria-labelledby="birth-title">
+  <header class="birth-header"><div><p id="birth-generation" class="birth-eyebrow"></p><h2 id="birth-title">看一辆车怎么出生</h2></div><button id="birth-close" aria-label="关闭出生观察，返回暂停的比赛">返回比赛 ×</button></header>
+  <div class="birth-toolbar"><label>观察哪辆后代 <select id="birth-child" aria-label="选择观察的后代"></select></label><span>原样保留的 2 辆精英车不在这里 · 不挑选赢家</span></div>
+  <nav class="birth-stages" aria-label="出生过程"><button id="birth-stage-0" aria-current="step">01 父母</button><button id="birth-stage-1">02 继承</button><button id="birth-stage-2">03 变异</button><button id="birth-stage-3">04 实跑</button></nav>
+  <div class="birth-workbench">
+   <div class="birth-visual"><canvas id="birth-scene" width="900" height="480" role="img" aria-label="父母、继承与变异路线对照"></canvas><div id="birth-legend" class="birth-legend"></div></div>
+   <div class="birth-detail-controls"><div id="birth-genome" class="birth-genome" aria-hidden="true"></div><label id="birth-segment-control" class="birth-segment">对照第 <output id="birth-segment-number">1</output> 个路标<input id="birth-segment" type="range" min="0" max="23" step="1" value="0" aria-label="选择要观察的路标"></label><p id="birth-segment-detail" class="birth-segment-detail"></p></div>
+   <div class="birth-story"><h3 id="birth-step-title" tabindex="-1"></h3><p id="birth-explanation"></p><div id="birth-parents" class="birth-parents"><button id="birth-parent-a" aria-pressed="true"></button><button id="birth-parent-b" aria-pressed="false"></button></div><p id="birth-selection-note" class="birth-small"></p><button id="birth-step-next" class="birth-primary">看它继承了什么 →</button>
+    <div id="birth-playback" hidden><p id="birth-clock"></p><div class="birth-play-buttons"><button id="birth-run" class="birth-primary">开始同场实跑 →</button><button id="birth-finish">直接看结果</button></div><label class="birth-scrub">同一个模拟时钟<input id="birth-time" type="range" min="0" max="1" value="0" step="0.1" aria-label="回放模拟时间"></label></div>
+    <section id="birth-results" hidden aria-label="同场实跑的结果"><dl class="birth-scores"><div><dt>父代 A</dt><dd id="birth-a-result"></dd></div><div><dt>父代 B</dt><dd id="birth-b-result"></dd></div><div><dt>只继承，未变异</dt><dd id="birth-inherited-result"></dd></div><div><dt>最终后代</dt><dd id="birth-child-result"></dd></div></dl><p id="birth-inheritance-result"></p><p id="birth-mutation-result"></p><p class="birth-takeaway">继承是在拼已有走法；变异是在试新走法。有没有更好，得在同样条件下跑过才知道。</p></section>
+   </div>
+  </div>
+  <p class="birth-boundary">同一赛道、同一路障、同一运动规则。实跑是本地路线模拟，不是真实汽车物理；“未变异路线”是只去掉本次变异的对照。随机尝试可能进步，也可能退步。关闭后比赛保持暂停。</p>
+ </dialog>
 </body></html>

@@ -76,7 +76,7 @@ export function evaluateGenome(track,genes,obstacles=[]){
   }
  }
  const score=finished?2+1/(1+time/20):progress;
- return {samples,time,progress,finished,score};
+ return {samples,route,time,progress,finished,score};
 }
 export function positionAt(run,time){
  if(!Number.isFinite(time))throw Error('Invalid playback time');
@@ -105,18 +105,43 @@ export function nextGeneration(race){
  validateMutation(race.mutation);
  const random=randomSource(race.seed),ranked=race.runs.map((run,i)=>({score:run.score,i})).sort((a,b)=>b.score-a.score);
  const population=ranked.slice(0,2).map(({i})=>[...race.population[i]]);
+ const births=ranked.slice(0,2).map(({i})=>({kind:'elite',parentIndex:i,parentGeneration:race.generation}));
  function parent(){
   let winner=Math.floor(random.next()*POPULATION);
-  for(let i=0;i<3;i++){const candidate=Math.floor(random.next()*POPULATION);if(race.runs[candidate].score>race.runs[winner].score)winner=candidate;}
-  return race.population[winner];
+  const candidates=[winner];
+  for(let i=0;i<3;i++){const candidate=Math.floor(random.next()*POPULATION);candidates.push(candidate);if(race.runs[candidate].score>race.runs[winner].score)winner=candidate;}
+  return {index:winner,candidates,rank:ranked.findIndex(p=>p.i===winner)+1,genes:[...race.population[winner]]};
  }
  while(population.length<POPULATION){
   const a=parent(),b=parent();
-  population.push(a.map((value,i)=>{
-   let gene=random.next()<.5?value:b[i];
+  const sources=[],inherited=[],mutations=[];
+  population.push(a.genes.map((value,i)=>{
+   const source=random.next()<.5?0:1;let gene=source===0?value:b.genes[i];
+   sources.push(source);inherited.push(gene);
    if(random.next()<race.mutation)gene+= (random.next()+random.next()-1)*.65;
-   return clamp(gene,-1,1);
+   gene=clamp(gene,-1,1);
+   if(gene!==inherited[i])mutations.push({index:i,before:inherited[i],after:gene});
+   return gene;
   }));
+  births.push({kind:'child',parentGeneration:race.generation,parents:[a,b],sources,inherited,mutations,mutationRate:race.mutation});
  }
- return evaluated(race.track,race.obstacles,population,race.generation+1,random.state,race.mutation,race.history);
+ return {...evaluated(race.track,race.obstacles,population,race.generation+1,random.state,race.mutation,race.history),births};
+}
+
+// Only the immediately preceding generation is retained; no growing family tree.
+export function inspectBirth(race,index){
+ const birth=race.births?.[index];
+ if(!Number.isInteger(index)||birth?.kind!=='child')throw Error('Choose a child with birth evidence');
+ return {...birth,index,generation:race.generation,track:race.track,obstacles:race.obstacles,
+  parents:birth.parents.map(p=>({...p,run:evaluateGenome(race.track,p.genes,race.obstacles)})),
+  inheritedRun:evaluateGenome(race.track,birth.inherited,race.obstacles),childRun:race.runs[index],genes:[...race.population[index]]};
+}
+export function compareRuns(before,after){
+ if(before.finished&&after.finished){
+  const delta=before.time-after.time;
+  return {outcome:Math.abs(delta)<1e-8?'same-time':delta>0?'faster':'slower',seconds:Math.abs(delta)};
+ }
+ if(before.finished!==after.finished)return {outcome:after.finished?'gained-finish':'lost-finish'};
+ const delta=after.progress-before.progress;
+ return {outcome:Math.abs(delta)<1e-8?'same-progress':delta>0?'further':'shorter',progress:Math.abs(delta)};
 }
