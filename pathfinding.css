@@ -21,6 +21,9 @@
 .map-editing>summary span{float:right;color:var(--good);margin-right:8px}
 .map-editing[open]>summary{margin-bottom:8px}
 .map-editing .tool-row{border-bottom:0}
+.map-history{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.map-history button{min-height:36px;min-width:72px;white-space:nowrap}
+#history-status{font-size:11px;color:var(--muted);margin-left:auto}
 .map-toolbar .play-row{border-top:1px solid var(--line)}
 @media(min-width:761px){.map-editing>summary{font-size:11px;min-height:32px}}
 @media(max-width:760px){
@@ -29,6 +32,9 @@
  .map-toolbar .clear-button{margin-left:auto}
  .map-toolbar .play-row{padding-top:8px}
  .map-toolbar:has(.map-editing[open]){position:static}
- .cell{scroll-margin-top:175px}
- .arena{scroll-margin-top:175px}
+ .map-history button{min-height:44px}
+ .map-history{gap:6px;padding:6px 0}
+ #history-status{font-size:10px}
+ .cell{scroll-margin-top:235px}
+ .arena{scroll-margin-top:235px}
 }
