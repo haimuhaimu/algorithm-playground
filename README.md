@@ -4,7 +4,7 @@
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
 
-Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, a blind-box mining game about exploration vs exploitation, and a pixel postcard editor with real lossless Huffman encoding. No account required.
+Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, a blind-box mining game about exploration vs exploitation, a pixel postcard editor with real lossless Huffman encoding, and a tiny learned world-model flight lab. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
 
@@ -20,7 +20,9 @@ Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs 
 
 第七个实验是「盲盒探矿」：30 次探测、5 颗未知星球，玩完再和 greedy、ε-greedy、UCB1 比一比。开局预生成同一套潜在结果，不安排算法必胜；复盘局明确标记，不冒充首次盲测。原生 CSS 插画，无新依赖或第三方素材。[直接玩盲盒探矿 →](https://haimuhaimu.github.io/algorithm-playground/mining.html)
 
-第八个实验是「像素邮局」：在 16×16 四色画纸上涂画，以真实 Huffman 字节包模拟寄送并逐格解码。灵感连接学习页的熵与信息量；支持触摸、键盘、30 次撤销与减少动画。包大小包含编码树和补齐，不冒充 PNG 文件体积；相同颜色频率的不同图案大小相同。八个实验可从导航切换。[直接玩像素邮局 →](https://haimuhaimu.github.io/algorithm-playground/pixel.html)
+第八个实验是「像素邮局」：在 16×16 四色画纸上涂画，以真实 Huffman 字节包模拟寄送并逐格解码。灵感连接学习页的熵与信息量；支持触摸、键盘、30 次撤销与减少动画。包大小包含编码树和补齐，不冒充 PNG 文件体积；相同颜色频率的不同图案大小相同。[直接玩像素邮局 →](https://haimuhaimu.github.io/algorithm-playground/pixel.html)
+
+第九个实验是「脑内预演室」：教小飞船从试飞经历中预测运动，在脑内选路线，再用真实试飞检验。先跟着完成四趟试飞，再面对“只换目标，要不要重新学习”的独立选择；结尾保留实际轨迹，回顾学习、世界变化和重新规划的区别。九个实验可从导航切换。[直接玩脑内预演室 →](https://haimuhaimu.github.io/algorithm-playground/world-model.html)
 
 ## 本地运行
 
@@ -38,7 +40,7 @@ npm start
 npm run verify
 ```
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只包含白名单中的运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`，探矿入口为 `mining.html`，像素入口为 `pixel.html`。
+此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只包含白名单中的运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`，探矿入口为 `mining.html`，像素入口为 `pixel.html`，脑内预演室入口为 `world-model.html`。
 
 ## 在线演示与更新
 
@@ -55,6 +57,15 @@ npm run verify
 5. 跑一轮对照。修改设置后，上轮结果会保留并标记为旧结果，不会假装是新实验。
 
 ## 模型边界
+
+### 脑内预演室
+
+- 学习器仅使用已完成试飞的状态转移，通过带微小正则的线性回归拟合每轴的速度、推力和偏置参数；不导入真实环境，也不读取其隐藏参数。规划器只在当前模型里枚举 2009 条路线，再由用户确认真实试飞。
+- 每趟先推 36 拍、再滑行 24 拍，以第 60 拍落在目标半径 5 内为抵达，不要求刹停。环境是无碰撞、无测量噪声的确定性二维简化动力学；学习器的假设恰好能表达它，远比真实问题简单。
+- 预测在出发前锁定，真实轨迹与本趟目标单独记录；学习不会改写旧成绩。“轨迹偏差”是预测与实际位置的均方根距离，不是训练集拟合分数；不同条件的试飞不构成严格算法排名。
+- 引导依次呈现首次失误、学习后验证、风向改变、重新学习后验证，再让用户在目标移动但风不变时独立选择。沿用路线、重新规划与只重新学习会执行不同的实际操作；每次重试从同一份基线经验出发，不暗中累积优势。
+- 实验结尾显示本轮真实轨迹和结果。选中一次合适的方法不等于已经掌握世界模型；可以带着当前模型进入自由实验，也可以重新开始。后台暂停且不自动继续，减少动画时直接展示完整轨迹。
+- 这是“学习环境 → 模型中规划 → 真实执行”的教学模型，不是 Dreamer 复现，没有潜在状态、奖励学习或想象中的策略训练；也不是递归自我改进（RSI），不会修改自身代码或学习算法。无第三方运行依赖、上传、API、追踪或自动保存，刷新后重置。
 
 ### 盲盒探矿
 
@@ -148,6 +159,10 @@ npm run verify
 - `scripts/`：只提供白名单静态文件的本地服务和打包流程。
 - `pixel-core.mjs`：确定性 Huffman 编码、独立字节解码、像素预设与线段绘画。
 - `pixel.html` / `pixel.css` / `pixel.mjs`：像素邮局、画纸编辑、打包解释与无损收件校验。
+- `world-model-core.mjs`：仅依赖观测的模型学习、预测、路线搜索与误差计算。
+- `world-model-environment.mjs` / `world-model-session.mjs`：独立真实环境、试飞快照和学习生命周期。
+- `world-model-lesson.mjs`：引导、独立判断、同基线重试和实验结尾的状态流程。
+- `world-model.html` / `world-model.css` / `world-model.mjs`：脑内预演室、轨迹可视化、分步控制与学习回顾。
 - `tests/`：Node 内置测试，无外部测试依赖。
 
 已验证桌面浏览器及响应式窗口模拟，未完成真实手机/原生容器验收。只有涂鸦与像素邮局保留本地草稿：不跨浏览器、设备或站点同步，也不是云备份。禁用存储、空间不足或损坏的旧草稿会显示提示但不阻止游玩；删除本地草稿不改变当前画面，下一次操作会重新保存。清理站点数据会移除草稿；异常退出可能丢失尚未暂停的训练进度。

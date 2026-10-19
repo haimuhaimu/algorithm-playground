@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="description" content="让飞船从试飞中学会预测，再在脑中挑选路线。改变风力，亲手发现世界模型何时会出错。">
+ <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css"><link rel="stylesheet" href="./world-model.css">
+ <script type="module" src="./navigation.mjs"></script><script type="module" src="./world-model.mjs"></script>
+ <title>算法游乐场 · 脑内预演室</title>
+</head><body>
+ <a class="skip-link" href="#flight-guide">跳到试飞控制</a>
+ <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><a class="quiet-button" href="#how-it-works">这算世界模型吗 ↘</a><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div></header>
+ <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html" aria-current="page">09 脑内预演室</a></div></nav>
+ <main class="world-main">
+  <section class="world-intro"><p class="eyebrow">09 / 脑内预演室</p><h1>教小飞船，<span>飞进圆环。</span></h1><p>先跟着试，再独立判断一次。最后，带走关于“世界模型”的三个发现。</p></section>
+  <div class="world-layout">
+   <section class="flight-deck" aria-labelledby="scene-heading">
+    <div class="deck-heading"><h2 id="scene-heading">目标：最后落在圆环里</h2><span class="wind-chip" id="wind-label"></span></div>
+    <div class="scene-wrap" id="scene-wrap">
+     <div class="scene-top"><span id="scene-label">下一趟预演 · 尚未试飞</span><span id="progress">0 / 60 拍</span></div>
+     <svg class="world-scene" id="scene" viewBox="0 0 140 90" role="img" aria-labelledby="scene-title scene-desc">
+      <title id="scene-title">飞船预测与真实轨迹</title><desc id="scene-desc">虚线是模型的预演，实线是实际试飞。目标在右侧圆环。</desc>
+      <defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="currentColor" stroke-width=".12"/></pattern></defs>
+      <rect x="-300" y="-300" width="800" height="800" fill="url(#grid)" class="scene-grid"/>
+      <g class="scene-decoration" aria-hidden="true"><circle cx="117" cy="18" r="7"/><ellipse cx="117" cy="18" rx="12" ry="2.5" transform="rotate(-25 117 18)"/><path d="M22 16h2m-1-1v2M63 76h2m-1-1v2M127 66h2m-1-1v2"/></g>
+      <g class="launch-marker"><circle cx="12" cy="45" r="4"/><text x="12" y="55" text-anchor="middle">起点</text></g>
+      <g class="target-marker" id="target-marker"><circle cx="88" cy="45" r="7" class="target-halo"/><circle cx="88" cy="45" r="5"/><path d="M86 45h4m-2-2v4"/><text x="88" y="33" text-anchor="middle">目标圆环</text></g>
+      <polyline id="prediction-path" class="prediction-path" points=""/>
+      <circle id="prediction-end" class="prediction-end" r="1.6" cx="12" cy="45"/>
+      <polyline id="actual-path" class="actual-path" points=""/>
+      <g id="ship" class="world-ship" transform="translate(12 45)"><path d="M3.7 0 -2.7 -2.5 -1.5 0 -2.7 2.5Z"/><circle cx="0" cy="0" r=".65"/></g>
+     </svg>
+     <div class="scene-legend"><span><i class="dash-key"></i>它以为的路线</span><span><i class="solid-key"></i>真正飞过的路</span></div>
+    </div>
+    <section id="flight-guide" class="flight-guide" tabindex="-1" aria-labelledby="guide-title">
+     <p class="guide-stage" id="guide-stage">第一步 · 试一试</p><h2 id="guide-title">先看看，它会飞到哪？</h2><p id="guide-copy">点一下出发，不用调参数。虚线是它的猜测，橙色是实际路线。</p>
+     <div class="flight-toolbar"><button id="next" class="primary">先试飞一次 ↗</button><button id="pause" disabled hidden>暂停</button><button id="step" disabled hidden>走一拍</button></div>
+     <div id="choices" class="lesson-choices" role="group" aria-label="选择下一步操作" hidden><button id="choice-reuse"><span>沿用原路线</span><small>方向、推力都不改</small></button><button id="choice-plan"><span>重新规划路线</span><small>用已有模型，选新的方向和推力</small></button><button id="choice-learn"><span>只重新学习</span><small>再学刚才的经历，先不改路线</small></button></div>
+     <button id="finish-lesson" class="text-action" hidden>结束尝试，看看回顾 →</button>
+     <p class="flight-status" id="status" role="status" aria-atomic="true">准备好了，点「先试飞一次」。</p>
+    </section>
+   </section>
+  </div>
+  <section id="lesson-ending" class="lesson-ending" aria-labelledby="ending-title" hidden>
+   <p class="eyebrow">本轮实验结束</p><h2 id="ending-title" tabindex="-1">不只是飞进圈，而是知道下一步该做什么。</h2>
+   <p class="ending-lead">学习，是认识世界怎么变化。<br>规划，是用这些认识决定怎么行动。</p>
+   <div class="recap-grid">
+    <article><span class="recap-number">01 / 从经历中学习</span><h3>先猜错，才有纠正的依据。</h3><svg id="recap-learn-scene" viewBox="0 0 140 90" role="img" aria-label="学习后那一趟的预测与真实轨迹"><circle id="recap-learn-target" r="5" class="recap-target"/><polyline id="recap-learn-predicted" class="prediction-path"/><polyline id="recap-learn-actual" class="actual-path"/></svg><p id="recap-learning"></p></article>
+    <article><span class="recap-number">02 / 世界改变了</span><h3>旧经验，不保证一直管用。</h3><svg id="recap-wind-scene" viewBox="0 0 140 90" role="img" aria-label="换风后修正模型那一趟的轨迹"><circle id="recap-wind-target" r="5" class="recap-target"/><polyline id="recap-wind-predicted" class="prediction-path"/><polyline id="recap-wind-actual" class="actual-path"/></svg><p id="recap-wind"></p></article>
+    <article><span class="recap-number">03 / 目标改变了</span><h3>不一定要重学，也能换条路。</h3><svg id="recap-choice-scene" viewBox="0 0 140 90" role="img" aria-label="最后一次独立选择的真实结果"><circle id="recap-choice-target" r="5" class="recap-target"/><polyline id="recap-choice-predicted" class="prediction-path"/><polyline id="recap-choice-actual" class="actual-path"/></svg><p id="recap-decision"></p></article>
+   </div>
+   <p class="recap-note">图中虚线是出发前的预测，实线是刚才真正飞过的路。各趟条件不全相同，不是严格算法排名。选中一次合适的方法，也不等于已经掌握世界模型。</p>
+   <div class="ending-actions"><button id="free-experiment" class="primary">带着这个发现，自由实验 ↗</button><a href="./">返回算法游乐场 →</a></div>
+  </section>
+  <details id="advanced-controls" class="advanced-controls"><summary>想自己试？展开方向、推力和分步控制</summary><div class="pilot-panel" aria-labelledby="pilot-title">
+    <div class="pilot-title"><h2 id="pilot-title">自由试飞</h2><p class="pilot-note">操作下方控制会离开引导，保留当前模型。想再走一轮完整实验，可以点页尾“重新开始”。</p></div>
+    <section class="pilot-step"><h3><span>01</span> 选一个出发方式</h3><div class="world-slider"><label for="angle">推力方向 <output id="angle-label" for="angle">水平向右</output></label><input id="angle" type="range" min="-40" max="40" step="2" value="0"><p>向上 ↖ <span>↘ 向下</span></p></div><div class="world-slider"><label for="power">推力大小 <output id="power-label" for="power">1.00×</output></label><input id="power" type="range" min="0.4" max="1.6" step="0.025" value="1"></div><p class="pilot-note">先推 36 拍，再滑行 24 拍。看它最终能否停在圆环内；这里只判位置，不要求刹停。</p></section>
+    <section class="pilot-step"><h3><span>02</span> 把真实经历教给它</h3><button id="learn" class="secondary" disabled>学习刚才这趟</button><p class="pilot-note" id="learn-note">完整试飞后，才会得到 60 条观测。</p></section>
+    <section class="pilot-step"><h3><span>03</span> 让模型帮你选路线</h3><button id="plan" class="secondary">脑内试飞，选一条 ↗</button><p class="pilot-note" id="plan-note">只在模型里比较方向与推力，不偷看真实世界。</p><button id="fly" class="secondary">按这条路线试飞 ↗</button></section>
+    <section class="wind-challenge"><div><span class="eyebrow">然后，给它一个意外</span><h3>如果风突然变了呢？</h3></div><button id="wind-flip">让风反过来 ↕</button><p>世界会变，学过的模型不会自动更新。</p></section>
+    <div class="model-stamp"><strong id="model-label">M0 · 初始猜测</strong><small id="sample-label">还没有学习任何观测</small></div>
+   </div></details>
+  <details id="results" class="world-results" hidden>
+   <summary>查看这趟的详细数据与上一趟记录</summary>
+   <div class="result-topline"><div><p class="eyebrow" id="result-context"></p><h2 id="result-title">不是只看飞到了哪里。</h2></div><a href="#flight-guide" id="result-link" hidden>返回试飞 ↑</a></div>
+   <div class="measurement-row"><div><span>模型猜得准吗？</span><strong id="prediction-error">—</strong><small>整趟轨迹偏差 · 越小越准</small></div><div><span>实际到达目标了吗？</span><strong id="target-distance">—</strong><small>终点距靶心 · ≤ 5 单位算抵达</small></div><p id="result-explanation"></p></div>
+  <p id="history" class="world-history" hidden></p>
+  </details>
+  <section class="world-explanation" id="how-it-works"><h2>刚才，你教会了它什么？</h2><p>它把试飞的经历变成一套“世界会怎样变化”的猜测，再用这套猜测提前选路线。这就是这里的<strong>世界模型</strong>。风变了，旧猜测就可能失灵，需要新经历来纠正。</p></section>
+  <details class="world-boundaries"><summary>它和 Dreamer、RSI 有什么区别？算法与诚实边界</summary><div><p>这是「学习环境 → 模型中规划 → 真实执行」的教学实验。学习器是带微小正则的线性回归（每轴速度、推力、偏置三个参数），不是大型神经网络；规划器枚举方向与力度，并非训练神经策略。没有复现 Dreamer 的潜在状态、奖励学习或想象中的策略训练。可继续阅读 <a href="https://www.nature.com/articles/s41586-025-08744-2" target="_blank" rel="noopener noreferrer">Dreamer 研究 ↗</a>。</p><p>真实环境是确定性的二维简化动力学，没有碰撞和随机测量噪声。学习器的线性假设恰好能表达它，因此这个小世界比真实问题容易得多。目标是第 60 拍在半径 5 的圆环内，并不代表完成物理着陆。</p><p>「轨迹偏差」是本趟出发前锁定的预测与完整实际轨迹的位置均方根距离。学习不会改写旧分数。不同推力、方向、风况的成绩不构成严格算法排名；页面不展示训练集拟合误差作为泛化能力。</p><p>这里没有递归自我改进（RSI）：飞船只更新动力学参数，不修改自身代码或学习算法。纯浏览器本地计算，无上传、API、追踪或自动保存。刷新会重新开始；后台会暂停，回来不会自动继续。系统选择减少动态效果时直接展示完整轨迹和结果。</p></div></details>
+  <footer class="world-footer"><button id="reset">重新开始 · 忘掉已学经验</button><span>MADE BY CHEN QUAN</span></footer>
+ </main><noscript><p>请开启 JavaScript 后体验脑内预演室。</p></noscript>
+</body></html>
