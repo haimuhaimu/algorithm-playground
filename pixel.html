@@ -20,6 +20,7 @@
     <div class="paper-frame"><canvas id="editor" width="512" height="512" tabindex="0" role="application" aria-label="像素画纸" aria-describedby="paint-help cursor-status">浏览器需要支持 Canvas 才能绘画。</canvas><div class="drawing-size-note"><span>这张画的邮包</span><strong id="drawing-size">— B</strong><span>原始 64 B</span></div></div>
     <div class="paint-tools"><div class="swatches" role="group" aria-label="画笔颜色"><button id="color-0" class="swatch color-0" aria-label="1 米白画笔" aria-pressed="false"><span>1</span></button><button id="color-1" class="swatch color-1" aria-label="2 墨黑画笔" aria-pressed="true"><span>2</span></button><button id="color-2" class="swatch color-2" aria-label="3 苔绿画笔" aria-pressed="false"><span>3</span></button><button id="color-3" class="swatch color-3" aria-label="4 珊瑚画笔" aria-pressed="false"><span>4</span></button></div><button id="undo" class="undo" disabled>↶ 撤销</button></div>
     <p class="paint-help" id="paint-help">按住涂画，米白可擦除。Tab 进入画纸后，方向键移动，空格落笔，1–4 换色。</p><span id="cursor-status" class="visually-hidden" role="status"></span>
+    <div class="reorder-entry"><span>图变乱了，邮包就更大吗？</span><button id="reorder-start" type="button">拿这张画试一试 ↗</button><small>只打乱副本，原画和草稿都保留。</small></div>
    </div>
    <div class="dispatch-desk">
     <div class="section-label"><h2>打包寄出</h2><span>真实字节 · 无损还原</span></div>
@@ -32,6 +33,23 @@
     </div>
     <p class="dispatch-hint">改几笔，再寄一次。邮包大小会变，画里的每一格都不会少。</p>
    </div>
+  </section>
+  <section id="reorder-lesson" class="reorder-lesson" aria-labelledby="reorder-title" hidden>
+   <div class="reorder-heading"><div><p class="eyebrow">一个亲手验证的小实验</p><h2 id="reorder-title" tabindex="-1">换了位置，邮费会变吗？</h2></div><a href="#editor">回到画纸 ↑</a></div>
+   <p id="reorder-source" class="reorder-source"></p>
+   <div class="reorder-pictures">
+    <figure><figcaption><span>调整前 · 原图副本</span><strong id="reorder-before-size"></strong></figcaption><canvas id="reorder-before" width="512" height="512" role="img" aria-label="本轮保留的原图副本"></canvas></figure>
+    <figure><figcaption><span>调整后 · 只换位置</span><strong id="reorder-after-size">待揭晓</strong></figcaption><div id="reorder-mystery" class="reorder-mystery"><b>?</b><span>每种颜色一格不少<br>只把位置重新排列</span></div><div id="reorder-after-wrap" hidden><canvas id="reorder-after" width="512" height="512" role="img" aria-label="打乱后的真实邮包解码图"></canvas></div></figure>
+   </div>
+   <div id="reorder-question" class="reorder-question"><h3>你猜，这次邮包会怎样？</h3><div role="group" aria-label="预测打乱位置后的邮包大小"><button id="guess-more">变大 · 看起来更乱了</button><button id="guess-same">一样大 · 只是换位置</button><button id="guess-less">变小 · 也许更好压缩</button></div></div>
+   <div id="reorder-results" class="reorder-results" hidden>
+    <h3 id="reorder-result-title" tabindex="-1"></h3><p id="reorder-feedback" role="status"></p>
+    <div class="reorder-evidence"><div><h4>四种颜色，一格也没多</h4><p class="reorder-column-label">颜色格数：前 → 后 <span>二进制暗号</span></p><div id="reorder-counts" class="reorder-counts"></div></div><div><h4>实际邮包，重新算了一遍</h4><p class="reorder-column-label">前 → 后 · 每 8 bit 是 1 B</p><dl id="reorder-costs" class="reorder-costs"></dl></div></div>
+    <p id="reorder-explanation" class="reorder-explanation"></p>
+    <p id="reorder-integrity" class="reorder-integrity"></p>
+    <div class="reorder-takeaway"><strong>这次你验证了什么？</strong><p>这版 Huffman 编码看颜色出现多少次，不看图案像不像小猫。数量没变，暗号长度和总大小就不变；“看起来乱”不等于“邮包更大”。</p><small>这是本实验的编码规则，不代表所有图片压缩算法。前后图保留到重新开始或刷新，不写入草稿。</small></div>
+   </div>
+   <button id="reorder-again" class="reorder-again">用当前画纸再试一次</button>
   </section>
   <details class="packing-details">
    <summary><span>拆开邮包，看看它怎么变小</span><small>颜色暗号 · 信息量 · 真实字节</small></summary>

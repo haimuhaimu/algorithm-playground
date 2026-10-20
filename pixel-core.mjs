@@ -103,3 +103,28 @@ export function stroke(pixels, from, to, color) {
   }
   return next;
 }
+
+// Compare actual packets, not an estimate of visual complexity. The original
+// and rearranged postcards are isolated copies; neither writes to the editor.
+export function rearrangement(pixels, seed = 42) {
+  checkPixels(pixels);
+  if (pixels.length !== 256 || !Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) throw new TypeError('Invalid postcard or seed');
+  const shuffled = [...pixels];
+  let state = seed;
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    const j = Math.floor(state / 0x100000000 * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  if (shuffled.every((p, i) => p === pixels[i]) && pixels.some(p => p !== pixels[0])) shuffled.push(shuffled.shift());
+  const snapshot = data => {
+    const copy = [...data], encoded = encode(copy), decoded = decode(encoded.packet, copy.length);
+    return { pixels: copy, encoded, decoded, matches: decoded.reduce((n, p, i) => n + Number(p === copy[i]), 0) };
+  };
+  const before = snapshot(pixels), after = snapshot(shuffled);
+  return {
+    before, after,
+    changedCells: pixels.reduce((n, p, i) => n + Number(p !== shuffled[i]), 0),
+    samePacket: before.encoded.packet.length === after.encoded.packet.length && before.encoded.packet.every((p, i) => p === after.encoded.packet[i]),
+  };
+}
