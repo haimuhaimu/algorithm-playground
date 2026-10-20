@@ -36,7 +36,7 @@
     <span id="play-status" role="status">地图就绪，等你出题。</span>
    </div>
   </section>
-  <div class="map-instructions"><p id="map-help">两边同步，整笔可撤销。键盘：方向键移动，空格编辑，Ctrl / ⌘ Z 撤销。</p><span id="wall-count">9 格墙</span></div>
+  <div class="map-instructions"><p id="map-help">两边同步，整笔可撤销。键盘：方向键移动，空格编辑，Ctrl / ⌘ Z 撤销。</p><a href="#comparison">看前后对照 ↓</a><span id="wall-count">9 格墙</span></div>
   <section class="arena" id="arena" aria-label="算法对照地图">
    <article class="algorithm-board bfs-board">
     <div class="board-heading"><div><span class="algorithm-name">BFS</span><h2>一圈一圈地找</h2></div><span id="bfs-status" class="search-status">等待出发</span></div>
@@ -52,6 +52,36 @@
    </article>
   </section>
   <div class="map-legend" aria-label="地图图例"><span><i class="legend-start">S</i>起点</span><span><i class="legend-goal">G</i>终点</span><span><i class="legend-wall"></i>墙</span><span><i class="legend-visited"></i>已探索</span><span><i class="legend-frontier"></i>待探索</span><span><i class="legend-path"></i>最终路径</span></div>
+  <section class="map-comparison" id="comparison" aria-labelledby="compare-title">
+   <div class="comparison-heading"><div><p class="eyebrow">我的这一步，改变了什么</p><h2 id="compare-title">改一格，看懂一次变化。</h2></div><a class="comparison-return" href="#arena">回到地图改一格 ↑</a></div>
+   <p id="compare-empty" class="comparison-empty">先完整跑完一轮，我们会留住地图和结果。再改一格墙，就能把前后放在一起看。</p>
+   <div id="compare-content" hidden>
+    <p id="compare-status" class="comparison-status" role="status"></p>
+    <div class="comparison-layout">
+     <div class="comparison-visuals">
+      <div class="comparison-view" role="group" aria-label="前后地图显示的算法"><span>看谁的轨迹</span><button id="compare-astar" aria-pressed="true">A*</button><button id="compare-bfs" aria-pressed="false">BFS</button></div>
+      <div class="comparison-maps">
+       <figure><figcaption>改之前 <span>保留的对照</span></figcaption><div id="compare-before-map" class="comparison-grid" role="img" aria-label="改之前的地图"></div></figure>
+       <figure><figcaption>改之后 <span id="compare-after-label">当前地图</span></figcaption><div id="compare-after-map" class="comparison-grid" role="img" aria-label="改之后的地图"></div></figure>
+      </div>
+      <p class="comparison-legend">虚线框是改动位置 · ＋加墙 · −去墙 · S / G 起终点 · 实线轨迹是最终路径</p>
+      <p id="compare-changes" class="comparison-changes"></p>
+      <details id="compare-change-details" hidden><summary>查看全部改动位置</summary><p id="compare-all-changes"></p></details>
+     </div>
+     <div class="comparison-findings">
+      <table class="comparison-table"><caption>前后结果对照</caption><thead><tr><th scope="col">指标</th><th scope="col">之前</th><th scope="col">之后</th><th scope="col">变化</th></tr></thead><tbody>
+       <tr><th scope="row">路线步数</th><td id="compare-before-distance"></td><td id="compare-after-distance"></td><td id="compare-distance-delta"></td></tr>
+       <tr><th scope="row">BFS 探索格</th><td id="compare-before-bfs"></td><td id="compare-after-bfs"></td><td id="compare-bfs-delta"></td></tr>
+       <tr><th scope="row">A* 探索格</th><td id="compare-before-astar"></td><td id="compare-after-astar"></td><td id="compare-astar-delta"></td></tr>
+      </tbody></table>
+      <div class="comparison-reason"><h3 id="compare-reason-title" tabindex="-1">先留住这一轮</h3><p id="compare-explanation"></p><p id="compare-search-explanation"></p></div>
+      <button id="compare-run" class="play-button" hidden>运行这张图，揭晓变化</button>
+      <button id="compare-rebase" class="secondary-button" disabled>以这轮为新对照</button>
+      <p class="comparison-footnote">对照不会自动替换；只保留在当前页面，刷新会清空。探索格数不是运行速度。</p>
+     </div>
+    </div>
+   </div>
+  </section>
   <section class="race-summary" aria-labelledby="summary-title">
    <div class="summary-main"><p class="eyebrow">这一局，发现了什么</p><h2 id="summary-title">最短的路，不止一种找法。</h2><p id="result-copy">先跑一轮，再挪动一块墙。地图里的一个小改变，就可能让算法换一种走法。</p></div>
    <div class="map-challenge"><h3>给你一个出题挑战</h3><p>亲手改一张地图，让 A* 少探索至少一半格子，还能找到出口。</p><p id="challenge-status">先改一笔，再试试。</p></div>
@@ -59,7 +89,7 @@
   <details class="algorithm-notes"><summary>为什么都能找到最短路？这个比较又有什么边界？</summary><div><p>这里只能上下左右走，每一步成本相同。广度优先搜索按层展开，所以第一次找到终点就是最短路。</p><p>A* 使用「已走步数 + 曼哈顿距离」排序。曼哈顿距离是不考虑墙时的横向加纵向距离，在这张地图里不会高估余程，所以也能保证最短路。分数相同优先预计余程更短的节点，再按入队顺序。</p><p>两边每一拍各展开一个格子，找到终点后各自停止。探索数包括起终点，不包括仅进入待探索队列的格子；路线步数不包括起点。探索更少不等于实际运行更快，A* 还要维护排序。</p><p>相同地图必得相同结果。A* 不保证在每张地图上都省下一半搜索；路线可能不同，但最短长度相同。刷新会重置地图，无账号、上传或追踪。</p></div></details>
   <section class="bottom-note"><span>自己出题，才有新发现。</span><p>四向移动，每步成本为 1。动画用来理解过程，不代表性能跑分。</p><span class="signature">MADE BY CHEN QUAN</span></section>
  </main>
-<dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">给算法出道题。</h2><ol><li>先点「开始找路」，看看两种搜索的不同。</li><li>用「画墙」或「橡皮」改地图，也可以移动 S 起点和 G 终点。</li><li>画错、清空或换错地图，点「撤销」找回来；一次拖画只算一步，保留最近 30 步。按 Esc 可取消还没松手的一笔。</li><li>再跑一次，看看路线和探索数量怎么变。想看清过程？暂停后「走一步」。</li></ol><p>手机可以在网格上直接画，网格外可正常滑动。键盘方向键移动、空格编辑，Ctrl / ⌘ Z 撤销，Ctrl / ⌘ Shift Z 重做。改图和撤销都会清除上轮结果，刷新会清空地图与编辑历史。</p></dialog>
+<dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">给算法出道题。</h2><ol><li>先点「开始找路」，完整跑完一轮，自动留下第一份对照。</li><li>用「画墙」或「橡皮」改一格，再跑一次。下方会保留前后地图、标出改动，并解释结果的变化。</li><li>画错、清空或换错地图，点「撤销」找回来；一次拖画只算一步，保留最近 30 步。按 Esc 可取消还没松手的一笔。</li><li>想继续实验，点「以这轮为新对照」再改图。想看清过程？暂停后「走一步」。</li></ol><p>手机可以在网格上直接画，网格外可正常滑动。键盘方向键移动、空格编辑，Ctrl / ⌘ Z 撤销，Ctrl / ⌘ Shift Z 重做。改图会清除当前动画，但保留对照；刷新会清空地图、对照与编辑历史。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验可编辑地图和寻路实验。</p></noscript>
 </body>
 </html>

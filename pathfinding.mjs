@@ -1,6 +1,7 @@
-import {search,makeMap,editMap,lineCells,frameAt} from './pathfinding-core.mjs';
+import {search,makeMap,editMap,lineCells,frameAt,captureRun,mapChanges,compareRuns} from './pathfinding-core.mjs';
 const $=id=>document.getElementById(id),names=['bfs','astar'];
 let map=makeMap(),preset='detour',tool='wall',traces=null,step=0,playing=false,timer=null,edited=false,stroke=null;
+let baseline=null,currentRun=null,comparisonAlgorithm='astar',comparisonView=[];
 const undoStack=[],redoStack=[];
 const snapshot=()=>({map,preset,edited});
 const sameMap=(a,b)=>a.start===b.start&&a.goal===b.goal&&a.walls.length===b.walls.length&&a.walls.every((v,i)=>v===b.walls[i]);
@@ -26,10 +27,64 @@ for(const name of names){
  });
 }
 function stop(){clearTimeout(timer);timer=null;playing=false;}
-function invalidate(){stop();traces=null;step=0;}
+function invalidate(){stop();traces=null;step=0;currentRun=null;}
 function prepare(){if(!traces)traces=Object.fromEntries(names.map(name=>[name,search(map,name)]));}
 function duration(){return traces?Math.max(...names.map(name=>traces[name].visited.length)):0;}
 function complete(){return !!traces&&step>=duration();}
+function drawComparisonMap(id,savedMap,result,changes,label){
+ const grid=$(id),walls=new Set(savedMap.walls),visited=new Set(result?.visited),path=new Set(result?.path),changed=new Set(changes.indices);
+ grid.className=`comparison-grid ${comparisonAlgorithm}-comparison`;
+ grid.setAttribute('aria-label',`${label}，${comparisonAlgorithm==='astar'?'A*':'BFS'}，${result?(result.found?`最短路线 ${result.distance} 步`:'无通路'):'等待运行'}。改动位置见下方文字。`);
+ const children=Array.from({length:savedMap.cols*savedMap.rows},(_,index)=>{
+  const cell=document.createElement('span');
+  const state=index===savedMap.start?'start':index===savedMap.goal?'goal':walls.has(index)?'wall':path.has(index)?'path':visited.has(index)?'visited':'';
+  cell.className=`comparison-cell ${state}${changed.has(index)?' changed':''}`;cell.setAttribute('aria-hidden','true');
+  cell.textContent=state==='start'?'S':state==='goal'?'G':changes.added.includes(index)?'+':changes.removed.includes(index)?'−':'';
+  return cell;
+ });
+ grid.replaceChildren(...children);
+}
+function renderComparison(done){
+ if(done){currentRun??=captureRun(map);baseline??=currentRun;}
+ const view=[baseline,map,done,currentRun,comparisonAlgorithm];
+ if(view.every((v,i)=>v===comparisonView[i]))return;comparisonView=view;
+ $('compare-empty').hidden=!!baseline;$('compare-content').hidden=!baseline;
+ if(!baseline)return;
+ const changes=mapChanges(baseline.map,map),changed=changes.indices.length>0;
+ const comparison=done?compareRuns(baseline,currentRun,comparisonAlgorithm):null;
+ $('compare-rebase').disabled=!done||!changed;
+ $('compare-run').hidden=done;
+ $('compare-status').textContent=!changed?'已保留这一轮作对照。改一格，再跑一次。':done?'两轮都已完成；改动与结果放在一起看。':'原对照还在。跑完当前地图后，再揭晓变化。';
+ $('compare-after-label').textContent=done?'本轮完整结果':'改好了，待运行';
+ $('compare-astar').setAttribute('aria-pressed',String(comparisonAlgorithm==='astar'));
+ $('compare-bfs').setAttribute('aria-pressed',String(comparisonAlgorithm==='bfs'));
+ drawComparisonMap('compare-before-map',baseline.map,baseline.traces[comparisonAlgorithm],changes,'改之前');
+ drawComparisonMap('compare-after-map',map,done?currentRun.traces[comparisonAlgorithm]:null,changes,'改之后');
+ const coordinate=i=>`第 ${Math.floor(i/map.cols)+1} 行、第 ${i%map.cols+1} 列`;
+ const details=[];
+ if(changes.startMoved)details.push(`起点：${coordinate(baseline.map.start)} → ${coordinate(map.start)}`);
+ if(changes.goalMoved)details.push(`终点：${coordinate(baseline.map.goal)} → ${coordinate(map.goal)}`);
+ for(const [list,label] of [[changes.added,'加墙'],[changes.removed,'去墙']])if(list.length)details.push(list.length<=3?`${label}：${list.map(coordinate).join('；')}`:`${label} ${list.length} 格，位置已标框`);
+ $('compare-changes').textContent=details.join('。')||'目前地图与对照相同。';
+ $('compare-change-details').hidden=changes.added.length<=3&&changes.removed.length<=3;
+ $('compare-all-changes').textContent=[...changes.added.map(i=>`加墙：${coordinate(i)}`),...changes.removed.map(i=>`去墙：${coordinate(i)}`)].join('；');
+ for(const name of ['distance','bfs','astar']){
+  const old=name==='distance'?baseline.traces.bfs.distance:baseline.traces[name].visited.length;
+  const value=done?comparison[name]:null;
+  $('compare-before-'+name).textContent=old===null?'无通路':String(old);
+  $('compare-after-'+name).textContent=!value?'待运行':value.after===null?'无通路':String(value.after);
+  $('compare-'+name+'-delta').textContent=!value?'—':value.delta===null?(value.before===value.after?'仍无通路':value.after===null?'通路断开':'重新接通'):value.delta===0?'不变':`${value.delta<0?'少':'多'} ${Math.abs(value.delta)} ${name==='distance'?'步':'格'}`;
+ }
+ $('compare-reason-title').textContent=!done?'先猜一猜，再跑一轮':!changed?'从这一轮开始做实验':'为什么会变？';
+ $('compare-explanation').textContent=comparison?comparison.explanation:'对照图和原结果已保留。你觉得路线会变短、变长，还是不变？点「开始找路」或「直接看结果」来验证。';
+ $('compare-search-explanation').textContent=comparison&&changed?comparison.searchExplanation:'';
+}
+for(const name of names)$('compare-'+name).addEventListener('click',()=>{comparisonAlgorithm=name;renderComparison(complete());});
+$('compare-run').addEventListener('click',()=>{finishRun();$('compare-reason-title').focus({preventScroll:true});});
+$('compare-rebase').addEventListener('click',()=>{
+ if(!complete())return;baseline=currentRun;renderComparison(true);
+ $('compare-status').textContent='已把这轮设为新对照。下一次修改将与它比较。';
+});
 function render(){
  historyControls();
  const walls=new Set(map.walls),done=complete();
@@ -53,7 +108,8 @@ function render(){
  $('editing-label').textContent=({wall:'画墙',erase:'橡皮',start:'移起点',goal:'移终点'})[tool];
  $('wall-count').textContent=`${map.walls.length} 格墙`;
  $('play-status').textContent=done?'本轮完成，可以改图再试。':playing?`正在展开第 ${step} 步`:
-  traces?`已暂停在第 ${step} 步`:edited?'地图已改变，上轮结果已清除。':'地图就绪，等你出题。';
+  traces?`已暂停在第 ${step} 步`:edited?(baseline?'地图已改变，原对照已保留。':'地图已改变，跑完一轮建立对照。'):'地图就绪，等你出题。';
+ renderComparison(done);
  document.querySelectorAll('[data-map]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.map===preset)));
  document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===tool)));
  const status=$('challenge-status');status.classList.remove('won');
@@ -77,7 +133,8 @@ $('play').addEventListener('click',()=>{
  playing=true;render();schedule();
 });
 $('step').addEventListener('click',()=>{endStroke();stop();prepare();if(complete())step=0;step++;render();});
-$('finish').addEventListener('click',()=>{endStroke();stop();prepare();step=duration();render();});
+function finishRun(){endStroke();stop();prepare();step=duration();render();}
+$('finish').addEventListener('click',finishRun);
 $('speed').addEventListener('change',()=>{if(playing){clearTimeout(timer);schedule();}});
 function endStroke(commit=true){
  if(!stroke)return;const {grid,id,before}=stroke;stroke=null;

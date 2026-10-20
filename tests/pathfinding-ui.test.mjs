@@ -10,7 +10,8 @@ async function boot(){
   constructor(){super();this.dataset={};this.attributes=new Map();this.children=[];this.className='';this.textContent='';this.disabled=false;this.value='40';this.captures=new Set();
    this.classList={remove:name=>{this.className=this.className.split(' ').filter(v=>v!==name).join(' ');},toggle:(name,on)=>{this.classList.remove(name);if(on)this.className+=' '+name;}};
   }
-  append(child){this.children.push(child);child.parent=this;}
+  append(...children){for(const child of children){this.children.push(child);child.parent=this;}}
+  replaceChildren(...children){this.children=[];this.append(...children);}
   setAttribute(k,v){this.attributes.set(k,v);}getAttribute(k){return this.attributes.get(k);}
   closest(selector){return selector==='.cell'&&this.className.split(' ').includes('cell')?this:null;}
   contains(child){return this.children.includes(child);}
@@ -129,5 +130,101 @@ test('moving an endpoint away and back is a no-op and preserves the preset and r
   u.pointer('pointerdown',75);u.pointer('pointermove',76);u.pointer('pointerup',76);
   assert.equal(u.selected(),'detour');assert.equal(u.els.get('undo-map').disabled,true);assert.equal(u.els.get('redo-map').disabled,false);
   u.click('redo-map');assert.equal(u.map()[0],'墙');assert.equal(u.map()[76],'起点');
+ }finally{u.restore();}
+});
+
+test('a completed baseline survives editing, pending results, reruns and undo',async()=>{
+ const u=await boot();try{
+  u.click('finish');assert.ok(u.els.has('compare-before-distance'),'a completed baseline is visible');
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  u.tool('erase');u.edit(82);
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  assert.equal(u.els.get('compare-after-distance').textContent,'待运行');
+  assert.equal(u.els.get('compare-rebase').disabled,true);
+  u.click('finish');assert.equal(u.els.get('compare-after-distance').textContent,'12');
+  assert.equal(u.els.get('compare-distance-delta').textContent,'少 8 步');
+  assert.equal(u.els.get('compare-after-astar').textContent,'13');
+  assert.match(u.els.get('compare-explanation').textContent,/直达/);
+  u.click('finish');assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  u.click('undo-map');u.click('finish');
+  assert.equal(u.els.get('compare-distance-delta').textContent,'不变');
+ }finally{u.restore();}
+});
+
+test('only an explicitly requested completed round replaces the baseline',async()=>{
+ const u=await boot();try{
+  u.click('finish');u.tool('erase');u.edit(82);u.click('finish');
+  u.click('compare-rebase');assert.equal(u.els.get('compare-before-distance').textContent,'12');
+  assert.equal(u.els.get('compare-rebase').disabled,true);
+  u.tool('wall');u.edit(82);u.click('finish');
+  assert.equal(u.els.get('compare-before-distance').textContent,'12');
+  assert.equal(u.els.get('compare-after-distance').textContent,'20');
+  assert.equal(u.els.get('compare-distance-delta').textContent,'多 8 步');
+ }finally{u.restore();}
+});
+
+test('partial playback is not recorded as a baseline and cancelled edits keep comparison evidence',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('compare-empty'),'first-run guidance is available');
+  u.click('step');assert.equal(u.els.get('compare-empty').hidden,false);
+  u.tool('erase');u.edit(82);u.click('finish');
+  assert.equal(u.els.get('compare-before-distance').textContent,'12');
+  u.tool('wall');u.pointer('pointerdown',82);u.pointer('pointercancel',82);u.click('finish');
+  assert.equal(u.els.get('compare-distance-delta').textContent,'不变');
+  assert.equal(u.els.get('compare-before-distance').textContent,'12');
+ }finally{u.restore();}
+});
+
+test('comparison maps mark the edited cell and can display either real search trace',async()=>{
+ const u=await boot();try{
+  u.click('finish');u.tool('erase');u.edit(82);u.click('finish');
+  const before=u.els.get('compare-before-map'),after=u.els.get('compare-after-map');
+  assert.ok(before,'before map exists');assert.ok(after,'after map exists');
+  assert.match(before.children[82].className,/changed/);assert.match(before.children[82].className,/wall/);
+  assert.match(after.children[82].className,/changed/);assert.match(after.children[82].className,/path/);
+  u.click('compare-bfs');assert.match(after.getAttribute('aria-label'),/BFS/);
+  assert.equal(u.els.get('compare-bfs').getAttribute('aria-pressed'),'true');
+  u.click('compare-astar');assert.match(after.getAttribute('aria-label'),/A\*/);
+ }finally{u.restore();}
+});
+
+test('pending comparison can run in place without replacing its original baseline',async()=>{
+ const u=await boot();try{
+  u.click('finish');u.tool('erase');u.edit(82);
+  u.click('compare-run');
+  assert.equal(u.els.get('compare-after-distance').textContent,'12');
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  assert.equal(u.els.get('compare-run').hidden,true);
+  u.tool('wall');u.edit(82);assert.equal(u.els.get('compare-run').hidden,false);
+ }finally{u.restore();}
+});
+
+test('replaying a completed comparison hides future results until the round finishes again',async()=>{
+ const u=await boot();try{
+  u.click('finish');u.tool('erase');u.edit(82);u.click('finish');u.click('step');
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  assert.equal(u.els.get('compare-after-distance').textContent,'待运行');
+  assert.equal(u.els.get('compare-rebase').disabled,true);
+  assert.equal(u.els.get('compare-after-map').children.some(c=>c.className.split(' ').includes('path')),false);
+  u.click('finish');assert.equal(u.els.get('compare-after-distance').textContent,'12');
+ }finally{u.restore();}
+});
+
+test('multi-cell changes have a complete readable coordinate list, not only visual markers',async()=>{
+ const u=await boot();try{
+  u.click('finish');u.preset('maze');
+  assert.ok(u.els.has('compare-all-changes'),'full textual change list is available');
+  assert.equal(u.els.get('compare-change-details').hidden,false);
+  assert.match(u.els.get('compare-all-changes').textContent,/第 1 行、第 5 列/);
+  assert.match(u.els.get('compare-all-changes').textContent,/第 11 行、第 8 列/);
+ }finally{u.restore();}
+});
+
+test('switching comparison view also switches the explanation to the visible old path',async()=>{
+ const u=await boot();try{
+  u.click('clear-walls');for(const i of [66,78,82,93])u.edit(i);u.click('finish');
+  u.edit(62);u.click('finish');
+  assert.match(u.els.get('compare-explanation').textContent,/同样短的其他/);
+  u.click('compare-bfs');assert.match(u.els.get('compare-explanation').textContent,/没有挡住/);
  }finally{u.restore();}
 });
