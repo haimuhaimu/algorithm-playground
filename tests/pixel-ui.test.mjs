@@ -11,7 +11,9 @@ async function boot({ reduced = false, missingCanvas = false, storage = memorySt
     getContext() { return missingCanvas ? null : this.ctx; }
     setAttribute(k, v) { this.attributes.set(k, String(v)); } getAttribute(k) { return this.attributes.get(k); }
     getBoundingClientRect() { return { left: 0, top: 0, width: 256, height: 256 }; }
-    setPointerCapture() {} releasePointerCapture() {} focus() {}
+    set textContent(value){this.text=value;this.textWrites=(this.textWrites??0)+1;} get textContent(){return this.text;}
+    setPointerCapture() {} releasePointerCapture() {} focus() {doc.activeElement=this;}
+    scrollIntoView(){this.scrolled=true;}
     showModal() { this.open = true; } close() { this.open = false; this.dispatchEvent(new Event('close')); }
   }
   const els = new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([, id]) => [id, new Element()]));
@@ -193,4 +195,53 @@ test('blur and lost capture discard drafts without changing history or the recei
       assert.equal(u.els.get('undo').disabled, true);
     }
   } finally { u.restore(); }
+});
+
+test('rearrangement reveals real decoded evidence only after a prediction and never edits the postcard or draft',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('reorder-start'),'the experiment needs a user entry point');
+  u.click('send');const original=u.pixels('editor'),receipt=u.els.get('receipt').textContent,records=[...storage.records];
+  u.click('reorder-start');
+  assert.equal(u.els.get('reorder-results').hidden,true);assert.equal(u.els.get('reorder-question').hidden,false);
+  assert.deepEqual(u.pixels('reorder-before'),original);
+  assert.equal(u.els.get('reorder-after-wrap').hidden,true,'future image must stay hidden before guessing');
+  u.click('guess-more');
+  assert.equal(u.els.get('reorder-results').hidden,false);assert.equal(u.els.get('reorder-results').dataset.correct,'false');
+  assert.equal(u.els.get('reorder-before-size').textContent,'54 B');assert.equal(u.els.get('reorder-after-size').textContent,'54 B');
+  assert.notDeepEqual(u.pixels('reorder-after'),original);assert.deepEqual(u.pixels('editor'),original);assert.deepEqual(u.pixels('receiver'),original);
+  assert.equal(u.els.get('receipt').textContent,receipt);assert.deepEqual([...storage.records],records);
+  assert.equal(u.doc.activeElement,u.els.get('reorder-result-title'));
+  const announcements=u.els.get('reorder-feedback').textWrites;
+  u.fire(u.els.get('editor'),'focus');
+  assert.equal(u.els.get('reorder-feedback').textWrites,announcements,'focusing the editor must not repeat the old result announcement');
+  u.click('guess-same');assert.equal(u.els.get('reorder-results').dataset.correct,'false','one prediction remains the recorded prediction');
+ }finally{u.restore();}
+});
+
+test('editing after a comparison retains the old evidence and starting again clears the old answer',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('reorder-start'));u.click('reorder-start');u.click('guess-same');
+  const before=u.pixels('reorder-before'),after=u.pixels('reorder-after');
+  u.click('preset-heart');
+  assert.deepEqual(u.pixels('reorder-before'),before);assert.deepEqual(u.pixels('reorder-after'),after);
+  assert.match(u.els.get('reorder-source').textContent,/已改|旧/);
+  u.click('reorder-again');assert.equal(u.els.get('reorder-results').hidden,true);
+  assert.equal(u.els.get('reorder-feedback').textContent,'');assert.deepEqual(u.pixels('reorder-before'),u.pixels('editor'));
+  assert.equal(u.els.get('reorder-after-wrap').hidden,true);
+ }finally{u.restore();}
+});
+
+test('rearrangement respects monochrome and missing-canvas states and does not interrupt a delivery',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('reorder-start'));u.click('send');u.click('reorder-start');u.click('guess-same');
+  assert.equal(u.frames.size,1);u.finish();assert.deepEqual(u.pixels('receiver'),u.pixels('editor'));
+  u.click('preset-blank');u.click('reorder-start');u.click('guess-less');
+  assert.equal(u.els.get('reorder-results').dataset.changed,'false');
+  assert.match(u.els.get('reorder-explanation').textContent,/只有一种颜色|单色/);
+  assert.equal(u.els.get('reorder-after-size').textContent,'33 B');
+ }finally{u.restore();}
+ const v=await boot({missingCanvas:true});try{
+  assert.equal(v.els.get('reorder-start').disabled,true);
+  v.click('reorder-start');assert.equal(v.els.get('reorder-lesson').hidden,true);
+ }finally{v.restore();}
 });

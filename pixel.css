@@ -76,3 +76,38 @@
  .undo{font-size:12px;padding-inline:4px}
  .dispatch-desk .receiving-desk{grid-template-columns:96px minmax(0,1fr);gap:14px}
 }
+
+/* One controlled comparison, using copies of the user's drawing. */
+.reorder-entry{max-width:420px;margin-top:20px;padding:16px 0 0;border-top:1px solid var(--line);display:grid;gap:7px}
+.reorder-entry>span{font-size:13px;font-weight:600}.reorder-entry small{font-size:11px;color:var(--muted);line-height:1.6}
+.reorder-entry button,.reorder-again{justify-self:start;min-height:44px;padding:10px 14px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font:inherit;font-size:13px;cursor:pointer;border-radius:5px}.reorder-again{margin-top:16px}
+.reorder-lesson{margin:28px 0;padding:26px;border:1px solid var(--line);border-radius:12px;background:var(--surface);scroll-margin-top:18px}
+.reorder-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}.reorder-heading h2{margin:6px 0;font-size:25px;letter-spacing:-.6px}.reorder-heading a{font-size:12px;white-space:nowrap;text-underline-offset:4px}
+.reorder-source{font-size:12px;line-height:1.8;color:var(--muted);margin:10px 0 22px}
+.reorder-pictures{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:520px;margin:0 auto 22px}
+.reorder-pictures figure{margin:0;min-width:0}.reorder-pictures figcaption{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;font-size:12px;line-height:1.6}.reorder-pictures strong{font:600 18px ui-monospace,monospace;white-space:nowrap}
+.reorder-pictures canvas,.reorder-mystery{border:1px solid var(--line);border-radius:6px}
+.reorder-mystery{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--soft);gap:16px;text-align:center;color:var(--muted)}
+.reorder-mystery b{font:400 64px ui-monospace,monospace;color:var(--ink)}.reorder-mystery span{font-size:12px;line-height:1.8}
+.reorder-question h3,.reorder-results h3{font-size:18px;line-height:1.5;margin:16px 0}
+.reorder-question>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.reorder-question button{min-height:48px;padding:12px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;font:inherit;font-size:13px;cursor:pointer}
+.reorder-question button:hover,.reorder-entry button:hover,.reorder-again:hover{background:var(--soft);border-color:var(--muted)}
+.reorder-results>p{font-size:13px;line-height:1.9}
+.reorder-evidence{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding-block:8px}
+.reorder-evidence h4{font-size:13px;margin:12px 0}.reorder-counts>div,.reorder-costs>div{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:12px}
+.reorder-counts span{display:flex;align-items:center;gap:8px}.reorder-counts i{display:block;width:11px;height:11px;border:1px solid var(--muted)}
+.reorder-counts b{margin-left:auto;font-weight:500;font-variant-numeric:tabular-nums}.reorder-counts code{min-width:50px;text-align:right;font-size:11px}
+.reorder-costs{margin:0}.reorder-costs dd{margin:0 0 0 auto;font:12px ui-monospace,monospace}
+.reorder-column-label{display:flex;justify-content:space-between;gap:10px;font-size:10px;color:var(--muted);line-height:1.6}
+.reorder-explanation{border-left:3px solid var(--good);padding-left:14px}.reorder-integrity{color:var(--muted)}
+.reorder-takeaway{background:var(--soft);padding:18px;border-radius:8px;margin:20px 0}.reorder-takeaway strong{font-size:15px}.reorder-takeaway p{font-size:13px;line-height:1.9;margin:8px 0}.reorder-takeaway small{font-size:11px;line-height:1.8;color:var(--muted);display:block}
+@media(max-width:760px){
+ .reorder-lesson{padding:16px;margin:20px 0}.reorder-heading{align-items:flex-start}.reorder-heading h2{font-size:21px}.reorder-heading .eyebrow{font-size:9px}
+ .reorder-heading a{font-size:11px;min-height:44px;display:flex;align-items:center}
+ .reorder-source{font-size:11px;margin-bottom:16px}.reorder-pictures{gap:12px}
+ .reorder-pictures figcaption{display:block;font-size:11px}.reorder-pictures strong{display:block;font-size:17px;margin-top:4px}
+ .reorder-mystery{gap:6px}.reorder-mystery b{font-size:36px}.reorder-mystery span{font-size:10px}
+ .reorder-question>div{grid-template-columns:1fr}.reorder-question button{text-align:left}
+ .reorder-evidence{grid-template-columns:1fr;gap:8px}.reorder-results h3{font-size:17px}
+}

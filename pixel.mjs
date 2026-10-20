@@ -1,4 +1,4 @@
-import { encode, decode, preset, stroke } from './pixel-core.mjs';
+import { encode, decode, preset, stroke, rearrangement } from './pixel-core.mjs';
 import {DRAFT_KEYS,readDraft,writeDraft,clearDraft,validatePixelDraft,draftMessage} from './local-drafts.mjs';
 
 const $ = id => document.getElementById(id);
@@ -8,6 +8,7 @@ const colors = ['#f3eedc', '#30352a', '#bdd754', '#e79d88'], names = ['米白', 
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 let pixels = preset('cat'), color = 1, cursor = { x: 0, y: 0 }, focused = false;
 let gesture = null, history = [], received = null, job = null, frame = 0;
+let reorder = null;
 const equal = (a, b) => a.length === b.length && a.every((value, i) => value === b[i]);
 const available = () => context && receivedContext && !document.hidden && !$('guide').open;
 function saveDraft(){
@@ -72,7 +73,50 @@ function render() {
   $('challenge').textContent = size <= 48 ? `轻装达成 · ${size} B / 48 B。还能画点什么？` : `小挑战：把一张喜欢的画装进 48 B。还差 ${size - 48} B。`;
   receipt();
   renderIdleWire(packet);
+  renderReorder();
 }
+function renderReorder() {
+  $('reorder-lesson').hidden = !reorder;
+  if (!reorder) return;
+  const {trial,guess} = reorder, {before,after,changedCells,samePacket} = trial;
+  const shown = guess !== null;
+  $('reorder-source').textContent = equal(pixels,before.pixels)
+    ? '本轮用的是当前画纸的副本。原画、草稿和上次来信不会改变。'
+    : '画纸已改。这里仍是刚才封存的旧图对照；要比较新图，请点「用当前画纸再试一次」。';
+  if(reorder.renderedGuess===guess)return;
+  reorder.renderedGuess=guess;
+  draw($('reorder-before').getContext('2d'),before.decoded);
+  $('reorder-before-size').textContent = before.encoded.packet.length + ' B';
+  $('reorder-after-size').textContent = shown ? after.encoded.packet.length + ' B' : '待揭晓';
+  $('reorder-after-wrap').hidden = !shown; $('reorder-mystery').hidden = shown;
+  $('reorder-question').hidden = shown; $('reorder-results').hidden = !shown;
+  $('reorder-feedback').textContent = '';
+  if (!shown) return;
+  draw($('reorder-after').getContext('2d'),after.decoded);
+  const delta = after.encoded.packet.length-before.encoded.packet.length;
+  const actual = delta===0?'same':delta>0?'more':'less', correct = guess===actual;
+  $('reorder-results').dataset.correct=String(correct);$('reorder-results').dataset.changed=String(changedCells>0);
+  $('reorder-result-title').textContent = delta===0?'图案换了，邮包一样大。':`实际邮包变化：${delta>0?'+':''}${delta} B`;
+  if(!changedCells)$('reorder-result-title').textContent='单色图，换了位置也看不出变化。';
+  const labels={more:'变大',same:'一样大',less:'变小'};
+  $('reorder-feedback').textContent=`你猜的是「${labels[guess]}」。${correct?'这次判断对了。':'这次结果和直觉不一样。'}看下面两组实际记录。`;
+  $('reorder-counts').innerHTML=names.map((name,i)=>`<div><span><i class="color-${i}" aria-hidden="true"></i>${name}</span><b>${before.encoded.counts[i]} → ${after.encoded.counts[i]} 格</b><code>${before.encoded.codes[i]??'未使用'}</code></div>`).join('');
+  $('reorder-costs').innerHTML=[['图案编码',before.encoded.payloadBits,after.encoded.payloadBits],['编码树',before.encoded.treeBits,after.encoded.treeBits],['字节补齐',before.encoded.paddingBits,after.encoded.paddingBits],['合计',before.encoded.packet.length*8,after.encoded.packet.length*8]].map(([label,a,b])=>`<div><dt>${label}</dt><dd>${a} → ${b} bit</dd></div>`).join('');
+  $('reorder-explanation').textContent=changedCells
+    ? `${changedCells} 个位置的颜色和原图不同，但每种颜色的总格数没变，分到的暗号也没变。因此总编码长度不变。`
+    : '这张图只有一种颜色，所有格子都一样，换位置不会产生可见变化。换成小猫、爱心或画两种颜色，再试一次更明显。';
+  $('reorder-integrity').textContent=`前后邮包分别解码：原图 ${before.matches} / 256 格一致，重排图 ${after.matches} / 256 格一致。${samePacket?'本轮二进制内容也相同。':'大小相同，不是内容相同：两个邮包的二进制内容不同，分别还原出各自的图。'}没有通过删像素变小，也没有寄出或覆盖原画。`;
+}
+function startReorder() {
+  if(!available())return;
+  cancelStroke();reorder={trial:rearrangement(pixels),guess:null};renderReorder();$('reorder-title').focus({preventScroll:true});$('reorder-lesson').scrollIntoView({block:'start',behavior:'instant'});
+}
+$('reorder-start').addEventListener('click',startReorder);
+$('reorder-again').addEventListener('click',startReorder);
+for(const guess of ['more','same','less'])$('guess-'+guess).addEventListener('click',()=>{
+  if(!available()||!reorder||reorder.guess!==null)return;
+  reorder.guess=guess;renderReorder();$('reorder-result-title').focus({preventScroll:true});$('reorder-lesson').scrollIntoView({block:'start',behavior:'instant'});
+});
 function cancelSend(message) {
   if (!job) return;
   job = null; cancelAnimationFrame(frame); frame = 0;
@@ -186,6 +230,7 @@ draw(receivedContext, received?.pixels); render();
 if (!context || !receivedContext) {
   $('status').textContent = '此浏览器无法打开 Canvas 画布，请换用支持 Canvas 的浏览器。';
   $('send').disabled = true; $('undo').disabled = true; editor.setAttribute('aria-disabled', 'true');
+  $('reorder-start').disabled = true;
   for (const name of ['cat', 'heart', 'noise', 'blank']) $('preset-' + name).disabled = true;
   for (let i = 0; i < 4; i++) $('color-' + i).disabled = true;
 }
