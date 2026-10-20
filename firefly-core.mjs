@@ -62,3 +62,62 @@ export function perturbSwarm(world,point,mode='scatter',radius=0.22){
  const points=world.points.map(p=>distance2(p,point)<=radius*radius?{...p,phase:mode==='align'?0:rng()*TAU}:p);
  return {...world,points,seed};
 }
+
+// Spatial membership is meaningful only for the fixed two-island preset.
+export function measureGroups(world){
+ if(world.preset!=='islands')return null;
+ const left=world.points.filter(p=>p.x<.5),right=world.points.filter(p=>p.x>=.5);
+ const l=coherence(left),r=coherence(right);
+ const mean=points=>Math.atan2(points.reduce((s,p)=>s+Math.sin(p.phase),0),points.reduce((s,p)=>s+Math.cos(p.phase),0));
+ const a=mean(left),b=mean(right);
+ let links=0;
+ if(world.settings.coupling>0)for(const p of left)for(const q of right)if(distance2(p,q)<=world.settings.radius**2)links++;
+ return {left:l,right:r,whole:coherence(world.points),leftPhase:a,rightPhase:b,
+  gap:l>=.1&&r>=.1?Math.acos(Math.max(-1,Math.min(1,Math.cos(a-b))))*180/Math.PI:null,links};
+}
+
+const copyWorld=world=>({...world,settings:{...world.settings},points:world.points.map(p=>({...p}))});
+function listeningSnapshot(world,samples){
+ const values=samples.filter(s=>s.time>=world.time-3-1e-8).map(s=>s.value);
+ return {world:copyWorld(world),metrics:measureGroups(world),range:{min:Math.min(...values),max:Math.max(...values)}};
+}
+export function createListening(){
+ const world=createSwarm('islands',42);
+ return {stage:'observing',world,ticks:0,samples:[{time:0,value:coherence(world.points)}],before:null,after:null,choice:null,answer:null};
+}
+export function advanceListening(session,steps=1){
+ if(!Number.isInteger(steps)||steps<0||steps>900)throw Error('Expected 0..900 simulation steps');
+ if(!['observing','comparing'].includes(session.stage))return session;
+ const limit=session.stage==='observing'?900:600;
+ let world=session.world,ticks=session.ticks,samples=[...session.samples];
+ for(let i=0;i<steps&&ticks<limit;i++){
+  world=stepSwarm(world);ticks++;
+  if(ticks%6===0)samples.push({time:world.time,value:coherence(world.points)});
+ }
+ samples=samples.filter(s=>s.time>=world.time-3-1e-8);
+ const next={...session,world,ticks,samples};
+ if(ticks===limit){
+  const snapshot=listeningSnapshot(world,samples);
+  if(session.stage==='observing'){next.stage='before';next.before=snapshot;}
+  else{next.stage='after';next.after=snapshot;}
+ }
+ return next;
+}
+export function chooseListening(session,choice){
+ if(!session.before||!['before','after'].includes(session.stage))throw Error('Observe before comparing');
+ if(!['wide','near'].includes(choice))throw Error('Unknown listening choice');
+ const world=configureSwarm(copyWorld(session.before.world),{radius:choice==='wide'?2:.32});
+ return {...session,stage:'comparing',world,ticks:0,samples:[{time:world.time,value:coherence(world.points)}],after:null,choice,answer:null};
+}
+export function listeningOutcome(session){
+ if(!session.after)return null;
+ const {metrics,range}=session.after;
+ if(metrics.left>.9&&metrics.right>.9&&metrics.links===0)return 'separate';
+ if(metrics.links>0&&range.min>.9&&range.max-range.min<.02)return 'joined';
+ return 'unsettled';
+}
+export function answerListening(session,choice){
+ if(session.stage!=='after')throw Error('Complete the comparison first');
+ if(!['separate','chaotic','everyone'].includes(choice))throw Error('Unknown judgment');
+ return {...session,answer:{choice,correct:choice==='separate'}};
+}

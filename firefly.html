@@ -16,17 +16,34 @@
  </header>
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html" aria-current="page">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="firefly-main">
-  <section class="firefly-intro"><p class="eyebrow">80 个小节拍，一场没有指挥的合奏</p><h1>谁也没指挥，<span>怎么就合拍了？</span></h1><p>点乱一片萤火，再看它们慢慢找回彼此的节奏。</p></section>
+  <section class="firefly-intro"><p class="eyebrow">80 个小节拍，一场没有指挥的合奏</p><h1>各自很整齐，<span>为什么还没合拍？</span></h1><p>让两群互相听见。亲手改变一次连接，看懂局部与整体的区别。</p></section>
+  <section class="listening-lesson" id="listening-lesson" aria-labelledby="listening-title" data-stage="idle">
+   <div class="listening-heading"><span class="eyebrow" id="listening-stage">一次小实验 · 约半分钟</span><h2 id="listening-title">让两群互相听见</h2><p id="listening-instruction">先看它们各自找到节拍，再由你决定要不要让两群相互影响。没有指挥，也不需要刷到 100%。</p></div>
+   <div class="listening-actions">
+    <button id="listening-start" class="listening-primary">开始两群实验</button>
+    <button id="listening-fast" hidden>快进到观察点</button>
+    <button id="listening-wide" hidden disabled>让两群互相听见</button>
+    <button id="listening-near" hidden disabled>仍然只听身边</button>
+    <a id="listening-evidence-link" href="#comparison-title" hidden>查看本轮对照与结尾 ↓</a>
+    <button id="listening-exit" hidden>退出引导，清除对照</button>
+   </div>
+   <p class="listening-status" id="listening-status" role="status"></p>
+  </section>
   <section class="chorus-lab" aria-label="萤火虫同步实验">
    <div class="habitat-column">
     <div class="habitat">
      <div class="habitat-heading"><span id="habitat-label">一起合拍</span><span id="elapsed">0.0 秒</span><label class="phase-toggle"><input type="checkbox" id="show-phase">看小节拍</label></div>
     <div class="touch-modes"><h2>你来插一手</h2><div role="group" aria-label="点按动作"><button data-mode="scatter" aria-pressed="true">打乱一片 <kbd>1</kbd></button><button data-mode="align" aria-pressed="false">点亮一片 <kbd>2</kbd></button></div><p id="interaction-status" role="status">试着点一下画布。</p></div>
      <canvas id="fireflies" width="960" height="600" tabindex="0" role="application" aria-label="萤火虫合奏互动画布" aria-describedby="field-help cursor-status">需要支持 Canvas 的浏览器。</canvas>
+     <div id="group-readout" class="group-readout" hidden aria-label="两群的实时节拍">
+      <div><span class="group-left">左群内部</span><strong id="left-coherence">—</strong></div><div><span class="group-right">右群内部</span><strong id="right-coherence">—</strong></div><div><span>两群节拍错开</span><strong id="group-gap">—</strong></div>
+      <p id="group-message"></p>
+     </div>
      <p class="field-caption" id="field-caption">点一下，把附近的节拍打乱</p>
      <div class="chorus-transport"><button id="play" class="primary" aria-pressed="true">暂停</button><button id="step">走一拍</button><button id="shuffle">重新散开</button><button id="reset">重置</button></div>
     </div>
     <p class="near-play-status" id="play-status" role="status">运行中 · 点按可以干预</p>
+    <nav id="listening-jumps" class="listening-jumps" aria-label="本轮实验位置" hidden><a href="#listening-lesson">回到本轮选择 ↑</a><a id="listening-result-jump" href="#comparison-title" hidden>查看前后证据 ↓</a></nav>
    </div>
    <aside class="chorus-controls" aria-label="合奏控制">
     <h2>换一种相处方式</h2>
@@ -39,15 +56,28 @@
     <p class="chorus-tip" id="scene-tip">先等它们合拍，再点乱一小片。它们会自己找回节奏吗？</p>
    </aside>
    <div class="chorus-observation">
-    <div class="coherence-value"><span>合拍度</span><strong id="coherence">0<small>%</small></strong><p id="coherence-label">各有节奏</p></div>
+    <div class="coherence-value"><span>整体合拍度</span><strong id="coherence">0<small>%</small></strong><p id="coherence-label">各有节奏</p></div>
     <div class="phase-view"><canvas id="phase-clock" width="180" height="180" aria-label="当前 80 个相位在圆周上的分布"></canvas><span>越聚在一起，越合拍</span></div>
     <div class="history-view"><div><span>合拍度的变化</span><small>最近 30 秒</small></div><canvas id="history" width="600" height="120" aria-label="合拍度随模拟时间变化的曲线"></canvas></div>
    </div>
   </section>
-  <p class="field-help" id="field-help">点按画布干预，滑动页面不落笔。键盘：方向键移动，空格 / Enter 点一下，1 / 2 切换动作。</p><p id="cursor-status" class="sr-only" aria-live="polite"></p>
+  <section id="listening-comparison" class="listening-comparison" aria-labelledby="comparison-title" hidden>
+   <p class="eyebrow">同一批萤火 · 只改变听见的范围</p><h2 id="comparison-title" tabindex="-1">留下前后证据</h2>
+   <p id="comparison-context"></p>
+   <div class="listening-cards"><article id="comparison-before" aria-label="调整前记录"></article><article id="comparison-after" aria-label="调整后记录"></article></div>
+   <p id="comparison-explanation" class="comparison-explanation"></p>
+   <p class="evidence-note">百分数表示节拍的集中程度，不是合拍的萤火虫占比。错开 0° 表示同拍，180° 表示相反；内部太散时不强行比较平均节拍。记录保留到重开实验、退出引导或刷新。</p>
+  </section>
+  <section id="listening-quiz" class="listening-quiz" aria-labelledby="judgment-title" hidden>
+   <p class="eyebrow">最后，由你判断一次</p><h2 id="judgment-title">回看调整前：整体只有约 21%，说明什么？</h2>
+   <div class="judgment-options"><button id="answer-chaotic">两群内部都很乱</button><button id="answer-separate">各自很整齐，只是彼此错开了</button><button id="answer-everyone">只有 21% 的萤火虫学会了合拍</button></div>
+   <p id="listening-answer" role="status"></p>
+   <div id="listening-takeaway" hidden><h3>你刚刚看懂了一次同步</h3><p>局部整齐，不等于整体同拍；连接让两群有机会互相调整，但要连续观察，不能凭一次一起亮就判定成功。</p><p id="listening-ending"></p></div>
+  </section>
+  <p class="field-help" id="field-help">自由探索时可点按画布干预，滑动页面不落笔。键盘：方向键移动，空格 / Enter 点一下，1 / 2 切换动作。</p><p id="cursor-status" class="sr-only" aria-live="polite"></p>
   <details class="chorus-notes"><summary>为什么会合拍？这个数字又是什么？</summary><div><p>每个亮点有自己的节拍，也会稍微向范围内其他亮点的相位靠拢。这里使用局部邻居版本的 Kuramoto 相位耦合模型，没有隐藏的总指挥，也没有预设的同步时间。</p><p>「合拍度」是所有相位在单位圆上的平均向量长度（0 到 1，显示成百分数），不是已经同步的萤火虫占比。两群内部很整齐、却反着闪时，总合拍度也可能很低；它不保证一直上升。</p><p>位置固定，只模拟节拍。萤火虫是这个数学模型的视觉比喻，不是生物学复现。每秒 60 个固定步长，单步推进 1/60 秒；页面离开后暂停，回来需要手动继续。闪光是缓慢的局部亮暗变化，无声音。</p><p>无账号、上传、追踪或自动保存。切换场景会恢复该场景默认参数；重置保留参数并恢复初始节拍；「重新散开」保留参数和位置，换一组节拍。刷新会回到初始状态。</p><p>模型参考：<a href="https://web.mit.edu/~jadbabai/www/ESE680/Strogatz_Kuramoto.pdf" target="_blank" rel="noreferrer">Strogatz, From Kuramoto to Crawford（2000）↗</a></p></div></details>
   <footer class="bottom-note"><span>不同的节拍，也能找到彼此。</span><span class="signature">MADE BY CHEN QUAN</span></footer>
  </main>
- <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">把节奏交给它们。</h2><ol><li>从「一起合拍」开始，等一会，观察亮暗和合拍度。</li><li>点一下画布，打乱一片。也可以选「点亮一片」，把附近的节拍拨到同一刻。</li><li>把互相影响拉到 0，看看没有彼此的影响，会发生什么。</li><li>切到「两群对唱」，再把「看见多远」拉大，试着让两群相互听见。</li></ol><p>这不是必须刷到 100% 的游戏。局部合拍，也是一种有趣的结果。打开说明会暂停，关闭后由你继续。</p></dialog>
+ <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">把节奏交给它们。</h2><p>在两群实验中，按本轮提示观察、选择听见的范围，再看前后证据；其他参数和画布干预暂时锁定。退出引导后，可以这样自由探索：</p><ol><li>从「一起合拍」开始，等一会，观察亮暗和合拍度。</li><li>点一下画布，打乱一片。也可以选「点亮一片」，把附近的节拍拨到同一刻。</li><li>把互相影响拉到 0，看看没有彼此的影响，会发生什么。</li><li>切到「两群对唱」，再把「看见多远」拉大，试着让两群相互听见。</li></ol><p>这不是必须刷到 100% 的游戏。局部合拍，也是一种有趣的结果。打开说明会暂停，关闭后不会自动播放；运行途中可点「继续」，到观察点则按本轮提示选择或查看证据。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验萤火虫合奏。</p></noscript>
 </body></html>
