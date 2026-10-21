@@ -1,4 +1,4 @@
-import {learnLatest,selectPlan,changeWind,moveTarget} from './world-model-session.mjs';
+import {learnLatest,selectPlan,changeWind,moveTarget} from './world-model-session.mjs?v=same-flight-1';
 
 export const CHALLENGE_TARGET=Object.freeze({x:112,y:63,radius:5});
 export const CHOICES=Object.freeze({reuse:'沿用原路线',plan:'重新规划路线',learn:'只重新学习'});
@@ -19,7 +19,10 @@ export function nextLesson(lesson,session){
  let stage=lesson.stage;
  if(['first','learnedPreview','changedPreview','recoveredPreview'].includes(stage))return {lesson,session,fly:true};
  if(stage==='learn'||stage==='relearn'){
-  session=selectPlan(learnLatest(session));stage=stage==='learn'?'learnedPreview':'recoveredPreview';
+  session=learnLatest(session);stage=stage==='learn'?'learningComparison':'relearningComparison';
+  lesson={...lesson,evidence:{...lesson.evidence,[stage]:structuredClone(session.comparison)}};
+ }else if(stage==='learningComparison'||stage==='relearningComparison'){
+  session=selectPlan(session);stage=stage==='learningComparison'?'learnedPreview':'recoveredPreview';
  }else if(stage==='wind'){
   session=selectPlan(changeWind(session,-1));stage='changedPreview';
  }else if(stage==='challenge'){

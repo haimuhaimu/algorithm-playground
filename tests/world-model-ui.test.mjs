@@ -78,18 +78,23 @@ test('new observations do not mislabel an older learned model as having learned 
  }finally{u.restore();}
 });
 
-test('one guided action leads from a real miss to learning, preview, and a separately confirmed successful flight',async()=>{
+test('guided learning preserves the same real route before a separate plan and a separately confirmed successful flight',async()=>{
  const u=await boot({reduced:true});try{
   assert.ok(u.els.has('next'),'the experiment needs a single guided next action');
   u.click('next');
   assert.equal(u.els.get('results').hidden,false);
   assert.ok(parseFloat(u.els.get('target-distance').textContent)>5);
   const firstError=u.els.get('prediction-error').textContent;
+  const originalRoute=u.els.get('actual-path').getAttribute('points');
   u.click('next');
   assert.match(u.els.get('model-label').textContent,/M1/);
-  assert.equal(u.els.get('actual-path').getAttribute('points'),'','learning previews, never silently launches');
+  assert.equal(u.els.get('actual-path').getAttribute('points'),originalRoute,'learning keeps the actual flight visible');
+  assert.equal(u.els.get('angle').value,'0');assert.equal(u.els.get('power').value,'1');
   assert.equal(u.els.get('prediction-error').textContent,firstError,'the original evidence stays intact');
-  assert.match(u.els.get('guide-copy').textContent,/虚线/);
+  u.click('next');
+  assert.equal(u.els.get('actual-path').getAttribute('points'),'','only planning previews a new route');
+  assert.equal(u.els.get('prediction-error').textContent,firstError,'planning has not flown');
+  assert.match(u.els.get('model-label').textContent,/M1/);
   u.click('next');
   assert.ok(parseFloat(u.els.get('target-distance').textContent)<=5);
   assert.match(u.els.get('guide-title').textContent,/进圈/);
@@ -97,6 +102,7 @@ test('one guided action leads from a real miss to learning, preview, and a separ
   assert.match(u.els.get('model-label').textContent,/M1/,'changing wind does not retrain');
   assert.equal(u.els.get('results').hidden,true);
   u.click('next');assert.ok(parseFloat(u.els.get('target-distance').textContent)>5);
+  u.click('next');assert.match(u.els.get('model-label').textContent,/M2/);
   u.click('next');assert.match(u.els.get('model-label').textContent,/M2/);
   u.click('next');assert.ok(parseFloat(u.els.get('target-distance').textContent)<=5);
   u.click('reset');assert.match(u.els.get('model-label').textContent,/M0/);
@@ -142,7 +148,7 @@ test('free planning before any observation never claims that learning already ha
  }finally{u.restore();}
 });
 
-function reachDecision(u){for(let i=0;i<8;i++)u.click('next');}
+function reachDecision(u){for(let i=0;i<10;i++)u.click('next');}
 test('independent choice executes a real route, explains its result, and finishes with evidence rather than another wind loop',async()=>{
  const u=await boot({reduced:true});try{
   reachDecision(u);
@@ -196,5 +202,54 @@ test('manual controls leave the guided lesson instead of earning a fabricated co
   assert.match(u.els.get('guide-stage').textContent,/自由/);
   u.click('next');assert.equal(u.els.get('lesson-ending').hidden,true);
   u.click('reset');assert.doesNotMatch(u.els.get('guide-stage').textContent,/自由/);
+ }finally{u.restore();}
+});
+
+test('comparison emphasis preserves both predictions, the actual route, fixed axes and historical score',async()=>{
+ const u=await boot({reduced:true});try{
+  u.click('next');const before=u.els.get('prediction-path').getAttribute('points'),actual=u.els.get('actual-path').getAttribute('points'),error=u.els.get('prediction-error').textContent;
+  u.click('next');
+  assert.ok(u.els.has('learning-comparison'),'comparison controls are part of the real page');
+  assert.equal(u.els.get('learning-comparison').hidden,false);
+  const after=u.els.get('learned-path').getAttribute('points'),axes=u.els.get('scene').getAttribute('viewBox');
+  assert.notEqual(before,after);assert.notEqual(after,actual);
+  assert.equal(u.els.get('prediction-path').getAttribute('points'),before);
+  assert.match(u.els.get('comparison-after-error').textContent,/< 0.1/,'rounded tiny replay error is not claimed to be exact zero');
+  for(const id of ['compare-before','compare-after']){
+   u.click(id);assert.equal(u.els.get(id).getAttribute('aria-pressed'),'true');
+   assert.equal(u.els.get('scene').getAttribute('viewBox'),axes);
+   assert.equal(u.els.get('actual-path').getAttribute('points'),actual);
+   assert.equal(u.els.get('learned-path').getAttribute('points'),after);
+   assert.equal(u.els.get('prediction-error').textContent,error);
+  }
+  assert.equal(u.els.get('learning-record').hidden,false);
+  const saved=u.els.get('record-after-predicted').getAttribute('points');
+  u.click('next');assert.equal(u.els.get('learning-comparison').hidden,true);
+  assert.equal(u.els.get('record-after-predicted').getAttribute('points'),saved);
+  u.click('next');u.click('next');
+  assert.equal(u.els.get('record-after-predicted').getAttribute('points'),saved,'new wind cannot rewrite the old replay');
+  assert.match(u.els.get('record-context').textContent,/下吹 0.6/);
+  u.click('reset');assert.equal(u.els.get('learning-record').hidden,true);
+  assert.equal(u.els.get('learning-comparison').hidden,true);
+  assert.equal(u.els.get('learned-path').getAttribute('points'),'');
+ }finally{u.restore();}
+});
+
+test('ending reuses both same-flight comparisons even after an independent learning choice replaces the latest record',async()=>{
+ const u=await boot({reduced:true});try{
+  u.click('next');const firstActual=u.els.get('actual-path').getAttribute('points');
+  u.click('next');const firstAfter=u.els.get('learned-path').getAttribute('points');
+  for(let i=0;i<4;i++)u.click('next');
+  const windActual=u.els.get('actual-path').getAttribute('points');
+  u.click('next');const windAfter=u.els.get('learned-path').getAttribute('points');
+  for(let i=0;i<3;i++)u.click('next');
+  u.click('choice-learn');u.click('finish-lesson');
+  assert.equal(u.els.get('lesson-ending').hidden,false);
+  assert.equal(u.els.get('recap-learn-actual').getAttribute('points'),firstActual);
+  assert.equal(u.els.get('recap-learn-predicted').getAttribute('points'),firstAfter);
+  assert.equal(u.els.get('recap-wind-actual').getAttribute('points'),windActual);
+  assert.equal(u.els.get('recap-wind-predicted').getAttribute('points'),windAfter);
+  assert.match(u.els.get('recap-learning').textContent,/同一趟记录.*回看偏差/);
+  assert.match(u.els.get('recap-decision').textContent,/没有改路线/);
  }finally{u.restore();}
 });

@@ -6,12 +6,30 @@ import {createLesson,nextLesson,recordLessonFlight,chooseLesson} from '../world-
 
 function guidedChallenge(){
  let lesson=createLesson(),session=createSession();
- for(let i=0;i<8;i++){
+ for(let i=0;i<12&&lesson.stage!=='choose';i++){
   const next=nextLesson(lesson,session);({lesson,session}=next);
   if(next.fly){session=advanceFlight(startFlight(session),60);lesson=recordLessonFlight(lesson,session.flight);}
  }
  return {lesson,session};
 }
+test('guided learning stops at fixed-condition evidence before separately planning the next flight',()=>{
+ let lesson=createLesson(),session=advanceFlight(startFlight(createSession()),60);
+ lesson=recordLessonFlight(lesson,session.flight);const completed=structuredClone(session.flight);
+ const learned=nextLesson(lesson,session);
+ assert.equal(learned.lesson.stage,'learningComparison');assert.equal(learned.fly,false);
+ assert.equal(learned.session.model.version,1);assert.deepEqual(learned.session.controls,{angle:0,power:1});
+ assert.equal(learned.session.plan,null);assert.deepEqual(learned.session.flight,completed);
+ assert.deepEqual(learned.lesson.evidence.learningComparison,learned.session.comparison);
+ const planned=nextLesson(learned.lesson,learned.session);
+ assert.equal(planned.lesson.stage,'learnedPreview');assert.equal(planned.fly,false);
+ assert.equal(planned.session.model.version,1);assert.ok(planned.session.plan);assert.equal(planned.session.completed,1);
+ assert.deepEqual(planned.lesson.evidence.learningComparison,learned.lesson.evidence.learningComparison);
+ assert.equal(nextLesson(planned.lesson,planned.session).fly,true);
+ const challenge=guidedChallenge();
+ assert.equal(challenge.lesson.evidence.relearningComparison.wind,-1);
+ assert.equal(challenge.lesson.evidence.learningComparison.wind,0.6);
+ assert.equal(challenge.lesson.evidence.relearningComparison.number,3);
+});
 test('moving the goal changes planning but never changes dynamics or scores an earlier flight against a new ring',()=>{
  let s=learnLatest(advanceFlight(startFlight(createSession()),60));const old=structuredClone(s.flight),model=structuredClone(s.model);
  s=moveTarget(s,{x:112,y:63,radius:5});
