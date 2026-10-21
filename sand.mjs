@@ -115,6 +115,7 @@ $('step').addEventListener('click',()=>{endStroke();stop();world=stepWorld(world
 $('speed').addEventListener('change',()=>{lastTick=performance.now();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){endStroke();stop();controls('页面离开后已暂停 · 点继续恢复');}});
 window.addEventListener('blur',endStroke);window.addEventListener('pagehide',()=>{endStroke();stop();});
+document.addEventListener('sand-lesson-start',()=>{endStroke();stop();controls('观察一粒沙时已暂停 · 你的画布保留着');});
 $('about').addEventListener('click',()=>{endStroke();stop();$('guide').showModal();});
 const themeQuery=matchMedia('(prefers-color-scheme:dark)');let explicitTheme=false;
 function setTheme(dark){document.documentElement.dataset.theme=dark?'dark':'light';$('theme').setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');}
