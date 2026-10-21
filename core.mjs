@@ -3,16 +3,17 @@ export function probability(post,profile={}) {
   // Teaching model, not a trained predictor. Quality is deliberately separate.
   return .05+.5*unit(post.appeal)+.36*unit(profile[post.topic]);
 }
-export function rankPosts(posts,weights={},profile={},size=6) {
+export function scorePost(post,weights={},profile={},counts={}) {
   const w=Object.fromEntries(['click','diversity','newcomer'].map(k=>[k,unit(weights[k]/100)]));
+  const parts={click:w.click*probability(post,profile),diversity:w.diversity*.5/(1+(counts[post.topic]||0)),newcomer:w.newcomer*.45*(post.isNew?1:0)};
+  return {parts,score:Object.values(parts).reduce((a,b)=>a+b,0)};
+}
+export function rankPosts(posts,weights={},profile={},size=6) {
   const candidates=[...new Map(posts.map(p=>[p.id,p])).values()];
   const chosen=[],counts={};
   const limit=Number.isFinite(size)?Math.max(0,Math.floor(size)):6;
   while(chosen.length<limit&&candidates.length) {
-    const ranked=candidates.map(post=>{
-      const parts={click:w.click*probability(post,profile),diversity:w.diversity*.5/(1+(counts[post.topic]||0)),newcomer:w.newcomer*.45*(post.isNew?1:0)};
-      return {...post,parts,score:Object.values(parts).reduce((a,b)=>a+b,0)};
-    }).sort((a,b)=>b.score-a.score||String(a.id).localeCompare(String(b.id),'en'));
+    const ranked=candidates.map(post=>({...post,...scorePost(post,weights,profile,counts)})).sort((a,b)=>b.score-a.score||String(a.id).localeCompare(String(b.id),'en'));
     const best=ranked[0];chosen.push(best);counts[best.topic]=(counts[best.topic]||0)+1;
     candidates.splice(candidates.findIndex(p=>p.id===best.id),1);
   }
