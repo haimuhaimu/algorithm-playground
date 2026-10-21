@@ -5,6 +5,7 @@
  <meta name="description" content="画两种点，现场训练一个小神经网络。比较直线与弯曲的分界，看看坏样本会怎样改变它的判断。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./neural.css">
+ <link rel="stylesheet" href="./neural-lesson.css"><script type="module" src="./neural-lesson-ui.mjs"></script>
  <script type="module" src="./neural.mjs"></script><title>算法游乐场 · 涂鸦训练场</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
 </head>
@@ -14,6 +15,33 @@
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html" aria-current="page">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="neural-main">
   <section class="neural-intro"><h1>你来出题，<span>它来找规律。</span></h1><p>画两种点，看小神经网络怎么分开它们。也可以故意教错，看看会发生什么。</p></section>
+  <section class="label-lab" id="label-lab" aria-labelledby="label-title">
+   <header class="label-heading"><div><span class="label-eyebrow">一个小实验 · 只改一个标签</span><h2 id="label-title">教错一个点，<span>看看它怎么学偏。</span></h2><p>它会只听这个点，还是连旁边的判断也跟着变？</p></div><a href="#field">去自由涂鸦 ↓</a></header>
+   <div class="label-conditions" aria-label="两次训练的相同条件"><span>同样 48 个位置</span><span>同一初始权重</span><span>8 个神经元</span><span>步子 0.15</span><span>各训 500 步</span></div>
+   <div class="label-controls">
+    <div class="label-choices" role="group" aria-label="选择要教错的一个点"><button id="label-choice-edge" type="button" aria-pressed="true">① 岛边的方点 <small>方 → 圆</small></button><button id="label-choice-inside" type="button" aria-pressed="false">② 岛里的方点 <small>方 → 圆</small></button><button id="label-choice-opposite" type="button" aria-pressed="false">③ 对岸的圆点 <small>圆 → 方</small></button></div>
+    <p id="label-change"></p>
+    <div class="label-actions"><button class="label-primary" id="label-before-run" type="button">1 · 先正常训练 500 步</button><button class="label-primary" id="label-after-run" type="button" disabled>2 · 换这个标签，再训 500 步</button><button id="label-pause" type="button" disabled>暂停</button><button id="label-restart" type="button">重来</button></div>
+    <p id="label-status" role="status"></p>
+   </div>
+   <div class="label-boards">
+    <figure><figcaption><b>改前 · 正常学到的分界</b><span id="label-before-state">0 / 500 步</span></figcaption><canvas id="label-before-canvas" width="600" height="400" role="img" aria-label="原始标签与正常训练的分界；A 是选中样本，B 和 C 是固定观察位置" aria-describedby="label-probe-A label-probe-B label-probe-C"></canvas></figure>
+    <figure><figcaption><b id="label-after-name">改后 · 岛边的方点</b><span id="label-after-state">尚未训练</span></figcaption><canvas id="label-after-canvas" width="600" height="400" role="img" aria-label="只改变 A 的标签后的训练分界，与改前使用相同坐标和训练条件" aria-describedby="label-probe-A label-probe-B label-probe-C"></canvas></figure>
+   </div>
+   <div class="label-legend"><p><span>● 圆</span><span>■ 方</span> · 背景是模型倾向，实线是 50% 分界。</p><label><input id="label-overlay" type="checkbox" checked disabled> 在改后图叠加原分界（虚线）</label></div>
+   <section id="label-result" class="label-result" tabindex="-1" aria-labelledby="label-result-title" hidden>
+    <header><span class="label-eyebrow">3 · 看同一位置，别只看一张新图</span><h3 id="label-result-title">点没挪，判断变了吗？</h3><p id="label-summary"></p></header>
+    <div class="label-probes">
+     <article><p id="label-probe-A"></p><div class="label-bars" aria-hidden="true"><span>前</span><i><b id="label-meter-A-before"></b></i><span>后</span><i><b id="label-meter-A-after"></b></i></div></article>
+     <article><p id="label-probe-B"></p><div class="label-bars" aria-hidden="true"><span>前</span><i><b id="label-meter-B-before"></b></i><span>后</span><i><b id="label-meter-B-after"></b></i></div></article>
+     <article><p id="label-probe-C"></p><div class="label-bars" aria-hidden="true"><span>前</span><i><b id="label-meter-C-before"></b></i><span>后</span><i><b id="label-meter-C-after"></b></i></div></article>
+    </div>
+    <p class="label-reading-note">方倾向越高越偏向方，低于 50% 判圆；这不是正确率，也不是校准过的可靠度。B、C 不参与训练；这里只比较这 3 处，不代表全图表现。</p>
+    <div class="label-explanation"><h4>为什么一个标签，会动到别处？</h4><p id="label-reason"></p></div>
+    <div class="label-question"><h4>最后你来判断：为什么 B 没参与训练，预测也可能变？</h4><div role="group" aria-label="独立判断"><button id="label-answer-local" type="button" aria-pressed="false">应该只改 A，B 变化是随机的</button><button id="label-answer-shared" type="button" aria-pressed="false">它们共享一套学出来的参数</button></div><p id="label-judgment" role="status"></p><p class="label-next">再试试「岛里的方点」：同样教错一个点，影响一定一样大吗？</p></div>
+   </section>
+   <details class="label-details"><summary>这次对照为什么公平？</summary><p>两边都是同一份“四个小岛”题目、48 个位置、8 个 tanh 神经元、初始化种子 41、全量梯度下降、步子 0.15、500 步。改后也从未训练的同一起点出发，不在左边模型上接着练。只对选中样本调换圆／方标签，其他标签不变。</p><p>“教错”以这道合成题的原始规则为参照；网络本身不知道真假。A 是训练样本，B、C 是预先固定的观察位置，前后不移动。换点时，正常分界保留，改后结果清除；不会累计改坏多个点。小实验只在内存中运行，刷新即重置，不读取或覆盖下面的自由涂鸦草稿。</p></details>
+  </section>
   <section class="neural-lab" aria-label="神经网络分类实验">
    <div class="drawing-column">
     <div class="local-draft"><p id="draft-status" role="status">草稿仅在此浏览器保留，不上传。</p><button id="forget-draft" type="button">删除本地草稿</button></div>
