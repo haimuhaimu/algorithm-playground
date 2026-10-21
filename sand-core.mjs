@@ -11,7 +11,19 @@ export function countMaterials(world){
 }
 
 export function stepWorld(world){
+ return advanceWorld(world).world;
+}
+
+// Observation is recorded inside the normal update loop, never a second simulation.
+export function observeSandStep(world,point){
+ if(!point||!Number.isInteger(point.x)||!Number.isInteger(point.y)||point.x<0||point.x>=world.width||point.y<0||point.y>=world.height)throw Error('Invalid observation point');
+ if(world.cells[point.y*world.width+point.x]!==SAND)throw Error('Select a sand cell');
+ return advanceWorld(world,point);
+}
+
+function advanceWorld(world,point=null){
  const {width,height,tick}=world,cells=world.cells.slice(),moved=new Uint8Array(cells.length);
+ const decision=point?{from:{...point},to:{...point},attempts:[],outcome:'stay'}:null;
  const reverse=tick%2===1;
  // Bottom-up traversal prevents a falling particle from moving twice.
  for(let y=height-1;y>=0;y--)for(let n=0;n<width;n++){
@@ -20,18 +32,26 @@ export function stepWorld(world){
   const direction=((x*13+y*7+tick)&1)?1:-1;
   const candidates=[[x,y+1],[x+direction,y+1],[x-direction,y+1]];
   if(material===WATER)candidates.push([x+direction,y],[x-direction,y]);
+  const watched=point&&x===point.x&&y===point.y;
   for(const [nx,ny] of candidates){
-   if(nx<0||nx>=width||ny>=height)continue;
-   // A diagonal must have an open side passage, not tunnel through a wall corner.
-   if(nx!==x&&ny!==y&&cells[y*width+nx]===WALL)continue;
    const j=ny*width+nx,target=cells[j];
-   if(target!==EMPTY&&!(material===SAND&&target===WATER&&!moved[j]))continue;
+   let reason;
+   if(nx<0||nx>=width||ny>=height)reason='edge';
+   // A diagonal must have an open side passage, not tunnel through a wall corner.
+   else if(nx!==x&&ny!==y&&cells[y*width+nx]===WALL)reason='corner';
+   else if(target===EMPTY)reason='empty';
+   else if(material===SAND&&target===WATER)reason=moved[j]?'water-moved':'swap';
+   else reason='occupied';
+   const accepted=reason==='empty'||reason==='swap';
+   if(watched)decision.attempts.push({to:{x:nx,y:ny},target:reason==='edge'?null:target,reason,accepted});
+   if(!accepted)continue;
    cells[j]=material;cells[i]=target;
    moved[i]=1;moved[j]=1;
+   if(watched){decision.to={x:nx,y:ny};decision.outcome=nx===x?'down':nx<x?'left':'right';}
    break;
   }
  }
- return {...world,cells,tick:tick+1};
+ return {world:{...world,cells,tick:tick+1},decision};
 }
 
 export function paintStroke(world,from,to,material,radius=2){

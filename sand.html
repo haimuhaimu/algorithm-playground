@@ -6,6 +6,7 @@
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./sand.css">
  <script type="module" src="./sand.mjs"></script><title>算法游乐场 · 落沙实验室</title>
+ <script type="module" src="./sand-lesson-ui.mjs"></script>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
 </head>
 <body>
@@ -17,7 +18,21 @@
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html" aria-current="page">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="sand-main">
   <section class="sand-intro"><div><p class="eyebrow">EXPERIMENT 03 / 元胞自动机</p><h1>一点规则，<span>一整个小世界。</span></h1><p>倒沙，放水，画一道墙。复杂的流动，从每个小格子的一次选择开始。</p></div><span class="lab-stamp" aria-hidden="true">SAND<br>& WATER<br><i>72 × 48 CELLS</i></span></section>
-  <section class="sand-lab" aria-label="落沙工作台">
+  <section class="grain-lesson" id="grain-lab" aria-labelledby="grain-title">
+   <header class="grain-heading"><div><p class="eyebrow">ONE GRAIN / 一分钟看懂</p><h2 id="grain-title" tabindex="-1">看一粒沙怎么做决定</h2><p>先猜，走一拍；只改一格，再看一次。不是播放预设动画，是真的运行同一套规则。</p></div><a href="#free-sand">先自由玩沙 ↗</a></header>
+   <div class="grain-layout">
+    <div class="grain-observation"><p id="grain-board-title">这一拍之前 · ● 选中的沙粒</p><div id="grain-board" role="group" aria-label="放大的五乘五沙粒实验台" aria-describedby="grain-edit-note"></div><p id="grain-edit-note"></p></div>
+    <div class="grain-action"><p class="eyebrow" id="grain-phase">01 / 先猜下一格</p><h3 id="grain-prompt">黄色沙粒已选中：下方有墙，右侧也有墙。这一拍它会去哪里？</h3>
+     <div class="grain-guesses" role="group" aria-label="预测沙粒去向"><button data-grain-guess="left" aria-pressed="false">↙ 左下</button><button data-grain-guess="down" aria-pressed="false">↓ 往下</button><button data-grain-guess="right" aria-pressed="false">↘ 右下</button><button data-grain-guess="stay" aria-pressed="false">· 停住</button></div>
+     <button id="grain-run" class="grain-run" disabled>走一拍，看决定</button>
+     <p id="grain-feedback" role="status"></p><ol id="grain-trace" aria-label="实际尝试顺序"></ol><p class="grain-fine" id="grain-trace-note"></p>
+    </div>
+   </div>
+   <div class="grain-comparison" aria-label="保留前后对照"><article><h3>第一次 · 原来的邻居</h3><div id="grain-before"></div></article><article><h3>这一次 · 只改了一格</h3><div id="grain-after"></div></article></div>
+   <div class="grain-conclusion" id="grain-conclusion" tabindex="-1" aria-labelledby="grain-summary-title" hidden><h3 id="grain-summary-title"></h3><p id="grain-summary"></p><p id="grain-takeaway"></p><a href="#free-sand">去大画布造一道墙，试试这套规则 ↓</a></div>
+   <footer class="grain-footer"><button id="grain-restart">重新观察</button><p>独立小样本，不会清空下面的作品。这里固定起点和拍数；大画布两侧的尝试顺序随位置与拍数交替，不是永远先右。</p></footer>
+  </section>
+  <section class="sand-lab" id="free-sand" aria-label="落沙工作台">
    <aside class="sand-tools" aria-label="实验工具">
     <div class="material-group"><h2><span>01</span> 拿起一种材料</h2><div class="material-buttons" role="group" aria-label="材料">
      <button data-material="1" aria-pressed="true"><i class="swatch sand"></i><strong>沙子</strong><small>堆起来</small><kbd>1</kbd></button>
