@@ -1,11 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-const htmlIds=new Set([...readFileSync(new URL('../rsi.html',import.meta.url),'utf8').matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]));
-let uiModule={};try{uiModule=await import('../rsi.mjs');}catch{}
-import {briefs,createWorkflow,draw} from '../rsi-core.mjs';
-const watched=b=>{for(let i=0;i<b.ui.state.candidate.attempts.length*3;i++)b.click('trace-next');};
-function boot(width=1280){
+import {initStudio,poster} from '../rsi.mjs';
+const htmlIds=new Set([...readFileSync(new URL('../rsi.html',import.meta.url),'utf8').matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
+function boot(width=1280,height=720){
  const doc=new EventTarget(),nodes=new Map();
  class Element extends EventTarget{
   constructor(id){super();this.id=id;this.hidden=false;this.disabled=false;this.dataset={};this.attrs={};this.innerHTML='';this.textContent='';this.scrolls=[];}
@@ -14,108 +12,72 @@ function boot(width=1280){
  }
  doc.getElementById=id=>{if(!htmlIds.has(id))return null;if(!nodes.has(id))nodes.set(id,new Element(id));return nodes.get(id);};
  doc.documentElement={dataset:{}};doc.querySelectorAll=()=>[];
- const ui=uiModule.initStudio(doc,{innerWidth:width,confirm:()=>true});
- return {ui,doc,nodes,click(id){const n=doc.getElementById(id);assert.equal(n.hidden,false,id);assert.equal(n.disabled,false,id);n.dispatchEvent(new Event('click'));}};
+ const ui=initStudio(doc,{innerWidth:width,innerHeight:height});
+ return {ui,doc,nodes,click(id){const n=doc.getElementById(id);assert.ok(n,'missing real HTML control '+id);assert.equal(n.hidden,false,id);assert.equal(n.disabled,false,id);n.dispatchEvent(new Event('click'));}};
 }
-test('poster drawing reflects species, clothing and pose rather than a canned score',()=>{
- const job=briefs('first')[1],w=createWorkflow(),bad=draw(w,job),good={...bad,species:'fox',coat:'green',pose:'jump'};
- const a=uiModule.poster(bad),b=uiModule.poster(good);
+const reachDecision=b=>{b.click('story-next');b.click('story-next');b.click('story-next');};
+test('poster still reflects actual species, clothing and pose',()=>{
+ const a=poster({species:'rabbit',coat:'green',pose:'side',scene:'garden'});
+ const b=poster({species:'fox',coat:'coral',pose:'jump',scene:'garden'});
  assert.notEqual(a,b);assert.match(a,/兔子/);assert.match(b,/狐狸/);assert.match(b,/跃起/);
- assert.match(a,/viewBox=/);assert.doesNotMatch(a,/<script|<image|https?:/);
+ assert.doesNotMatch(a,/<script|<image|https?:/);
 });
-test('skipping first repairs does not claim the pictures were fixed',()=>{
- const b=boot();b.click('start');b.click('next');
- assert.doesNotMatch(b.nodes.get('guide-title').textContent,/图修好了/);
- assert.match(b.nodes.get('guide-copy').textContent,/没有返修/);
+test('first view starts with one wrong poster and one action, no duplicate comparison',()=>{
+ const b=boot();assert.equal(b.ui.state.stage,'mistake');
+ assert.equal(b.nodes.get('before-figure').hidden,true);assert.equal(b.nodes.get('story-next').hidden,false);
+ assert.equal(b.nodes.get('choice-controls').hidden,true);assert.equal(b.nodes.get('challenge-controls').hidden,true);
+ assert.match(b.nodes.get('after-art').innerHTML,/兔子/);
 });
-test('phone stage changes bring the next instruction back below the pinned artwork',()=>{
- const b=boot(390);b.click('start');b.click('next');b.click('trial');
- assert.equal(b.nodes.get('guide-stage').scrolls.length,3);
- assert.equal(b.nodes.get('guide-stage').scrolls.at(-1).block,'start');
+test('the same poster visibly goes rabbit to fox to rabbit without changing its brief',()=>{
+ const b=boot();b.click('story-next');assert.equal(b.ui.state.stage,'repaired');
+ assert.match(b.nodes.get('before-art').innerHTML,/兔子/);assert.match(b.nodes.get('after-art').innerHTML,/狐狸/);
+ b.click('story-next');assert.match(b.nodes.get('before-art').innerHTML,/狐狸/);assert.match(b.nodes.get('after-art').innerHTML,/兔子/);
+ assert.equal(b.ui.state.job.scene,'garden');
 });
-test('fixed-method ending acknowledges that its improvement method was not changed',()=>{
- const b=boot();b.click('start');b.click('next');b.click('method-cycle');b.click('trial');
- watched(b);b.click('adopt');b.click('repair-next');watched(b);b.click('finish-keep');b.click('answer-method');
- assert.equal(b.ui.state.workflow.improver,'cycle');
- assert.match(b.nodes.get('answer-feedback').textContent,/这轮.*固定顺序.*没有/);
- assert.doesNotMatch(b.nodes.get('answer-feedback').textContent,/也被改变/);
+test('visible keep and withdraw controls, not Next, determine the next drawing',()=>{
+ for(const decision of ['keep','withdraw']){
+  const b=boot();reachDecision(b);assert.equal(b.nodes.get('choice-controls').hidden,false);
+  assert.equal(b.nodes.get('story-next').hidden,true);assert.equal(b.ui.state.decision,null);
+  b.click(decision+'-rule');assert.equal(b.ui.state.stage,'proof');
+  assert.equal(b.ui.state.decision,decision);
+  assert.match(b.nodes.get('after-art').innerHTML,decision==='keep'?/狐狸/:/兔子/);
+  assert.match(b.nodes.get('evidence-copy').textContent,decision==='keep'?/已保留/:/未保留/);
+  assert.equal(b.nodes.get('choice-controls').hidden,true);
+ }
 });
-test('rejecting a successful candidate distinguishes the trial score from installed results',()=>{
- const b=boot();b.click('start');b.click('next');b.click('trial');watched(b);b.click('adopt');b.click('repair-next');watched(b);b.click('finish-keep');
- assert.equal(b.ui.state.transferRecord.after.passed,3);assert.equal(b.ui.state.finalRecord.passed,0);
- assert.match(b.nodes.get('recap-transfer-copy').textContent,/候选.*保留原版.*0/);
+test('challenge requires a prediction, keeps it neutral, and its run uses the chosen method',()=>{
+ const b=boot();reachDecision(b);b.click('keep-rule');b.click('story-next');
+ assert.equal(b.ui.state.stage,'challenge');assert.equal(b.nodes.get('run-assistant').disabled,true);
+ assert.equal(b.nodes.get('art-status').hidden,true,'must not reveal which detail is wrong before guessing');
+ b.click('guess-identity');assert.equal(b.ui.state.prediction,'identity');
+ assert.equal(b.nodes.get('guess-identity').attrs['aria-pressed'],'true');
+ assert.equal(b.nodes.get('run-assistant').disabled,false);
+ b.click('run-assistant');assert.equal(b.ui.state.stage,'ending');
+ assert.equal(b.ui.state.transfer.attempts[0].patch,'lockOutfit');assert.equal(b.ui.state.art.coat,'green');
+ assert.match(b.nodes.get('outcome-copy').textContent,/衣服/);
 });
-test('actual buttons repair selected artwork, update credit count and invalidate curation',()=>{
- const b=boot();b.click('start');b.click('pick-1');b.click('fix-identity');
- assert.equal(b.ui.state.art[1].species,'fox');assert.equal(b.ui.state.credits,2);
- assert.equal(b.nodes.get('budget').textContent,'2 / 3');
- b.click('curate');assert.equal(b.ui.state.selected[1],true);
- b.click('redraw');assert.equal(b.ui.state.selected[1],false);assert.match(b.nodes.get('notice').textContent,/整张/);
- b.click('fix-outfit');assert.equal(b.nodes.get('redraw').disabled,true);
- assert.equal(b.nodes.get('fix-identity').disabled,true);
+test('withdraw route honestly ends without fixing the new problem and allows changing the real earlier choice',()=>{
+ const b=boot();reachDecision(b);b.click('withdraw-rule');b.click('story-next');b.click('guess-outfit');b.click('run-assistant');
+ assert.equal(b.ui.state.transfer.after.passed,0);assert.equal(b.ui.state.art.coat,'coral');
+ assert.match(b.nodes.get('outcome-copy').textContent,/没有|仍|没/);
+ b.click('revisit');assert.equal(b.ui.state.stage,'decision');assert.equal(b.ui.state.transfer,null);
+ b.click('keep-rule');assert.equal(b.ui.state.art.species,'fox');
 });
-test('phase controls are mutually exclusive, independent method choice reaches different real outcome',()=>{
- const b=boot();assert.equal(b.nodes.get('edit-controls').hidden,true);
- b.click('start');assert.equal(b.nodes.get('edit-controls').hidden,false);
- b.click('next');b.click('method-cycle');b.click('trial');
- assert.equal(b.ui.state.candidate.after.passed,1);assert.equal(b.nodes.get('edit-controls').hidden,true);
- watched(b);b.click('adopt');b.click('repair-next');assert.equal(b.ui.state.transferRecord.after.passed,0);
- assert.doesNotMatch(b.nodes.get('trace-reason').textContent,/动作本来正确/);
- watched(b);b.click('finish-keep');assert.equal(b.ui.state.stage,'ending');assert.equal(b.doc.activeElement.id,'ending-title');
- assert.equal(b.nodes.get('ending').hidden,false);
+test('theme changes preserve the story and reset clears choice, predictions and evidence',()=>{
+ const b=boot();reachDecision(b);b.click('keep-rule');b.click('theme');
+ assert.equal(b.ui.state.stage,'proof');assert.equal(b.doc.documentElement.dataset.theme,'dark');
+ b.click('reset');assert.equal(b.ui.state.stage,'mistake');assert.equal(b.ui.state.decision,null);
+ assert.equal(b.nodes.get('before-figure').hidden,true);assert.equal(b.nodes.get('choice-controls').hidden,true);
+ assert.equal(b.nodes.get('ending-controls').hidden,true);
 });
-test('diagnosis route reuses new method and ending records evidence without assuming learning',()=>{
- const b=boot();b.click('start');b.click('next');b.click('trial');watched(b);b.click('adopt');b.click('repair-next');
- assert.equal(b.ui.state.transferRecord.after.passed,3);
- watched(b);b.click('finish-adopt');assert.equal(b.ui.state.finalRecord.passed,3);
- assert.equal(b.ui.state.answer,null);b.click('answer-picture');assert.match(b.nodes.get('answer-feedback').textContent,/不只/);
- b.click('answer-method');assert.match(b.nodes.get('answer-feedback').textContent,/下一/);
+test('mobile stage transitions focus one instruction while a prediction keeps focus on its control',()=>{
+ const b=boot(390);reachDecision(b);
+ assert.equal(b.doc.activeElement.id,'guide-title');assert.equal(b.nodes.get('guide-title').scrolls.at(-1).block,'start');
+ b.click('keep-rule');b.click('story-next');b.nodes.get('guess-pose').focus();b.click('guess-pose');
+ assert.equal(b.doc.activeElement.id,'guess-pose');
 });
-test('alternative trial preserves earlier report and uses the same work, not a harder task',()=>{
- const b=boot();b.click('start');b.click('next');b.click('trial');b.click('alternate');
- assert.equal(b.ui.state.methodReports.diagnose.after.passed,3);assert.equal(b.ui.state.methodReports.cycle.after.passed,1);
- assert.deepEqual(b.ui.state.methodReports.diagnose.before.art,b.ui.state.methodReports.cycle.before.art);
- b.click('alternate');assert.equal(b.ui.state.candidate.method,'diagnose');
- assert.match(b.nodes.get('adopt').textContent,/先归因/);
- b.click('alternate');assert.match(b.nodes.get('adopt').textContent,/固定顺序/);
-});
-test('replay restores controls, old pictures and empty evidence; theme does not reset work',()=>{
- const b=boot();b.click('start');b.click('fix-outfit');b.click('theme');
- assert.equal(b.ui.state.credits,2);assert.equal(b.doc.documentElement.dataset.theme,'dark');
- b.click('reset');assert.equal(b.ui.state.stage,'welcome');assert.equal(b.nodes.get('ending').hidden,true);
- assert.equal(b.nodes.get('start').hidden,false);
-});
-test('find errors reveals actual ties and lets the user inspect affected work before the candidate',()=>{
- const b=boot();b.click('start');b.click('next');b.click('trial');
- assert.equal(b.nodes.get('adopt').disabled,true);
- assert.equal(b.nodes.get('trial-report').hidden,true);
- assert.match(b.nodes.get('trace-reason').textContent,/同.*2.*角色.*衣服/);
- assert.doesNotMatch(b.nodes.get('after-art').innerHTML,/<svg/);
- b.click('inspect-outfit');assert.equal(b.ui.state.active,1);
- assert.match(b.nodes.get('retained-issues').textContent,/衣服/);
- b.click('trace-next');assert.match(b.nodes.get('after-art').innerHTML,/狐狸/);
- assert.equal(b.nodes.get('trace-next').disabled,false);
-});
-test('rejected trial keeps the failed picture visible, then next attempt returns to retained work',()=>{
- const b=boot();b.click('start');b.click('next');b.click('method-cycle');b.click('trial');
- b.click('trace-next');b.click('trace-next');
- assert.match(b.nodes.get('trace-verdict').textContent,/撤回/);
- assert.match(b.nodes.get('trace-reason').textContent,/0.*0/);
- assert.match(b.nodes.get('after-art').innerHTML,/正面/);
- assert.match(b.nodes.get('retained-art').innerHTML,/侧身/);
- b.click('trace-next');assert.match(b.nodes.get('retained-art').innerHTML,/侧身/);
- assert.doesNotMatch(b.nodes.get('after-art').innerHTML,/<svg/);
- b.click('trace-next');b.click('trace-next');b.click('trace-next');
- assert.equal(b.nodes.get('trial-report').hidden,false);assert.equal(b.nodes.get('adopt').disabled,false);
- b.click('trace-replay');assert.equal(b.nodes.get('adopt').disabled,true);
-});
-test('transfer explains predicted versus selected rule and reset clears the trace panel',()=>{
- const b=boot();b.click('start');b.click('next');b.click('trial');watched(b);b.click('adopt');
- b.click('predict-identity');b.click('repair-next');
- assert.match(b.nodes.get('prediction-feedback').textContent,/你猜.*角色.*实际.*动作/);
- assert.equal(b.nodes.get('finish-adopt').disabled,true);
- assert.match(b.nodes.get('trace-reason').textContent,/3.*动作/);
- watched(b);assert.doesNotMatch(b.nodes.get('trace-verdict').textContent,/换方法/);
- b.click('reset');assert.equal(b.nodes.get('trace-controls').hidden,true);
- assert.equal(b.nodes.get('retained-figure').hidden,true);
+test('short landscape screens bring the new instruction back into view after each action',()=>{
+ const b=boot(844,390);reachDecision(b);b.click('keep-rule');b.click('story-next');b.click('guess-outfit');b.click('run-assistant');
+ assert.equal(b.doc.activeElement.id,'guide-title');
+ assert.equal(b.nodes.get('guide-title').scrolls.at(-1)?.block,'start');
 });

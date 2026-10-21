@@ -1,4 +1,59 @@
-import {createWorkflow,briefs,produce,draw,assess,retouch,improve} from './rsi-core.mjs?v=decision-trace-1';
+import {createWorkflow,briefs,produce,draw,assess,retouch,improve} from './rsi-core.mjs?v=single-poster-1';
+
+// The short story keeps one brief in view. A local retouch never mutates the
+// reusable workflow; only the player's decision can install the proposal.
+function posterBrief(){
+ return {id:'lili-garden',title:'栗栗的花园海报',scene:'garden',
+  target:{species:'fox',coat:'green',pose:'side'},
+  reference:{species:'rabbit',coat:'green',pose:'side'}};
+}
+export function createPosterStory(){
+ const job=posterBrief(),workflow=createWorkflow(),art=draw(workflow,job);
+ return {stage:'mistake',job,workflow,art,original:{...art},repairRecord:null,
+  proposal:null,decision:null,prediction:null,transfer:null};
+}
+export function posterStoryAction(s,a){
+ if(a.type==='reset')return createPosterStory();
+ if(a.type==='fix'&&s.stage==='mistake'){
+  const art=retouch(s.art,s.job,'identity');
+  return {...s,stage:'repaired',art,repairRecord:{...art}};
+ }
+ if(a.type==='redraw'&&s.stage==='repaired')return {...s,stage:'repeat',art:draw(s.workflow,s.job)};
+ if(a.type==='propose'&&s.stage==='repeat'){
+  return {...s,stage:'decision',proposal:improve(s.workflow,[s.job],'diagnose',1)};
+ }
+ if(a.type==='decide'&&s.stage==='decision'&&['keep','withdraw'].includes(a.decision)){
+  const workflow=a.decision==='keep'?{...s.proposal.workflow}:{...s.workflow};
+  return {...s,stage:'proof',decision:a.decision,workflow,art:draw(workflow,s.job)};
+ }
+ if(a.type==='challenge'&&s.stage==='proof'){
+  const job={...s.job,reference:{species:'fox',coat:'coral',pose:'side'}};
+  return {...s,stage:'challenge',job,art:draw(s.workflow,job)};
+ }
+ if(a.type==='predict'&&s.stage==='challenge'&&['identity','outfit','pose'].includes(a.issue)){
+  return {...s,prediction:a.issue};
+ }
+ if(a.type==='run'&&s.stage==='challenge'&&s.prediction){
+  const transfer=improve(s.workflow,[s.job],s.workflow.improver,1),workflow={...transfer.workflow};
+  return {...s,stage:'ending',transfer,workflow,art:draw(workflow,s.job)};
+ }
+ if(a.type==='revisit'&&['proof','challenge','ending'].includes(s.stage)){
+  const fresh=createPosterStory();
+  return {...fresh,stage:'decision',repairRecord:structuredClone(s.repairRecord),
+   proposal:improve(fresh.workflow,[fresh.job],'diagnose',1)};
+ }
+ return s;
+}
+export function posterStoryView(s){
+ const chapter=['mistake','repaired'].includes(s.stage)?1:['repeat','decision'].includes(s.stage)?2:3;
+ let before=null,after=s.art;
+ if(s.stage==='repaired')before=s.original;
+ if(s.stage==='repeat')before=s.repairRecord;
+ if(s.stage==='decision'){before=s.proposal.before.art[0];after=s.proposal.after.art[0];}
+ if(s.stage==='proof')before=s.decision==='keep'?s.original:s.proposal.after.art[0];
+ if(s.stage==='ending')before=s.transfer.before.art[0];
+ return {chapter,before,after,decision:s.decision,issues:assess([after],[s.job]).issues[0]};
+}
 export function createStudio(){
  const workflow=createWorkflow(),jobs=briefs('first'),art=produce(workflow,jobs);
  return {stage:'welcome',workflow,jobs,art,before:structuredClone(art),active:0,selected:[false,false,false],credits:3,
