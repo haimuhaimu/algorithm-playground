@@ -1,5 +1,5 @@
-import {ISSUE_LABELS,PATCH_LABELS,METHOD_LABELS,assess} from './rsi-core.mjs';
-import {createStudio,studioAction} from './rsi-session.mjs';
+import {ISSUE_LABELS,PATCH_LABELS,METHOD_LABELS,assess} from './rsi-core.mjs?v=decision-trace-1';
+import {createStudio,studioAction,studioTrace} from './rsi-session.mjs?v=decision-trace-1';
 
 const POSES={front:'正面打招呼',side:'侧身',jump:'跃起'};
 export function poster(art){
@@ -25,9 +25,9 @@ function guide(s){
  welcome:['01 / 创作总监就位','三张图，你敢交哪张？','栗栗要去花园、海边和月球。助手把角色参考和场景参考混用了。先看看：它们还是同一只狐狸吗？'],
  curate:['01 / 选片与定点返修','先救作品，最多改三次。','点击缩略图换片，对照母版和动作要求。选进精选，或花一次机会只修一处；整张重画也花一次，但会重新组合细节。'],
  method:['02 / 下一组又出问题了',first?.passed===3?'图修好了，方法却没变。':'换了委托，同类问题还在。',(first?.spent?'上次的操作只作用于那几张作品。':'你没有返修，直接接了新一组委托。')+'现在让助手改可复用的出图规则；你来决定它怎样寻找改法。'],
- trial:['02 / 两次小样的真实记录',s.method==='diagnose'?'先找原因，少走弯路。':'按顺序试，也可能试错方向。','左边始终是同一批原始出图，右边是这套方法留下的最佳版本。没有更好的候选会被拒绝，不会偷偷装上。'],
+ trial:['02 / 两次小样的真实记录','看助手怎样找到下一条改法','每次只试一条。先看哪里错，再对照试改前与小样，最后看为什么保留或撤回。所有步骤来自本轮实际计算。'],
  transfer:['03 / 陌生的动作委托','这次，换你没教过的动作。','新的任务没有参与刚才的试验。角色和衣服只是第一关：参考图都是正面，新委托却要侧身与跃起。'],
- judgment:['03 / 独立判断','这次真的值得升级吗？','你没有手动点“修动作”。助手用继承的方法选了一条规则，并在这批新图上实际试过。看画面、看结果，再决定安装。'],
+ judgment:['03 / 新委托也走一遍','它会照搬上一条改法吗？','这次没有手动返修。跟着继承的方法看它如何选规则；看完试改结果，再决定要不要安装。'],
  ending:['本轮结束','留下的不只是一组图。','下面保留了你这轮的作品、方法和新委托记录。可以换一种选择重玩，比较不同路径。']
  };
  return {chapter:['welcome','curate'].includes(s.stage)?1:['method','trial'].includes(s.stage)?2:3,lines:copy[s.stage],first};
@@ -43,6 +43,54 @@ function reportHTML(r){
 export function initStudio(doc=document,win=window){
  let state=createStudio();
  const $=id=>doc.getElementById(id);
+ const issueNames={identity:'角色',outfit:'衣服',pose:'动作'};
+ const issuesText=issues=>Object.keys(issueNames).map(key=>issueNames[key]+(issues.includes(key)?' ×':' ✓')).join(' · ');
+ function renderTrace(frame){
+  $('trace-controls').hidden=!frame;$('retained-figure').hidden=!frame;
+  $('original-issues').hidden=!frame;$('candidate-issues').hidden=!frame;
+  $('art-pair').dataset.trace=String(Boolean(frame));
+  $('adopt').disabled=!frame?.done;$('finish-adopt').disabled=!frame?.done;$('finish-keep').disabled=!frame?.done;
+  for(const key of Object.keys(issueNames))$('predict-'+key).setAttribute('aria-pressed',String(state.prediction===key));
+  if(!frame)return;
+  const {attempt:a,report,done,phase,retained,original,number}=frame,i=state.active;
+  $('trace-controls').dataset.phase=phase;
+  $('error-count-label').textContent=done?'本轮留下版本的错误':'试改前的错误 · 点数量看作品';
+  $('trace-progress').textContent=done?'本轮小样结束 · 尚未安装':'小样 '+number+' / '+report.budget+' · '+METHOD_LABELS[report.method];
+  for(const p of ['inspect','try','decide']){if(p===phase)$('phase-'+p).setAttribute('aria-current','step');else $('phase-'+p).removeAttribute('aria-current');}
+  $('trace-title').textContent=done?'看完过程，再决定带走什么':phase==='inspect'?'先找错：这三张卡在哪里？':phase==='try'?'只试一条，其他条件不动。':a.accepted?'这条有效，保留在试验里。':'这条没解决问题，撤回。';
+  for(const [key,name]of Object.entries(issueNames)){
+   $('inspect-'+key).textContent=name+'错 '+retained.counts[key]+' 张';
+   $('inspect-'+key).disabled=done||retained.counts[key]===0;
+  }
+  const changed=a?a.before.art.filter((art,j)=>['species','coat','pose'].some(k=>art[k]!==a.after.art[j][k])).length:0;
+  let reason='';
+  if(done)reason='相同委托，共试了 '+report.attempts.length+' 条修改，保留 '+report.attempts.filter(x=>x.accepted).length+' 条。下方汇总只计算保留下来的版本；撤回的小样不带进下一轮。';
+  else if(phase==='inspect'){
+   const counts=a.selection.counts,tied=a.selection.tied;
+   if(report.method==='cycle')reason='这套方法不按错误数量选。按预设顺序，下一条是「'+PATCH_LABELS[a.patch]+'」。'+(a.selection.skipped.length?'前面的规则已经试过或已在使用，本次跳过。':counts.pose===0?'即使动作本来正确，也先试正面构图。':'它从固定列表重新开始，不根据当前错误重排顺序。');
+   else if(tied.length>1)reason=tied.map(key=>issueNames[key]).join('和')+'各错 '+counts[tied[0]]+' 张，同为最多的 '+counts[tied[0]]+' 张。按预设的“角色 → 衣服 → 动作”顺序打破平局，不是角色更重要；先试「'+PATCH_LABELS[a.patch]+'」。';
+   else reason='当前有 '+counts[tied[0]]+' 张'+issueNames[tied[0]]+'不符合委托，数量最多。'+(number>1?'上一条已保留，先重新统计剩下的错误。':'')+'因此选「'+PATCH_LABELS[a.patch]+'」。';
+  }else if(phase==='try')reason='三份委托、参考和其他规则都不变，只试「'+PATCH_LABELS[a.patch]+'」。实际有 '+changed+' 张画面变化，合格数 '+a.before.passed+' → '+a.after.passed+' / '+a.after.total+'。可以切换作品检查：改了细节，不等于整张已经合格。';
+  else reason='合格数 '+a.before.passed+' → '+a.after.passed+' / '+a.after.total+'。本实验只在合格张数严格增加时保留修改。'+(a.accepted?'下一次从这份小样继续找错；不是从原始图重来。':'小样仍留在右边供检查，但下一次回到中间的版本，不把这条修改带过去。');
+  $('trace-reason').textContent=reason;
+  $('trace-rule').textContent=done?'只有保留的规则会进入待安装版本':PATCH_LABELS[a.patch];
+  $('trace-verdict').textContent=done?(state.stage==='trial'?'过程已看完，可以安装，也可以换方法对照。':'过程已看完：采用候选，或保留原版，由你决定。'):phase==='inspect'?'点上面的错误数量，查看对应作品；此时还没有展示小样。':phase==='try'?'这是试改小样，还没决定留不留。':a.accepted?'保留 ✓ · 只进入试验版本，尚未安装':'撤回 ↩ · 当前保留版本不变';
+  const actual=a?({lockIdentity:'identity',lockOutfit:'outfit',readPose:'pose',frontPose:'pose'})[a.patch]:null;
+  $('prediction-feedback').hidden=state.stage!=='judgment'||!state.prediction||done;
+  $('prediction-feedback').textContent=actual&&state.prediction?'你猜从'+issueNames[state.prediction]+'开始；实际试的是'+issueNames[actual]+'规则。'+(state.prediction===actual?'对照上面的统计和方法，看看依据。':'猜测不改变算法选择；它仍照继承的方法运行。'):'';
+  $('before-label').textContent='最初出图 · 不变';$('retained-label').textContent=done?'本轮留下的版本':'试改前 · 已保留';
+  $('retained-art').innerHTML=poster(retained.art[i]);
+  $('original-issues').textContent=issuesText(original.issues[i]);$('retained-issues').textContent=issuesText(retained.issues[i]);
+  $('art-mark').textContent='';
+  $('after-label').textContent=done?'待安装版本':phase==='inspect'?'下一份小样':phase==='try'?'试改小样 · 待判断':a.accepted?'小样 · 已保留':'小样 · 已撤回';
+  $('candidate-issues').textContent=phase==='inspect'?'还没有试改':issuesText((done?report.after:a.after).issues[i]);
+  if(phase==='inspect')$('after-art').innerHTML='<div class="sample-pending"><span>?</span><p>只换一条规则<br>它会怎样变？</p></div>';
+  $('trace-back').disabled=state.traceStep===0;$('trace-next').disabled=done;
+  $('trace-next').textContent=done?'本轮过程已看完':phase==='inspect'?'看这条规则怎么改 →':phase==='try'?'为什么保留或撤回？ →':number<report.attempts.length?'带着结果，找下一处错 →':'看本轮留下了什么 →';
+  $('trace-replay').hidden=!done;
+  $('candidate-note').textContent='这里是试验台。保留一条修改 ≠ 已安装；看完后仍由你决定是否带到新委托。';
+  $('desk-caption').textContent='三列是同一张委托：最初出图 / 这次试改的起点 / 新小样。下方切换作品，× 是不符合委托，✓ 是符合。';
+ }
  function render(){
   const g=guide(state),[step,title,copy]=g.lines,index=state.active,art=state.art[index],job=state.jobs[index],phase=state.stage;
   for(let n=1;n<=3;n++){if(n===g.chapter)$('chapter-'+n).setAttribute('aria-current','step');else $('chapter-'+n).removeAttribute('aria-current');}
@@ -69,15 +117,19 @@ export function initStudio(doc=document,win=window){
   $('pick-count').textContent='已精选 '+state.selected.filter(Boolean).length+' / 3 张 · 不花返修预算';
   for(const method of ['cycle','diagnose'])$('method-'+method).setAttribute('aria-pressed',String(state.method===method));
   if(state.firstRecord)$('first-receipt').textContent='上一组：你精选了 '+state.firstRecord.picked+' 张，其中 '+state.firstRecord.qualified+' 张符合委托。用了 '+state.firstRecord.spent+' 次操作；这一组仍按旧方法出图。';
-  if(phase==='trial'){
+  const trace=studioTrace(state);
+  $('trial-report').hidden=phase!=='trial'||!trace?.done;
+  $('transfer-report').hidden=phase!=='judgment'||!trace?.done;
+  if(phase==='trial')$('adopt').textContent='保留「'+METHOD_LABELS[state.method]+'」，接新委托 →';
+  if(phase==='trial'&&trace.done){
    $('trial-report').innerHTML=reportHTML(state.candidate)+'<p class="comparison-note">'+(Object.keys(state.methodReports).length===2?'同一批图、各两次机会：固定顺序 '+state.methodReports.cycle.after.passed+'/3；先归因 '+state.methodReports.diagnose.after.passed+'/3。':'另一套方法还没试；可以在相同任务和预算下对照。')+'</p>';
-   $('adopt').textContent='保留「'+METHOD_LABELS[state.method]+'」，接新委托 →';
   }
-  if(phase==='judgment')$('transfer-report').innerHTML=reportHTML(state.transferRecord);
+  if(phase==='judgment'&&trace.done)$('transfer-report').innerHTML=reportHTML(state.transferRecord);
   $('notice').textContent=state.notice||(phase==='curate'&&state.credits===0?'预算用完了。仍可选片或撤回精选，再交这一组。':'');
   $('workflow-label').textContent=flowLabel(state.workflow);$('improver-label').textContent=METHOD_LABELS[state.workflow.improver];
   $('candidate-note').textContent=['trial','judgment'].includes(phase)?'右侧画面是试验候选，尚未替换当前安装的方法。':'只修一张作品，不会自动改变这里的规则。';
   $('desk-caption').textContent=g.chapter===1?'点击缩略图换片。对照母版，再决定哪张值得留下。':'前后使用同一份委托。切换三张作品，看看究竟改了什么。';
+  renderTrace(trace);
   if(phase==='ending')renderEnding();
  }
  function renderEnding(){
@@ -97,10 +149,18 @@ export function initStudio(doc=document,win=window){
   state=next;render();
   if(state.stage==='ending'&&old.stage!=='ending'){$('ending-title').focus({preventScroll:true});$('ending').scrollIntoView({block:'start',behavior:'instant'});}
   else if(state.stage!==old.stage){$('guide-title').focus({preventScroll:true});if(win.innerWidth<=700)$('guide-stage').scrollIntoView({block:'start',behavior:'instant'});}
+  else if(['trace-next','trace-back','trace-replay','alternate'].includes(type)){
+   $('trace-title').focus({preventScroll:true});if(win.innerWidth<=700)$('trace-title').scrollIntoView({block:'start',behavior:'instant'});
+  }
  }
  for(let i=0;i<3;i++)$('pick-'+i).addEventListener('click',()=>act('select',{index:i}));
  for(const issue of ['identity','outfit','pose'])$('fix-'+issue).addEventListener('click',()=>act('retouch',{issue}));
  for(const type of ['start','redraw','curate','next','trial','alternate','adopt','repair-next'])$(type).addEventListener('click',()=>act(type));
+ for(const type of ['trace-next','trace-back','trace-replay'])$(type).addEventListener('click',()=>act(type));
+ for(const issue of ['identity','outfit','pose']){
+  $('inspect-'+issue).addEventListener('click',()=>act('inspect-issue',{issue}));
+  $('predict-'+issue).addEventListener('click',()=>act('predict',{issue}));
+ }
  for(const method of ['cycle','diagnose'])$('method-'+method).addEventListener('click',()=>act('method',{method}));
  for(const decision of ['adopt','keep'])$('finish-'+decision).addEventListener('click',()=>act('finish',{decision}));
  for(const answer of ['picture','method','unlimited'])$('answer-'+answer).addEventListener('click',()=>act('answer',{answer}));

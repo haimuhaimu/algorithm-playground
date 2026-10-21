@@ -37,14 +37,19 @@ export function improve(workflow,jobs,method=workflow.improver,budget=2){
  const before=assess(produce(workflow,jobs),jobs),attempts=[],used=new Set();
  let current={...workflow,improver:method},after=before;
  while(attempts.length<budget){
+  // Explicit tie order is part of this finite teaching model, not learned intelligence.
+  const ranked=['identity','outfit','pose'].filter(key=>after.counts[key]>0).sort((a,b)=>after.counts[b]-after.counts[a]);
   const choices=method==='cycle'?['frontPose','lockOutfit','lockIdentity','readPose']:
-   Object.entries(after.counts).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).map(([key])=>({identity:'lockIdentity',outfit:'lockOutfit',pose:'readPose'})[key]);
+   ranked.map(key=>({identity:'lockIdentity',outfit:'lockOutfit',pose:'readPose'})[key]);
   const patch=choices.find(p=>!used.has(p)&&Object.entries(PATCHES[p]).some(([k,v])=>current[k]!==v));
   if(!patch)break;
   used.add(patch);
   const proposed={...current,...PATCHES[patch],version:current.version+1},result=assess(produce(proposed,jobs),jobs);
   const accepted=result.passed>after.passed;
-  attempts.push({patch,accepted,workflow:proposed,before:after,after:result});
+  const selection={method,counts:{...after.counts},order:[...choices],
+   tied:ranked.filter(key=>after.counts[key]===after.counts[ranked[0]]),
+   skipped:choices.slice(0,choices.indexOf(patch))};
+  attempts.push({patch,accepted,selection,currentWorkflow:{...current},workflow:proposed,before:after,after:result});
   if(accepted){current=proposed;after=result;}
  }
  return {method,budget,before,after,attempts,workflow:current};
