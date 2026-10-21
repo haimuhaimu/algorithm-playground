@@ -13,6 +13,9 @@ Object.assign(TYPES,{'neural.html':'text/html; charset=utf-8','neural.css':'text
 Object.assign(TYPES,{'mining.html':'text/html; charset=utf-8','mining.css':'text/css; charset=utf-8','mining.mjs':'text/javascript; charset=utf-8','mining-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'pixel.html':'text/html; charset=utf-8','pixel.css':'text/css; charset=utf-8','pixel.mjs':'text/javascript; charset=utf-8','pixel-core.mjs':'text/javascript; charset=utf-8'});
 TYPES['local-drafts.mjs']='text/javascript; charset=utf-8';
+TYPES['feedback-story.mjs']='text/javascript; charset=utf-8';
+TYPES['feedback-story-ui.mjs']='text/javascript; charset=utf-8';
+TYPES['feedback-story.css']='text/css; charset=utf-8';
 TYPES['sand-lesson.mjs']='text/javascript; charset=utf-8';
 TYPES['sand-lesson-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['evolution-birth.mjs']='text/javascript; charset=utf-8';
