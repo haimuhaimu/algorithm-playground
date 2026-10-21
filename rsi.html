@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="当一次 AI 创作总监：角色出图、选片、定点返修，再改进助手寻找改法的方法。有限预算，真实前后对照。">
 <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
-<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css"><link rel="stylesheet" href="./rsi.css">
-<script type="module" src="./navigation.mjs"></script><script type="module" src="./rsi.mjs"></script>
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css"><link rel="stylesheet" href="./rsi.css?v=decision-trace-1">
+<script type="module" src="./navigation.mjs"></script><script type="module" src="./rsi.mjs?v=decision-trace-1"></script>
 <title>算法游乐场 · 会进化的 AI 创作室</title></head><body>
 <a class="skip-link" href="#workshop">跳到创作室</a>
 <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><a class="quiet-button" href="#boundaries">这算 RSI 吗 ↘</a><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div></header>
@@ -16,9 +16,10 @@
  <section class="art-desk" aria-label="作品与前后对照">
   <div class="desk-heading"><span id="batch-label">首批委托 / 三张角色海报</span><span id="desk-budget" hidden></span><span class="model-tag">规则绘图 · 非真实生图</span></div>
   <div class="reference-strip"><div id="master-art" class="master-art"></div><div><strong>角色母版：栗栗</strong><p>橘色尖耳狐狸 · 绿色外套<br><span id="brief-copy">这张要：正面打招呼</span></p></div><span class="reference-stamp">KEEP<br>IDENTITY</span></div>
-  <div class="art-pair">
-   <figure><figcaption id="before-label">原始出图</figcaption><div id="before-art"></div></figure>
-   <figure class="current-art"><figcaption><span id="after-label">你的当前版本</span><span id="art-mark"></span></figcaption><div id="after-art"></div></figure>
+  <div class="art-pair" id="art-pair">
+   <figure><figcaption id="before-label">原始出图</figcaption><div id="before-art"></div><p class="art-issues" id="original-issues" hidden></p></figure>
+   <figure id="retained-figure" hidden><figcaption id="retained-label">试改前 · 已保留</figcaption><div id="retained-art"></div><p class="art-issues" id="retained-issues"></p></figure>
+   <figure class="current-art"><figcaption><span id="after-label">你的当前版本</span><span id="art-mark"></span></figcaption><div id="after-art"></div><p class="art-issues" id="candidate-issues" hidden></p></figure>
   </div>
   <div class="filmstrip" role="group" aria-label="选择一张作品">
    <button id="pick-0" aria-pressed="true"><span id="thumb-0"></span><span><b>01</b><strong id="name-0"></strong><small id="picked-0"></small></span></button>
@@ -47,8 +48,19 @@
     <button id="method-diagnose" aria-pressed="true"><b>先归因，再试改法</b><span>统计哪里错得多，优先修对应规则。</span></button>
    </div><button id="trial" class="rsi-primary">让助手试这套方法 →</button>
   </div>
+  <section id="trace-controls" class="trace-controls" hidden aria-labelledby="trace-title">
+   <p id="trace-progress" class="trace-progress"></p>
+   <ol class="trace-stages" aria-label="本次小样过程"><li id="phase-inspect">1 找错</li><li id="phase-try">2 试改</li><li id="phase-decide">3 取舍</li></ol>
+   <h3 id="trace-title" tabindex="-1">看助手怎样找到下一条改法</h3>
+   <p id="error-count-label" class="control-label">试改前的错误 · 点数量看作品</p><div class="error-counts" role="group" aria-labelledby="error-count-label"><button id="inspect-identity"></button><button id="inspect-outfit"></button><button id="inspect-pose"></button></div>
+   <p id="trace-reason" class="trace-reason"></p><p id="prediction-feedback" class="prediction-feedback" hidden></p>
+   <div class="trace-rule"><span>本次只试这一条</span><strong id="trace-rule"></strong></div>
+   <p id="trace-verdict" class="trace-verdict" role="status" aria-live="polite"></p>
+   <div class="trace-navigation"><button id="trace-back" class="secondary-button">← 上一步</button><button id="trace-next" class="rsi-primary">看这条规则怎么改 →</button></div>
+   <button id="trace-replay" class="secondary-button">从找错重新看一遍 ↻</button>
+  </section>
   <div id="trial-controls" hidden><div id="trial-report"></div><button id="alternate" class="secondary-button">同一批图，试另一套方法 ⇄</button><button id="adopt" class="rsi-primary">保留这套方法，接新委托 →</button></div>
-  <div id="transfer-controls" hidden><p class="callout">这次参考图全是正面，但委托要侧身和跃起。<br>只会照抄参考，交不了这份作业。</p><button id="repair-next" class="rsi-primary">让助手自己找一次改法 →</button></div>
+  <div id="transfer-controls" hidden><p class="callout">这次参考图全是正面，但委托要侧身和跃起。<br>只会照抄参考，交不了这份作业。</p><p class="control-label">先猜一下：它会从哪里找改法？（可跳过）</p><div class="repair-options" role="group" aria-label="预测助手改哪里"><button id="predict-identity" aria-pressed="false">角色</button><button id="predict-outfit" aria-pressed="false">衣服</button><button id="predict-pose" aria-pressed="false">动作</button></div><button id="repair-next" class="rsi-primary">让助手自己找一次改法 →</button></div>
   <div id="judgment-controls" hidden><div id="transfer-report"></div><p class="control-label">看过前后作品，你决定：</p><button id="finish-adopt" class="rsi-primary">采用刚试过的候选版 →</button><button id="finish-keep" class="secondary-button">先不换，保留原版</button></div>
   <p id="notice" class="notice" role="status" aria-live="polite" aria-atomic="true"></p>
   <div class="workflow-note"><span>当前安装的工作方法</span><strong id="workflow-label"></strong><span>它如何寻找下一次改进</span><strong id="improver-label"></strong><p id="candidate-note"></p></div>

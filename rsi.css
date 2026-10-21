@@ -31,3 +31,47 @@
 @media(prefers-reduced-motion:reduce){.art-pair svg{animation:none}*{scroll-behavior:auto!important}}
 @media(max-width:700px){#guide-stage{scroll-margin-top:365px}}
 @media(max-height:650px) and (max-width:700px){#guide-stage{scroll-margin-top:280px}}
+
+/* The experiment trace uses the same work, not a decorative replay. */
+.art-pair[data-trace=true]{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.art-pair[data-trace=true] figcaption{min-height:36px;align-items:end;line-height:1.5}
+.art-pair[data-trace=true] svg{max-height:265px}
+.art-issues{font-size:10px;line-height:1.8;color:var(--muted);margin:9px 0 0;overflow-wrap:anywhere}
+.sample-pending{aspect-ratio:4/5;display:flex;flex-direction:column;align-items:center;justify-content:center;max-height:265px;border:1px dashed var(--line);text-align:center;color:var(--muted)}
+.sample-pending>span{font:italic 42px Georgia,serif}.sample-pending p{font-size:11px;line-height:1.8;margin-top:12px}
+.trace-controls{border-top:1px solid var(--line);padding-top:16px;margin-top:18px}
+.trace-progress{font:10px/1.7 ui-monospace,monospace;color:var(--muted)}
+.trace-stages{display:flex;list-style:none;gap:8px;padding:0;margin:12px 0 18px}
+.trace-stages li{flex:1;font-size:11px;border-bottom:2px solid var(--line);padding:7px 0;color:var(--muted)}
+.trace-stages [aria-current=step]{color:var(--good);border-color:var(--good);font-weight:650}
+.trace-controls h3{font-size:19px;line-height:1.5;letter-spacing:-.025em;margin:12px 0;scroll-margin-top:20px}
+.trace-controls h3:focus{outline:none}
+.error-counts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.error-counts button{font-size:11px;min-height:44px;padding:7px 3px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.error-counts button:not(:disabled):hover{border-color:var(--good)}
+.error-counts button:disabled{opacity:1;color:var(--muted);background:var(--soft)}
+.trace-reason{font-size:12px;line-height:1.9;color:var(--ink);margin:13px 0}
+.trace-rule{padding:12px 14px;background:var(--soft);border-left:2px solid var(--good)}
+.trace-rule span{font-size:10px;display:block;color:var(--muted);margin-bottom:5px}.trace-rule strong{font-size:13px;line-height:1.7;font-weight:600}
+.trace-verdict,.prediction-feedback{font-size:11px;line-height:1.8;color:var(--muted);margin:13px 0}
+.trace-controls[data-phase=decide] .trace-verdict{color:var(--good);font-weight:600}
+.trace-navigation{display:grid;grid-template-columns:1fr 2fr;gap:8px}.trace-navigation button{margin:0}
+.repair-options [aria-pressed=true]{box-shadow:inset 0 0 0 1px var(--good);border-color:var(--good);color:var(--good)}
+@media(min-width:701px) and (min-height:501px){.art-desk{position:sticky;top:18px}}
+@media(max-width:700px){
+ /* Reserve the pinned artwork in the scrollport, including keyboard/button focus. */
+ html{scroll-padding-top:345px}
+ #guide-stage{scroll-margin-top:10px}
+ .art-pair[data-trace=true]{gap:8px}.art-pair[data-trace=true] svg{height:auto;max-height:140px}
+ .art-pair[data-trace=true] figcaption{font-size:9px;min-height:30px;align-items:start}
+ .art-issues{font-size:9px;line-height:1.6;margin-top:6px}
+ .sample-pending{max-height:140px}.sample-pending>span{font-size:30px}.sample-pending p{font-size:9px;margin-top:4px}
+ .trace-controls{padding-top:12px}.trace-controls h3{font-size:19px;scroll-margin-top:10px}
+ .trace-reason{font-size:12px}.trace-navigation{grid-template-columns:1fr 2fr}
+}
+@media(max-width:700px) and (max-height:650px){
+ html{scroll-padding-top:295px}
+ .art-pair[data-trace=true] svg,.sample-pending{max-height:100px}
+ #guide-stage{scroll-margin-top:10px}
+}
+@media(max-height:500px) and (min-width:701px){.art-pair[data-trace=true] svg,.sample-pending{max-height:125px}.art-issues{font-size:9px}}
