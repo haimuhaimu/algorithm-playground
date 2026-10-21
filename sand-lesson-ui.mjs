@@ -1,5 +1,5 @@
-import {SAND,WALL} from './sand-core.mjs';
-import {SAND_ORIGIN,SAND_OUTCOMES,createSandLesson,canEditSandCell,predictSandLesson,runSandLesson,editSandLesson,describeSandAttempt,summarizeSandLesson} from './sand-lesson.mjs';
+import {SAND,WALL} from './sand-core.mjs?v=grain-decision-1';
+import {SAND_ORIGIN,SAND_OUTCOMES,createSandLesson,canEditSandCell,predictSandLesson,runSandLesson,editSandLesson,describeSandAttempt,summarizeSandLesson} from './sand-lesson.mjs?v=grain-decision-1';
 
 const $=id=>document.getElementById(id),root=$('grain-lab');
 let state=createSandLesson();

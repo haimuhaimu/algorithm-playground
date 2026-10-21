@@ -1,4 +1,4 @@
-import {EMPTY,SAND,WATER,WALL,createWorld,stepWorld,paintStroke,countMaterials} from './sand-core.mjs';
+import {EMPTY,SAND,WATER,WALL,createWorld,stepWorld,paintStroke,countMaterials} from './sand-core.mjs?v=grain-decision-1';
 const $=id=>document.getElementById(id),canvas=$('sandbox'),ctx=canvas.getContext('2d');
 const names=['橡皮','沙子','水','墙'],sizes=['细','小','中','大','很大'];
 const tips={splitter:'往屋顶尖端倒水，再擦掉一小段斜坡。两边的去向会怎么变？',hourglass:'在沙漏的细口补一堵墙，让时间停住；再挖开它，让沙继续走。',empty:'造一只杯子，装点水，再撒一把沙。也可以在杯底开一道口。'};
