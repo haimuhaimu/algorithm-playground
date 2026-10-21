@@ -1,7 +1,7 @@
 import {START,TARGET,STEPS,initialModel,makeActions,predict,learnModel,planFlight,trajectoryError,finite,validTarget} from './world-model-core.mjs';
 import {stepWorld} from './world-model-environment.mjs';
 
-export function createSession(){return {model:initialModel(),target:{...TARGET},controls:{angle:0,power:1},wind:0.6,worldVersion:0,flight:null,previous:null,samples:[],completed:0,learnedFlight:0,plan:null};}
+export function createSession(){return {model:initialModel(),target:{...TARGET},controls:{angle:0,power:1},wind:0.6,worldVersion:0,flight:null,previous:null,samples:[],completed:0,learnedFlight:0,plan:null,comparison:null};}
 export function startFlight(s){
  if(s.flight&&!s.flight.done)return s;
  const actions=makeActions(s.controls);
@@ -21,7 +21,12 @@ export function advanceFlight(s,count=1){
 export function learnLatest(s){
  if(!s.flight?.done||s.flight.worldVersion!==s.worldVersion||s.learnedFlight===s.flight.number)return s;
  const model={...learnModel(s.samples,s.model),source:{number:s.flight.number,wind:s.flight.wind,worldVersion:s.flight.worldVersion}};
- return {...s,model,learnedFlight:s.flight.number,plan:null};
+ // Re-evaluate the training flight, never silently plan or run a new flight.
+ const f=s.flight,after=predict(model,f.actions,f.actual[0]);
+ const comparison=structuredClone({number:f.number,beforeVersion:f.modelVersion,afterVersion:model.version,
+  controls:f.controls,wind:f.wind,worldVersion:f.worldVersion,target:f.target,actions:f.actions,
+  before:f.predicted,after,actual:f.actual,beforeError:f.error,afterError:trajectoryError(after,f.actual)});
+ return {...s,model,learnedFlight:s.flight.number,plan:null,comparison};
 }
 export function changeWind(s,wind){
  finite(wind);if(wind< -1||wind>1)throw Error('Wind outside range');if(wind===s.wind)return s;
