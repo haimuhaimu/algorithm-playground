@@ -43,6 +43,15 @@ test('number shortcuts inside shared lesson never launch the unrelated thirty-fl
   u.doc.activeElement=u.els.get('shared-fly');u.key('3');assert.equal(u.els.get('remaining').textContent,'30');
  }finally{u.restore();}
 });
+test('fresh-page and noninteractive lesson focus cannot spend mission attempts; mission focus enables shortcuts',async()=>{
+ const u=await boot({reduced:true});try{
+  u.key('2');assert.equal(u.els.get('remaining').textContent,'30','body focus on entry must not launch an offscreen mission');
+  u.doc.activeElement=u.els.get('shared-title');u.key('3');assert.equal(u.els.get('remaining').textContent,'30');
+  u.doc.activeElement=undefined;u.click('shared-title');u.key('4');assert.equal(u.els.get('remaining').textContent,'30');
+  u.doc.activeElement=u.els.get('planet-0');u.key('2');assert.equal(u.els.get('remaining').textContent,'29');
+  assert.match(u.els.get('sample-1').textContent,/1 次/);
+ }finally{u.restore();}
+});
 async function boot({reduced=false,seed}={}){
  const html=await readFile(new URL('../mining.html',import.meta.url),'utf8').catch(()=>'');
  assert.ok(html.includes('id="planet-0"'),'playable mining page must exist');
@@ -219,7 +228,7 @@ test('thirty reduced-motion probes reveal actual results and cap further play',a
  }finally{u.restore();}
 });
 test('keyboard choices ignore repeats, modifiers, hidden page and help',async()=>{
- const u=await boot({reduced:true});try{u.key('1',{repeat:true});u.key('1',{ctrlKey:true});u.hide();u.key('1');u.show();u.click('about');u.key('1');assert.equal(u.els.get('remaining').textContent,'30');
+ const u=await boot({reduced:true});try{u.doc.activeElement=u.els.get('planet-0');u.key('1',{repeat:true});u.key('1',{ctrlKey:true});u.hide();u.key('1');u.show();u.click('about');u.key('1');assert.equal(u.els.get('remaining').textContent,'30');
   u.els.get('guide').close();u.key('3');assert.equal(u.els.get('remaining').textContent,'29');assert.match(u.els.get('sample-2').textContent,/1 次/);
  }finally{u.restore();}
 });

@@ -202,7 +202,7 @@ window.addEventListener('pagehide',()=>{pauseSimulation();cancel();});
 window.addEventListener('resize',positionSimulationProbe);
 reduced.addEventListener('change',()=>{pauseSimulation();cancel('动画偏好已改变。重新选择星球即可继续。');});
 document.addEventListener('keydown',event=>{
- if(event.target?.closest?.('#shared-lab')||document.activeElement?.dataset?.sharedControl==='true')return;
+ if(!buttons.includes(document.activeElement))return;
  if(event.repeat||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.target?.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(event.target?.tagName))return;
  if(/^[1-5]$/.test(event.key)&&!document.hidden&&!$('guide').open){event.preventDefault();launch(Number(event.key)-1);}
 });
