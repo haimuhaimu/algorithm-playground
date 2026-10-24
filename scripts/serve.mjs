@@ -21,6 +21,8 @@ TYPES['feedback-story-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['feedback-story.css']='text/css; charset=utf-8';
 TYPES['sand-lesson.mjs']='text/javascript; charset=utf-8';
 TYPES['sand-lesson-ui.mjs']='text/javascript; charset=utf-8';
+TYPES['mining-shared-evidence.mjs']='text/javascript; charset=utf-8';
+TYPES['mining-shared-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['evolution-birth.mjs']='text/javascript; charset=utf-8';
 for(const file of ['world-model','world-model-core','world-model-environment','world-model-session','world-model-lesson'])TYPES[file+'.mjs']='text/javascript; charset=utf-8';
 TYPES['world-model.html']='text/html; charset=utf-8';TYPES['world-model.css']='text/css; charset=utf-8';
