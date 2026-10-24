@@ -1,4 +1,4 @@
-import {createWorld,createRecord,pull,chooseDecision} from './mining-core.mjs';
+import {createWorld,createRecord,pull,chooseDecision} from './mining-core.mjs?v=shared-evidence-1';
 
 // Curated reproducible teaching case, not the player's current mission.
 const SEED=265;
