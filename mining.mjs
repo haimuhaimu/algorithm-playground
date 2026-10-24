@@ -1,4 +1,5 @@
 import {BUDGET,createWorld,createRecord,pull,runPolicyTrace,traceChoices} from './mining-core.mjs';
+import {initSharedLesson} from './mining-shared-ui.mjs';
 
 const $=id=>document.getElementById(id);
 const names=['苔原','珊瑚','琥珀','雾蓝','月白'];
@@ -201,6 +202,7 @@ window.addEventListener('pagehide',()=>{pauseSimulation();cancel();});
 window.addEventListener('resize',positionSimulationProbe);
 reduced.addEventListener('change',()=>{pauseSimulation();cancel('动画偏好已改变。重新选择星球即可继续。');});
 document.addEventListener('keydown',event=>{
+ if(event.target?.closest?.('#shared-lab')||document.activeElement?.dataset?.sharedControl==='true')return;
  if(event.repeat||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.target?.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(event.target?.tagName))return;
  if(/^[1-5]$/.test(event.key)&&!document.hidden&&!$('guide').open){event.preventDefault();launch(Number(event.key)-1);}
 });
@@ -209,3 +211,4 @@ $('theme').addEventListener('click',()=>{
  $('theme').setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');
 });
 render();setStatus('这里没有地图。第一趟，凭直觉选就好。');
+initSharedLesson();

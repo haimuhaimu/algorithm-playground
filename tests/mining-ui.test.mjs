@@ -2,6 +2,47 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 let serial=0;
+test('shared lesson reveals rules only after committing a choice, then records just one flight',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('shared-reveal'),'same-evidence lesson must be available before completing thirty flights');
+  assert.equal(u.els.get('shared-reveal').disabled,true);
+  assert.equal(u.els.get('shared-comparison').hidden,true);assert.equal(u.els.get('shared-result').hidden,true);
+  u.click('shared-planet-1');assert.equal(u.els.get('shared-reveal').disabled,false);
+  u.click('shared-reveal');assert.equal(u.els.get('shared-comparison').hidden,false);
+  assert.match(u.els.get('shared-greedy').textContent,/苔原/);assert.match(u.els.get('shared-ucb').textContent,/珊瑚/);
+  assert.equal(u.els.get('shared-result').hidden,true);
+  u.click('shared-fly');u.click('shared-fly');u.click('shared-planet-0');
+  assert.equal(u.frames.size,1);u.tick(0);u.tick(600);assert.equal(u.els.get('shared-result').hidden,true);
+  u.tick(1300);assert.equal(u.els.get('shared-result').hidden,false);
+  assert.match(u.els.get('shared-outcome').textContent,/珊瑚.*1 块/);
+  assert.match(u.els.get('shared-change').textContent,/1.*2.*2.*3/);
+  assert.equal(u.els.get('remaining').textContent,'30');assert.equal(u.els.get('minerals').textContent,'0');
+  u.click('shared-answer-rules');assert.match(u.els.get('shared-learning').textContent,/同一份线索/);
+  u.click('shared-retry');assert.match(u.els.get('shared-status').textContent,/结果已知/);
+  assert.equal(u.els.get('shared-result').hidden,true);
+ }finally{u.restore();}
+});
+test('shared lesson cancellation rejects stale arrivals and reduced motion resolves on explicit launch',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('shared-fly'));
+  u.click('shared-planet-0');u.click('shared-reveal');u.click('shared-fly');u.tick(0);
+  const stale=[...u.frames.values()][0];u.hide();stale(9000);u.show();
+  assert.equal(u.frames.size,0);assert.equal(u.els.get('shared-result').hidden,true);
+  assert.equal(u.els.get('shared-fly').disabled,false);
+  u.click('shared-fly');u.tick(0);u.click('about');assert.equal(u.frames.size,0);
+  u.els.get('guide').close();u.media.matches=true;u.fire(u.media,'change');u.click('shared-fly');
+  assert.equal(u.frames.size,0);assert.equal(u.els.get('shared-result').hidden,false);
+  assert.match(u.els.get('shared-outcome').textContent,/苔原.*空手/);
+ }finally{u.restore();}
+});
+test('number shortcuts inside shared lesson never launch the unrelated thirty-flight game',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('shared-planet-0'));
+  u.doc.activeElement=u.els.get('shared-planet-0');
+  u.key('2');assert.equal(u.els.get('remaining').textContent,'30');
+  u.doc.activeElement=u.els.get('shared-fly');u.key('3');assert.equal(u.els.get('remaining').textContent,'30');
+ }finally{u.restore();}
+});
 async function boot({reduced=false,seed}={}){
  const html=await readFile(new URL('../mining.html',import.meta.url),'utf8').catch(()=>'');
  assert.ok(html.includes('id="planet-0"'),'playable mining page must exist');
