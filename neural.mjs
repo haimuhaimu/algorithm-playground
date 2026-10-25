@@ -1,5 +1,7 @@
 import {createModel,predict,metrics,train,makeDataset,editPoints,MAX_POINTS,MAX_EPOCHS} from './neural-core.mjs';
 import {DRAFT_KEYS,readDraft,writeDraft,clearDraft,validateNeuralDraft,draftMessage,questionKey} from './local-drafts.mjs';
+import {createStepTrial,guessStep,runStepTrial,rewindStepTrial,stepEvidence} from './neural-step.mjs';
+import {paintStep} from './neural-step-view.mjs';
 const $=id=>document.getElementById(id),field=$('field'),ctx=field.getContext('2d'),chart=$('history').getContext('2d');
 const tools=[...document.querySelectorAll('[data-tool]')],presets=[...document.querySelectorAll('[data-preset]')],guesses=[...document.querySelectorAll('[data-guess]')];
 const names={diagonal:'一分为二',islands:'四个小岛',ring:'甜甜圈',custom:'我的涂鸦'};
@@ -9,6 +11,49 @@ let model=createModel(),rate=.15,tool='probe',guess=null,history=[],undo=[],gest
 let running=false,remaining=0,raf=null,token=0,cursor={x:0,y:0},showCursor=false,probeActive=false;
 let ink,muted,line,surface,paper,dark=false,manualTheme=false;
 let initialized=false,dirty=false,usedRates=[],previous=null;
+let stepTrial=null;
+const directionNames={up:'更像方',down:'更像圆',steady:'几乎不变'};
+const stepPercent=p=>(p*100).toFixed(3)+'%';
+function invalidateStep(){
+ if(!stepTrial)return;
+ stepTrial=null;$('step-note').textContent='题目或模型已继续变化，旧对照已结束。重新留档，就能从现在这一刻再试。';renderStep();
+}
+function renderStep(){
+ const t=stepTrial,e=t?stepEvidence(t):null;
+ $('step-body').hidden=!t;$('step-result').hidden=!e;$('step-rewind').disabled=!e;
+ $('step-run').disabled=!t||!!e||!t.guesses.A||!t.guesses.B;
+ $('step-capture').disabled=!ctx||!chart;
+ $('step-capture').textContent=t?'从当前模型另开一轮':'留住当前状态，开始猜';
+ if(!t)return;
+ $('step-conditions').textContent=`留档：${names[preset]} · ${t.base.points.length} 个样本 · ${t.base.model.kind==='linear'?'直线脑袋':'8 个神经元'} · 第 ${t.base.model.epoch} 步。A、B 坐标始终不变。`;
+ $('step-before-epoch').textContent='第 '+t.base.model.epoch+' 步';
+ $('step-after-epoch').textContent=e?'第 '+e.after.model.epoch+' 步':'尚未更新';
+ $('step-after-title').textContent=e?'走之后 · 只更新了 1 次':'走之后 · 等你先猜';
+ $('step-A-label').textContent='A · 靠近分界的训练样本（标签：'+(t.probes[0].label?'方':'圆')+'）';
+ for(const p of t.probes){
+  $('step-'+p.id+'-before').textContent='走之前的方倾向 '+stepPercent(predict(t.base.model,p.x,p.y))+'，你猜下一步？';
+  for(const choice of ['up','down','steady']){
+   const button=$('step-'+p.id+'-'+choice);button.disabled=!!e;button.setAttribute('aria-pressed',String(t.guesses[p.id]===choice));
+  }
+  const r=e?.probes.find(q=>q.id===p.id);
+  $('step-'+p.id+'-result').textContent=r?`${p.id}：方倾向 ${stepPercent(r.before)} → ${stepPercent(r.after)}（${r.delta>=0?'+':''}${(r.delta*100).toFixed(3)} 个百分点）。${r.flipped?'判断从'+(r.before>=.5?'方':'圆')+'变为'+(r.after>=.5?'方':'圆'):'仍判为'+(r.after>=.5?'方':'圆')}。你猜${directionNames[r.guess]}，实际${directionNames[r.direction]}；${r.guess===r.direction?'猜中了':'这次不一样，看看前后数值'}。`:'';
+ }
+ $('step-run').textContent=e?'这一步已完成':t.guesses.A&&t.guesses.B?'用步子 '+rate+'，真实走一步':'猜完 A 和 B，再走一步';
+ $('step-rate-note').textContent=e?`本次实际步子 ${e.rate}。${rate!==e.rate?'上方新步子 '+rate+' 尚未应用。':''}先退回，再换步子、重新猜。`:`将用步子 ${rate}。可在上方“每次改多少”调整，不会自动训练。`;
+ paintStep($('step-before-canvas'),t.base.model,t.base.points,t.probes,null,dark);
+ paintStep($('step-after-canvas'),e?e.after.model:t.base.model,t.base.points,t.probes,e?t.base.model:null,dark);
+ if(e){
+  const delta=e.lossAfter-e.lossBefore,changed=t.base.model.weights.filter((w,i)=>w!==e.after.model.weights[i]).length;
+  $('step-loss-result').textContent=`整组犯错代价：${e.lossBefore.toFixed(6)} → ${e.lossAfter.toFixed(6)}（${Math.abs(delta)<.0000005?'变化小于显示精度':delta<0?'下降':'上升'}）。不是正确率，也不只看 A 这一个点。`;
+  $('step-explanation').textContent=`这一步先计算全部 ${t.base.points.length} 个标签的犯错代价，再沿计算出的梯度、按步子 ${e.rate} 调整参数；${t.base.model.weights.length} 个参数中 ${changed} 个发生变化。两个画布的位置与标签完全没动。分界若几乎重合，就用上面的数值看细微变化，不放大或伪造改判。`;
+ }
+ $('step-attempts').hidden=!t.last;
+ const summary=r=>`步子 ${r.rate}：犯错代价 ${r.lossAfter.toFixed(6)}；`+r.probes.map(p=>`${p.id} 方倾向 ${stepPercent(p.after)}`).join('，')+'。';
+ if(t.last){$('step-last-result').textContent='上次 · '+summary(t.last);$('step-current-result').textContent=e?'这次 · '+summary(e):'当前已退回第 '+t.base.model.epoch+' 步，尚未再走。上次结果只留作对照，不叠加到本次。';}
+}
+function applyStepSnapshot(value){
+ ({model,history,usedRates,guess}=structuredClone(value));dirty=true;render();saveDraft();
+}
 function saveDraft(){
  if(!initialized)return;
  const ok=writeDraft(DRAFT_KEYS.neural,{points,preset,model,rate,tool,guess,history,undo,rates:usedRates,previous},validateNeuralDraft);
@@ -27,7 +72,7 @@ function theme(){
  $('theme').setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');
  const css=getComputedStyle(document.documentElement),color=k=>css.getPropertyValue('--'+k).trim();
  ink=color('ink');muted=color('muted');line=color('line');surface=color('surface');paper=color('paper');
- if(ctx&&chart)draw();
+ if(ctx&&chart){draw();renderStep();}
 }
 $('theme').addEventListener('click',()=>{manualTheme=true;dark=!dark;theme();});
 matchMedia('(prefers-color-scheme:dark)').addEventListener('change',theme);
@@ -72,6 +117,7 @@ function comparison(){
 }
 function switchModel(kind){
  if(kind===model.kind)return;
+ invalidateStep();
  stop();
  if(!model.epoch&&previous?.model.kind===kind){
   model=structuredClone(previous.model);usedRates=[...previous.rates];previous=null;guess=null;
@@ -120,17 +166,18 @@ function draw(){
   path(chart,history.map(p=>({x:3+p.epoch/last*314,y:72-p.loss/max*65})));chart.stroke();
  }
 }
-function render(){controls();refreshProbe();draw();}
+function render(){controls();refreshProbe();draw();renderStep();}
 function pause(){running=false;remaining=0;token++;if(raf!==null)cancelAnimationFrame(raf);raf=null;controls();if(dirty)saveDraft();}
 function cancelGesture(){if(gesture){const {id,previousCursor}=gesture;gesture=null;showCursor=previousCursor;try{field.releasePointerCapture(id);}catch{}draw();}}
 function stop(){pause();cancelGesture();}
-function restart(){dirty=false;model=createModel(model.kind);usedRates=[];guess=null;history=[];probeActive=false;showCursor=false;stop();const s=metrics(model,points);if(s)history.push({epoch:0,loss:s.loss});$('probe-result').textContent='点一下画面，看看它会怎么猜。';render();saveDraft();}
+function restart(){invalidateStep();dirty=false;model=createModel(model.kind);usedRates=[];guess=null;history=[];probeActive=false;showCursor=false;stop();const s=metrics(model,points);if(s)history.push({epoch:0,loss:s.loss});$('probe-result').textContent='点一下画面，看看它会怎么猜。';render();saveDraft();}
 function canTrain(){
  if(!points.some(p=>p.label===0)||!points.some(p=>p.label===1)){announce('需要两类样本。先各画至少一个圆点和方点。');return false;}
  if(model.epoch>=MAX_EPOCHS){announce('本轮已走 4000 步。可以换模型、改题目，或重新训练。');return false;}
  return !document.hidden;
 }
 function advance(count){
+ invalidateStep();
  train(model,points,rate,Math.min(count,MAX_EPOCHS-model.epoch));
  if(!usedRates.includes(rate))usedRates.push(rate);dirty=true;
  $('draft-status').textContent='训练中 · 暂停或离开页面时保留进度。';
@@ -153,7 +200,7 @@ let batch=false;
 function start(fast=false){
  if(gesture)cancelGesture();
  if(fast&&remaining)return;
- pause();if(!canTrain())return;
+ pause();if(!canTrain())return;invalidateStep();
  batch=fast;remaining=fast?Math.min(500,MAX_EPOCHS-model.epoch):0;running=true;
  announce(fast?'正在计算 500 次参数更新。':'正在学习你给的标签。随时可以暂停或改题目。');controls();schedule();
 }
@@ -178,9 +225,9 @@ function applyDraft(p){
 }
 if(!ctx||!chart){
  announce('这个浏览器暂不支持 Canvas。请换用现代浏览器；上方其他实验仍可访问。');
- for(const id of ['play','step','fast','reset','undo','clear','model','rate','compare-model'])$(id).disabled=true;
+ for(const id of ['play','step','fast','reset','undo','clear','model','rate','compare-model','step-capture','step-run','step-rewind'])$(id).disabled=true;
  for(const b of [...tools,...presets,...guesses])b.disabled=true;
- theme();
+ $('step-body').hidden=true;theme();
 }else{
  const draft=readDraft(DRAFT_KEYS.neural,validateNeuralDraft);
  if(draft.value){
@@ -188,8 +235,26 @@ if(!ctx||!chart){
   testPoints=preset==='custom'?null:makeDataset(preset).test;
   undo=undo.map(s=>({...s,testPoints:s.preset==='custom'?null:makeDataset(s.preset).test}));
   theme();render();announce('已恢复上次的题目和学习结果。训练已暂停，想继续时再开始。');
+  $('step-note').textContent='已恢复实际模型和草稿。临时单步对照不跨刷新保留，请重新留档。';
  }else{theme();restart();}
  initialized=true;$('draft-status').textContent=draftMessage(draft.status);
+ $('step-capture').addEventListener('click',()=>{
+  stop();if(!canTrain()){$('step-note').textContent=model.epoch>=MAX_EPOCHS?'已经走满 4000 步。请重新训练或换题后再留档。':'需要两类样本。先各画至少一个圆点和方点，再留档。';return;}
+  stepTrial=createStepTrial({model,points,history,usedRates,guess});
+  renderStep();$('step-note').textContent='起点已留住。先猜 A、B 的方倾向，再点“真实走一步”；执行后当前模型和草稿也会更新。';
+  $('step-A-up').focus({preventScroll:true});
+ });
+ for(const id of ['A','B'])for(const choice of ['up','down','steady'])$('step-'+id+'-'+choice).addEventListener('click',()=>{
+  if(!stepTrial||stepTrial.result)return;guessStep(stepTrial,id,choice);renderStep();
+ });
+ $('step-run').addEventListener('click',()=>{
+  if(document.hidden||!stepTrial||stepTrial.result||!stepTrial.guesses.A||!stepTrial.guesses.B)return;
+  stop();applyStepSnapshot(runStepTrial(stepTrial,rate));$('step-note').textContent='只执行了 1 次真实更新。先比较两个位置，再退回原状态换步子试试。';$('step-result').focus({preventScroll:true});
+ });
+ $('step-rewind').addEventListener('click',()=>{
+  if(!stepTrial?.result)return;stop();applyStepSnapshot(rewindStepTrial(stepTrial));
+  $('step-note').textContent='权重、步数与训练历史都已退回同一留档；上次结果保留在下方。换步子，再猜一次。';$('rate').focus({preventScroll:true});
+ });
  $('play').addEventListener('click',()=>{if(running){pause();announce('已暂停。可以用探针看看分界两侧。');}else start();});
  $('fast').addEventListener('click',()=>start(true));
  $('step').addEventListener('click',()=>{stop();if(canTrain()){advance(1);saveDraft();announce('更新了一次参数。');}});
@@ -201,10 +266,10 @@ if(!ctx||!chart){
   if(running||model.epoch===0)return;
   switchModel(model.kind==='linear'?'network':'linear');
  });
- $('rate').addEventListener('change',()=>{const next=Number($('rate').value);if(![.03,.15,.6].includes(next))return;stop();rate=next;render();saveDraft();announce('步子已调整，保留已有学习结果。点开始训练继续。');});
+ $('rate').addEventListener('change',()=>{const next=Number($('rate').value);if(![.03,.15,.6].includes(next))return;stop();rate=next;if(stepTrial&&!stepTrial.result)stepTrial.guesses={};render();saveDraft();announce('步子已调整，保留已有学习结果。不会自动训练。');});
  presets.forEach(b=>b.addEventListener('click',()=>{stop();rememberQuestion();previous=null;preset=b.dataset.preset;dataset=makeDataset(preset);points=dataset.train;testPoints=dataset.test;restart();announce('新题目准备好了。「撤销上一步」可以找回换题前的样本，训练从头开始。');}));
  tools.forEach(b=>b.addEventListener('click',()=>{cancelGesture();tool=b.dataset.tool;controls();draw();saveDraft();}));
- guesses.forEach(b=>b.addEventListener('click',()=>{if(model.epoch)return;guess=b.dataset.guess;controls();saveDraft();}));
+ guesses.forEach(b=>b.addEventListener('click',()=>{if(model.epoch)return;if(guess!==b.dataset.guess)invalidateStep();guess=b.dataset.guess;controls();saveDraft();}));
  field.addEventListener('pointerdown',e=>{
   if(e.isPrimary===false||e.button!==0||gesture)return;
   const p=position(e);

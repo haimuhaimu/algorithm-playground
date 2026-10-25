@@ -14,7 +14,7 @@
  <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><button class="quiet-button" id="about">怎么玩 ↗</button><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div></header>
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html" aria-current="page">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="neural-main">
-  <section class="neural-intro"><h1>你来出题，<span>它来找规律。</span></h1><p>画两种点，看小神经网络怎么分开它们。也可以故意教错，看看会发生什么。</p></section>
+  <section class="neural-intro"><h1>你来出题，<span>它来找规律。</span></h1><p>画两种点，看小神经网络怎么分开它们。也可以故意教错，看看会发生什么。</p><a class="step-jump" href="#step-lab">先猜，再看一步训练改了什么 ↓</a></section>
   <section class="label-lab" id="label-lab" aria-labelledby="label-title">
    <header class="label-heading"><div><span class="label-eyebrow">一个小实验 · 只改一个标签</span><h2 id="label-title">教错一个点，<span>看看它怎么学偏。</span></h2><p>它会只听这个点，还是连旁边的判断也跟着变？</p></div><a href="#field">去自由涂鸦 ↓</a></header>
    <div class="label-conditions" aria-label="两次训练的相同条件"><span>同样 48 个位置</span><span>同一初始权重</span><span>8 个神经元</span><span>步子 0.15</span><span>各训 500 步</span></div>
@@ -54,6 +54,31 @@
       <label for="rate">每次改多少<select id="rate"><option value="0.03">慢慢来 · 0.03</option><option value="0.15" selected>稳着走 · 0.15</option><option value="0.6">迈大步 · 0.60</option></select><small>步子大不一定学得更好。</small></label>
      </div>
      <div class="training-actions"><button class="primary" id="play" aria-pressed="false">开始训练</button><button id="step">走一步</button><button id="fast">快进 500 步</button><button id="undo" disabled title="撤销画点、清空或换题；恢复题目并从头训练">撤销上一步</button></div>
+     <section class="step-lab" id="step-lab" aria-labelledby="step-title">
+      <header><div><span class="step-eyebrow">把「走一步」拆开看</span><h2 id="step-title">走一步，它到底改了什么？</h2><p>用当前画布、当前模型。先猜两个位置，再做一次真实更新。</p></div><button id="step-capture" type="button">留住当前状态，开始猜</button></header>
+      <p id="step-note" role="status">不换题、不重置模型。先留档，才能退回这个起点。</p>
+      <div id="step-body" hidden>
+       <p id="step-conditions" class="step-conditions"></p>
+       <div class="step-boards">
+        <figure><figcaption><b>走之前 · 已留档</b><span id="step-before-epoch"></span></figcaption><canvas id="step-before-canvas" width="560" height="350" role="img" aria-label="训练一步之前的分界与固定位置 A、B" aria-describedby="step-A-result step-B-result"></canvas></figure>
+        <figure><figcaption><b id="step-after-title">走之后 · 等你先猜</b><span id="step-after-epoch"></span></figcaption><canvas id="step-after-canvas" width="560" height="350" role="img" aria-label="训练一步之后的分界，虚线保留原分界" aria-describedby="step-A-result step-B-result"></canvas></figure>
+       </div>
+       <p class="step-legend">● 圆　■ 方　实线：当前 50% 分界 · 虚线：走之前。颜色是模型倾向，不是正确率。</p>
+       <div class="step-guesses">
+        <fieldset><legend id="step-A-label">A · 一个训练样本</legend><p id="step-A-before"></p><div><button id="step-A-up" type="button" aria-pressed="false">更像方 ↑</button><button id="step-A-down" type="button" aria-pressed="false">更像圆 ↓</button><button id="step-A-steady" type="button" aria-pressed="false">几乎不变 ≈</button></div></fieldset>
+        <fieldset><legend>B · 没参加训练的探针</legend><p id="step-B-before"></p><div><button id="step-B-up" type="button" aria-pressed="false">更像方 ↑</button><button id="step-B-down" type="button" aria-pressed="false">更像圆 ↓</button><button id="step-B-steady" type="button" aria-pressed="false">几乎不变 ≈</button></div></fieldset>
+       </div>
+       <div class="step-actions"><button id="step-run" type="button" disabled>猜完 A 和 B，再走一步</button><button id="step-rewind" type="button" disabled>退回留档，再试一次</button><p id="step-rate-note"></p></div>
+       <p class="step-precision">“几乎不变”指倾向变化不足 0.01 个百分点，不表示数学上完全不变。</p>
+       <section id="step-result" class="step-result" tabindex="-1" aria-labelledby="step-result-title" hidden>
+        <h3 id="step-result-title">不是背下一个点，而是调整整套判断。</h3>
+        <div class="step-probe-results"><p id="step-A-result"></p><p id="step-B-result"></p></div>
+        <p id="step-loss-result"></p><p id="step-explanation"></p>
+        <p class="step-takeaway">你刚看见了：所有位置共享参数，所以没参加训练的地方也可能变；整体犯错代价下降，也不保证每个点都立刻改对。</p>
+       </section>
+       <div id="step-attempts" class="step-attempts" hidden><h3>同一个起点，换步子再比</h3><p id="step-last-result"></p><p id="step-current-result"></p><small>只比较这一次更新，不代表长期效果；大步不保证更好。</small></div>
+      </div>
+     </section>
      <div class="prediction"><div class="prediction-question"><h2>先猜一下 <small>可跳过</small></h2><p><span id="prediction-model">会拐弯 · 8 个神经元</span>，能分开这两类吗？</p></div><div class="guess-options" role="group" aria-label="训练前预测"><button data-guess="yes" aria-pressed="false">我猜能</button><button data-guess="no" aria-pressed="false">可能分不开</button></div><p id="prediction-result">可跳过。先留一个判断，再看实验。</p></div>
     </div>
     <div class="training-stats" aria-label="实际计算结果"><div><span>训练步数</span><strong id="epoch">0</strong></div><div><span>练习题正确率</span><strong id="accuracy">尚未计算</strong></div><div><span>新题正确率 <small>120 道</small></span><strong id="test-accuracy">尚未计算</strong></div><div class="loss-chart"><span>犯错代价 <b id="loss">待计算</b></span><canvas id="history" width="320" height="80" aria-label="本轮真实训练损失曲线"></canvas></div></div>
