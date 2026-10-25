@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {search,makeMap,decisionAt} from '../pathfinding-core.mjs';
 
 let serial=0;
 // Run the real controller and search model. Only DOM and the clock are represented.
@@ -10,7 +11,7 @@ async function boot(){
   constructor(){super();this.dataset={};this.attributes=new Map();this.children=[];this.className='';this.textContent='';this.disabled=false;this.value='40';this.captures=new Set();
    this.classList={remove:name=>{this.className=this.className.split(' ').filter(v=>v!==name).join(' ');},toggle:(name,on)=>{this.classList.remove(name);if(on)this.className+=' '+name;}};
   }
-  append(...children){for(const child of children){this.children.push(child);child.parent=this;}}
+  append(...children){for(const child of children){if(child.parent)child.parent.children=child.parent.children.filter(c=>c!==child);this.children.push(child);child.parent=this;}}
   replaceChildren(...children){this.children=[];this.append(...children);}
   setAttribute(k,v){this.attributes.set(k,v);}getAttribute(k){return this.attributes.get(k);}
   closest(selector){return selector==='.cell'&&this.className.split(' ').includes('cell')?this:null;}
@@ -226,5 +227,104 @@ test('switching comparison view also switches the explanation to the visible old
   u.edit(62);u.click('finish');
   assert.match(u.els.get('compare-explanation').textContent,/同样短的其他/);
   u.click('compare-bfs');assert.match(u.els.get('compare-explanation').textContent,/没有挡住/);
+ }finally{u.restore();}
+});
+
+test('guessing uses the next real frontier without editing and reveal advances exactly once',async()=>{
+ const u=await boot();try{
+  const trace=search(makeMap(),'astar'),d=decisionAt(trace,1);
+  u.click('guess-toggle');
+  assert.equal(u.els.get('astar-explored').textContent,1,'only the starting cell is expanded on entry');
+  assert.equal(u.els.get('guess-reveal').disabled,true);
+  assert.equal(u.els.get('step').disabled,true);
+  assert.equal(u.els.get('guess-explanation').textContent,'','no answer before the guess');
+  const wrong=d.candidates.find(c=>c.index!==d.current).index;
+  u.pointer('pointerdown',wrong,{name:'astar'});u.pointer('pointermove',0,{name:'astar'});u.pointer('pointerup',0,{name:'astar'});
+  assert.equal(u.els.get('wall-count').textContent,'9 格墙');
+  assert.equal(u.els.get('undo-map').disabled,true);
+  assert.match(u.els.get('guess-pick').textContent,/已走.*预计余程/);
+  assert.equal(u.els.get('astar-explored').textContent,1);
+  assert.equal(u.els.get('guess-explanation').textContent,'');
+  u.click('step');
+  assert.equal(u.els.get('astar-explored').textContent,2);assert.equal(u.els.get('bfs-explored').textContent,2);
+  assert.match(u.els.get('guess-explanation').textContent,/实际展开/);
+  assert.match(u.els.get('astar-grid').children[d.current].className,/guess-actual/);
+  assert.match(u.els.get('astar-grid').children[wrong].className,/guess-picked/);
+  assert.equal(u.els.get('astar-distance').textContent,'待揭晓');
+  u.edit(0);assert.equal(u.els.get('wall-count').textContent,'9 格墙','even inactive board taps cannot edit while guessing');
+  u.click('guess-reveal');assert.equal(u.els.get('astar-explored').textContent,2,'next question does not secretly advance');
+  assert.equal(u.els.get('guess-explanation').textContent,'');
+  u.edit(trace.visited[2],'astar');u.click('guess-reveal');
+  assert.equal(u.els.get('astar-explored').textContent,3);assert.match(u.els.get('guess-explanation').textContent,/猜中了/);
+ }finally{u.restore();}
+});
+
+test('switching to BFS keeps the current step and gives real FIFO evidence',async()=>{
+ const u=await boot();try{
+  u.click('guess-toggle');
+  const select=u.els.get('guess-algorithm');select.value='bfs';u.fire(select,'change');
+  assert.equal(u.els.get('guess-panel').parent,u.els.get('bfs-guess-slot'));
+  assert.equal(u.els.get('bfs-explored').textContent,1);
+  assert.match(u.els.get('guess-rule').textContent,/队列/);
+  u.edit(91,'bfs');u.click('guess-reveal');
+  assert.match(u.els.get('guess-explanation').textContent,/队列第 1.*第 2.*不按/);
+  assert.equal(u.els.get('bfs-grid').children[91].getAttribute('aria-pressed'),'true');
+ }finally{u.restore();}
+});
+
+test('map editing, undo and playback exit guessing without changing the completed baseline',async()=>{
+ const u=await boot();try{
+  u.click('finish');const baseline=u.els.get('compare-before-distance').textContent;
+  u.click('guess-toggle');assert.match(u.els.get('guess-status').textContent,/结束/);
+  u.click('guess-restart');assert.equal(u.els.get('astar-explored').textContent,1);
+  u.tool('erase');assert.equal(u.els.get('guess-toggle').getAttribute('aria-pressed'),'false');
+  u.edit(82);assert.equal(u.els.get('wall-count').textContent,'8 格墙');
+  u.click('guess-toggle');u.click('undo-map');
+  assert.equal(u.els.get('guess-panel').hidden,true);assert.equal(u.els.get('wall-count').textContent,'9 格墙');
+  assert.equal(u.els.get('compare-before-distance').textContent,baseline);
+  u.click('guess-toggle');u.click('play');assert.equal(u.els.get('guess-panel').hidden,true);assert.equal(u.timers.size,1);
+  u.click('guess-toggle');assert.equal(u.timers.size,0);u.click('finish');
+  assert.equal(u.els.get('guess-panel').hidden,true);assert.equal(u.els.get('compare-before-distance').textContent,baseline);
+ }finally{u.restore();}
+});
+
+test('finished algorithms do not silently rewind; Escape and blocked cells do not mutate the map',async()=>{
+ const u=await boot();try{
+  for(let i=0;i<61;i++)u.click('step');
+  u.click('guess-toggle');assert.equal(u.els.get('astar-explored').textContent,60);
+  assert.match(u.els.get('guess-status').textContent,/结束/);assert.equal(u.els.get('guess-reveal').disabled,true);
+  const select=u.els.get('guess-algorithm');select.value='bfs';u.fire(select,'change');
+  assert.equal(u.els.get('bfs-explored').textContent,61);
+  u.edit(82);assert.equal(u.els.get('guess-reveal').disabled,true);
+  u.key('Escape');assert.equal(u.els.get('guess-toggle').getAttribute('aria-pressed'),'false');
+  assert.equal(u.els.get('wall-count').textContent,'9 格墙');
+  u.click('guess-toggle');u.preset('maze');assert.equal(u.els.get('guess-panel').hidden,true);
+ }finally{u.restore();}
+});
+
+test('guessing does not leak future paths or replace before/after comparison on replay',async()=>{
+ const u=await boot();try{
+  u.click('finish');u.tool('erase');u.edit(82);u.click('finish');
+  u.click('guess-toggle');u.click('guess-restart');
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  assert.equal(u.els.get('compare-after-distance').textContent,'待运行');
+  assert.equal(u.els.get('compare-after-map').children.some(c=>c.className.split(' ').includes('path')),false);
+  u.key('Escape');u.click('finish');assert.equal(u.els.get('compare-after-distance').textContent,'12');
+ }finally{u.restore();}
+});
+
+test('the sole goal candidate remains discoverable and can be guessed before completion',async()=>{
+ const u=await boot();try{
+  u.preset('empty');for(const i of [61,75,91])u.edit(i);u.tool('goal');u.edit(77);
+  u.click('guess-toggle');
+  assert.match(u.els.get('guess-status').textContent,/只剩一个候选/);
+  assert.equal(u.els.get('astar-grid').children[77].textContent,'G');
+  assert.match(u.els.get('guess-entry-note').textContent,/终点 G/);
+  assert.match(u.els.get('guess-pick').textContent,/终点 G/);
+  u.edit(77,'astar');assert.equal(u.els.get('guess-explanation').textContent,'');
+  u.click('guess-reveal');assert.equal(u.els.get('astar-distance').textContent,1);
+  assert.match(u.els.get('guess-explanation').textContent,/猜中了/);
+  u.click('guess-reveal');assert.match(u.els.get('guess-status').textContent,/结束/);
+  assert.equal(u.els.get('guess-reveal').disabled,true);
  }finally{u.restore();}
 });

@@ -17,10 +17,14 @@ export function search(map,algorithm='bfs'){
  const h=n=>Math.abs(n%cols-goal%cols)+Math.abs(Math.floor(n/cols)-Math.floor(goal/cols));
  let found=false;
  while(open.length){
+  // Capture evidence BEFORE sorting/removing a candidate. Never reconstruct it
+  // from the final path: the learner sees only what was available at this step.
+  const candidates=open.map((index,i)=>({index,g:costs.get(index),h:h(index),f:costs.get(index)+h(index),queuePosition:i+1}));
   // Stable sort retains insertion order when both f and h tie.
   if(algorithm==='astar')open.sort((a,b)=>(costs.get(a)+h(a))-(costs.get(b)+h(b))||h(a)-h(b));
   const current=open.shift();closed.add(current);visited.push(current);
-  if(current===goal){found=true;frames.push({current,frontier:[...open]});break;}
+  const decision={algorithm,current,candidates};
+  if(current===goal){found=true;frames.push({current,frontier:[...open],decision});break;}
   for(const next of neighbors(current,cols,rows)){
    if(walls.has(next)||closed.has(next))continue;
    const cost=costs.get(current)+1;
@@ -29,11 +33,29 @@ export function search(map,algorithm='bfs'){
     if(!open.includes(next))open.push(next);
    }
   }
-  frames.push({current,frontier:[...open]});
+  frames.push({current,frontier:[...open],decision});
  }
  const path=[];
  if(found){let at=goal;while(at!==undefined){path.push(at);at=parents.get(at);}path.reverse();}
  return {visited,frames,path,distance:found?path.length-1:null,found};
+}
+export function decisionAt(trace,step){
+ if(!Number.isInteger(step)||step<0||step>=trace.frames.length)return null;
+ const d=trace.frames[step].decision;
+ return {...d,candidates:d.candidates.map(c=>({...c}))};
+}
+export function explainDecision(decision,guess,cols){
+ const chosen=decision.candidates.find(c=>c.index===decision.current),pick=decision.candidates.find(c=>c.index===guess);
+ if(!pick)return '';
+ const at=c=>`第 ${Math.floor(c.index/cols)+1} 行第 ${c.index%cols+1} 列`;
+ const right=guess===chosen.index,prefix=right?'猜中了。':`你选了${at(pick)}；`;
+ const actual=`实际展开${at(chosen)}。`;
+ if(decision.algorithm==='bfs')return prefix+actual+`它在队列第 ${chosen.queuePosition} 位${right?'':`，你选的在第 ${pick.queuePosition} 位`}。BFS 先处理排在前面的格子，不按离终点有多近挑选。新发现的格子排到队尾。`;
+ const formula=`已走 ${chosen.g} ＋ 预计余程 ${chosen.h} ＝ ${chosen.f}。`;
+ if(right)return prefix+actual+formula+'它按总分更小、同分时余程更小、再同分时队列更靠前的顺序胜出。预计余程不考虑墙，不是提前知道最终路线。';
+ if(chosen.f<pick.f)return prefix+actual+formula+`它的分数 ${chosen.f} 小于你选的 ${pick.g} ＋ ${pick.h} ＝ ${pick.f}；A* 比较的是总分，不只看谁离终点近。`;
+ if(chosen.h<pick.h)return prefix+actual+`总分同为 ${chosen.f}，这里再比较预计余程：它是 ${chosen.h}，你选的是 ${pick.h}，所以先展开它。这个同分规则决定搜索顺序，不表示它已经知道哪条路能走通。`;
+ return prefix+actual+`总分同为 ${chosen.f}，预计余程同为 ${chosen.h}，这次按队列先后：它在第 ${chosen.queuePosition} 位，你选的在第 ${pick.queuePosition} 位。这里只是当前估分相同，尚不能判断后面的路线哪条更好；有的方向也可能是死胡同。`;
 }
 export function frameAt(result,step){
  const count=Math.min(result.visited.length,Math.max(0,Math.floor(Number(step)||0))),done=count===result.visited.length;

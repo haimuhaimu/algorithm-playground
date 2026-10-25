@@ -1,7 +1,8 @@
-import {search,makeMap,editMap,lineCells,frameAt,captureRun,mapChanges,compareRuns} from './pathfinding-core.mjs';
+import {search,makeMap,editMap,lineCells,frameAt,captureRun,mapChanges,compareRuns,decisionAt,explainDecision} from './pathfinding-core.mjs';
 const $=id=>document.getElementById(id),names=['bfs','astar'];
 let map=makeMap(),preset='detour',tool='wall',traces=null,step=0,playing=false,timer=null,edited=false,stroke=null;
 let baseline=null,currentRun=null,comparisonAlgorithm='astar',comparisonView=[];
+let guessing=false,guessAlgorithm='astar',guessRound=null,guessPanelBoard='astar';
 const undoStack=[],redoStack=[];
 const snapshot=()=>({map,preset,edited});
 const sameMap=(a,b)=>a.start===b.start&&a.goal===b.goal&&a.walls.length===b.walls.length&&a.walls.every((v,i)=>v===b.walls[i]);
@@ -27,10 +28,62 @@ for(const name of names){
  });
 }
 function stop(){clearTimeout(timer);timer=null;playing=false;}
-function invalidate(){stop();traces=null;step=0;currentRun=null;}
+function leaveGuess(){guessing=false;guessRound=null;}
+function invalidate(){stop();leaveGuess();traces=null;step=0;currentRun=null;}
 function prepare(){if(!traces)traces=Object.fromEntries(names.map(name=>[name,search(map,name)]));}
 function duration(){return traces?Math.max(...names.map(name=>traces[name].visited.length)):0;}
 function complete(){return !!traces&&step>=duration();}
+function beginQuestion(){
+ const decision=decisionAt(traces[guessAlgorithm],step);
+ guessRound=decision?{decision,choice:null,revealed:false}:null;
+}
+function enterGuess(){
+ endStroke();stop();prepare();guessing=true;
+ // The forced first expansion is S, not a choice. Never skip other steps.
+ if(step===0)step=1;
+ beginQuestion();render();
+}
+function pickGuess(name,index){
+ if(name!==guessAlgorithm||!guessRound||guessRound.revealed)return;
+ if(!guessRound.decision.candidates.some(c=>c.index===index))return;
+ guessRound.choice=index;render();
+}
+function guessStep(){
+ if(!guessRound)return;
+ if(guessRound.revealed){beginQuestion();render();return;}
+ if(guessRound.choice===null)return;
+ guessRound.revealed=true;step++;render();
+}
+function renderGuess(){
+ const active=guessing?guessRound:null,d=active?.decision,label=guessAlgorithm==='astar'?'A*':'BFS';
+ document.documentElement.dataset.pathGuess=String(guessing);
+ $('arena').dataset.guessing=String(guessing);
+ $('guess-toggle').setAttribute('aria-pressed',String(guessing));
+ $('guess-toggle').textContent=guessing?'退出猜测，继续改图':'你来猜下一格';
+ $('guess-algorithm-label').hidden=!guessing;$('guess-algorithm').value=guessAlgorithm;
+ $('guess-panel').hidden=!guessing;
+ $('guess-entry-note').textContent=guessing?'点有边框的候选格（也可能是终点 G），再揭晓；猜错也能继续。':'先猜，再走一步。看看算法和你想得一不一样。';
+ $('map-help').textContent=guessing?`猜 ${label} 的下一格：方向键移动，空格选择，Esc 回到改图。此时点格子不会改地图。`:'两边同步，整笔可撤销。键盘：方向键移动，空格编辑，Ctrl / ⌘ Z 撤销。';
+ for(const name of names){
+  const selected=guessing&&name===guessAlgorithm;
+  $(name+'-board').classList.toggle('guess-board',selected);
+  $(name+'-guess-caption').hidden=!selected;
+  $(name+'-guess-caption').textContent=active?.revealed?'刚才的候选还留着：对照你的选择与算法的选择。':`你来猜 ${label} 的下一格 · 数字是${guessAlgorithm==='astar'?'已走＋预计余程的总分':'当前排队次序'}`;
+  $(name+'-grid').setAttribute('aria-label',guessing?(selected?`${label} 选择待探索格的猜测地图`:'另一种算法的同步地图，猜测时不可编辑'):`${name==='astar'?'A*':'BFS'} 可编辑地图`);
+ }
+ if(guessPanelBoard!==guessAlgorithm){$(guessAlgorithm+'-guess-slot').append($('guess-panel'));guessPanelBoard=guessAlgorithm;}
+ const disabled=!active||!active.revealed&&active.choice===null;
+ $('guess-reveal').disabled=disabled;
+ $('guess-reveal').textContent=active?.revealed?'继续猜下一格':'揭晓并走一步';
+ $('guess-restart').hidden=!!active||!guessing;
+ $('step').textContent=guessing?(active?.revealed?'猜下一步':'揭晓一步'):'走一步';
+ $('step').disabled=guessing?disabled:playing;
+ $('guess-explanation').textContent=active?.revealed?explainDecision(d,active.choice,map.cols):'';
+ $('guess-rule').textContent=guessAlgorithm==='astar'?'先比总分，越小越先；同分比预计余程，再同分按队列先后。余程只算横＋竖，不考虑墙。':'BFS 按队列先后来，不按离出口多近来；新发现的格子加到队尾。';
+ const pick=d?.candidates.find(c=>c.index===active.choice);
+ $('guess-pick').textContent=pick?`你选：第 ${Math.floor(pick.index/map.cols)+1} 行、第 ${pick.index%map.cols+1} 列 · ${guessAlgorithm==='astar'?`已走 ${pick.g} ＋ 预计余程 ${pick.h} ＝ ${pick.f} · 队列第 ${pick.queuePosition}`:`队列第 ${pick.queuePosition} 位 · 已走 ${pick.g} 步`}`:'点有边框的候选格看依据；终点 G 进入候选后也能选。';
+ $('guess-status').textContent=!active?`${label} 本轮已结束（${traces?.[guessAlgorithm].found?'已到出口':'无路可走'}）。可以换另一种算法，或从起点重新猜。`:active.revealed?(active.choice===d.current?'这一步，你和算法想的一样。':'这一步，它选了另一格。看看差别在哪。'):`${step===1?'已从起点 S 展开。':''}第 ${step+1} 步，${d.candidates.length===1?'只剩一个候选':`有 ${d.candidates.length} 个候选`}。你会先探索谁？`;
+}
 function drawComparisonMap(id,savedMap,result,changes,label){
  const grid=$(id),walls=new Set(savedMap.walls),visited=new Set(result?.visited),path=new Set(result?.path),changed=new Set(changes.indices);
  grid.className=`comparison-grid ${comparisonAlgorithm}-comparison`;
@@ -97,6 +150,15 @@ function render(){
    cell.textContent=index===map.start?'S':index===map.goal?'G':'';
    const label={start:'起点',goal:'终点',wall:'墙',path:'最终路径',visited:'已探索',frontier:'待探索','':'空地'}[state];
    cell.setAttribute('aria-label',`第 ${Math.floor(index/map.cols)+1} 行，第 ${index%map.cols+1} 列，${label}`);
+   const candidate=guessing&&name===guessAlgorithm?guessRound?.decision.candidates.find(c=>c.index===index):null;
+   cell.setAttribute('aria-pressed',String(!!candidate&&guessRound.choice===index));
+   if(candidate){
+    cell.classList.toggle('guess-candidate',true);
+    cell.classList.toggle('guess-picked',guessRound.choice===index);
+    cell.classList.toggle('guess-actual',guessRound.revealed&&guessRound.decision.current===index);
+    if(index!==map.start&&index!==map.goal)cell.textContent=guessAlgorithm==='astar'?candidate.f:candidate.queuePosition;
+    cell.setAttribute('aria-label',cell.getAttribute('aria-label')+`，候选，${guessAlgorithm==='astar'?`总分 ${candidate.f}，已走 ${candidate.g}，预计余程 ${candidate.h}`:`队列第 ${candidate.queuePosition} 位`}${guessRound.choice===index?'，你的选择':''}${guessRound.revealed&&guessRound.decision.current===index?'，算法实际选择':''}`);
+   }
   });
   $(name+'-explored').textContent=frame.visited.length;
   $(name+'-distance').textContent=frame.done?(frame.found?frame.distance:'无通路'):'待揭晓';
@@ -110,6 +172,7 @@ function render(){
  $('play-status').textContent=done?'本轮完成，可以改图再试。':playing?`正在展开第 ${step} 步`:
   traces?`已暂停在第 ${step} 步`:edited?(baseline?'地图已改变，原对照已保留。':'地图已改变，跑完一轮建立对照。'):'地图就绪，等你出题。';
  renderComparison(done);
+ renderGuess();
  document.querySelectorAll('[data-map]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.map===preset)));
  document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===tool)));
  const status=$('challenge-status');status.classList.remove('won');
@@ -126,15 +189,20 @@ function schedule(){
  timer=setTimeout(()=>{if(!playing)return;step++;if(complete())stop();render();if(playing)schedule();},Number($('speed').value));
 }
 $('play').addEventListener('click',()=>{
- endStroke();
+ endStroke();leaveGuess();
  if(playing){stop();render();return;}
  prepare();if(complete())step=0;
  if(reduced.matches){step=duration();render();return;}
  playing=true;render();schedule();
 });
-$('step').addEventListener('click',()=>{endStroke();stop();prepare();if(complete())step=0;step++;render();});
-function finishRun(){endStroke();stop();prepare();step=duration();render();}
+$('step').addEventListener('click',()=>{if(guessing){guessStep();return;}endStroke();stop();prepare();if(complete())step=0;step++;render();});
+function finishRun(){endStroke();stop();leaveGuess();prepare();step=duration();render();}
 $('finish').addEventListener('click',finishRun);
+$('guess-toggle').addEventListener('click',()=>{if(guessing){leaveGuess();render();}else enterGuess();});
+$('guess-exit').addEventListener('click',()=>{leaveGuess();render();$('guess-toggle').focus();});
+$('guess-reveal').addEventListener('click',guessStep);
+$('guess-restart').addEventListener('click',()=>{if(!guessing||guessRound)return;step=1;currentRun=null;beginQuestion();render();});
+$('guess-algorithm').addEventListener('change',()=>{if(!names.includes($('guess-algorithm').value))return;guessAlgorithm=$('guess-algorithm').value;if(guessing)beginQuestion();render();});
 $('speed').addEventListener('change',()=>{if(playing){clearTimeout(timer);schedule();}});
 function endStroke(commit=true){
  if(!stroke)return;const {grid,id,before}=stroke;stroke=null;
@@ -155,7 +223,7 @@ function applyCells(indices){
  if(stroke)stroke.before??=snapshot();else remember(snapshot());
  map=next;edited=true;preset=null;invalidate();render();
 }
-document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>{endStroke();tool=b.dataset.tool;render();}));
+document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>{endStroke();leaveGuess();tool=b.dataset.tool;render();}));
 document.querySelectorAll('[data-map]').forEach(b=>b.addEventListener('click',()=>{
  endStroke();const next=makeMap(b.dataset.map);
  if(sameMap(next,map))return;
@@ -179,6 +247,7 @@ for(const name of names){
  grid.addEventListener('pointerdown',event=>{
   if(event.button!==0||!event.isPrimary||stroke)return;
   const index=cellAt(event,grid);if(index===null)return;
+  if(guessing){event.preventDefault();focusCell(name,index);pickGuess(name,index);return;}
   event.preventDefault();focusCell(name,index);grid.setPointerCapture(event.pointerId);stroke={id:event.pointerId,grid,last:index};applyCells([index]);
  });
  grid.addEventListener('pointermove',event=>{
@@ -192,7 +261,7 @@ for(const name of names){
   const index=cellAt(event,grid);if(index!==null)applyCells(tool==='wall'||tool==='erase'?(stroke.last===null?[index]:lineCells(stroke.last,index,map.cols)):[index]);endStroke();
  });
  for(const type of ['pointercancel','lostpointercapture'])grid.addEventListener(type,event=>{if(stroke?.id===event.pointerId&&stroke.grid===grid)cancelStroke();});
- grid.addEventListener('click',event=>{if(event.detail===0){const cell=event.target.closest('.cell');if(cell)applyCells([Number(cell.dataset.index)]);}});
+ grid.addEventListener('click',event=>{if(event.detail===0){const cell=event.target.closest('.cell');if(cell){const index=Number(cell.dataset.index);if(guessing)pickGuess(name,index);else applyCells([index]);}}});
  grid.addEventListener('keydown',event=>{
   const cell=event.target.closest('.cell');if(!cell)return;const index=Number(cell.dataset.index),x=index%map.cols,y=Math.floor(index/map.cols);
   const moves={ArrowRight:[Math.min(x+1,map.cols-1),y],ArrowLeft:[Math.max(x-1,0),y],ArrowDown:[x,Math.min(y+1,map.rows-1)],ArrowUp:[x,Math.max(y-1,0)]};
@@ -202,6 +271,7 @@ for(const name of names){
 document.addEventListener('keydown',event=>{
  if(event.defaultPrevented||event.repeat||event.altKey||document.hidden||$('guide').open||event.target?.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(event.target?.tagName))return;
  if(event.key==='Escape'&&stroke){event.preventDefault();cancelStroke();return;}
+ if(event.key==='Escape'&&guessing){event.preventDefault();leaveGuess();render();return;}
  if(!event.ctrlKey&&!event.metaKey)return;
  const key=event.key.toLowerCase(),undo=key==='z'&&!event.shiftKey,redo=key==='z'&&event.shiftKey||key==='y'&&event.ctrlKey&&!event.shiftKey;
  if(undo||redo){event.preventDefault();travelHistory(undo);}
