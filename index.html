@@ -5,7 +5,7 @@
  <meta name="description" content="接管推荐首页，调一调算法，看见点击、多样性和新作者之间的取舍。一个使用合成数据的可玩实验。">
  <meta name="color-scheme" content="light dark">
  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e3ed78'/%3E%3Cpath d='M16 22h32M16 42h32M25 15v14M39 35v14' stroke='%2321231c' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./feedback-story.css?v=feedback-20261021"><script type="module" src="./app.mjs?v=feedback-20261021"></script>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./feedback-story.css?v=seats-20261025"><link rel="stylesheet" href="./seat-lesson.css?v=seats-20261025"><script type="module" src="./app.mjs?v=seats-20261025"></script>
  <title>算法游乐场 · 首页，交给你了</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
 </head>
@@ -44,6 +44,7 @@
    <section class="feed-section" id="feed-section" aria-labelledby="feed-title">
     <div class="section-heading"><span class="step">02</span><h2 id="feed-title">你的推荐首页</h2><span class="live-label">即时重排</span><a class="return-controls" href="#controls-title">调整规则 ↑</a></div>
     <div class="feed-context"><span id="strategy-name">只追点击</span><span>48 条候选 → 6 个席位</span></div>
+    <div class="feedback-entry-note"><p><strong>给首页排一次座位</strong>不只看谁入选：猜下一席，再查它赢过谁、为什么。</p><a href="#seat-lesson">亲手排六席 ↓</a></div>
     <div class="feedback-entry-note"><p><strong>点一次反馈，看懂首页为什么变</strong>先试试第一张的「少一点」，留住变化前后的六张卡。</p><a id="feedback-entry" href="#feedback-story">看反馈前后对照 ↓</a></div>
     <div class="feed-grid" id="feed"></div>
     <div class="taste"><div><strong>你的模拟口味</strong><span id="feedback-note">试试卡片上的「喜欢」和「少一点」。</span></div><div id="taste-bars" class="taste-bars"></div><p>反馈只改变这一位模拟用户的兴趣，不代表真实用户行为。</p></div>
@@ -59,6 +60,31 @@
     <section class="comparison panel" aria-labelledby="comparison-title"><div class="comparison-heading"><h3 id="comparison-title">规则对照</h3><span id="run-number">未运行</span></div><p class="rule-comparison-note">固定同一份口味，比较两套排序规则；不是刚才反馈前后的对照。</p><div id="comparison-result"><div class="empty-experiment" aria-hidden="true"><span> A </span><i>↔</i><span> B </span></div><p class="muted small">规则选好了？<br>跑一轮，和对照组比一比。</p></div><a class="return-controls" href="#controls-title">回去调整规则，再比一轮 ↑</a></section>
    </aside>
   </div>
+  <section class="seat-lesson" id="seat-lesson" aria-labelledby="seat-title">
+   <div class="seat-lesson-header"><div><p class="eyebrow">排座位 / 固定口味，逐席看决定</p><h2 id="seat-title">给首页排一次座位。</h2><p>48 张卡，只有 6 个座位。你先猜下一张，再揭晓它如何赢过其他候选。<br>想看「同主题越多，加分越少」，可先用「多看一点」演示。</p></div><div class="seat-starts"><button class="seat-primary" id="seat-start" type="button">排当前首页</button><button id="seat-example" type="button">用「多看一点」演示</button></div></div>
+   <p class="seat-state" id="seat-state" role="status" aria-live="polite"></p>
+   <div id="seat-stage" hidden>
+    <p class="seat-settings" id="seat-settings"></p><p class="seat-taste" id="seat-taste"></p>
+    <ol class="seat-row" id="seat-row" aria-label="六个首页席位"></ol>
+    <h3 id="seat-turn" tabindex="-1"></h3><p id="seat-context"></p>
+    <div class="seat-choice-grid" role="group" aria-label="猜谁会拿到这一席"><button id="seat-guess-0" type="button" aria-pressed="false"></button><button id="seat-guess-1" type="button" aria-pressed="false"></button><button id="seat-guess-2" type="button" aria-pressed="false"></button></div>
+    <p class="seat-subset" id="seat-subset"></p>
+    <div class="seat-evidence" id="seat-evidence" hidden>
+     <h3 id="seat-result-title" tabindex="-1"></h3><p id="seat-guess-result"></p>
+     <div class="seat-formula seat-winner-score" id="seat-winner-score" aria-label="赢家的得分组成"></div><p id="seat-reason"></p>
+     <p class="seat-change" id="seat-change"></p>
+     <details class="seat-all-details" id="seat-all-details"><summary id="seat-all-summary">查看全部候选</summary><div class="seat-list" tabindex="0" role="region" aria-label="本席所有候选及分数"><ol id="seat-all"></ol></div><p>这里只比较同一席位的分数，已坐下的卡不再参选。显示值经过舍入；排序使用未取整分数。同分按固定内容编号决定先后。</p></details>
+     <button class="seat-primary seat-next" id="seat-next" type="button" hidden>去排下一席 →</button>
+    </div>
+    <section class="seat-ending" id="seat-ending" aria-labelledby="seat-ending-title" hidden>
+     <h3 id="seat-ending-title">六个座位，排完了。</h3><p id="seat-conclusion"></p>
+     <button id="seat-compare" type="button">口味不变，只关掉多样性再排一次</button>
+     <div class="seat-counterfactual" id="seat-counterfactual" hidden><h3 id="seat-counterfactual-title" tabindex="-1">同一批卡，只改一条规则。</h3><p id="seat-counterfactual-note"></p><div class="seat-counterfactual-grid"><section aria-label="本次六席"><h4>本次排出的六席</h4><ol id="seat-original"></ol></section><section aria-label="关闭多样性后的六席"><h4>只关掉多样性</h4><ol id="seat-alternative"></ol></section></div></div>
+     <div class="seat-question"><h3>最后换你判断：这里的多样性分，依据什么计算？</h3><div class="seat-answers"><button id="seat-answer-taste" type="button" aria-pressed="false">每排一席，我的兴趣都变了</button><button id="seat-answer-seats" type="button" aria-pressed="false">同主题已经坐下了几张</button></div><p id="seat-judgment" role="status" aria-live="polite"></p></div>
+    </section>
+   </div>
+   <div class="seat-footer"><p>这只是逐席选最高分的简化教学规则，不保证整页达到某种全局最优。全是合成内容，不代表真实平台。<br>本轮证据保留到重新开始；刷新或全局重置会清空。上方调参、卡片反馈和原来的反馈对照继续可用。</p><a href="#feed-section">回到首页自由试 ↑</a></div>
+  </section>
   <section class="feedback-story" id="feedback-story" aria-labelledby="feedback-story-title">
    <div class="feedback-story-header"><div><p class="eyebrow">反馈对照 / 规则不变，只看一次反馈</p><h2 id="feedback-story-title">点一次反馈，看懂首页为什么变。</h2><p id="feedback-record-state" role="status" aria-live="polite"></p></div><button id="feedback-arm" type="button">记录下一次反馈</button></div>
    <div class="feedback-story-empty" id="feedback-story-empty">先回到首页，对第一张卡点「少一点」。这里会保留两份首页，告诉你谁进来了、谁离开了，以及为什么。<br><a href="#feed-section">去给一张卡片反馈 ↑</a></div>

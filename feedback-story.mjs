@@ -1,4 +1,4 @@
-import {feedback,rankPosts,scorePost,probability,metrics} from './core.mjs?v=feedback-20261021';
+import {feedback,rankPosts,scorePost,probability,metrics} from './core.mjs?v=seats-20261025';
 
 function freeze(value){
  if(value&&typeof value==='object'){

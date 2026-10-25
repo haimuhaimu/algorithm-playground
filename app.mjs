@@ -1,11 +1,13 @@
-import {POSTS,TOPICS,PRESETS,INITIAL_PROFILE} from './data.mjs?v=feedback-20261021';
-import {rankPosts,metrics,feedback,challenge,probability,experiment} from './core.mjs?v=feedback-20261021';
-import {captureFeedback} from './feedback-story.mjs?v=feedback-20261021';
-import {mountFeedbackStory} from './feedback-story-ui.mjs?v=feedback-20261021';
+import {POSTS,TOPICS,PRESETS,INITIAL_PROFILE} from './data.mjs?v=seats-20261025';
+import {rankPosts,metrics,feedback,challenge,probability,experiment} from './core.mjs?v=seats-20261025';
+import {captureFeedback} from './feedback-story.mjs?v=seats-20261025';
+import {mountFeedbackStory} from './feedback-story-ui.mjs?v=seats-20261025';
+import {mountSeatLesson} from './seat-lesson-ui.mjs?v=seats-20261025';
 
 const $=id=>document.getElementById(id);
 const feedbackStory=mountFeedbackStory({document});
 let weights={...PRESETS.click.weights},baseline={...PRESETS.click.weights},profile={...INITIAL_PROFILE};
+const seatLesson=mountSeatLesson({document,getInputs:()=>({posts:POSTS,weights,profile})});
 let completed=null,runCount=0,toastTimer;
 const keyOrder=['click','diversity','newcomer'];
 const same=(a,b)=>keyOrder.every(k=>a[k]===b[k]);
@@ -43,7 +45,7 @@ function render(){
  $('challenge-checks').innerHTML=[[goal.click,'预测点击率 ≥ 40%'],[goal.diversity,'至少 4 种主题'],[goal.newcomer,'至少 2 个新人席位']].map(([ok,label])=>`<li class="${ok?'done':''}"><span class="check-icon" aria-hidden="true">${ok?'✓':''}</span>${label}<span class="sr-only">${ok?'，已达成':'，未达成'}</span></li>`).join('');
  $('challenge-status').textContent=goal.won?'挑战达成！再跑一轮，看看代价。':'还差一点，试着调调看。';$('challenge-status').classList.toggle('won',goal.won);
  $('taste-bars').innerHTML=Object.entries(TOPICS).map(([key,topic])=>`<div class="taste-item" title="${topic.short}兴趣 ${Math.round(profile[key]*100)}"><div class="taste-track"><div class="taste-fill" style="width:${profile[key]*100}%"></div></div><span>${topic.short} ${Math.round(profile[key]*100)}</span></div>`).join('');
- $('baseline-caption').textContent=`对照组：${strategy(baseline)}`;renderComparison();feedbackStory.sync(weights,profile);return m;
+ $('baseline-caption').textContent=`对照组：${strategy(baseline)}`;renderComparison();feedbackStory.sync(weights,profile);seatLesson.sync();return m;
 }
 
 function renderComparison(){
@@ -87,6 +89,7 @@ const emptyComparison=$('comparison-result').innerHTML;
 $('reset').addEventListener('click',()=>{
  weights={...PRESETS.click.weights};baseline={...PRESETS.click.weights};profile={...INITIAL_PROFILE};completed=null;runCount=0;
  feedbackStory.reset();
+ seatLesson.reset();
  $('comparison-result').innerHTML=emptyComparison;$('run-number').textContent='未运行';$('feedback-note').textContent='试试卡片上的「喜欢」和「少一点」。';
  $('feed').innerHTML='';render();toast('已回到实验起点');announce('全部规则、口味和实验记录已重置。');
 });

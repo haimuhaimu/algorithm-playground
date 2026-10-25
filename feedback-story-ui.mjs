@@ -1,5 +1,5 @@
-import {TOPICS} from './data.mjs?v=feedback-20261021';
-import {recordMatches} from './feedback-story.mjs?v=feedback-20261021';
+import {TOPICS} from './data.mjs?v=seats-20261025';
+import {recordMatches} from './feedback-story.mjs?v=seats-20261025';
 
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const interest=value=>Math.round(value*100);
