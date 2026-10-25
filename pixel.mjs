@@ -1,4 +1,5 @@
-import { encode, decode, preset, stroke, rearrangement } from './pixel-core.mjs';
+import { encode, decode, preset, stroke, rearrangement } from './pixel-core.mjs?v=recipient-1';
+import { setupRecipient } from './pixel-recipient-ui.mjs?v=recipient-1';
 import {DRAFT_KEYS,readDraft,writeDraft,clearDraft,validatePixelDraft,draftMessage} from './local-drafts.mjs';
 
 const $ = id => document.getElementById(id);
@@ -8,7 +9,7 @@ const colors = ['#f3eedc', '#30352a', '#bdd754', '#e79d88'], names = ['米白', 
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 let pixels = preset('cat'), color = 1, cursor = { x: 0, y: 0 }, focused = false;
 let gesture = null, history = [], received = null, job = null, frame = 0;
-let reorder = null;
+let reorder = null, recipient = null;
 const equal = (a, b) => a.length === b.length && a.every((value, i) => value === b[i]);
 const available = () => context && receivedContext && !document.hidden && !$('guide').open;
 function saveDraft(){
@@ -74,6 +75,7 @@ function render() {
   receipt();
   renderIdleWire(packet);
   renderReorder();
+  recipient?.refresh();
 }
 function renderReorder() {
   $('reorder-lesson').hidden = !reorder;
@@ -226,11 +228,13 @@ if(draft.value){
 }
 $('draft-status').textContent=draftMessage(draft.status);
 for(const name of ['cat','heart','noise','blank'])$('preset-'+name).setAttribute('aria-pressed',equal(pixels,preset(name)));
+recipient = setupRecipient({ getPixels: () => pixels, available, cancelStroke });
 draw(receivedContext, received?.pixels); render();
 if (!context || !receivedContext) {
   $('status').textContent = '此浏览器无法打开 Canvas 画布，请换用支持 Canvas 的浏览器。';
   $('send').disabled = true; $('undo').disabled = true; editor.setAttribute('aria-disabled', 'true');
   $('reorder-start').disabled = true;
+  $('recipient-start').disabled = true;
   for (const name of ['cat', 'heart', 'noise', 'blank']) $('preset-' + name).disabled = true;
   for (let i = 0; i < 4; i++) $('color-' + i).disabled = true;
 }
