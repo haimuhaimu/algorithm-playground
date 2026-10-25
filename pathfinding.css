@@ -7,6 +7,43 @@
 @media(max-width:1100px){.drawing-tools{margin-left:0}.tool-row{gap:10px}.board-metrics{grid-template-columns:1fr 1fr}.board-metrics p{display:none}.algorithm-board{padding:15px}.play-row{gap:8px}#play-status{width:100%;margin:0}.board-heading h2{font-size:14px}.race-summary{gap:24px}}
 @media(max-width:760px){.path-main{padding:0 18px}.path-intro{padding:22px 0}.path-intro h1{font-size:31px}.path-intro .intro-copy{font-size:12px;max-width:32ch}.map-toolbar{padding:10px}.tool-row{gap:9px}.map-presets{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}.map-presets button{font-size:11px;padding:7px}.drawing-tools{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:2px}.drawing-tools button{font-size:11px;padding:5px 4px;min-height:34px}.clear-button{font-size:11px;padding:6px 3px}.play-row{display:grid;grid-template-columns:1.2fr .8fr 1fr;gap:7px}.play-button{font-size:12px;min-width:0;gap:7px;padding:11px}.secondary-button{font-size:11px;padding:8px 5px}.speed-control{grid-column:1 / 3;margin:3px 0 0}.speed-control select{padding:5px}#play-status{grid-column:1 / -1;font-size:10px}.arena{grid-template-columns:1fr;gap:17px}.map-instructions{font-size:10px;margin-top:13px;align-items:start}.map-instructions p{max-width:29ch}.algorithm-board{padding:13px}.board-heading h2{font-size:15px}.board-description{font-size:11px;margin-bottom:12px}.algorithm-name{font-size:21px}.path-grid{gap:1px;padding:1px}.cell{font-size:10px}.board-metrics{grid-template-columns:1fr 1fr 1.2fr;margin-top:12px;gap:7px}.board-metrics p{display:block;font-size:10px;padding-left:10px}.board-metrics strong{font-size:24px}.map-legend{gap:10px;padding:17px 0}.race-summary{grid-template-columns:1fr;gap:20px;padding:20px 0}.map-challenge{padding:17px 0 0;border-left:0;border-top:1px solid var(--line)}.summary-main h2{font-size:20px}.summary-main>p:last-child{font-size:12px}.algorithm-notes{font-size:11px}}
 .cell{scroll-margin:8px}
+/* Prediction is part of the existing playback, not a separate lesson. */
+.guess-entry{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:16px 0 4px}
+.guess-entry>button{min-height:44px;padding:10px 16px;border-color:var(--good);font-weight:600}
+.guess-entry>button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.guess-entry label{display:flex;align-items:center;gap:8px;font-size:12px}
+.guess-entry select{min-height:44px}
+#guess-entry-note{font-size:12px;color:var(--muted)}
+.guess-board{border-color:var(--search)}
+.guess-caption{font-size:12px;font-weight:600;color:var(--search);margin:0 0 10px;line-height:1.7}
+.guess-panel{padding-top:14px}
+.guess-status{font-size:14px;font-weight:650;line-height:1.7}
+#guess-rule{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.8}
+.guess-pick{font-size:12px;line-height:1.8;padding:10px 12px;margin-top:10px;background:var(--soft);border-radius:6px;font-variant-numeric:tabular-nums;min-height:42px}
+.guess-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.guess-actions button{min-height:44px}
+.guess-actions .play-button{font-size:12px;justify-content:center;min-width:160px}
+.guess-explanation{border-left:3px solid var(--search);padding:5px 0 5px 12px;font-size:12px;line-height:1.9;margin-top:12px}
+.guess-explanation:empty{display:none}
+.guess-footnote{font-size:10px;color:var(--muted);line-height:1.8;margin-top:10px}
+.cell.guess-candidate{background:var(--frontier);color:var(--ink);box-shadow:inset 0 0 0 1px var(--search);cursor:pointer}
+.cell.guess-candidate.current:before{display:none}
+.cell.guess-picked{outline:2px solid var(--ink);outline-offset:-2px;background:var(--accent);color:var(--accent-ink);z-index:1}
+.cell.guess-actual{outline:3px double var(--search);outline-offset:1px;z-index:2}
+.cell.guess-actual.guess-picked{box-shadow:inset 0 0 0 2px var(--ink)}
+.cell.guess-candidate.goal{background:var(--accent);color:var(--accent-ink)}
+.arena[data-guessing=true] .path-grid,.arena[data-guessing=true] .cell{touch-action:pan-y}
+#guess-panel[hidden],#guess-algorithm-label[hidden],#guess-restart[hidden],.guess-caption[hidden]{display:none}
+.guess-entry button:focus-visible,.guess-actions button:focus-visible{outline:3px solid var(--good);outline-offset:3px}
+@media(max-width:760px){
+ .guess-entry{gap:8px;margin-top:13px}.guess-entry label{font-size:11px}#guess-entry-note{flex-basis:100%;font-size:11px}
+ .arena[data-guessing=true] .guess-board{order:-1}
+ :root[data-path-guess=true] .map-toolbar{position:static}
+ :root[data-path-guess=true] .cell{scroll-margin-top:15px}
+ .guess-board{scroll-margin-top:15px}
+ .guess-panel{padding-top:12px}.guess-status{font-size:13px}
+ .guess-actions .play-button{flex:1;min-width:140px}
+}
 .map-instructions a{color:var(--good);white-space:nowrap;text-underline-offset:4px}
 .map-comparison{padding:25px 0 30px;border-top:1px solid var(--line);scroll-margin-top:20px}
 .comparison-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:17px}

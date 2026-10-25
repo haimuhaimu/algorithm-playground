@@ -36,18 +36,36 @@
     <span id="play-status" role="status">地图就绪，等你出题。</span>
    </div>
   </section>
+  <div class="guess-entry">
+   <button class="secondary-button" id="guess-toggle" aria-pressed="false" aria-controls="guess-panel">你来猜下一格</button>
+   <label id="guess-algorithm-label" hidden>猜谁的选择 <select id="guess-algorithm"><option value="astar">A*</option><option value="bfs">BFS</option></select></label>
+   <span id="guess-entry-note">先猜，再走一步。看看算法和你想得一不一样。</span>
+  </div>
   <div class="map-instructions"><p id="map-help">两边同步，整笔可撤销。键盘：方向键移动，空格编辑，Ctrl / ⌘ Z 撤销。</p><a href="#comparison">看前后对照 ↓</a><span id="wall-count">9 格墙</span></div>
   <section class="arena" id="arena" aria-label="算法对照地图">
-   <article class="algorithm-board bfs-board">
+   <article class="algorithm-board bfs-board" id="bfs-board">
     <div class="board-heading"><div><span class="algorithm-name">BFS</span><h2>一圈一圈地找</h2></div><span id="bfs-status" class="search-status">等待出发</span></div>
     <p class="board-description">广度优先搜索，把附近的岔路都看一遍。</p>
+    <p class="guess-caption" id="bfs-guess-caption" hidden></p>
     <div class="path-grid" id="bfs-grid" role="group" aria-label="BFS 可编辑地图" aria-describedby="map-help"></div>
+    <div id="bfs-guess-slot"></div>
     <div class="board-metrics"><div><strong id="bfs-explored">0</strong><span>已探索格子</span></div><div><strong id="bfs-distance">待揭晓</strong><span>最短路线步数</span></div><p>不预判方向，按离起点的距离探索。</p></div>
    </article>
-   <article class="algorithm-board astar-board">
+   <article class="algorithm-board astar-board" id="astar-board">
     <div class="board-heading"><div><span class="algorithm-name">A*</span><h2>朝着目标试探</h2></div><span id="astar-status" class="search-status">等待出发</span></div>
     <p class="board-description">A* 搜索，同时考虑已走距离与预计余程。</p>
+    <p class="guess-caption" id="astar-guess-caption" hidden></p>
     <div class="path-grid" id="astar-grid" role="group" aria-label="A* 可编辑地图" aria-describedby="map-help"></div>
+    <div id="astar-guess-slot">
+     <section id="guess-panel" class="guess-panel" aria-label="你来猜下一格" hidden>
+      <p id="guess-status" class="guess-status" role="status"></p>
+      <p id="guess-rule"></p>
+      <p id="guess-pick" class="guess-pick" aria-live="polite"></p>
+      <div class="guess-actions"><button id="guess-reveal" class="play-button" disabled>揭晓并走一步</button><button id="guess-restart" class="secondary-button" hidden>从起点重新猜</button><button id="guess-exit" class="secondary-button">回到改图</button></div>
+      <p id="guess-explanation" class="guess-explanation" aria-live="polite"></p>
+      <p class="guess-footnote">猜的是下一个要<strong>探索</strong>的格子，不是最终路线的下一步。实线框是你的选择，双线框是算法的选择。</p>
+     </section>
+    </div>
     <div class="board-metrics"><div><strong id="astar-explored">0</strong><span>已探索格子</span></div><div><strong id="astar-distance">待揭晓</strong><span>最短路线步数</span></div><p>方向只是线索，遇到墙也要绕路。</p></div>
    </article>
   </section>
@@ -89,7 +107,7 @@
   <details class="algorithm-notes"><summary>为什么都能找到最短路？这个比较又有什么边界？</summary><div><p>这里只能上下左右走，每一步成本相同。广度优先搜索按层展开，所以第一次找到终点就是最短路。</p><p>A* 使用「已走步数 + 曼哈顿距离」排序。曼哈顿距离是不考虑墙时的横向加纵向距离，在这张地图里不会高估余程，所以也能保证最短路。分数相同优先预计余程更短的节点，再按入队顺序。</p><p>两边每一拍各展开一个格子，找到终点后各自停止。探索数包括起终点，不包括仅进入待探索队列的格子；路线步数不包括起点。探索更少不等于实际运行更快，A* 还要维护排序。</p><p>相同地图必得相同结果。A* 不保证在每张地图上都省下一半搜索；路线可能不同，但最短长度相同。刷新会重置地图，无账号、上传或追踪。</p></div></details>
   <section class="bottom-note"><span>自己出题，才有新发现。</span><p>四向移动，每步成本为 1。动画用来理解过程，不代表性能跑分。</p><span class="signature">MADE BY CHEN QUAN</span></section>
  </main>
-<dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">给算法出道题。</h2><ol><li>先点「开始找路」，完整跑完一轮，自动留下第一份对照。</li><li>用「画墙」或「橡皮」改一格，再跑一次。下方会保留前后地图、标出改动，并解释结果的变化。</li><li>画错、清空或换错地图，点「撤销」找回来；一次拖画只算一步，保留最近 30 步。按 Esc 可取消还没松手的一笔。</li><li>想继续实验，点「以这轮为新对照」再改图。想看清过程？暂停后「走一步」。</li></ol><p>手机可以在网格上直接画，网格外可正常滑动。键盘方向键移动、空格编辑，Ctrl / ⌘ Z 撤销，Ctrl / ⌘ Shift Z 重做。改图会清除当前动画，但保留对照；刷新会清空地图、对照与编辑历史。</p></dialog>
+<dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">给算法出道题。</h2><ol><li>先点「开始找路」，完整跑完一轮，自动留下第一份对照。</li><li>用「画墙」或「橡皮」改一格，再跑一次。下方会保留前后地图、标出改动，并解释结果的变化。</li><li>画错、清空或换错地图，点「撤销」找回来；一次拖画只算一步，保留最近 30 步。按 Esc 可取消还没松手的一笔。</li><li>点「你来猜下一格」，在 A* 或 BFS 的待探索格中选一个，再揭晓。格上的数字是 A* 总分或 BFS 排队次序；猜错可以继续，地图不会改变。按 Esc 或「回到改图」退出。</li><li>想继续实验，点「以这轮为新对照」再改图。普通「走一步」和自由播放也仍然保留。</li></ol><p>手机可以在网格上直接画，网格外可正常滑动。键盘方向键移动、空格编辑（猜测时是选择），Ctrl / ⌘ Z 撤销，Ctrl / ⌘ Shift Z 重做。改图会清除当前动画，但保留对照；刷新会清空地图、对照与编辑历史。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验可编辑地图和寻路实验。</p></noscript>
 </body>
 </html>
