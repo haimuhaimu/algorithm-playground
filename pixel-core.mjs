@@ -34,6 +34,12 @@ export function encode(pixels) {
 }
 
 export function decode(packet, count) {
+  return inspectPacket(packet, count).pixels;
+}
+
+// The teaching trace is produced by the same byte parser as normal delivery.
+// Offsets are absolute bit positions in the packet, including its tree header.
+export function inspectPacket(packet, count) {
   if (!(packet instanceof Uint8Array) || !packet.length || packet.length > 1538 || !Number.isInteger(count) || count < 1 || count > 4096) throw new TypeError('Invalid packet or pixel count');
   let cursor = 0, nodes = 0;
   const symbols = new Set();
@@ -51,19 +57,32 @@ export function decode(packet, count) {
     }
     return { left: tree(depth + 1), right: tree(depth + 1) };
   }
-  const root = tree(), pixels = [];
+  const root = tree(), pixels = [], entries = [], codes = [null, null, null, null];
+  const treeBits = cursor;
+  function codebook(node, prefix = '') {
+    if (node.symbol !== undefined) codes[node.symbol] = prefix || '0';
+    else { codebook(node.left, prefix + '0'); codebook(node.right, prefix + '1'); }
+  }
+  codebook(root);
   for (let i = 0; i < count; i++) {
-    let node = root;
+    let node = root, code = '';
+    const startBit = cursor;
     if (node.symbol !== undefined) {
       if (bit() !== 0) throw new Error('Invalid single-color payload');
+      code = '0';
     } else {
-      while (node.symbol === undefined) node = bit() ? node.right : node.left;
+      while (node.symbol === undefined) {
+        const direction = bit(); code += direction;
+        node = direction ? node.right : node.left;
+      }
     }
     pixels.push(node.symbol);
+    entries.push({ index: i, color: node.symbol, code, startBit, endBit: cursor });
   }
+  const payloadBits = cursor - treeBits, paddingBits = packet.length * 8 - cursor;
   if (packet.length * 8 - cursor > 7) throw new Error('Trailing bytes');
   while (cursor < packet.length * 8) if (bit()) throw new Error('Nonzero padding');
-  return pixels;
+  return { pixels, entries, codes, treeBits, payloadBits, paddingBits };
 }
 
 export function preset(name) {

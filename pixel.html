@@ -3,8 +3,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="画一张像素明信片，用真正的 Huffman 编码打包寄出，再一格不差地还原。亲手玩懂信息量与无损压缩。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pixel.css">
- <script type="module" src="./pixel.mjs"></script><title>算法游乐场 · 像素邮局</title>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pixel.css"><link rel="stylesheet" href="./pixel-recipient.css?v=recipient-1">
+ <script type="module" src="./pixel.mjs?v=recipient-1"></script><title>算法游乐场 · 像素邮局</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
 </head><body>
  <a class="skip-link" href="#editor">跳到明信片画纸</a>
@@ -32,7 +32,46 @@
      <div class="receipt-copy"><h2>收件处 <span>逐格验收</span></h2><p id="receipt" role="status">还没有来信</p><p class="challenge" id="challenge">小挑战：画一张你喜欢的图，让它不超过 48 B。</p></div>
     </div>
     <p class="dispatch-hint">改几笔，再寄一次。邮包大小会变，画里的每一格都不会少。</p>
+    <div class="recipient-entry"><span>这串 0 和 1，真的能读成一张画吗？</span><button id="recipient-start" type="button">当一次收件员 ↗</button><small>从当前画纸截取 8 格，你来读暗号。原画和草稿不变。</small></div>
    </div>
+  </section>
+  <section id="recipient-lesson" class="recipient-lesson" aria-labelledby="recipient-title" hidden>
+   <header class="recipient-heading"><div><p class="eyebrow">像素 → 暗号 → 像素</p><h2 id="recipient-title" tabindex="-1">当一次收件员</h2><p>不是猜一张图，而是亲手读回它的 8 格。</p></div><a href="#editor">回到画纸 ↑</a></header>
+   <ol class="recipient-steps" aria-label="收件练习进度"><li id="recipient-step-1">01 看怎么写</li><li id="recipient-step-2">02 亲手读回来</li><li id="recipient-step-3">03 核对这封信</li></ol>
+   <p id="recipient-snapshot-note" class="recipient-note"></p>
+   <div id="recipient-source" class="recipient-source">
+    <div class="recipient-source-caption"><div id="recipient-miniature" class="recipient-miniature" aria-hidden="true"></div><div><h3>寄件人先把每种颜色换成暗号。</h3><p id="recipient-location"></p><p>下面 8 格从左到右连起来，就是来信的一小段。整张画共用同一本暗号表。</p></div></div>
+    <div id="recipient-source-strip" class="recipient-strip" aria-label="原片段：每格颜色和实际暗号"></div>
+    <p class="recipient-note">每一格都写进去了，只是写法不同。真正的邮包没有空格，收件人怎样知道在哪儿断开？</p>
+   </div>
+   <button id="recipient-begin" class="recipient-primary" type="button">把原片段收起来，我来读信 →</button>
+   <div id="recipient-work" hidden>
+    <div class="recipient-read-head"><h3 id="recipient-work-title" tabindex="-1">只看暗号，把颜色放回来。</h3><span id="recipient-progress">已还原 0 / 8 格</span></div>
+    <div id="recipient-restored" class="recipient-strip recipient-restored" aria-label="你还原的像素"></div>
+    <div class="recipient-decoder">
+     <div class="recipient-reading">
+      <p class="recipient-small-label">这封来信的片段 · 没有分隔符</p><code id="recipient-stream" class="recipient-stream"></code>
+      <div class="recipient-current"><span>这一格，已经读到</span><code id="recipient-prefix">—</code></div>
+      <button id="recipient-read" class="recipient-primary" type="button">读下一位</button>
+      <p id="recipient-feedback" class="recipient-feedback" role="status"></p>
+     </div>
+     <div class="recipient-codebook"><h4>这封信的暗号表</h4><p>读到完整暗号，再点它对应的颜色。</p><div class="recipient-color-options" role="group" aria-label="选择当前暗号对应的颜色">
+      <button id="recipient-color-0" type="button"><i class="color-0" aria-hidden="true"></i><span>米白<small id="recipient-count-0"></small></span><code id="recipient-code-0"></code></button>
+      <button id="recipient-color-1" type="button"><i class="color-1" aria-hidden="true"></i><span>墨黑<small id="recipient-count-1"></small></span><code id="recipient-code-1"></code></button>
+      <button id="recipient-color-2" type="button"><i class="color-2" aria-hidden="true"></i><span>苔绿<small id="recipient-count-2"></small></span><code id="recipient-code-2"></code></button>
+      <button id="recipient-color-3" type="button"><i class="color-3" aria-hidden="true"></i><span>珊瑚<small id="recipient-count-3"></small></span><code id="recipient-code-3"></code></button>
+     </div><p id="recipient-prefix-help" class="recipient-note"></p></div>
+    </div>
+    <button id="recipient-peek" class="recipient-text-button" type="button" aria-expanded="false" aria-controls="recipient-source">看一眼原片段</button>
+   </div>
+   <div id="recipient-end" class="recipient-end" hidden>
+    <h3 id="recipient-verdict" tabindex="-1"></h3><p>上面是寄件人的原片段，下面是你按来信逐格还原的结果。</p>
+    <div id="recipient-final-strip" class="recipient-strip" aria-label="收件结果：逐格与原片段核对"></div>
+    <p id="recipient-bit-cost"></p><p id="recipient-packet-cost" class="recipient-note"></p>
+    <div class="recipient-check"><h4>最后一个判断：这封信究竟改变了什么？</h4><div role="group" aria-label="判断无损压缩的含义"><button id="recipient-answer-loss" type="button">删掉了一些不重要的格子</button><button id="recipient-answer-code" type="button">一格没删，换了记录颜色的写法</button></div><p id="recipient-takeaway" role="status">选一次，把刚才的操作变成自己的结论。</p></div>
+    <details><summary>为什么没有空格，也不会读错？</summary><p>这份 Huffman 暗号表中，没有一个完整暗号是另一个暗号的开头。读到一个完整暗号，就能确定一格；下一位从头开始读。只有一种颜色时，本实验约定每格仍写一个 0。</p><p>收件端先从邮包的编码树读出这张表，再按固定的 256 格解码。本练习替你读好了树和前面的像素，只手动还原标出的 8 格；不是单独压缩这 8 格。颜色表不是对所有画通用的，换图后可能改变。</p></details>
+   </div>
+   <footer class="recipient-footer"><button id="recipient-replay" type="button">用这封信重新练习</button><span>练习只保留在本页，刷新后结束；画纸草稿照常保留。</span></footer>
   </section>
   <section id="reorder-lesson" class="reorder-lesson" aria-labelledby="reorder-title" hidden>
    <div class="reorder-heading"><div><p class="eyebrow">一个亲手验证的小实验</p><h2 id="reorder-title" tabindex="-1">换了位置，邮费会变吗？</h2></div><a href="#editor">回到画纸 ↑</a></div>

@@ -3,6 +3,64 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { memoryStorage } from './storage-helper.mjs';
 let serial = 0;
+test('recipient reads actual bits and restores eight cells without editing or saving the postcard',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('recipient-start'),'recipient entry exists');
+  u.click('send');const drawing=u.pixels('editor'),received=u.pixels('receiver'),writes=storage.writes;
+  u.click('recipient-start');assert.equal(u.els.get('recipient-lesson').hidden,false);
+  assert.equal(u.els.get('recipient-title').scrollOptions.block,'start','entry must reveal the lesson, not just its bottom-edge title');
+  const source=u.els.get('recipient-source-strip').innerHTML;
+  u.click('recipient-begin');assert.equal(u.els.get('recipient-source').hidden,true);
+  assert.equal(u.els.get('recipient-color-0').disabled,true);
+  u.click('recipient-color-0');assert.match(u.els.get('recipient-progress').textContent,/0.*8/);
+  for(let i=0;i<8;i++){
+   let guard=0;while(!u.els.get('recipient-read').disabled && guard++<4)u.click('recipient-read');
+   const prefix=u.els.get('recipient-prefix').textContent;
+   const correct=[0,1,2,3].find(c=>u.els.get('recipient-code-'+c).textContent===prefix);
+   assert.ok(correct!==undefined);
+   if(i===0){u.click('recipient-color-'+((correct+1)%4));assert.match(u.els.get('recipient-feedback').textContent,/不对应/);}
+   u.click('recipient-color-'+correct);
+  }
+  assert.equal(u.els.get('recipient-end').hidden,false);
+  assert.match(u.els.get('recipient-verdict').textContent,/8.*8/);
+  assert.equal(u.els.get('recipient-source-strip').innerHTML,source);
+  u.click('recipient-answer-loss');assert.match(u.els.get('recipient-takeaway').textContent,/没删/);
+  u.click('recipient-answer-code');assert.match(u.els.get('recipient-takeaway').textContent,/无损/);
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),received);
+  assert.equal(storage.writes,writes,'lesson is not a draft mutation');
+ }finally{u.restore();}
+});
+test('recipient snapshot survives editing, replay resets progress, hidden documents cannot advance',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('recipient-start'),'recipient entry exists');
+  u.click('recipient-start');const source=u.els.get('recipient-source-strip').innerHTML;
+  u.click('recipient-begin');u.click('recipient-read');
+  u.click('preset-noise');assert.equal(u.els.get('recipient-source-strip').innerHTML,source);
+  assert.match(u.els.get('recipient-snapshot-note').textContent,/画纸已改/);
+  const prefix=u.els.get('recipient-prefix').textContent;u.hide();u.click('recipient-read');
+  assert.equal(u.els.get('recipient-prefix').textContent,prefix);
+  u.doc.hidden=false;u.click('recipient-replay');
+  assert.equal(u.els.get('recipient-source-strip').innerHTML,source);assert.equal(u.els.get('recipient-source').hidden,false);
+  assert.match(u.els.get('recipient-progress').textContent,/0.*8/);
+  u.click('recipient-start');assert.notEqual(u.els.get('recipient-source-strip').innerHTML,source);
+  u.click('preset-blank');u.click('recipient-start');
+  assert.equal(u.els.get('recipient-code-1').textContent,'本图未使用');
+ }finally{u.restore();}
+});
+test('a larger noise postcard never teaches that every code or packet gets shorter',async()=>{
+ const u=await boot();try{
+  u.click('preset-noise');u.click('recipient-start');u.click('recipient-begin');
+  for(let i=0;i<8;i++){
+   for(let b=0;b<3&&!u.els.get('recipient-read').disabled;b++)u.click('recipient-read');
+   const prefix=u.els.get('recipient-prefix').textContent;
+   const c=[0,1,2,3].find(c=>u.els.get('recipient-code-'+c).textContent===prefix);
+   u.click('recipient-color-'+c);
+  }
+  assert.match(u.els.get('recipient-packet-cost').textContent,/66 B/);
+  u.click('recipient-answer-loss');
+  assert.doesNotMatch(u.els.get('recipient-takeaway').textContent,/变短/,'the actual packet is larger, so no unconditional savings claim');
+ }finally{u.restore();}
+});
 async function boot({ reduced = false, missingCanvas = false, storage = memoryStorage() } = {}) {
   const html = await readFile(new URL('../pixel.html', import.meta.url), 'utf8').catch(() => '');
   assert.ok(html.includes('id="editor"'), 'playable pixel page must exist');
@@ -13,7 +71,7 @@ async function boot({ reduced = false, missingCanvas = false, storage = memorySt
     getBoundingClientRect() { return { left: 0, top: 0, width: 256, height: 256 }; }
     set textContent(value){this.text=value;this.textWrites=(this.textWrites??0)+1;} get textContent(){return this.text;}
     setPointerCapture() {} releasePointerCapture() {} focus() {doc.activeElement=this;}
-    scrollIntoView(){this.scrolled=true;}
+    scrollIntoView(options){this.scrolled=true;this.scrollOptions=options;}
     showModal() { this.open = true; } close() { this.open = false; this.dispatchEvent(new Event('close')); }
   }
   const els = new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([, id]) => [id, new Element()]));
