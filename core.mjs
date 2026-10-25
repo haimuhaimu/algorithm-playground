@@ -9,15 +9,22 @@ export function scorePost(post,weights={},profile={},counts={}) {
   return {parts,score:Object.values(parts).reduce((a,b)=>a+b,0)};
 }
 export function rankPosts(posts,weights={},profile={},size=6) {
+  return selectPosts(posts,weights,profile,size,false).feed;
+}
+export function traceRanking(posts,weights={},profile={},size=6) {
+  return selectPosts(posts,weights,profile,size,true);
+}
+function selectPosts(posts,weights,profile,size,record) {
   const candidates=[...new Map(posts.map(p=>[p.id,p])).values()];
-  const chosen=[],counts={};
+  const chosen=[],counts={},rounds=[];
   const limit=Number.isFinite(size)?Math.max(0,Math.floor(size)):6;
   while(chosen.length<limit&&candidates.length) {
     const ranked=candidates.map(post=>({...post,...scorePost(post,weights,profile,counts)})).sort((a,b)=>b.score-a.score||String(a.id).localeCompare(String(b.id),'en'));
+    if(record)rounds.push({slot:chosen.length+1,countsBefore:{...counts},ranked});
     const best=ranked[0];chosen.push(best);counts[best.topic]=(counts[best.topic]||0)+1;
     candidates.splice(candidates.findIndex(p=>p.id===best.id),1);
   }
-  return chosen;
+  return {feed:chosen,rounds};
 }
 export function metrics(feed,profile={}) {
   if(!feed.length) return {ctr:0,topics:0,newcomers:0,quality:0};
