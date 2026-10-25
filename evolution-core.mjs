@@ -101,6 +101,28 @@ export function createRace(track=presetTrack(),{seed=42,mutation=.18,obstacles=[
  const population=Array.from({length:POPULATION},()=>Array.from({length:GENES},()=>random.next()*2-1));
  return evaluated({points:track.points.map(p=>({...p})),length:track.length},obstacles.map(o=>({...o})),population,1,random.state,mutation);
 }
+// Changing the environment is not breeding: preserve all genes and RNG state,
+// but discard obsolete fitness and selection provenance before the next draw.
+export function changeObstacles(race,obstacles){
+ validateObstacles(obstacles);
+ const next=evaluated(structuredClone(race.track),structuredClone(obstacles),race.population.map(g=>[...g]),race.generation,race.seed,race.mutation);
+ const adaptation={generation:race.generation,genome:[...race.population[race.bestIndex]],
+  oldRun:structuredClone(race.best),oldObstacles:structuredClone(race.obstacles),oldHistory:structuredClone(race.history),
+  oldFinished:race.runs.filter(r=>r.finished).length,
+  newRun:structuredClone(next.runs[race.bestIndex]),initialBest:structuredClone(next.best),
+  initialFinished:next.runs.filter(r=>r.finished).length};
+ return {...next,environment:(race.environment||0)+1,adaptation};
+}
+// A convenient touch/keyboard entry, not a scripted winning scenario: put the
+// obstacle on a point the actual best route reached, away from either endpoint.
+export function suggestRoadblock(race){
+ if(race.obstacles.length>=12)return null;
+ const eligible=race.best.samples.filter(p=>p.progress>=.3&&p.progress<=.7&&p.x>=45&&p.x<=WIDTH-45&&p.y>=45&&p.y<=HEIGHT-45&&
+  distance(p,race.track.points[0])>=70&&distance(p,race.track.points.at(-1))>=70&&
+  race.obstacles.every(o=>distance(p,o)>o.radius+26));
+ const point=eligible.sort((a,b)=>Math.abs(a.progress-.5)-Math.abs(b.progress-.5))[0];
+ return point?{x:point.x,y:point.y,radius:16}:null;
+}
 export function nextGeneration(race){
  validateMutation(race.mutation);
  const random=randomSource(race.seed),ranked=race.runs.map((run,i)=>({score:run.score,i})).sort((a,b)=>b.score-a.score);
@@ -125,7 +147,8 @@ export function nextGeneration(race){
   }));
   births.push({kind:'child',parentGeneration:race.generation,parents:[a,b],sources,inherited,mutations,mutationRate:race.mutation});
  }
- return {...evaluated(race.track,race.obstacles,population,race.generation+1,random.state,race.mutation,race.history),births};
+ return {...evaluated(race.track,race.obstacles,population,race.generation+1,random.state,race.mutation,race.history),births,
+  ...(race.adaptation?{adaptation:race.adaptation,environment:race.environment}:{})};
 }
 
 // Only the immediately preceding generation is retained; no growing family tree.
