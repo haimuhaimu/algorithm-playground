@@ -102,17 +102,74 @@ test('a long back-and-forth scribble cannot replace a valid race with instant fi
   assert.match(ui.elements.get('status').textContent,/原赛道已保留/);
  }finally{ui.restore();}
 });
-test('keyboard roadblocks reset scores and a second finger cannot replace an active drawing',async()=>{
+test('keyboard roadblocks re-score without resetting generation and a second finger cannot replace an active drawing',async()=>{
  const ui=await boot({reduced:true}),field=ui.elements.get('race');
  try{
   ui.click('next');ui.fire(ui.modes[2],'click');ui.fire(field,'keydown',{key:'Enter',repeat:false});
-  assert.equal(ui.elements.get('generation').textContent,'1');assert.match(ui.elements.get('status').textContent,/路障/);
+  assert.equal(ui.elements.get('generation').textContent,'2');assert.match(ui.elements.get('status').textContent,/路障/);
   ui.fire(ui.modes[1],'click');
   ui.fire(field,'pointerdown',{isPrimary:true,button:0,pointerId:1,clientX:80,clientY:100});
   ui.fire(field,'pointerdown',{isPrimary:false,button:0,pointerId:2,clientX:800,clientY:400});
   ui.fire(field,'pointerup',{isPrimary:false,pointerId:2,clientX:800,clientY:400});
   assert.equal(ui.elements.get('track-name').textContent,'大回环');
   ui.fire(field,'pointercancel',{pointerId:1});
+ }finally{ui.restore();}
+});
+
+test('guided obstacle retains the current generation and shows re-scoring separately from breeding',async()=>{
+ const ui=await boot({reduced:true});try{
+  assert.ok(ui.elements.has('challenge-obstacle'),'guided roadblock entry is available');
+  assert.equal(ui.elements.get('adapt-cards').hidden,true);
+  ui.click('evolve');for(let i=0;i<10;i++)ui.frame();
+  assert.equal(ui.elements.get('generation').textContent,'11');
+  ui.click('challenge-obstacle');
+  assert.equal(ui.elements.get('generation').textContent,'11');assert.equal(ui.frames.size,0);
+  assert.equal(ui.elements.get('adapt-cards').hidden,false);
+  assert.match(ui.elements.get('adapt-old-result').textContent,/完成/);
+  assert.match(ui.elements.get('adapt-impact-result').textContent,/未完成/);
+  assert.match(ui.elements.get('adapt-population').textContent,/48.*保留/);
+  assert.match(ui.elements.get('adapt-evolution-note').textContent,/还没有.*繁衍|尚未.*繁衍/);
+ }finally{ui.restore();}
+});
+test('comparison shows only completed generations, keeps its old route fixed, and survives continued breeding',async()=>{
+ const ui=await boot({reduced:true});try{
+  assert.ok(ui.elements.has('challenge-obstacle'));
+  ui.click('challenge-obstacle');const old=ui.elements.get('adapt-old-result').textContent;
+  const current=ui.elements.get('adapt-current-result').textContent;
+  ui.click('next');assert.equal(ui.elements.get('generation').textContent,'2');
+  assert.equal(ui.elements.get('adapt-current-result').textContent,current);
+  assert.match(ui.elements.get('adapt-current-generation').textContent,/第 1 代/);
+  ui.click('adapt-evolve');for(let i=0;i<10;i++)ui.frame();
+  assert.equal(ui.elements.get('generation').textContent,'12');
+  assert.equal(ui.elements.get('adapt-old-result').textContent,old);
+  assert.match(ui.elements.get('adapt-current-generation').textContent,/第 12 代/);
+  assert.match(ui.elements.get('adapt-evolution-note').textContent,/11 代/);
+ }finally{ui.restore();}
+});
+test('roadblock edit cancels stale batches, repeat edits replace checkpoint, reset alone starts over',async()=>{
+ const ui=await boot({reduced:true}),field=ui.elements.get('race');try{
+  assert.ok(ui.elements.has('challenge-obstacle'));
+  ui.click('evolve');ui.frame();const stale=[...ui.frames.values()][0];
+  ui.fire(ui.modes[2],'click');ui.fire(field,'keydown',{key:'Enter',repeat:false});
+  const status=ui.elements.get('status').textContent;stale(10000);
+  assert.equal(ui.elements.get('generation').textContent,'2');assert.equal(ui.frames.size,0);
+  assert.equal(ui.elements.get('status').textContent,status);
+  ui.click('clear-obstacles');assert.equal(ui.elements.get('generation').textContent,'2');
+  assert.match(ui.elements.get('adapt-checkpoint').textContent,/路况 2/);
+  ui.click('clear-obstacles');assert.match(ui.elements.get('adapt-checkpoint').textContent,/路况 2/);
+  ui.click('reset');assert.equal(ui.elements.get('generation').textContent,'1');
+  assert.equal(ui.elements.get('adapt-cards').hidden,true);
+ }finally{ui.restore();}
+});
+test('birth inspection after an environment change breeds using the re-scored population',async()=>{
+ const ui=await boot({reduced:true});try{
+  assert.ok(ui.elements.has('challenge-obstacle'));
+  ui.click('next');ui.click('challenge-obstacle');
+  ui.click('inspect-birth');assert.equal(ui.elements.get('generation').textContent,'3');
+  assert.equal(ui.elements.get('birth-dialog').open,true);
+  assert.match(ui.elements.get('status').textContent,/当前路况/);
+  ui.click('birth-close');assert.equal(ui.frames.size,0);
+  assert.equal(ui.elements.get('adapt-cards').hidden,false);
  }finally{ui.restore();}
 });
 test('touch scrolling in roadblock mode neither edits the track nor reports a cancelled drawing',async()=>{
