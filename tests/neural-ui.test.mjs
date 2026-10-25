@@ -4,6 +4,57 @@ import {readFile} from 'node:fs/promises';
 import {memoryStorage} from './storage-helper.mjs';
 import {DRAFT_KEYS} from '../local-drafts.mjs';
 let serial=0;
+test('a newer ordinary prediction cannot be overwritten by an older one-step checkpoint',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});const saved=()=>JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value;
+ try{
+  u.click('step-capture');u.choose('guess','yes');assert.equal(saved().guess,'yes');
+  assert.equal(u.elements.get('step-body').hidden,true,'changing the ordinary guess invalidates its frozen version');
+  u.click('step-A-up');u.click('step-B-down');u.click('step-run');assert.equal(saved().guess,'yes');assert.equal(saved().model.epoch,0);
+  u.click('step-capture');u.click('step-A-up');u.click('step-B-down');u.click('step-run');assert.equal(saved().guess,'yes');
+  u.click('step-rewind');assert.equal(saved().guess,'yes');assert.match(u.elements.get('prediction-result').textContent,/你猜/);
+ }finally{u.restore();}
+});
+test('inspected step requires guesses, trains once, rewinds exact draft state and retries at a different rate',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});const saved=()=>JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value;
+ try{
+  assert.ok(u.elements.get('step-capture'),'one-step inspection entry exists');
+  u.click('step');const before=saved();u.click('step-capture');
+  assert.equal(u.elements.get('step-run').disabled,true);u.click('step-run');assert.equal(saved().model.epoch,1);
+  u.click('step-A-up');assert.equal(u.elements.get('step-run').disabled,true);u.click('step-B-down');assert.equal(u.elements.get('step-run').disabled,false);
+  u.click('step-run');const first=saved();assert.equal(first.model.epoch,2);u.click('step-run');assert.deepEqual(saved(),first);
+  assert.equal(u.elements.get('step-result').hidden,false);assert.match(u.elements.get('step-A-result').textContent,/方倾向/);
+  u.click('step-rewind');assert.deepEqual(saved(),before);assert.equal(u.elements.get('step-run').disabled,true);
+  u.change('rate','0.6');assert.equal(saved().model.epoch,1);u.click('step-A-up');u.click('step-B-down');u.click('step-run');
+  assert.equal(saved().model.epoch,2);assert.notDeepEqual(saved().model.weights,first.model.weights);assert.deepEqual(saved().points,before.points);
+  assert.equal(u.elements.get('step-attempts').hidden,false);assert.match(u.elements.get('step-last-result').textContent,/0.15/);assert.match(u.elements.get('step-current-result').textContent,/0.6/);
+  assert.equal(u.elements.get('step-run').disabled,true);assert.equal(u.frames.size,0);
+ }finally{u.restore();}
+});
+test('ordinary edits and training invalidate rewind, but a cancelled stroke preserves the comparison',async()=>{
+ const u=await boot();try{
+  assert.ok(u.elements.get('step-capture'));u.click('step-capture');u.click('step-A-up');u.click('step-B-down');u.click('step-run');
+  u.choose('tool','0');u.pointer('pointerdown');u.pointer('pointercancel');assert.equal(u.elements.get('step-rewind').disabled,false);
+  u.pointer('pointerdown');u.pointer('pointerup');assert.equal(u.elements.get('step-rewind').disabled,true);assert.equal(u.elements.get('step-body').hidden,true);
+  u.click('step-capture');u.click('step-A-up');u.click('step-B-down');u.click('step-run');u.click('step');
+  assert.equal(u.elements.get('step-body').hidden,true);const epoch=u.elements.get('epoch').textContent;u.click('step-rewind');assert.equal(u.elements.get('epoch').textContent,epoch);
+  u.click('step-capture');u.choose('preset','ring');assert.equal(u.elements.get('step-body').hidden,true);
+  u.click('step-capture');u.change('model','linear');assert.equal(u.elements.get('step-body').hidden,true);
+ }finally{u.restore();}
+});
+test('inspection cancels pending training, handles empty data and restores the actual stepped draft on reload',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});let expected;
+ try{
+  assert.ok(u.elements.get('step-capture'));u.click('play');const stale=[...u.frames.values()][0];u.click('step-capture');stale(100);assert.equal(u.frames.size,0);assert.equal(u.elements.get('epoch').textContent,'0');
+  u.click('step-A-up');u.click('step-B-up');u.click('step-run');expected=JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value;
+ }finally{u.restore();}
+ const v=await boot({storage});try{
+  assert.equal(v.elements.get('epoch').textContent,'1');assert.equal(v.elements.get('step-body').hidden,true);assert.equal(v.elements.get('step-rewind').disabled,true);
+  assert.match(v.elements.get('step-note').textContent,/临时.*重新留档/);
+  assert.deepEqual(JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value,expected);
+  v.click('clear');v.click('step-capture');assert.equal(v.elements.get('step-body').hidden,true);assert.match(v.elements.get('step-note').textContent,/两类/);
+ }finally{v.restore();}
+ const w=await boot({noCanvas:true});try{assert.equal(w.elements.get('step-capture').disabled,true);}finally{w.restore();}
+});
 test('canvas layout never overrides its intrinsic proportions with an independent height',async()=>{
  const css=await readFile(new URL('../neural.css',import.meta.url),'utf8');
  const rules=[...css.matchAll(/#field\s*\{([^}]+)\}/g)].map(([,body])=>body);

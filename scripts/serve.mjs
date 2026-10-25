@@ -19,6 +19,8 @@ TYPES['pixel-recipient.css']='text/css; charset=utf-8';
 TYPES['neural-lesson.mjs']='text/javascript; charset=utf-8';
 TYPES['neural-lesson-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['neural-lesson.css']='text/css; charset=utf-8';
+TYPES['neural-step.mjs']='text/javascript; charset=utf-8';
+TYPES['neural-step-view.mjs']='text/javascript; charset=utf-8';
 TYPES['feedback-story.mjs']='text/javascript; charset=utf-8';
 TYPES['feedback-story-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['feedback-story.css']='text/css; charset=utf-8';
