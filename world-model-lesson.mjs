@@ -1,4 +1,4 @@
-import {learnLatest,selectPlan,changeWind,moveTarget} from './world-model-session.mjs?v=same-flight-1';
+import {learnLatest,selectPlan,changeWind,moveTarget} from './world-model-session.mjs?v=planning-1';
 
 export const CHALLENGE_TARGET=Object.freeze({x:112,y:63,radius:5});
 export const CHOICES=Object.freeze({reuse:'沿用原路线',plan:'重新规划路线',learn:'只重新学习'});

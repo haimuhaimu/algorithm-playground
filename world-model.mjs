@@ -1,9 +1,11 @@
 import {STEPS,START,TARGET,makeActions,predict} from './world-model-core.mjs';
-import {createSession,startFlight,advanceFlight,learnLatest,changeWind,selectPlan} from './world-model-session.mjs?v=same-flight-1';
-import {createLesson,nextLesson,recordLessonFlight,chooseLesson,CHOICES} from './world-model-lesson.mjs?v=same-flight-1';
+import {createSession,startFlight,advanceFlight,learnLatest,changeWind,selectPlan,usePlanningRoute} from './world-model-session.mjs?v=planning-1';
+import {createLesson,nextLesson,recordLessonFlight,chooseLesson,CHOICES} from './world-model-lesson.mjs?v=planning-1';
 
 const $=id=>document.getElementById(id),media=matchMedia('(prefers-reduced-motion: reduce)');
 let session=createSession(),lesson=createLesson(),running=false,frame=null,token=0,lastTime=null,remainder=0,view='preview',comparisonEmphasis='after';
+let inspectedPlan=null,inspectedRoute='best';
+const routeNames={original:'原路线',direction:'只换方向',best:'再调推力'};
 const points=path=>path.map(p=>`${p.x.toFixed(3)},${p.y.toFixed(3)}`).join(' ');
 const windText=wind=>`${wind>0?'↓ 下吹':'↑ 上吹'} ${Math.abs(wind).toFixed(1)}`;
 const errorText=value=>value>0&&value<.05?'< 0.1':value.toFixed(1);
@@ -99,6 +101,34 @@ function renderComparison(c){
   $(`record-${key}-target`).setAttribute('cx',saved.target.x);$(`record-${key}-target`).setAttribute('cy',saved.target.y);
  }
 }
+function renderPlanning(){
+ const plan=session.plan,active=Boolean(session.flight&&!session.flight.done);
+ $('planning-lab').hidden=!plan;$('planning-entry').hidden=!plan||active;
+ if(!plan){inspectedPlan=null;return;}
+ if(inspectedPlan!==plan){inspectedPlan=plan;inspectedRoute=plan.selectedKey;}
+ const selected=plan.alternatives.find(c=>c.key===inspectedRoute),best=plan.alternatives.at(-1);
+ const axes=bounds(plan.alternatives.map(c=>c.path),plan.target);
+ $('planning-context').textContent=`同一 M${plan.modelVersion} · 同一起点与目标 · 未重新学习`;
+ for(const candidate of plan.alternatives){
+  const key=candidate.key,end=candidate.path.at(-1),controls=candidate.controls;
+  $(`planning-${key}`).setAttribute('aria-pressed',String(key===inspectedRoute));$(`planning-${key}`).disabled=active;
+  $(`planning-${key}-scene`).setAttribute('viewBox',axes);
+  $(`planning-${key}-path`).setAttribute('points',points(candidate.path));
+  $(`planning-${key}-target`).setAttribute('cx',plan.target.x);$(`planning-${key}-target`).setAttribute('cy',plan.target.y);
+  $(`planning-${key}-end`).setAttribute('cx',end.x);$(`planning-${key}-end`).setAttribute('cy',end.y);
+  $(`planning-${key}-controls`).textContent=`方向 ${controls.angle}° · 推力 ${controls.power.toFixed(2)}×`;
+  $(`planning-${key}-distance`).textContent=`${errorText(candidate.distance)} 单位`;
+ }
+ const prior=plan.alternatives[inspectedRoute==='best'?1:0];
+ const same=selected.controls.angle===prior.controls.angle&&selected.controls.power===prior.controls.power;
+ const difference=prior.distance-selected.distance;
+ const why=inspectedRoute==='original'?'这是规划前的出发方式，作为比较起点。':same?'这次两张卡的方向与推力相同，所以预测完全相同，没有额外改善。':`比「${routeNames[prior.key]}」${difference>=0?'近':'远'} ${errorText(Math.abs(difference))} 单位。${inspectedRoute==='direction'?'只换成搜索选中的方向，推力还没动。':'方向相同，再换成搜索选中的推力。'}`;
+ $('planning-detail').textContent=`正在看「${routeNames[inspectedRoute]}」：预测${selected.distance<=plan.target.radius?'落在圈内':'没进圈'}。${why} 完整搜索选中的组合预测距靶心 ${errorText(best.distance)} 单位，但这不是实飞成绩。`;
+ $('planning-launch').textContent=`用「${routeNames[inspectedRoute]}」实飞 ↗`;$('planning-launch').disabled=active;
+ const f=session.flight,hasResult=view==='flight'&&f?.done&&f.modelVersion===plan.modelVersion;
+ $('planning-result').hidden=!hasResult;
+ if(hasResult)$('planning-result').textContent=`刚才实飞「${routeNames[plan.selectedKey]}」：出发时预测距靶心 ${errorText(plan.distance)} → 实际 ${errorText(f.distance)} 单位。${f.distance<=f.target.radius?'这次实际进圈了。':'这次实际没进圈。'}${f.error>3?'模型的轨迹预测仍有偏差；选得再认真，也需要真实经历来校准。':'预测和实际较接近；能否进圈还取决于选的路线。'}`;
+}
 function render(){
  const s=session,f=s.flight,active=Boolean(f&&!f.done),displayFlight=view==='flight'&&f,c=view==='comparison'?s.comparison:null;
  const focusedControl=[$('pause'),$('step')].find(el=>el===document.activeElement);
@@ -149,6 +179,7 @@ function render(){
  const p=s.previous;$('history').hidden=!p;
  if(p)$('history').textContent=`保留上一趟 #${p.number}：M${p.modelVersion} · 风 ${windText(p.wind)} · 预测偏差 ${p.error.toFixed(1)} · 距当时靶心 ${p.distance.toFixed(1)} 单位。${p.worldVersion!==s.worldVersion?'旧风况，不作同场比较。':'目标或路线可能不同，不作为严格算法排名。'}`;
  renderEnding();
+ renderPlanning();
 }
 function complete(){stop();lesson=recordLessonFlight(lesson,session.flight);render();message(`${$('guide-title').textContent} 下一步：${$('next').textContent}`);}
 function animate(time,myToken){
@@ -227,6 +258,15 @@ $('plan').addEventListener('click',()=>{
  if(session.flight&&!session.flight.done)return;
  enterFree();session=selectPlan(session);view='preview';message(`只用 M${session.model.version} 预演了 ${session.plan.candidates} 条路线。虚线不是保证，试飞才知道。`);render();
  $('scene-wrap').scrollIntoView({block:'nearest',behavior:'instant'});
+});
+for(const key of Object.keys(routeNames))$(`planning-${key}`).addEventListener('click',()=>{
+ if(!session.plan||session.flight&&!session.flight.done)return;
+ inspectedRoute=key;renderPlanning();
+});
+$('planning-launch').addEventListener('click',()=>{
+ if(document.hidden||!session.plan||session.flight&&!session.flight.done)return;
+ session=usePlanningRoute(session,inspectedRoute);enterFree();fly();
+ $('scene-wrap').scrollIntoView({block:'start',behavior:'instant'});
 });
 for(const id of ['angle','power'])$(id).addEventListener('input',()=>{
  if(session.flight&&!session.flight.done)return;

@@ -1,4 +1,5 @@
-import {START,TARGET,STEPS,initialModel,makeActions,predict,learnModel,planFlight,trajectoryError,finite,validTarget} from './world-model-core.mjs';
+import {START,TARGET,STEPS,initialModel,makeActions,predict,learnModel,trajectoryError,finite,validTarget} from './world-model-core.mjs';
+import {comparePlanningRoutes} from './world-model-planning.mjs';
 import {stepWorld} from './world-model-environment.mjs';
 
 export function createSession(){return {model:initialModel(),target:{...TARGET},controls:{angle:0,power:1},wind:0.6,worldVersion:0,flight:null,previous:null,samples:[],completed:0,learnedFlight:0,plan:null,comparison:null};}
@@ -34,7 +35,12 @@ export function changeWind(s,wind){
 }
 export function selectPlan(s){
  if(s.flight&&!s.flight.done)return s;
- const plan=planFlight(s.model,s.target);return {...s,plan,controls:{...plan.controls}};
+ const plan=comparePlanningRoutes(s.model,s.target,s.controls);return {...s,plan,controls:{...plan.controls}};
+}
+export function usePlanningRoute(s,key){
+ if(!s.plan||s.flight&&!s.flight.done)return s;
+ const selected=s.plan.alternatives.find(c=>c.key===key);if(!selected)return s;
+ return {...s,controls:{...selected.controls},plan:{...s.plan,...selected,selectedKey:key}};
 }
 export function moveTarget(s,target){
  validTarget(target);if(s.flight&&!s.flight.done)return s;

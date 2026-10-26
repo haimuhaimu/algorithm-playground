@@ -37,6 +37,48 @@ test('flight has visible progress, immutable prediction and results before expli
   assert.equal(u.els.get('actual-path').getAttribute('points'),'');
  }finally{u.restore();}
 });
+
+test('planning cards inspect frozen alternatives without changing the chosen flight or learning record',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('planning-lab'),'the planning comparison needs a visible entry');
+  assert.equal(u.els.get('planning-lab').hidden,true);
+  u.click('fly');const originalActual=u.els.get('actual-path').getAttribute('points');u.click('learn');u.click('plan');
+  assert.equal(u.els.get('planning-lab').hidden,false);
+  const route=u.els.get('prediction-path').getAttribute('points'),model=u.els.get('model-label').textContent;
+  const record=u.els.get('record-after-predicted').getAttribute('points');
+  u.click('planning-original');
+  assert.equal(u.els.get('planning-original').getAttribute('aria-pressed'),'true');
+  assert.equal(u.els.get('prediction-path').getAttribute('points'),route,'inspection cannot silently change the next guided flight');
+  assert.equal(u.els.get('model-label').textContent,model);
+  assert.equal(u.els.get('record-after-predicted').getAttribute('points'),record);
+  assert.match(u.els.get('planning-launch').textContent,/原路线/);
+  assert.equal(u.els.get('planning-result').hidden,true);
+  u.click('planning-launch');
+  assert.equal(u.els.get('angle').value,'0');assert.equal(u.els.get('power').value,'1');
+  assert.equal(u.els.get('actual-path').getAttribute('points'),originalActual,'the original controls fly the original real route');
+  assert.equal(u.els.get('planning-result').hidden,false);
+  assert.match(u.els.get('planning-result').textContent,/预测.*实际/);
+  assert.match(u.els.get('guide-stage').textContent,/自由实验/);
+  u.click('planning-best');
+  assert.match(u.els.get('planning-result').textContent,/原路线/,'inspecting another card cannot relabel the completed flight');
+  u.input('angle',12);assert.equal(u.els.get('planning-lab').hidden,true);
+  u.click('plan');u.click('wind-flip');assert.equal(u.els.get('planning-lab').hidden,true);
+  u.click('plan');u.click('reset');assert.equal(u.els.get('planning-lab').hidden,true);
+ }finally{u.restore();}
+});
+
+test('planning launch cannot replace a partial flight and learning clears stale comparison',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('planning-launch'),'the chosen candidate must have an explicit real flight action');
+  u.click('plan');u.click('planning-original');u.click('planning-launch');u.tick(0);u.tick(500);
+  const actual=u.els.get('actual-path').getAttribute('points');
+  assert.equal(u.els.get('planning-best').disabled,true);assert.equal(u.els.get('planning-launch').disabled,true);
+  u.click('planning-best');u.click('planning-launch');assert.equal(u.els.get('actual-path').getAttribute('points'),actual);
+  u.click('pause');u.click('planning-launch');assert.equal(u.els.get('actual-path').getAttribute('points'),actual);
+  u.click('next');u.finish();assert.equal(u.els.get('planning-result').hidden,false);
+  u.click('learn');assert.equal(u.els.get('planning-lab').hidden,true);
+ }finally{u.restore();}
+});
 test('pause, background and reset invalidate stale animation without auto-resume',async()=>{
  const u=await boot();try{
   u.click('fly');u.tick(0);u.tick(400);const stale=[...u.frames.values()][0];
