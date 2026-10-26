@@ -96,7 +96,7 @@ function controls(){
  $('test-accuracy').textContent=testScore?percent(testScore.accuracy):'未设答案';
  $('loss').textContent=trainScore?trainScore.loss.toFixed(3):'无样本';
  if(guess)$('prediction-result').textContent='你猜：'+(guess==='yes'?'能分开':'可能分不开')+'。'+(model.epoch?'已走 '+model.epoch+' 步，练习题 '+percent(trainScore.accuracy)+'。再换个模型比较。':'开始训练来看看。');
- else $('prediction-result').textContent=model.epoch?'先观察这一轮。想留个预测，可以重新训练。':'可跳过。先留一个判断，再看实验。';
+ else $('prediction-result').textContent=model.epoch?'本轮没有留预测，仍可直接看结果和同题对照，不用重来。':'可跳过。先留一个判断，再看实验。';
  comparison();
 }
 function comparison(){
@@ -192,7 +192,8 @@ function schedule(){
   raf=null;const count=Math.min(remaining||8,remaining?25:8,MAX_EPOCHS-model.epoch);
   advance(count);if(remaining)remaining-=count;
   if(model.epoch>=MAX_EPOCHS||(count>0&&remaining===0&&batch)){
-   pause();announce(model.epoch>=MAX_EPOCHS?'本轮 4000 步结束。试着改变题目或模型。':'这 500 步算完了。看看分错的点，再决定怎么改。');
+   pause();const score=metrics(model,points);
+   announce(model.epoch>=MAX_EPOCHS?'本轮 4000 步结束。试着改变题目或模型。':score.accuracy===1?'这 500 步算完了，练习题已全部分对。用探针考一个新位置，或换模型比较；不代表所有新位置都会正确。':`这 500 步算完了，练习题还有 ${Math.round((1-score.accuracy)*points.length)} 个分错。可以用探针观察分界，或换模型比较。`);
   }else schedule();
  });
 }
@@ -295,4 +296,5 @@ if(!ctx||!chart){
  $('about').addEventListener('click',()=>{stop();$('guide').showModal();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
  window.addEventListener('pagehide',stop);
+ window.addEventListener('neural-guide-pause',stop);
 }

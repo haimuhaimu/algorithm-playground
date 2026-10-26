@@ -7,6 +7,19 @@ import {createAppServer} from '../scripts/serve.mjs';
 import {build} from '../scripts/build.mjs';
 
 const root=new URL('../',import.meta.url).pathname;
+test('changed legacy neural entry modules have fresh request URLs and still serve exact JavaScript bytes',async()=>{
+ const server=createAppServer(root);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const base=`http://127.0.0.1:${server.address().port}`,html=await(await fetch(base+'/neural.html')).text();
+  const sources=[...html.matchAll(/<script\b[^>]*src="([^"]+)"/g)].map(match=>new URL(match[1],base+'/neural.html'));
+  for(const name of ['neural.mjs','neural-lesson-ui.mjs']){
+   const url=sources.find(source=>source.pathname==='/'+name);assert.ok(url,`${name} is loaded`);
+   assert.ok(url.searchParams.get('v'),`${name} must not reuse the previously cached entry URL`);
+   const response=await fetch(url);assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/javascript/);
+   assert.deepEqual(Buffer.from(await response.arrayBuffer()),await readFile(join(root,name)));
+  }
+ }finally{await new Promise(resolve=>server.close(resolve));}
+});
 test('decorative mining orbits are clipped without a programmatically scrollable game board',async()=>{
  const css=await readFile(join(root,'mining.css'),'utf8');
  assert.match(css,/\.starfield\{[^}]*overflow:clip/);
@@ -14,6 +27,9 @@ test('decorative mining orbits are clipped without a programmatically scrollable
 const files=['app.mjs','core.mjs','data.mjs','evolution-core.mjs','evolution.css','evolution.html','evolution.mjs','firefly-core.mjs','firefly.css','firefly.html','firefly.mjs','index.html','mining-core.mjs','mining.css','mining.html','mining.mjs','navigation.css','navigation.mjs','neural-core.mjs','neural.css','neural.html','neural.mjs','pathfinding-core.mjs','pathfinding.css','pathfinding.html','pathfinding.mjs','pixel-core.mjs','pixel.css','pixel.html','pixel.mjs','sand-core.mjs','sand.css','sand.html','sand.mjs','style.css'];
 files.push('neural-lesson.mjs','neural-lesson-ui.mjs','neural-lesson.css');
 files.push('neural-step.mjs','neural-step-view.mjs');
+files.push('neural-guide.mjs','neural-guide-ui.mjs','neural-guide-view.mjs','neural-guide.css');
+files.push('neural-gradient.mjs','neural-gradient-ui.mjs');
+files.push('neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs','neural-residual.css');
 files.push('space-theme.css');
 files.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 files.push('pixel-recipient.mjs','pixel-recipient-ui.mjs','pixel-recipient.css');

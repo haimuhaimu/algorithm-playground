@@ -8,6 +8,8 @@ test('showcase has ten usable experiment routes and preserves recommendation les
   const entries=[...home.matchAll(/<a class="experiment-entry[^"]*" href="([^"]+)"/g)].map(m=>m[1]);
   assert.equal(entries.length,10);
   assert.equal(new Set(entries.map(h=>h.split('#')[0])).size,10);
+  const neural=new URL(entries.find(h=>h.startsWith('./neural.html')),base);
+  assert.ok(['','#first-lesson'].includes(neural.hash),'the normal homepage entry must lead newcomers to the guided lesson, not a legacy advanced anchor');
   for(const href of entries){const response=await fetch(new URL(href,base));assert.equal(response.status,200,href);const html=await response.text();assert.match(html,/<main(?:\s|>)/);assert.match(html,/href="\.\/recommendation\.html"/,href);}
   const rec=await (await fetch(base+'recommendation.html')).text();
   for(const id of ['feed-section','seat-lesson','feedback-story'])assert.ok(rec.includes(`id="${id}"`));

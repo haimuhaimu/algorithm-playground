@@ -5,17 +5,75 @@
  <meta name="description" content="画两种点，现场训练一个小神经网络。比较直线与弯曲的分界，看看坏样本会怎样改变它的判断。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./neural.css">
- <link rel="stylesheet" href="./neural-lesson.css"><script type="module" src="./neural-lesson-ui.mjs"></script>
- <script type="module" src="./neural.mjs"></script><title>算法游乐场 · 涂鸦训练场</title>
+ <link rel="stylesheet" href="./neural-lesson.css"><script type="module" src="./neural-lesson-ui.mjs?v=neural-learning-20261026"></script>
+ <script type="module" src="./neural.mjs?v=neural-learning-20261026"></script><title>算法游乐场 · 涂鸦训练场</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
+ <link rel="stylesheet" href="./neural-guide.css"><script type="module" src="./neural-guide-ui.mjs"></script>
+ <script type="module" src="./neural-gradient-ui.mjs"></script>
+ <link rel="stylesheet" href="./neural-residual.css"><script type="module" src="./neural-residual-ui.mjs"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head>
 <body>
- <a class="skip-link" href="#field">跳到训练画布</a>
+ <a class="skip-link" href="#first-lesson">跳到新手小题</a>
  <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><button class="quiet-button" id="about">怎么玩 ↗</button><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div></header>
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./recommendation.html">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html" aria-current="page">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="neural-main">
-  <section class="neural-intro"><h1>你来出题，<span>它来找规律。</span></h1><p>画两种点，看小神经网络怎么分开它们。也可以故意教错，看看会发生什么。</p><a class="step-jump" href="#step-lab">先猜，再看一步训练改了什么 ↓</a></section>
+  <section class="neural-intro"><h1>让一条线，<span>学会分组。</span></h1><p>不移动点，只调整线。看看两个错点怎样分回来。</p></section>
+  <section class="neural-guide" id="first-lesson" aria-labelledby="guide-title-main" tabindex="-1">
+   <header class="guide-top"><span id="guide-title-main">亲眼看一次“学习”</span><button id="guide-restart" type="button">重新开始</button></header>
+   <ol class="guide-progress" aria-label="本轮学习进度"><li id="guide-progress-0" aria-current="step"><span>01</span> 认识题目</li><li id="guide-progress-1"><span>02</span> 教它一次</li><li id="guide-progress-2"><span>03</span> 考它一次</li><li id="guide-progress-3"><span>04</span> 回顾结果</li></ol>
+   <div class="guide-layout">
+    <div class="guide-prompt"><span id="guide-stage">第 1 步 / 4</span><h2 id="guide-title" tabindex="-1">这条线，分错了两个点。</h2><p id="guide-description">圆点要进圆区，方点要进方区。找找标“错”的两个点。</p></div>
+    <figure class="guide-map"><figcaption><b id="guide-map-state">先看原来的分法</b><strong id="guide-error-count">2 个分错</strong><div id="guide-compare" hidden><button id="guide-before" type="button" aria-pressed="false">原来</button><button id="guide-current" type="button" aria-pressed="true">现在</button></div></figcaption><canvas id="guide-map" width="800" height="480" role="img" aria-label="分界线的两侧是圆区和方区，错点直接标在图上" aria-describedby="guide-map-text guide-observation"></canvas><p id="guide-map-text" class="sr-only"></p><p class="guide-legend"><span><i class="guide-dot"></i>圆点进圆区</span><span><i class="guide-square"></i>方点进方区</span><span>实线：现在 · 虚线：原来</span></p></figure>
+    <div class="guide-controls">
+     <button id="guide-main" class="guide-primary" type="button">看它怎样调整这条线</button>
+     <div id="guide-choices" class="guide-choices" role="group" aria-label="用学到的分界给新点分组" hidden><button id="guide-guess-round" type="button">我猜圆区</button><button id="guide-guess-square" type="button">我猜方区</button></div>
+     <div id="guide-reflection" class="guide-reflection" role="group" aria-label="解释新位置怎样分组" hidden><button id="guide-memory" type="button">只记住了这 6 个点的答案</button><button id="guide-parameters" type="button">用学到的分界线，给新位置分组</button><p id="guide-feedback"></p></div>
+     <button id="guide-retest" class="guide-secondary" type="button" hidden>换个位置，再考一次</button>
+     <button id="guide-open-gradient" class="guide-primary" type="button" hidden>接着看：线为什么这样挪？</button>
+     <p id="guide-status" role="status">从这道固定的小题开始；自由涂鸦的草稿独立保留。</p>
+    </div>
+    <div class="guide-evidence"><p id="guide-observation"></p><section id="guide-summary" hidden aria-label="本轮实际学习记录"><p id="guide-summary-model"></p><p id="guide-summary-probe"></p><p id="guide-summary-limit"></p></section></div>
+   </div>
+   <details class="guide-math"><summary>想知道算法怎样改线？展开看（可跳过）</summary><p id="guide-math"></p></details>
+   <footer class="guide-footer"><p>这轮学的是按位置分组，不是识别图案。自由涂鸦和神经网络保留在下面。</p><button id="guide-open-free" type="button">进入自由涂鸦 · 草稿保留 ↓</button></footer>
+  </section>
+  <section class="neural-guide gradient-lesson" id="gradient-lesson" aria-labelledby="gradient-title" hidden>
+   <header class="gradient-heading"><p>接着刚才那条线</p><h2 id="gradient-title" tabindex="-1">线为什么这样挪？</h2><p>把刚才的 120 步拆开。这次由你控制，一步一步看。</p></header>
+   <div class="gradient-layout">
+    <div class="gradient-controls"><label for="gradient-rate">这次每步改多少？<select id="gradient-rate"><option value="0.03">小步 0.03</option><option value="0.15" selected>刚才的步长 0.15</option><option value="0.6">大步 0.60</option></select></label><div class="gradient-actions"><button id="gradient-step" class="guide-primary" type="button">走一步</button><button id="gradient-ten" type="button">再走 10 步</button></div><button id="gradient-reset" class="guide-secondary" type="button">退回同一起点，换步长</button><p id="gradient-status" role="status"></p></div>
+    <figure class="guide-map gradient-map"><figcaption><b id="gradient-view">现在的分界线</b><span id="gradient-count"></span><div class="gradient-view-controls"><button id="gradient-original" type="button" aria-pressed="false">原来的线</button><button id="gradient-current" type="button" aria-pressed="true">现在的线</button></div></figcaption><canvas id="gradient-map" width="800" height="480" role="img" aria-label="同样六个点、同一起始分界的真实梯度更新" aria-describedby="gradient-map-text gradient-reading"></canvas><p class="sr-only" id="gradient-map-text"></p><p class="guide-legend">圆点进圆区，方点进方区。实线是现在，虚线是原来。</p></figure>
+    <div class="gradient-evidence"><strong id="gradient-loss"></strong><p id="gradient-reading"></p><p class="gradient-note">误差也衡量预测离标签有多远，不只是数分错几个。这里显示的是合成练习题的平均交叉熵，不是新题成绩。</p></div>
+   </div>
+   <section class="gradient-reflect" aria-label="解释一次真实更新"><h3>点没动，为什么分法会变？</h3><div class="guide-choices"><button id="gradient-answer-points" type="button" disabled>算法把点搬到了另一边</button><button id="gradient-answer-parameters" type="button" disabled>算法调整了分界线的参数</button></div><p id="gradient-answer" role="status"></p><div id="gradient-takeaway" hidden><h3>刚才做的，就是梯度下降。</h3><p>用整组例子的错误，算出参数附近怎样改能让误差下降，再按步长改一点。步长控制改多少，不代表越大越好；训练误差变小，也不保证新题都能做对。</p><button id="gradient-open-residual" type="button">下一课：给原信号留条路</button></div></section>
+   <details class="guide-math"><summary>现在，把它和公式对上</summary><p><b>新参数 = 旧参数 − 步长 × 当前梯度</b>。梯度指向误差上升最快的局部方向，所以训练朝反方向改。这里用整组 6 个点算一次梯度，不是只追着一个错点跑。</p><p id="gradient-formula-step"></p><p id="gradient-param-0"></p><p id="gradient-param-1"></p><p id="gradient-param-2"></p><p>这个例子对称，偏移 c 的梯度接近 0，所以线主要旋转。换一组数据时，不一定如此。</p></details>
+   <footer class="gradient-os"><h3>带着这次改线，回到 GenAI OS。</h3><p>在「数学零层」的“理解学习”里，把损失、梯度和参数三个概念连起来。这里负责动手验证，GenAI OS 负责把知识串起来；两边不共享学习进度或草稿。</p><a href="https://haimuhaimu.github.io/genai-learning-os/?page=math-primer" target="_blank" rel="noopener noreferrer">去读数学零层 ↗</a></footer>
+  </section>
+  <section class="neural-guide residual-lesson" id="residual-lesson" aria-labelledby="residual-title" hidden>
+   <header class="residual-heading"><div><p>分类 → 梯度 → 网络结构</p><h2 id="residual-title" tabindex="-1">加一层，为什么要留条直通路？</h2><p id="residual-subtitle">先让变化为零。原来的信号，还能到达输出吗？</p></div><button id="residual-reset" type="button">重来本课</button></header>
+   <div id="residual-signal-stage">
+    <div class="residual-layout">
+     <div class="residual-controls"><p id="residual-reading"></p><button id="residual-shortcut" type="button" aria-pressed="false">打开直通路</button><button id="residual-zero" type="button" aria-pressed="false" hidden>再试：让变化分支工作</button><div class="residual-picks" role="group" aria-label="换一个输入信号"><span>换个信号试试</span><button id="residual-pick-A" type="button" aria-pressed="true">A</button><button id="residual-pick-B" type="button" aria-pressed="false">B</button><button id="residual-pick-C" type="button" aria-pressed="false">C</button></div></div>
+     <button id="residual-learn" class="guide-primary" type="button" hidden disabled>接着，让两种结构都学习</button><p id="residual-status" role="status"></p>
+     <figure class="residual-signal"><figcaption id="residual-path">直通路关闭：只输出变化分支</figcaption><div class="residual-circuit" id="residual-circuit" data-enabled="false" aria-label="信号在这一段网络中的两条路径"><span id="residual-circuit-shortcut" class="circuit-shortcut">直通路关闭</span><span class="circuit-node">输入</span><span id="residual-circuit-branch" class="circuit-node"></span><span id="residual-circuit-output" class="circuit-node"></span></div><canvas id="residual-map" width="800" height="400" role="img" aria-label="输入与输出的内部表示：切换直通路，看原信号是否被带过去" aria-describedby="residual-map-text residual-reading"></canvas><p class="sr-only" id="residual-map-text"></p><p class="residual-legend">空心圈：输入　实心点：输出</p></figure>
+     <div class="residual-vectors" aria-label="这一次的真实信号计算"><span id="residual-vector-input"></span><span id="residual-vector-change"></span><strong id="residual-vector-output"></strong></div>
+    </div>
+    <p class="residual-scope">这里的坐标是网络内部的两个数，不是把原始样本搬走。“变化为 0”是临时机制演示，不会清空网络参数；进入训练后恢复真实分支。</p>
+   </div>
+   <section id="residual-training-stage" class="residual-training" aria-labelledby="residual-training-title" hidden>
+    <header><h3 id="residual-training-title" tabindex="-1">同样六个点，让两种结构都学一次。</h3><p>普通结构输出变化；残差结构输出原信号加变化。分类头和变化分支都会学习。</p></header>
+    <div class="residual-training-actions"><button id="residual-step" class="guide-primary" type="button">两边各走一步</button><button id="residual-twenty" type="button">两边各学 20 步</button><span id="residual-steps" role="status"></span></div>
+    <div class="residual-scores" aria-label="各自起点与当前结果"><div><b>普通结构</b><strong id="residual-plain-metric"></strong><span id="residual-plain-mistakes"></span></div><div><b>有残差连接</b><strong id="residual-res-metric"></strong><span id="residual-res-mistakes"></span></div></div>
+    <div class="residual-view-switch" role="group" aria-label="查看哪种结构的分界"><button id="residual-view-plain" type="button" aria-pressed="false">看普通结构</button><button id="residual-view-residual" type="button" aria-pressed="true">看残差结构</button></div>
+    <div class="residual-fields"><figure id="residual-plain-panel"><figcaption>普通结构 · F(x)</figcaption><canvas id="residual-plain-map" width="600" height="360" role="img" aria-label="普通结构在原始样本坐标上的真实分类结果" aria-describedby="residual-plain-metric residual-plain-mistakes"></canvas></figure><figure id="residual-res-panel"><figcaption>残差结构 · x + F(x)</figcaption><canvas id="residual-res-map" width="600" height="360" role="img" aria-label="残差结构在相同原始样本坐标上的真实分类结果" aria-describedby="residual-res-metric residual-res-mistakes"></canvas></figure></div>
+    <p id="residual-comparison"></p><p class="residual-training-note">圆点进圆区，方点进方区。背景是当前模型的预测；同样的数据、分支与分类头初始参数、步长 0.15 和更新次数，只有相加直通路不同。初始预测并不相同，上方分别保留了起点。</p>
+    <details><summary>看同一个信号在网络里变成什么</summary><p id="residual-internal"></p></details>
+    <section class="residual-reflect" aria-label="残差连接的独立判断"><h3>残差连接，多保留了什么？</h3><div class="guide-choices"><button id="residual-answer-carry" type="button" disabled>一条原信号直接相加的通路</button><button id="residual-answer-perfect" type="button" disabled>自动把所有错误改对的答案</button></div><p id="residual-answer" role="status"></p><div id="residual-takeaway" hidden><h3>保留原信号，再学习怎样改变它。</h3><p>你刚才看到：变化为 0 时，直通路仍能把输入带到输出；真正训练时，变化分支和分类头继续更新。这不是冻结旧模型，也不是只训练错题。这个浅层小例子不证明深层网络的训练稳定性，更不保证残差结构每次都赢。</p><a id="residual-genai-link" href="https://haimuhaimu.github.io/genai-learning-os/?page=foundation&amp;node=transformer-block" target="_blank" rel="noopener noreferrer">回 GenAI OS，继续看 Transformer Block ↗</a></div></section>
+   </section>
+   <details class="residual-details"><summary>看懂之后，再对上残差公式</summary><p><b>输出 = x + F(x)</b>。x 是这一段网络的输入，F(x) 是可学习的变化；输入与输出维度相同才能直接相加。本例内部都是两个数，使用 2→4 个 tanh 单元→2 的变化分支，再接一个可训练分类头，共 25 个参数。</p><p>这是一个无相加后激活的简化残差块，不是完整 ResNet 或 Transformer。训练使用整组 6 点的平均交叉熵与真实反向传播；这里的“残差”不是界面上数出的分类错误。样本很少、网络很浅，训练成绩不代表泛化能力。</p></details>
+  </section>
+  <nav class="neural-learning-route" aria-label="分类、梯度与残差的学习路线"><a href="#first-lesson">看一条线学会分组</a><span aria-hidden="true">→</span><a href="#gradient-lesson">拆开一次梯度更新</a><span aria-hidden="true">→</span><a href="#residual-lesson">给原信号留条路</a><span aria-hidden="true">→</span><a href="https://haimuhaimu.github.io/genai-learning-os/?page=math-primer" target="_blank" rel="noopener noreferrer">GenAI OS：读懂公式 ↗</a></nav>
+  <details class="neural-advanced" id="neural-advanced"><summary><strong>自由涂鸦与进阶实验</strong><span>自己画题、换模型、教错标签，或拆开看一步训练。</span></summary><div class="advanced-return"><button id="guide-return" type="button">↑ 回到新手小题</button><p>下面沿用你的自由涂鸦草稿；与上面的小题互不覆盖。</p></div>
   <section class="label-lab" id="label-lab" aria-labelledby="label-title">
    <header class="label-heading"><div><span class="label-eyebrow">一个小实验 · 只改一个标签</span><h2 id="label-title">教错一个点，<span>看看它怎么学偏。</span></h2><p>它会只听这个点，还是连旁边的判断也跟着变？</p></div><a href="#field">去自由涂鸦 ↓</a></header>
    <div class="label-conditions" aria-label="两次训练的相同条件"><span>同样 48 个位置</span><span>同一初始权重</span><span>8 个神经元</span><span>步子 0.15</span><span>各训 500 步</span></div>
@@ -102,8 +160,9 @@
   <p class="canvas-help" id="canvas-help">圆点是珊瑚色，方点是青绿色；带深色外圈的样本是当前分错的。选画笔后拖动绘制，最多 160 点。键盘方向键移动光标，Enter / 空格使用工具。<span id="cursor-status" class="sr-only" aria-live="polite"></span></p>
   <section class="learning-bridge" aria-labelledby="bridge-title"><div><h2 id="bridge-title">玩过以后，再认识它。</h2><p>从你的 GenAI Learning OS 接过来的一种学法：先判断，动手试，再解释。</p><a href="https://haimuhaimu.github.io/genai-learning-os/?page=decision-math" target="_blank" rel="noopener noreferrer">去 AI 决策数学继续学 ↗</a></div><ol><li><b>直线卡住了？</b><span>在「四个小岛」里换个脑袋。同一组数据，模型能表达的边界不一样。</span></li><li><b>教错会怎样？</b><span>往另一类的领地画几个反例。它只看你给的标签，不会知道你在捣乱。</span></li><li><b>熟题会做就够了？</b><span>比较练习题与新题。新题从不参与训练，自定义画布则不冒充有标准答案。</span></li></ol></section>
   <details class="neural-notes"><summary>这里的神经网络，是真的在学习吗？</summary><div><p>是。每个点的位置是两个输入，你画的圆或方是标签。线性模型使用一条直线；神经网络用 8 个 tanh 隐藏神经元和 1 个 sigmoid 输出。每一步计算全部练习题的二元交叉熵，再用反向传播与梯度下降更新参数。背景颜色是各位置的模型输出，不是预画的分区。</p><p>预设有 48 个训练样本和另外生成的 120 个固定测验样本，测验不参与参数更新。改动画布后，原题答案不再适用，因此清空新题成绩。正确率不等于真实世界能力；探针显示的是模型的倾向，不是校准过的可靠度。</p><p>相同预设、结构和步子会复现同样过程。每轮上限 4000 步，不保证学会任意涂鸦或找到最优答案。画点、清空和换预设都可撤销，最多保留 30 步；撤销只找回题目，训练从头开始。取消手势保留之前的数据与成绩。</p><p>灵感来自陈全的 GenAI Learning OS，算法与界面在此独立实现。纯浏览器本地计算，没有大模型接口、上传或账号。本地草稿保留题目、模型与撤销记录；暂停或正常离开时保存训练进度。刷新后恢复为暂停，仍需手动继续。仅限此浏览器、此站点，不是云备份。</p></div></details>
+  </details>
   <footer class="bottom-note"><span>它学到的世界，是你画给它的。</span><span class="signature">MADE BY CHEN QUAN</span></footer>
  </main>
- <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">教它，也考考它。</h2><ol><li>先猜当前模型能不能分开两类（可跳过），再点「快进 500 步」。</li><li>看完结果，点「换直线模型试试」，用同一道题比较两种脑袋。</li><li>选「画圆点」或「画方点」，在对方区域添几笔，重新训练。</li><li>想自己出题，选「空白画布」。至少画两类点，才能开始。</li></ol><p>「探针」可以点击或用键盘询问任意位置。按 Escape 可取消正在画的一笔。关闭帮助后不会自动继续训练。</p></dialog>
+ <dialog id="guide" aria-labelledby="help-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="help-title">看线怎样学会分组。</h2><ol><li>先找两个“错”点：圆点落在方区，方点落在圆区。</li><li>点「看它怎样调整这条线」。点不会移动，只有实线和它两侧的分组在变化；虚线保留原来的分法。</li><li>出现一个问号新点，沿着学到的实线，判断它该归圆区还是方区。</li><li>最后回顾：训练时调整分界线，使用时按同一条线给新位置分组。算法细节可以另外展开看。</li></ol><p>新手小题不改动你的草稿。自由模式保留画点、换题、模型对照和单步训练；关闭进阶区会暂停训练，重新打开不会自动继续。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验涂鸦训练场。</p></noscript>
 </body></html>

@@ -4,6 +4,20 @@ import {readFile} from 'node:fs/promises';
 import {memoryStorage} from './storage-helper.mjs';
 import {DRAFT_KEYS} from '../local-drafts.mjs';
 let serial=0;
+test('a perfect training batch invites a new test rather than looking for nonexistent mistakes',async()=>{
+ const u=await boot();try{u.click('fast');for(let i=0;i<20;i++)u.frame();
+  assert.equal(u.elements.get('accuracy').textContent,'100%');assert.doesNotMatch(u.elements.get('status').textContent,/看看分错/);
+  assert.match(u.elements.get('status').textContent,/全部|没有分错/);
+ }finally{u.restore();}
+});
+test('returning to the newcomer flow checkpoints and stops free-drawing training',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  u.click('play');u.frame();const stale=[...u.frames.values()][0];
+  window.dispatchEvent(new Event('neural-guide-pause'));stale();
+  assert.equal(u.elements.get('epoch').textContent,'8');assert.equal(u.frames.size,0);
+  assert.equal(JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value.model.epoch,8);
+ }finally{u.restore();}
+});
 test('a newer ordinary prediction cannot be overwritten by an older one-step checkpoint',async()=>{
  const storage=memoryStorage(),u=await boot({storage});const saved=()=>JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value;
  try{

@@ -20,6 +20,11 @@ function setup(){
  const e=id=>doc.getElementById(id),flush=()=>{let n=0;while(queue.length){assert.ok(n++<100);queue.shift()();}};
  return {controller,e,doc,win,queue,flush};
 }
+test('closing advanced experiments pauses label training and rejects its queued callback',()=>{
+ const {controller:c,e,win,queue,flush}=setup();e('label-before-run').click();queue.shift()();const stale=queue.shift();
+ win.dispatchEvent(new Event('neural-guide-pause'));stale();flush();
+ assert.equal(c.snapshot().lesson.before.epoch,25);assert.equal(c.snapshot().running,null);
+});
 test('baseline is pinned and wrong-label evidence appears only after equal completed training',()=>{
  const {controller:c,e,flush}=setup();assert.equal(e('label-result').hidden,true);assert.equal(e('label-after-run').disabled,true);
  e('label-before-run').click();assert.equal(e('label-pause').disabled,false);flush();
