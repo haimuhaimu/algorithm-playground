@@ -14,7 +14,7 @@ function setup({noCanvas=false,hash='',reduced=false,withLabel=false}={}){
   getContext(){return noCanvas?null:new Proxy({},{get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>(o[k]=v,true)});}
  }
  const elements=new Map();for(const id of ids)elements.set(id,new Element());
- const routeLinks=Object.fromEntries(['first-lesson','gradient-lesson','residual-lesson'].map(target=>[target,[...html.matchAll(new RegExp(`<a\\b[^>]*href="#${target}"[^>]*>`,'g'))].map(()=>new Element())]));
+ const routeLinks=Object.fromEntries(['first-lesson','gradient-lesson','residual-lesson','generalization-lesson'].map(target=>[target,[...html.matchAll(new RegExp(`<a\\b[^>]*href="#${target}"[^>]*>`,'g'))].map(()=>new Element())]));
  const firstLinks=routeLinks['first-lesson'];
  const doc=Object.assign(new EventTarget(),{hidden:false,documentElement:{dataset:{}},querySelectorAll:selector=>selector.split(',').flatMap(part=>{const target=part.match(/^a\[href="#([\w-]+)"\]$/)?.[1];assert.ok(target in routeLinks);return routeLinks[target];}),getElementById:id=>{assert.ok(ids.has(id),'target must exist in real HTML: '+id);return elements.get(id);}});
  const win=Object.assign(new EventTarget(),{location:{hash},matchMedia:()=>({matches:reduced})});
@@ -25,7 +25,7 @@ function setup({noCanvas=false,hash='',reduced=false,withLabel=false}={}){
  const flush=()=>{let n=0;while(queue.length){assert.ok(n++<200);queue.shift()();}};
  return {c,e,doc,win,queue,flush,pauses:()=>pauses,label,labelQueue,firstLinks,routeLinks};
 }
-for(const target of ['gradient-lesson','residual-lesson'])test(`same-hash ${target} navigation checkpoints active advanced training`,()=>{
+for(const target of ['gradient-lesson','residual-lesson','generalization-lesson'])test(`same-hash ${target} navigation checkpoints active advanced training`,()=>{
  const {e,label,labelQueue,routeLinks}=setup({hash:'#'+target,withLabel:true});
  e('guide-open-free').click();e('label-before-run').click();labelQueue.shift()();
  const checkpoint=label.snapshot(),stale=labelQueue.shift();assert.equal(checkpoint.lesson.before.epoch,25);

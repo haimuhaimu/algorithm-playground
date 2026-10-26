@@ -1,0 +1,53 @@
+.generalization-lesson{margin-top:28px;scroll-margin-top:18px}
+.generalization-heading{padding:26px 28px 20px;display:flex;align-items:flex-start;gap:24px;justify-content:space-between}
+.generalization-heading>div{max-width:760px}.generalization-heading>div>p:first-child{font-size:12px;font-weight:650;color:var(--good);margin:0 0 10px}
+.generalization-heading h2{font-size:clamp(26px,3vw,36px);line-height:1.25;letter-spacing:-.04em;margin:0 0 12px}
+.generalization-heading p{font-size:14px;line-height:1.75;color:var(--muted);margin:0}
+#generalization-reset{flex-shrink:0;font-size:12px}
+.generalization-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,1fr);grid-template-areas:"plot controls" "plot result";align-items:start;gap:18px 28px;padding:0 28px 26px}
+.generalization-controls{grid-area:controls;display:grid;gap:12px;min-width:0}
+.generalization-lock{font-size:12px;color:var(--good);font-weight:650;margin:0}
+.generalization-scores{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.generalization-scores>div{display:grid;gap:7px;padding:12px 0;border-top:1px solid var(--line)}
+.generalization-scores span{font-size:12px;color:var(--muted)}.generalization-scores strong{font-size:21px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.generalization-guess{display:grid;gap:10px}.generalization-guess button{font-size:14px;text-align:left;font-weight:600}
+#generalization-status{font-size:12px;line-height:1.7;color:var(--muted);margin:0}
+.generalization-plot{grid-area:plot;margin:0;min-width:0;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--paper)}
+.generalization-plot figcaption{font-size:12px;font-weight:650;padding:12px 14px;border-bottom:1px solid var(--line)}
+#generalization-map{width:100%;height:auto;aspect-ratio:4/3;display:block;touch-action:pan-y;outline-offset:-4px}
+#generalization-map:focus-visible{outline:3px solid var(--good)}
+.generalization-legend{font-size:11px;color:var(--muted);line-height:1.8;margin:0;padding:10px 14px;border-top:1px solid var(--line)}
+.generalization-result{grid-area:result;min-width:0}
+#generalization-guess-result{font-size:13px;line-height:1.8;margin:0 0 14px}
+.generalization-view{display:flex;flex-wrap:wrap;gap:6px}.generalization-view button{font-size:11px;padding:7px 10px}
+.generalization-view button[aria-pressed=true],.generalization-errors button[aria-pressed=true]{background:var(--soft);border-color:var(--ink);font-weight:700}
+.generalization-pick-label{font-size:12px;margin:18px 0 8px;color:var(--muted)}
+.generalization-errors{display:flex;gap:8px;flex-wrap:wrap}.generalization-errors button{font-size:12px;padding:8px 12px}
+.generalization-point{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
+.generalization-point h3{font-size:18px;line-height:1.6;letter-spacing:-.02em;margin:0 0 10px}
+.generalization-point p{font-size:13px;line-height:1.85;color:var(--muted);margin:0}
+.generalization-browse{display:flex;gap:8px;margin-top:14px}.generalization-browse button{font-size:12px}
+.generalization-result details{font-size:12px;color:var(--muted);line-height:1.8;margin-top:14px}
+.generalization-result summary,.generalization-scope summary{cursor:pointer}
+.generalization-reflect{padding:24px 28px;border-top:1px solid var(--line)}
+.generalization-reflect h3{font-size:20px;line-height:1.6;margin:0 0 14px;letter-spacing:-.025em}
+.generalization-reflect .guide-choices{max-width:800px}.generalization-reflect button{font-size:14px;text-align:left}
+#generalization-answer{font-size:13px;line-height:1.8;color:var(--muted);margin:12px 0 0}
+#generalization-takeaway{margin-top:20px;max-width:800px}#generalization-takeaway p{font-size:14px;line-height:1.85;color:var(--muted);margin:12px 0 0}
+.generalization-scope{padding:16px 28px;border-top:1px solid var(--line);font-size:12px;line-height:1.85;color:var(--muted)}
+.generalization-scope p{max-width:85em}
+#residual-open-generalization{display:block;margin-top:18px;font-weight:650}
+@media(max-width:900px){.generalization-layout{gap:16px;grid-template-columns:minmax(0,1fr) minmax(270px,.95fr)}}
+@media(max-width:650px){
+ .generalization-heading{padding:18px 16px 14px;gap:10px;position:relative}.generalization-heading>div>p:first-child{font-size:10px;margin-bottom:12px;padding-right:70px}
+ .generalization-heading h2{font-size:24px;line-height:1.35;margin-bottom:10px}.generalization-heading p{font-size:13px;line-height:1.7}
+ #generalization-reset{position:absolute;right:12px;top:8px;font-size:10px;padding:7px;min-height:38px}
+ .generalization-layout{grid-template-columns:1fr;grid-template-areas:"controls" "plot" "result";gap:14px;padding:0 16px 18px}
+ .generalization-controls{gap:10px}.generalization-scores{gap:10px}.generalization-scores strong{font-size:19px}.generalization-scores>div{padding:9px 0}
+ .generalization-guess{grid-template-columns:1fr 1fr;gap:8px}.generalization-guess button{font-size:12px;padding:9px;line-height:1.6}
+ #generalization-status{font-size:11px;line-height:1.6}.generalization-plot figcaption{font-size:11px;padding:10px}
+ .generalization-legend{font-size:10px;padding:8px 10px;line-height:1.6}.generalization-view button{font-size:10px;padding:7px 8px}
+ .generalization-point h3{font-size:16px}.generalization-point p{font-size:13px}.generalization-reflect{padding:20px 16px}
+ .generalization-reflect .guide-choices{grid-template-columns:1fr}.generalization-reflect h3{font-size:18px}.generalization-scope{padding:14px 16px}
+}
+@media(max-height:520px) and (min-width:651px){.generalization-heading{padding:14px 20px 12px}.generalization-heading h2{font-size:24px}.generalization-heading p{font-size:12px}.generalization-layout{padding:0 20px 18px;gap:12px}.generalization-scores strong{font-size:18px}}
