@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 
 test('every experiment links to the world model and AI creation studio with one current page',async()=>{
- for(const file of ['index','pathfinding','sand','firefly','evolution','neural','mining','pixel','world-model','rsi']){
+ for(const file of ['recommendation','pathfinding','sand','firefly','evolution','neural','mining','pixel','world-model','rsi']){
   const html=await readFile(new URL(`../${file}.html`,import.meta.url),'utf8');
   const nav=html.match(/<nav class="experiment-nav"[\s\S]*?<\/nav>/)[0];
   assert.match(nav,/href="\.\/world-model\.html"/,file);

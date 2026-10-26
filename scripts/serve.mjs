@@ -21,6 +21,9 @@ TYPES['neural-lesson-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['neural-lesson.css']='text/css; charset=utf-8';
 TYPES['neural-step.mjs']='text/javascript; charset=utf-8';
 TYPES['neural-step-view.mjs']='text/javascript; charset=utf-8';
+TYPES['space-theme.css']='text/css; charset=utf-8';
+TYPES['Silkscreen-Regular.ttf']='font/ttf';
+TYPES['Silkscreen-OFL.txt']='text/plain; charset=utf-8';
 TYPES['feedback-story.mjs']='text/javascript; charset=utf-8';
 TYPES['feedback-story-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['feedback-story.css']='text/css; charset=utf-8';
@@ -36,12 +39,16 @@ for(const file of ['world-model','world-model-core','world-model-environment','w
 TYPES['world-model.html']='text/html; charset=utf-8';TYPES['world-model.css']='text/css; charset=utf-8';
 for(const file of ['rsi','rsi-core','rsi-session'])TYPES[file+'.mjs']='text/javascript; charset=utf-8';
 TYPES['rsi.html']='text/html; charset=utf-8';TYPES['rsi.css']='text/css; charset=utf-8';
+TYPES['recommendation.html']='text/html; charset=utf-8';
+TYPES['home.css']='text/css; charset=utf-8';
+for(const name of ['home.mjs','home-core.mjs'])TYPES[name]='text/javascript; charset=utf-8';
+for(const name of ['home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg'])TYPES[name]='image/jpeg';
 export function createAppServer(root=ROOT){
  const canonicalRoot=realpath(root);
  return createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Cache-Control','no-store');
-  res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+  res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405,{Allow:'GET, HEAD'});res.end();return;}
   try{
    const path=decodeURIComponent((req.url||'/').split('?')[0]);

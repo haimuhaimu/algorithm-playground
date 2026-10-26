@@ -11,7 +11,7 @@ class Element extends EventTarget{
 }
 async function setup(){
  assert.equal(typeof ui.mountFeedbackStory,'function','feedback renderer must be implemented');
- const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
+ const html=await readFile(new URL('../recommendation.html',import.meta.url),'utf8');
  const elements=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],new Element()]));
  const story=ui.mountFeedbackStory({document:{getElementById:id=>{assert.ok(elements[id],`missing real HTML target ${id}`);return elements[id];}}});
  return {story,elements};

@@ -9,7 +9,7 @@ class Element extends EventTarget{
 }
 async function setup(weights=PRESETS.balanced.weights){
  assert.equal(typeof ui.mountSeatLesson,'function');
- const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
+ const html=await readFile(new URL('../recommendation.html',import.meta.url),'utf8');
  const e=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],new Element()]));
  const inputs={posts:POSTS,weights:{...weights},profile:{...INITIAL_PROFILE}};
  const controller=ui.mountSeatLesson({document:{getElementById:id=>{assert.ok(e[id],id);return e[id];}},getInputs:()=>inputs});

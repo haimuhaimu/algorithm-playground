@@ -1,5 +1,9 @@
 # 算法游乐场
 
+首页 `index.html` 是十个实验的展示入口：大幅立体像素画面由现有 A* 核心的真实搜索轨迹驱动，可暂停，并尊重减少动态效果偏好。离屏与后台停止播放。十个互动实验保留原有逻辑；原推荐首页完整移至 `recommendation.html`，旧根路径的常用实验锚点会保留查询参数与锚点跳转过去。
+
+`home-preview-*.jpg` 是本项目默认、合成场景的浏览器截图，不含用户草稿、外部素材或 Apple 图片。首页采用独立的 `home.css`，不改动实验的算法与草稿存储键。无 JavaScript 时十个链接仍可访问；互动和动态演示需要 JavaScript。
+
 **把算法变成能玩的实验。** 由陈全（Chen Quan）创作。
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
@@ -8,7 +12,7 @@ Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs 
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
 
-「给首页排一次座位」会冻结当前口味与规则，让你逐席猜谁入选，再查看赢家、最接近的落选者与全部候选的得分。六席排完后，只关掉多样性重排一次，保留前后对照；猜测不改变算法结果，也不会修改原有首页、反馈对照或自由调参。这是逐席选最高分的简化教学规则，不代表真实平台或整页全局最优。[亲手排六席 →](https://haimuhaimu.github.io/algorithm-playground/#seat-lesson)
+「给首页排一次座位」会冻结当前口味与规则，让你逐席猜谁入选，再查看赢家、最接近的落选者与全部候选的得分。六席排完后，只关掉多样性重排一次，保留前后对照；猜测不改变算法结果，也不会修改原有首页、反馈对照或自由调参。这是逐席选最高分的简化教学规则，不代表真实平台或整页全局最优。[亲手排六席 →](https://haimuhaimu.github.io/algorithm-playground/recommendation.html#seat-lesson)
 
 第二个实验是「寻路竞技场」：亲手画墙、移动起终点，让两种真实算法在同一张地图上找路。可暂停、单步、重放，比较探索格数与最短路长。
 
@@ -46,7 +50,7 @@ npm start
 npm run verify
 ```
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只包含白名单中的运行文件，可放在静态站点的子目录中。推荐实验入口为 `index.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`，探矿入口为 `mining.html`，像素入口为 `pixel.html`，脑内预演室入口为 `world-model.html`，AI 创作室入口为 `rsi.html`。
+此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只包含白名单中的运行文件，可放在静态站点的子目录中。推荐实验入口为 `recommendation.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`，探矿入口为 `mining.html`，像素入口为 `pixel.html`，脑内预演室入口为 `world-model.html`，AI 创作室入口为 `rsi.html`。
 
 ## 在线演示与更新
 
@@ -165,7 +169,7 @@ npm run verify
 - `data.mjs`：合成内容、主题和初始口味。
 - `app.mjs`：交互状态与渲染。
 - `feedback-story.mjs`：不可变的单次反馈证据；`feedback-story-ui.mjs` / `feedback-story.css`：前后卡片对照、变化原因与独立判断。
-- `index.html` / `style.css`：原生、响应式界面，含深浅色与减少动画支持。
+- `recommendation.html` / `style.css`：原生、响应式界面，含深浅色与减少动画支持。
 - `pathfinding-core.mjs`：寻路、地图编辑与重放快照的纯函数。
 - `pathfinding.html` / `pathfinding.css` / `pathfinding.mjs`：寻路竞技场界面与交互。
 - `sand-core.mjs`：落沙规则、连续笔刷、材料计数和场景的纯函数。

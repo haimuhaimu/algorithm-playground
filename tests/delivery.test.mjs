@@ -14,13 +14,15 @@ test('decorative mining orbits are clipped without a programmatically scrollable
 const files=['app.mjs','core.mjs','data.mjs','evolution-core.mjs','evolution.css','evolution.html','evolution.mjs','firefly-core.mjs','firefly.css','firefly.html','firefly.mjs','index.html','mining-core.mjs','mining.css','mining.html','mining.mjs','navigation.css','navigation.mjs','neural-core.mjs','neural.css','neural.html','neural.mjs','pathfinding-core.mjs','pathfinding.css','pathfinding.html','pathfinding.mjs','pixel-core.mjs','pixel.css','pixel.html','pixel.mjs','sand-core.mjs','sand.css','sand.html','sand.mjs','style.css'];
 files.push('neural-lesson.mjs','neural-lesson-ui.mjs','neural-lesson.css');
 files.push('neural-step.mjs','neural-step-view.mjs');
+files.push('space-theme.css');
+files.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 files.push('pixel-recipient.mjs','pixel-recipient-ui.mjs','pixel-recipient.css');
 files.push('sand-lesson.mjs','sand-lesson-ui.mjs');
 files.push('mining-shared-evidence.mjs','mining-shared-ui.mjs');
 files.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');
 files.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');
 files.push('evolution-birth.mjs','local-drafts.mjs','world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
-files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.sort();
+files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');files.sort();
 test('server serves only runtime assets with correct types, headers and methods',async()=>{
  const server=createAppServer(root);
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -29,6 +31,10 @@ test('server serves only runtime assets with correct types, headers and methods'
   const home=await fetch(base+'/?v=test');assert.equal(home.status,200);assert.match(await home.text(),/算法游乐场/);
   assert.match(home.headers.get('content-type'),/text\/html/);assert.equal(home.headers.get('x-content-type-options'),'nosniff');
   const module=await fetch(base+'/core.mjs');assert.match(module.headers.get('content-type'),/javascript/);
+  const font=await fetch(base+'/Silkscreen-Regular.ttf');
+  assert.equal(font.status,200,'pixel font must be available without a third-party request');
+  assert.match(font.headers.get('content-type'),/font\/ttf/);
+  assert.match(home.headers.get('content-security-policy'),/font-src 'self'/);
   for(const file of files){const asset=await fetch(base+'/'+file);assert.equal(asset.status,200,file);assert.deepEqual(Buffer.from(await asset.arrayBuffer()),await readFile(join(root,file)));}
   const head=await fetch(base+'/style.css',{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'');
   assert.equal((await fetch(base+'/index.html',{method:'POST'})).status,405);

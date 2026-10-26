@@ -2,115 +2,47 @@
 <html lang="zh-CN">
 <head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
- <meta name="description" content="接管推荐首页，调一调算法，看见点击、多样性和新作者之间的取舍。一个使用合成数据的可玩实验。">
+ <meta name="description" content="十个可以亲手玩的算法实验。从一粒沙到一个会学习的模型，把看不见的规则，变成看得见的变化。陈全的算法游乐场。">
  <meta name="color-scheme" content="light dark">
- <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e3ed78'/%3E%3Cpath d='M16 22h32M16 42h32M25 15v14M39 35v14' stroke='%2321231c' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./feedback-story.css?v=seats-20261025"><link rel="stylesheet" href="./seat-lesson.css?v=seats-20261025"><script type="module" src="./app.mjs?v=seats-20261025"></script>
- <title>算法游乐场 · 首页，交给你了</title>
- <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
+ <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 8h20v20H8zM36 8h20v20H36zM8 36h20v20H8zM36 36h20v20H36z' fill='%23c22973'/%3E%3C/svg%3E">
+ <link rel="stylesheet" href="./home.css"><script type="module" src="./home.mjs"></script>
+ <title>算法游乐场 · 算法，玩着就懂了</title>
 </head>
-<body>
- <a class="skip-link" href="#feed-section">跳到推荐首页</a>
- <header class="site-header">
-  <a class="brand" href="./" aria-label="算法游乐场首页"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a>
-  <div class="header-actions"><span class="edition">实验 01 / 推荐系统</span><button class="quiet-button" id="about">怎么玩 <span aria-hidden="true">↗</span></button><button class="theme-button" id="theme" aria-label="切换深色模式" title="切换深色模式">◐</button></div>
+<body id="top">
+ <a class="skip-link" href="#experiments">跳到十个实验</a>
+ <header class="home-header">
+  <a class="home-brand" href="./" aria-label="算法游乐场首页"><span class="pixel-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>算法游乐场</span></a>
+  <nav aria-label="首页导航"><a href="#experiments">探索实验</a><a href="#about">关于</a><button id="home-theme" type="button" aria-label="切换深色模式" hidden>◐</button></nav>
  </header>
- <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./" aria-current="page">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main>
-  <section class="intro" aria-labelledby="title">
-   <div><p class="eyebrow"><span class="live-dot"></span> 一场关于「你会看到什么」的小实验</p><h1 id="title">首页，<span>交给你了。</span></h1><p class="intro-copy">同样的内容，换一种算法，就换一个世界。<br class="mobile-break">调调旋钮，看看你的首页会变成什么样。</p></div>
-   <div class="intro-note"><span class="note-arrow" aria-hidden="true">↙</span><p>没有唯一的正确答案。<br><strong>有选择，就有取舍。</strong></p></div>
+  <section class="showcase-hero" aria-labelledby="home-title">
+   <div class="hero-copy"><p class="pixel-label">ALGORITHM PLAYGROUND</p><h1 id="home-title">算法，<br class="small-break">玩着就懂了。</h1><p class="hero-description">从一粒沙到一个会学习的模型，<br>把看不见的规则，变成看得见的变化。</p><a class="primary-link" href="#experiments">探索十个实验 <span aria-hidden="true">↓</span></a></div>
+   <figure class="hero-object" id="hero-object">
+    <div class="hero-stage"><img class="hero-fallback" src="./home-preview-pathfinding.jpg" width="523" height="385" alt="寻路实验的像素地图：起点和目标之间分布着障碍。" id="hero-fallback"><canvas id="hero-canvas" width="1200" height="570" role="img" aria-label="A* 寻路的立体像素演示：从起点探索空格，绕过白色障碍，再显示通往目标的粉色路径。" hidden>当前浏览器无法显示动态画布，可以直接进入下方实验。</canvas></div>
+    <figcaption><span><b class="demo-dot" aria-hidden="true"></b>A* 寻路演示<span class="hero-caption-detail"> · 真实算法，自动循环演示</span></span><button id="hero-motion" type="button" aria-pressed="false" hidden><span aria-hidden="true">Ⅱ</span> 暂停动画</button></figcaption>
+   </figure>
+   <a class="hero-experiment" href="./pathfinding.html#arena">这条路，换你来找 <span aria-hidden="true">↗</span></a>
   </section>
-  <div class="playground">
-   <section class="controls panel" aria-labelledby="controls-title">
-    <div class="section-heading"><span class="step">01</span><h2 id="controls-title">你来定规则</h2><button class="text-button" id="reset">重置</button></div>
-    <p class="muted small">先选一种立场，再试着打破它。</p>
-    <div class="presets" role="group" aria-label="推荐策略">
-     <button class="preset" data-preset="click" aria-pressed="true"><span class="preset-icon" aria-hidden="true">↗</span><span><strong>只追点击</strong><small>让人忍不住点开</small></span><span class="preset-dot" aria-hidden="true"></span></button>
-     <button class="preset" data-preset="balanced" aria-pressed="false"><span class="preset-icon" aria-hidden="true">✳</span><span><strong>多看一点</strong><small>给熟悉的世界开扇窗</small></span><span class="preset-dot" aria-hidden="true"></span></button>
-     <button class="preset" data-preset="newcomer" aria-pressed="false"><span class="preset-icon" aria-hidden="true">◇</span><span><strong>新人上场</strong><small>让还没被看见的人出现</small></span><span class="preset-dot" aria-hidden="true"></span></button>
-    </div>
-    <div class="sliders">
-     <div class="slider-control"><label for="click">点击优先 <output id="click-value" for="click">100</output></label><input id="click" type="range" min="0" max="100" step="1" value="100"><p>越高，越偏向你熟悉的口味。</p></div>
-     <div class="slider-control"><label for="diversity">内容多样 <output id="diversity-value" for="diversity">0</output></label><input id="diversity" type="range" min="0" max="100" step="1" value="0"><p>减少同一主题反复占据首页。</p></div>
-     <div class="slider-control"><label for="newcomer">新人机会 <output id="newcomer-value" for="newcomer">0</output></label><input id="newcomer" type="range" min="0" max="100" step="1" value="0"><p>给新作者一份额外的排序加分。</p></div>
-    </div>
-    <p class="weight-note">独立权重，不必加起来等于 100。</p>
-    <a class="mobile-result" href="#feed-section"><span id="mobile-result-text"></span><strong>看首页 ↓</strong></a>
-    <button class="run-button" id="run"><span>跑一轮规则对照</span><span aria-hidden="true">↗</span></button>
-    <p class="run-hint">100 位虚拟访客 · 每人看 6 条</p>
-    <button class="baseline-button" id="save-baseline">把当前规则设为对照组</button><p class="baseline-caption" id="baseline-caption">对照组：只追点击</p>
-   </section>
-   <section class="feed-section" id="feed-section" aria-labelledby="feed-title">
-    <div class="section-heading"><span class="step">02</span><h2 id="feed-title">你的推荐首页</h2><span class="live-label">即时重排</span><a class="return-controls" href="#controls-title">调整规则 ↑</a></div>
-    <div class="feed-context"><span id="strategy-name">只追点击</span><span>48 条候选 → 6 个席位</span></div>
-    <div class="feedback-entry-note"><p><strong>给首页排一次座位</strong>不只看谁入选：猜下一席，再查它赢过谁、为什么。</p><a href="#seat-lesson">亲手排六席 ↓</a></div>
-    <div class="feedback-entry-note"><p><strong>点一次反馈，看懂首页为什么变</strong>先试试第一张的「少一点」，留住变化前后的六张卡。</p><a id="feedback-entry" href="#feedback-story">看反馈前后对照 ↓</a></div>
-    <div class="feed-grid" id="feed"></div>
-    <div class="taste"><div><strong>你的模拟口味</strong><span id="feedback-note">试试卡片上的「喜欢」和「少一点」。</span></div><div id="taste-bars" class="taste-bars"></div><p>反馈只改变这一位模拟用户的兴趣，不代表真实用户行为。</p></div>
-   </section>
-   <aside class="observations" aria-labelledby="observation-title">
-    <div class="section-heading"><span class="step">03</span><h2 id="observation-title">看见取舍</h2></div>
-    <section class="live-metrics panel" aria-label="当前首页指标">
-     <p class="eyebrow">当前首页 · 模型预测</p><div class="hero-metric"><span id="ctr">83.6</span><span class="percent">%</span></div><p class="metric-label">平均预测点击率</p>
-     <div class="mini-metrics"><div><strong id="topic-count">2<span>/ 6</span></strong><p>不同主题</p></div><div><strong id="new-count">1<span>/ 6</span></strong><p>新人席位</p></div></div>
-     <div id="distribution" class="distribution" aria-label="首页主题分布"></div><div id="legend" class="legend"></div><p id="insight" class="insight"></p>
-    </section>
-    <section class="challenge" aria-labelledby="challenge-title"><p class="eyebrow">给你一个小挑战</p><h3 id="challenge-title">让首页多一点可能。</h3><p class="challenge-copy">保留基本点击吸引力，同时让更多主题和新人出现。</p><ul id="challenge-checks"></ul><div id="challenge-status" class="challenge-status">还差一点，试着调调看。</div></section>
-    <section class="comparison panel" aria-labelledby="comparison-title"><div class="comparison-heading"><h3 id="comparison-title">规则对照</h3><span id="run-number">未运行</span></div><p class="rule-comparison-note">固定同一份口味，比较两套排序规则；不是刚才反馈前后的对照。</p><div id="comparison-result"><div class="empty-experiment" aria-hidden="true"><span> A </span><i>↔</i><span> B </span></div><p class="muted small">规则选好了？<br>跑一轮，和对照组比一比。</p></div><a class="return-controls" href="#controls-title">回去调整规则，再比一轮 ↑</a></section>
-   </aside>
-  </div>
-  <section class="seat-lesson" id="seat-lesson" aria-labelledby="seat-title">
-   <div class="seat-lesson-header"><div><p class="eyebrow">排座位 / 固定口味，逐席看决定</p><h2 id="seat-title">给首页排一次座位。</h2><p>48 张卡，只有 6 个座位。你先猜下一张，再揭晓它如何赢过其他候选。<br>想看「同主题越多，加分越少」，可先用「多看一点」演示。</p></div><div class="seat-starts"><button class="seat-primary" id="seat-start" type="button">排当前首页</button><button id="seat-example" type="button">用「多看一点」演示</button></div></div>
-   <p class="seat-state" id="seat-state" role="status" aria-live="polite"></p>
-   <div id="seat-stage" hidden>
-    <p class="seat-settings" id="seat-settings"></p><p class="seat-taste" id="seat-taste"></p>
-    <ol class="seat-row" id="seat-row" aria-label="六个首页席位"></ol>
-    <h3 id="seat-turn" tabindex="-1"></h3><p id="seat-context"></p>
-    <div class="seat-choice-grid" role="group" aria-label="猜谁会拿到这一席"><button id="seat-guess-0" type="button" aria-pressed="false"></button><button id="seat-guess-1" type="button" aria-pressed="false"></button><button id="seat-guess-2" type="button" aria-pressed="false"></button></div>
-    <p class="seat-subset" id="seat-subset"></p>
-    <div class="seat-evidence" id="seat-evidence" hidden>
-     <h3 id="seat-result-title" tabindex="-1"></h3><p id="seat-guess-result"></p>
-     <div class="seat-formula seat-winner-score" id="seat-winner-score" aria-label="赢家的得分组成"></div><p id="seat-reason"></p>
-     <p class="seat-change" id="seat-change"></p>
-     <details class="seat-all-details" id="seat-all-details"><summary id="seat-all-summary">查看全部候选</summary><div class="seat-list" tabindex="0" role="region" aria-label="本席所有候选及分数"><ol id="seat-all"></ol></div><p>这里只比较同一席位的分数，已坐下的卡不再参选。显示值经过舍入；排序使用未取整分数。同分按固定内容编号决定先后。</p></details>
-     <button class="seat-primary seat-next" id="seat-next" type="button" hidden>去排下一席 →</button>
-    </div>
-    <section class="seat-ending" id="seat-ending" aria-labelledby="seat-ending-title" hidden>
-     <h3 id="seat-ending-title">六个座位，排完了。</h3><p id="seat-conclusion"></p>
-     <button id="seat-compare" type="button">口味不变，只关掉多样性再排一次</button>
-     <div class="seat-counterfactual" id="seat-counterfactual" hidden><h3 id="seat-counterfactual-title" tabindex="-1">同一批卡，只改一条规则。</h3><p id="seat-counterfactual-note"></p><div class="seat-counterfactual-grid"><section aria-label="本次六席"><h4>本次排出的六席</h4><ol id="seat-original"></ol></section><section aria-label="关闭多样性后的六席"><h4>只关掉多样性</h4><ol id="seat-alternative"></ol></section></div></div>
-     <div class="seat-question"><h3>最后换你判断：这里的多样性分，依据什么计算？</h3><div class="seat-answers"><button id="seat-answer-taste" type="button" aria-pressed="false">每排一席，我的兴趣都变了</button><button id="seat-answer-seats" type="button" aria-pressed="false">同主题已经坐下了几张</button></div><p id="seat-judgment" role="status" aria-live="polite"></p></div>
-    </section>
+  <section class="experiment-showcase" id="experiments" aria-labelledby="experiments-title">
+   <div class="section-intro"><p class="pixel-label">PICK YOUR CURIOSITY</p><h2 id="experiments-title">先动手。<br>再问为什么。</h2><p>十个实验，不需要先读完一本教科书。<br>选一个感兴趣的，改变它，看看会发生什么。</p></div>
+   <div class="featured-experiments">
+    <a class="experiment-entry featured-entry sand-entry" href="./sand.html#grain-lab"><div class="entry-copy"><span class="entry-topic">细胞自动机</span><h3>落沙实验室</h3><p>从一粒沙的选择，<br>看见一个小世界。</p><span class="entry-action">去玩沙 <span aria-hidden="true">↗</span></span></div><div class="entry-picture sand-picture"><img src="./home-preview-sand.jpg" width="868" height="500" alt="落沙实验室的实际默认画面" loading="lazy"></div></a>
+    <a class="experiment-entry featured-entry neural-entry" href="./neural.html#step-lab"><div class="entry-copy"><span class="entry-topic">神经网络</span><h3>涂鸦训练场</h3><p>你画下的一个点，<br>怎样改变一条分界？</p><span class="entry-action">教它一次 <span aria-hidden="true">↗</span></span></div><div class="entry-picture neural-picture"><img src="./home-preview-neural.jpg" width="608" height="378" alt="涂鸦训练场的实际默认画面" loading="lazy"></div></a>
    </div>
-   <div class="seat-footer"><p>这只是逐席选最高分的简化教学规则，不保证整页达到某种全局最优。全是合成内容，不代表真实平台。<br>本轮证据保留到重新开始；刷新或全局重置会清空。上方调参、卡片反馈和原来的反馈对照继续可用。</p><a href="#feed-section">回到首页自由试 ↑</a></div>
-  </section>
-  <section class="feedback-story" id="feedback-story" aria-labelledby="feedback-story-title">
-   <div class="feedback-story-header"><div><p class="eyebrow">反馈对照 / 规则不变，只看一次反馈</p><h2 id="feedback-story-title">点一次反馈，看懂首页为什么变。</h2><p id="feedback-record-state" role="status" aria-live="polite"></p></div><button id="feedback-arm" type="button">记录下一次反馈</button></div>
-   <div class="feedback-story-empty" id="feedback-story-empty">先回到首页，对第一张卡点「少一点」。这里会保留两份首页，告诉你谁进来了、谁离开了，以及为什么。<br><a href="#feed-section">去给一张卡片反馈 ↑</a></div>
-   <div id="feedback-story-content" hidden>
-    <div class="feedback-action-line"><h3 id="feedback-action"></h3><strong class="feedback-interest" id="feedback-interest"></strong></div><p class="feedback-fixed-rules" id="feedback-fixed-rules"></p>
-    <p class="feedback-summary" id="feedback-summary"></p>
-    <div class="feedback-snapshots"><section aria-label="反馈前的六张卡片"><div class="feedback-snapshot-heading"><h3>反馈前</h3><span>点下按钮的前一刻</span></div><ol id="feedback-before"></ol></section><section aria-label="反馈后的六张卡片"><div class="feedback-snapshot-heading"><h3>反馈后</h3><span>同一套规则重新选六张</span></div><ol id="feedback-after"></ol></section></div>
-    <div class="feedback-explanation"><div><h3>01 / 你的反馈改了什么？</h3><p id="feedback-cause"></p></div><div><h3>02 / 这张卡为什么在这里？</h3><p id="feedback-reason"></p><small>只比较同一个席位上的候选得分；多样性加分也使用该席位之前已选中的主题数，不混比不同轮次的分数。</small></div></div>
-    <div class="feedback-question"><h3>换你判断：卡片上的反馈，直接作用在哪里？</h3><div class="feedback-answers"><button id="feedback-answer-card" type="button" aria-pressed="false">屏蔽或置顶这一张卡</button><button id="feedback-answer-topic" type="button" aria-pressed="false">调整这一类内容的兴趣</button></div><p class="feedback-judgment" id="feedback-judgment" role="status" aria-live="polite"></p></div>
+   <div class="experiment-grid">
+    <a class="experiment-entry recommendation-entry" href="./recommendation.html#feed-section"><div class="entry-picture recommendation-picture"><img src="./home-preview-recommendation.jpg" width="610" height="500" alt="推荐系统的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">推荐与排序</span><h3>推荐系统</h3><p>给首页排一次座位，看见谁被选中。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry pathfinding-entry" href="./pathfinding.html#arena"><div class="entry-picture pathfinding-picture"><img src="./home-preview-pathfinding.jpg" width="523" height="385" alt="寻路竞技场的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">BFS / A*</span><h3>寻路竞技场</h3><p>改一格障碍，猜猜下一步怎么走。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry firefly-entry" href="./firefly.html#comparison-title"><div class="entry-picture firefly-picture"><img src="./home-preview-firefly.jpg" width="858" height="500" alt="萤火虫合奏的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">耦合振子</span><h3>萤火虫合奏</h3><p>让两群互相听见，一起闪亮。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry evolution-entry" href="./evolution.html#roadblock-lab"><div class="entry-picture evolution-picture"><img src="./home-preview-evolution.jpg" width="862" height="460" alt="遗传赛车的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">遗传算法</span><h3>遗传赛车</h3><p>旧冠军遇上新路障，后代能赢吗？</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry mining-entry" href="./mining.html#shared-title"><div class="entry-picture mining-picture"><img src="./home-preview-mining.jpg" width="1150" height="377" alt="盲盒探矿的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">探索与利用</span><h3>盲盒探矿</h3><p>同一份线索，你会飞向哪颗星球？</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry pixel-entry" href="./pixel.html#editor"><div class="entry-picture pixel-picture"><img src="./home-preview-pixel.jpg" width="398" height="398" alt="像素邮局的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">编码与压缩</span><h3>像素邮局</h3><p>把一张画寄成暗号，再亲手还原。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry world-model-entry" href="./world-model.html#flight-guide"><div class="entry-picture world-model-picture"><img src="./home-preview-world-model.jpg" width="794" height="340" alt="脑内预演室的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">世界模型</span><h3>脑内预演室</h3><p>飞过一次，再看它学到了什么。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry rsi-entry" href="./rsi.html#workshop"><div class="entry-picture rsi-picture"><img src="./home-preview-rsi.jpg" width="270" height="310" alt="AI 创作室的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">自我改进的简化模拟</span><h3>AI 创作室</h3><p>修好一张图，再改变下一次的做法。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
    </div>
-   <div class="feedback-story-footer"><p>这份对照不会被后续操作覆盖；点「记录下一次反馈」才会替换。仅在本页保留，刷新或重置后清空。<br>合成内容 + 人为设定的简化算法，不代表真实推荐平台。</p><a href="#feed-section">回到首页继续试 ↑</a></div>
   </section>
-  <section class="bottom-note"><span>实验，不是结论。</span><p>全部内容、作者与行为均为合成数据。简化模型用来观察权衡，不代表真实平台，也不证明某种策略更好。</p><span class="signature">MADE BY CHEN QUAN</span></section>
+  <section class="home-about" id="about" aria-labelledby="about-title"><p class="pixel-label">SMALL EXPERIMENTS. REAL QUESTIONS.</p><h2 id="about-title">不只看它运行。<br>也看懂它为什么。</h2><p>先猜一次，亲手改一下，再把前后放在一起。<br>这里没有万能算法，只有值得你亲自试试的选择。</p><p class="honest-note">全部实验使用简化模型或合成数据，不代表真实平台、真实生图或前沿模型的完整能力。预览图片来自实验默认画面；草稿仍保留在原浏览器中。</p><a href="./recommendation.html">从第一个实验开始 <span aria-hidden="true">↗</span></a></section>
  </main>
- <div id="announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div><div id="toast" class="toast" role="status" hidden></div>
- <dialog id="guide" aria-labelledby="guide-title">
-  <form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form>
-  <p class="eyebrow">PLAY, THEN ASK WHY.</p><h2 id="guide-title">你不是刷首页的人。<br>你是决定首页的人。</h2>
-  <ol><li><strong>选规则。</strong> 点击、多样性、新人机会，哪个更重要？</li><li><strong>看变化。</strong> 6 个席位会真实重排。「为什么」可以拆开看分数。</li><li><strong>给反馈。</strong> 喜欢或少一点，会改变模拟口味，影响后续排序。</li><li><strong>跑对照。</strong> 用同一份口味与随机样本，比较两套规则。</li></ol>
-  <h3>把模型摊开给你看</h3>
-  <p>预测点击概率 = 0.05 + 0.50 × 内容吸引力 + 0.36 × 主题兴趣。所有参数都是人为设定，不是训练出来的模型。</p>
-  <p>逐个挑选首页席位：点击分 + 多样性分 + 新人分。多样性分随着已选中的同主题内容增加而下降。并列时按内容编号排序。</p>
-  <p>这个实验特意把新作者的吸引力参数设得稍低，用来呈现「给机会」的取舍。这是人为构造的场景，不代表真实新作者的内容更差或更难吸引点击。</p>
-  <p>每轮对照为每组模拟 600 次曝光，使用相同的固定随机数（种子 42）；同样的设置会得到同样的结果。这不是统计显著性测试，不模拟长期留存、真实流量或内容质量。</p>
-  <p>挑战阈值仅是本关游戏规则。权重越高不一定越好，点击率也不等于满意度。</p>
-  <p class="guide-foot">本地原型 · 无账号 · 无追踪 · 无真实平台数据</p>
- </dialog>
+ <footer class="home-footer"><a class="home-brand" href="#top"><span class="pixel-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>算法游乐场</span></a><span>MADE BY CHEN QUAN</span><a href="#experiments">全部十个实验 ↑</a></footer>
+ <noscript><p class="no-script">动态演示需要 JavaScript。上方十个入口仍可打开；各个互动实验需要启用 JavaScript。旧推荐系统链接可直接前往 <a href="./recommendation.html">推荐系统</a>。</p></noscript>
 </body>
 </html>
