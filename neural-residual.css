@@ -1,0 +1,82 @@
+.residual-lesson{margin-top:28px;scroll-margin-top:18px}
+.residual-lesson[hidden]{display:none!important}
+.residual-heading{padding:26px 28px 22px;display:flex;align-items:start;justify-content:space-between;gap:24px}
+.residual-heading p{font-size:14px;line-height:1.7;color:var(--muted);margin:0}
+.residual-heading p:first-child{font-size:12px;font-weight:650;color:var(--good);margin-bottom:8px}
+.residual-heading h2{font-size:clamp(25px,3vw,35px);line-height:1.35;letter-spacing:-.045em;margin:0 0 10px}
+.residual-heading>button{font-size:12px;flex-shrink:0}
+.residual-lesson[data-stage=learn] .residual-heading{padding-top:16px;padding-bottom:16px}
+.residual-lesson[data-stage=learn] .residual-heading p{display:none}
+.residual-lesson[data-stage=learn] .residual-heading h2{font-size:20px;line-height:1.5;margin:0}
+.residual-layout{padding:0 28px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,1fr);grid-template-areas:"plot controls" "plot next" "plot status" "values values";gap:14px 28px;align-items:start}
+.residual-controls{grid-area:controls;display:grid;gap:12px}
+#residual-reading{font-size:15px;line-height:1.85;margin:0 0 2px}
+.residual-controls>button{font-size:13px;font-weight:600;min-height:46px}
+#residual-shortcut[data-first=true]{background:var(--action);color:var(--on-action);border-color:var(--action)}
+.residual-picks{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.residual-picks span{font-size:12px;color:var(--muted);margin-right:auto}
+.residual-picks button{min-width:44px;padding:8px 12px;font-size:12px}
+.residual-picks button[aria-pressed=true],.residual-view-switch button[aria-pressed=true]{font-weight:700;border-color:var(--ink);background:var(--soft)}
+#residual-learn{grid-area:next;font-size:13px}#residual-status{grid-area:status;font-size:12px;line-height:1.8;color:var(--muted);margin:0}
+.residual-circuit{display:grid;grid-template-columns:1fr 1.4fr 1.25fr;gap:18px;position:relative;margin:4px 14px 0;padding-top:32px;font-size:11px;line-height:1.5}
+.circuit-node{padding:7px 4px;border:1px solid var(--line);border-radius:8px;text-align:center;position:relative;display:flex;align-items:center;justify-content:center;min-height:38px;background:var(--paper)}
+.circuit-node:not(:last-child)::after{content:'→';position:absolute;right:-17px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.circuit-shortcut{position:absolute;left:12%;right:13%;top:4px;height:28px;border:2px dashed var(--line);border-bottom:0;border-radius:8px 8px 0 0;text-align:center;font-size:10px;color:var(--muted);padding-top:2px}
+.residual-circuit[data-enabled=true] .circuit-shortcut{border-style:solid;border-color:var(--good);color:var(--good);font-weight:650}
+.residual-signal{grid-area:plot;border:1px solid var(--line);border-radius:16px;margin:0;min-width:0;overflow:hidden;background:var(--paper)}
+.residual-signal figcaption{font-size:12px;font-weight:650;padding:12px 14px;min-height:44px;display:flex;align-items:center}
+.residual-signal canvas{width:100%;height:auto;aspect-ratio:2;display:block}
+.residual-legend{padding:8px 14px;margin:0;border-top:1px solid var(--line);font-size:11px;color:var(--muted);line-height:1.6}
+.residual-vectors{grid-area:values;display:flex;flex-wrap:wrap;gap:8px 20px;font-size:12px;line-height:1.8;font-variant-numeric:tabular-nums}
+.residual-vectors strong{font-weight:650}
+.residual-scope{font-size:11px;line-height:1.8;color:var(--muted);margin:16px 28px 22px;max-width:78em}
+.residual-training{padding:0 28px 24px;scroll-margin-top:18px}
+.residual-training>header h3{font-size:24px;letter-spacing:-.035em;line-height:1.4;margin:0 0 8px}
+.residual-training>header>p{font-size:14px;line-height:1.8;color:var(--muted);margin:0 0 18px}
+.residual-training-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.residual-training-actions button{font-size:13px}
+#residual-steps{font-size:12px;color:var(--muted);margin-left:auto}
+.residual-scores{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:0 0 16px}
+.residual-scores>div{display:grid;gap:7px;padding:14px 0;border-top:1px solid var(--line)}
+.residual-scores b{font-size:13px}.residual-scores strong{font-size:20px;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.residual-scores span{font-size:12px;color:var(--muted)}
+.residual-fields{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.residual-fields figure{margin:0;min-width:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--paper)}
+.residual-fields figcaption{font-size:12px;font-weight:600;padding:10px 14px}
+.residual-fields canvas{display:block;width:100%;height:auto;aspect-ratio:5/3}
+.residual-view-switch{display:none}
+#residual-comparison{font-size:14px;line-height:1.85;margin:18px 0 8px}
+.residual-training-note,.residual-training>details{font-size:11px;line-height:1.85;color:var(--muted)}
+.residual-training>details{margin:16px 0}
+.residual-training>details summary,.residual-details summary{cursor:pointer}
+.residual-reflect{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.residual-reflect h3{font-size:18px;line-height:1.5;margin:0 0 12px;letter-spacing:-.025em}
+.residual-reflect button{font-size:13px;text-align:left}
+#residual-answer,#residual-takeaway p{font-size:13px;line-height:1.85;color:var(--muted);margin:12px 0}
+#residual-takeaway{padding-top:16px;max-width:65em}
+#residual-takeaway a{font-size:13px;color:var(--good);display:inline-flex;min-height:44px;align-items:center;line-height:1.7}
+.residual-details{border-top:1px solid var(--line);padding:16px 28px;font-size:12px;line-height:1.85;color:var(--muted)}
+.residual-details p{max-width:80em}
+@media(max-width:650px){
+ .residual-heading{display:block;padding:20px 16px 16px;position:relative}.residual-heading>button{position:absolute;top:10px;right:10px;padding:5px 8px;min-height:32px;font-size:10px}
+ .residual-heading h2{font-size:24px;max-width:11em}.residual-heading p{font-size:13px}
+ .residual-lesson[data-stage=learn] .residual-heading h2{font-size:16px;max-width:11em}
+ .residual-layout{grid-template-columns:1fr;grid-template-areas:"controls" "plot" "values" "next" "status";padding:0 16px;gap:12px}
+ .residual-circuit{margin:4px 10px 0;gap:14px;font-size:10px;padding-top:29px}.circuit-node{font-size:10px;padding:5px 2px;min-height:34px}.circuit-node:not(:last-child)::after{right:-13px}.circuit-shortcut{font-size:9px;height:26px}
+ #residual-reading{font-size:13px;line-height:1.75}.residual-controls{gap:10px}#residual-status{font-size:11px;line-height:1.7}
+ .residual-signal figcaption{font-size:11px;padding:8px 10px;min-height:38px}.residual-legend{font-size:10px;padding:7px 10px}
+ .residual-vectors{display:grid;gap:2px;font-size:11px}.residual-scope{margin:14px 16px 18px;font-size:11px}
+ .residual-training{padding:0 16px 20px}.residual-training>header h3{font-size:22px}.residual-training>header>p{font-size:12px;line-height:1.75}
+ .residual-training-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.residual-training-actions button{padding:9px 6px;font-size:12px}#residual-steps{grid-column:1/-1;margin:0;font-size:11px}
+ .residual-scores{gap:12px;margin-bottom:10px}.residual-scores>div{padding:10px 0;gap:6px}.residual-scores strong{font-size:15px;line-height:1.5}.residual-scores b,.residual-scores span{font-size:11px}
+ .residual-view-switch{display:flex;gap:8px;margin-bottom:10px}.residual-view-switch button{flex:1;font-size:12px;padding:9px 8px}
+ .residual-fields{display:block}.residual-fields figure[data-active=false]{display:none}.residual-fields figcaption{font-size:11px;padding:8px 10px}
+ #residual-comparison{font-size:12px;line-height:1.8}.residual-reflect>.guide-choices{grid-template-columns:1fr}.residual-details{padding:14px 16px;font-size:11px}
+}
+@media(max-height:520px) and (min-width:651px){
+ .residual-heading{padding:8px 24px;gap:12px}.residual-heading h2{font-size:23px;margin:0}.residual-heading p{display:none}.residual-heading>button{min-height:34px;padding:5px 8px}
+ .residual-layout{padding:0 24px;grid-template-columns:minmax(280px,1.1fr) minmax(280px,1fr);gap:10px 20px}.residual-controls{gap:8px}#residual-reading{font-size:12px;line-height:1.6}#residual-status{font-size:10px;line-height:1.5}
+ .residual-picks span{font-size:11px}.residual-controls>button{min-height:40px;padding:8px 10px;font-size:12px}.residual-picks button{min-height:36px;padding:6px 10px}
+ .residual-signal figcaption{min-height:32px;padding:6px 12px;font-size:11px}.residual-circuit{padding-top:25px;font-size:10px}.circuit-node{min-height:32px;padding:5px 3px}.circuit-shortcut{height:23px;font-size:9px}.residual-legend{font-size:10px;padding:6px 12px}
+ .residual-training>header h3{font-size:21px}.residual-training>header>p{margin-bottom:10px}.residual-training-actions{margin-bottom:10px}
+}

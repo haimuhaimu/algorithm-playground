@@ -110,6 +110,7 @@ export function mountLabelLesson({document,window,schedule=callback=>requestAnim
  for(const id of ['about','play','step','fast'])$(id)?.addEventListener('click',()=>pause('小实验已暂停，证据保留。看完帮助或自由涂鸦后，可手动继续。'));
  document.addEventListener('visibilitychange',()=>{if(document.hidden)pause('页面离开时已暂停。回来后不会自动继续。');});
  window.addEventListener('pagehide',()=>pause());
+ window.addEventListener('neural-guide-pause',()=>pause('进阶区已暂停，已有训练与对照保留。重新打开后可手动继续。'));
  if(typeof MutationObserver!=='undefined')new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
  render();set('label-status','先让它正常学会，再只换一个标签。这个小实验不读写你的自由涂鸦草稿。');
  return {snapshot:()=>({lesson:structuredClone(lesson),running})};

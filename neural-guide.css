@@ -1,0 +1,127 @@
+.neural-main .neural-intro{padding:32px 0 24px}
+.neural-main .neural-intro h1{font-size:clamp(32px,4vw,48px);margin:0 0 10px;line-height:1.15;letter-spacing:-.045em}
+.neural-main .neural-intro>p{font-size:16px;line-height:1.7;margin:0}
+.neural-guide{border:1px solid var(--line);border-radius:24px;background:var(--surface);overflow:hidden;scroll-margin-top:20px;outline-offset:4px}
+.neural-guide [hidden]{display:none!important}
+.guide-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px 0;font-size:13px;font-weight:650}
+.neural-guide button,.advanced-return button{font:inherit;min-height:44px;cursor:pointer;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--surface);color:var(--ink);line-height:1.5}
+.neural-guide button:not(:disabled):hover{border-color:var(--ink)}
+.neural-guide button:focus-visible,.neural-advanced summary:focus-visible,.advanced-return button:focus-visible{outline:3px solid var(--good);outline-offset:3px}
+.guide-top button{font-size:12px;border:0;background:transparent;color:var(--muted);padding:8px}
+.guide-progress{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:0;padding:12px 24px 22px}
+.guide-progress li{border-bottom:2px solid var(--line);padding:8px 0 12px;color:var(--muted);font-size:13px}
+.guide-progress li span{font:10px var(--mono);margin-right:8px}
+.guide-progress li[aria-current=step]{color:var(--good);border-color:var(--good);font-weight:700}
+.guide-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr);grid-template-areas:"plot prompt" "plot controls" "plot evidence";gap:16px 28px;padding:0 24px 24px;align-content:start}
+.guide-prompt{grid-area:prompt;align-self:start}
+#guide-stage{font:11px var(--mono);color:var(--good)}
+.guide-prompt h2{font-size:clamp(22px,2.2vw,30px);line-height:1.35;letter-spacing:-.035em;margin:10px 0}
+.guide-prompt>p{font-size:15px;line-height:1.85;color:var(--muted);margin:0}
+.guide-map{grid-area:plot;margin:0;min-width:0;align-self:start;border:1px solid var(--line);border-radius:16px;background:var(--paper);overflow:hidden}
+.guide-map figcaption{min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;font-size:12px;flex-wrap:wrap}
+.guide-map figcaption b{font-weight:600}
+#guide-error-count{font-size:12px;margin-left:auto;white-space:nowrap}
+#guide-compare{display:flex;gap:3px}
+#guide-compare button{padding:6px 9px;min-height:36px;font-size:11px;border-color:transparent;background:transparent}
+#guide-compare button[aria-pressed=true]{background:var(--surface);border-color:var(--line);font-weight:700}
+#guide-map{display:block;width:100%;height:auto;aspect-ratio:800/480}
+.guide-legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:11px;line-height:1.6;color:var(--muted);padding:12px 14px;margin:0;border-top:1px solid var(--line)}
+.guide-legend span{display:inline-flex;align-items:center;gap:6px}
+.guide-legend i{display:inline-block;width:9px;height:9px;flex-shrink:0}
+.guide-dot{background:#bb5141;border-radius:50%}.guide-square{background:#287d7c}
+.guide-controls{grid-area:controls;align-self:start;display:grid;gap:10px}
+.neural-guide .guide-primary{background:var(--action);color:var(--on-action);border-color:var(--action);font-weight:650;min-height:48px}
+.guide-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.guide-choices button{font-size:14px;font-weight:650;min-height:50px}
+.guide-reflection{display:grid;gap:8px}
+.guide-reflection button{text-align:left;font-size:14px;min-height:50px}
+#guide-feedback{margin:4px 0 0;color:var(--good);font-size:13px;line-height:1.8}
+.neural-guide .guide-secondary{font-size:13px;background:var(--soft)}
+#guide-status{font-size:12px;line-height:1.7;color:var(--muted);margin:0;min-height:2.7em}
+.guide-evidence{grid-area:evidence;align-self:start;border-top:1px solid var(--line);padding-top:14px}
+.guide-math{padding:14px 24px;border-top:1px solid var(--line);font-size:12px;line-height:1.8;color:var(--muted)}
+.guide-math summary{cursor:pointer}.guide-math p{margin:10px 0 0;max-width:75em}
+#guide-observation{font-size:13px;line-height:1.85;margin:0}
+#guide-summary{margin-top:14px;padding:12px 14px;background:var(--soft);border-radius:12px}
+#guide-summary p{font-size:12px;line-height:1.8;margin:0 0 8px}
+#guide-summary p:last-child{margin:0;color:var(--muted)}
+.guide-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 24px;border-top:1px solid var(--line);background:var(--paper)}
+.guide-footer p{font-size:12px;line-height:1.7;color:var(--muted);margin:0;max-width:40em}
+.guide-footer button{font-size:12px;flex-shrink:0;background:var(--surface)}
+.neural-advanced{margin:28px 0 20px;border-top:1px solid var(--line);scroll-margin-top:20px}
+.neural-advanced>summary{padding:22px 0;cursor:pointer;font-size:18px;line-height:1.7}
+.neural-advanced>summary span{font-size:13px;color:var(--muted);font-weight:400;margin-left:12px}
+.advanced-return{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 20px}
+.advanced-return button{font-size:13px}
+.advanced-return p{font-size:12px;color:var(--muted);margin:0;line-height:1.7}
+#field,#label-lab,#step-lab,#model-comparison{scroll-margin-top:24px}
+@media(max-width:900px){.guide-layout{grid-template-columns:minmax(0,1.1fr) minmax(240px,1fr);gap:14px 20px}.guide-prompt>p{font-size:14px}}
+@media(max-width:650px){
+ .neural-main .neural-intro{padding:18px 0 16px}.neural-main .neural-intro h1{font-size:30px}.neural-main .neural-intro>p{font-size:13px;line-height:1.6}
+ .guide-top{padding:6px 14px 4px;font-size:11px}.guide-progress{display:none}
+ .guide-layout{grid-template-columns:1fr;grid-template-areas:"prompt" "controls" "plot" "evidence";gap:12px;padding:0 14px 16px}
+ .guide-prompt h2{font-size:23px;margin:4px 0}.guide-prompt>p{font-size:13px;line-height:1.7}
+ #guide-status{font-size:11px;min-height:0;line-height:1.6}.guide-map figcaption{padding:7px 9px;min-height:40px;font-size:10px}.guide-legend{font-size:10px;padding:8px 9px;gap:6px 12px}
+ #guide-error-count{font-size:11px}#guide-compare button{font-size:10px;padding:5px 7px}.guide-math{padding:12px 14px;font-size:11px}
+ .guide-legend span:last-child{flex-basis:100%}.guide-footer{padding:14px 16px;display:grid;gap:12px}.guide-footer button{width:100%}
+ .neural-advanced>summary{font-size:16px}.neural-advanced>summary span{display:block;margin:6px 0 0}
+}
+@media(max-height:520px) and (min-width:651px){.guide-layout{grid-template-columns:minmax(240px,1fr) minmax(270px,1.2fr)}.neural-main .neural-intro{padding:18px 0}.guide-prompt h2{font-size:23px}.guide-top{padding-top:6px}.guide-progress{padding-bottom:12px}}
+@media(forced-colors:active){.guide-dot,.guide-square{border:1px solid CanvasText}.guide-progress li[aria-current=step]{border-width:4px}.neural-guide .guide-primary{border:2px solid ButtonText}}
+
+/* Continue the same visible-rule lesson, without making the introduction a control panel. */
+.gradient-lesson{margin-top:28px;scroll-margin-top:18px}
+.gradient-lesson[hidden]{display:none!important}
+.gradient-heading{padding:28px 28px 20px}
+.gradient-heading>p:first-child{font-size:12px;font-weight:650;color:var(--good);margin:0 0 8px}
+.gradient-heading h2{font-size:clamp(26px,3vw,36px);letter-spacing:-.045em;line-height:1.25;margin:0 0 10px}
+.gradient-heading p{font-size:14px;line-height:1.7;color:var(--muted);margin:0}
+.gradient-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,1fr);grid-template-areas:"plot controls" "plot evidence";gap:18px 28px;padding:0 28px 24px;align-items:start}
+.gradient-controls{grid-area:controls;display:grid;gap:12px}
+.gradient-controls label{font-size:14px;line-height:1.6;font-weight:600;display:grid;gap:8px}
+.gradient-controls select{width:100%;min-height:44px;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.gradient-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gradient-controls button{font-size:13px}
+#gradient-status{font-size:12px;line-height:1.8;color:var(--muted);margin:0}
+.gradient-map{grid-area:plot;min-width:0}
+#gradient-map{width:100%;height:auto;display:block;aspect-ratio:800/480}
+.gradient-map figcaption{flex-wrap:wrap;gap:8px}
+#gradient-count{margin-left:auto;font-size:11px;color:var(--muted)}
+.gradient-view-controls{display:flex;gap:6px;width:100%}
+.gradient-view-controls button{min-height:36px;padding:5px 10px;font-size:11px}
+.gradient-view-controls button[aria-pressed=true]{border-color:var(--ink);font-weight:700;background:var(--soft)}
+.gradient-evidence{grid-area:evidence;border-top:1px solid var(--line);padding-top:16px;min-width:0}
+#gradient-loss{font-size:20px;line-height:1.5;font-variant-numeric:tabular-nums;letter-spacing:-.025em}
+#gradient-reading{font-size:13px;line-height:1.85;margin:10px 0}
+.gradient-note{font-size:11px;line-height:1.8;color:var(--muted);margin:0}
+.gradient-reflect{border-top:1px solid var(--line);padding:22px 28px}
+.gradient-reflect h3,.gradient-os h3{font-size:18px;line-height:1.5;letter-spacing:-.025em;margin:0 0 14px}
+.gradient-reflect>.guide-choices{max-width:700px}
+.gradient-reflect button{font-size:13px;text-align:left}
+#gradient-answer{font-size:13px;color:var(--muted);line-height:1.8;margin:12px 0 0}
+#gradient-takeaway{padding:20px 0 0;max-width:700px}
+#gradient-takeaway p,.gradient-os p{font-size:13px;line-height:1.85;color:var(--muted);margin:0}
+.gradient-os{background:var(--paper);border-top:1px solid var(--line);padding:24px 28px}
+.gradient-os p{max-width:58em}
+.gradient-os a{display:inline-flex;margin-top:16px;color:var(--good);font-size:14px;font-weight:650;min-height:44px;align-items:center}
+.neural-learning-route{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:24px 0 4px;font-size:12px;line-height:1.6}
+.neural-learning-route a{color:var(--muted);min-height:44px;display:flex;align-items:center}
+.neural-learning-route a:hover{color:var(--ink)}
+.gradient-controls select:focus-visible,.gradient-os a:focus-visible,.neural-learning-route a:focus-visible{outline:3px solid var(--good);outline-offset:3px}
+@media(max-width:650px){
+ .gradient-heading{padding:20px 16px 16px}.gradient-heading h2{font-size:26px}.gradient-heading p{font-size:13px}
+ .gradient-layout{grid-template-columns:1fr;grid-template-areas:"controls" "plot" "evidence";padding:0 16px 18px;gap:16px}
+ .gradient-controls{gap:10px}.gradient-controls label{font-size:13px;grid-template-columns:1fr 1.15fr;align-items:center}
+ .gradient-controls select{font-size:12px;padding:8px;min-width:0}#gradient-status{font-size:11px;line-height:1.6}
+ .gradient-map figcaption{padding:8px 10px}.gradient-reflect{padding:20px 16px}.gradient-reflect>.guide-choices{grid-template-columns:1fr}
+ .gradient-os{padding:20px 16px}.gradient-os h3,.gradient-reflect h3{font-size:17px}
+ .neural-learning-route{display:grid;gap:0;font-size:12px;padding-top:16px}.neural-learning-route>span{display:none}
+}
+@media(max-height:520px) and (min-width:651px){
+ .gradient-layout{grid-template-columns:minmax(240px,1.1fr) minmax(280px,1fr)}
+ .gradient-heading{padding:14px 28px}.gradient-heading h2{font-size:23px;margin:0}.gradient-heading>p{display:none}
+ .gradient-map figcaption{min-height:42px;padding:5px 10px;flex-wrap:nowrap;font-size:10px;gap:6px}
+ #gradient-count{font-size:10px;white-space:nowrap}.gradient-view-controls{width:auto;gap:4px}
+ .gradient-view-controls button{min-height:30px;padding:4px 6px;font-size:10px;white-space:nowrap}
+ .gradient-map .guide-legend{font-size:10px;padding:6px 10px}
+}
