@@ -80,7 +80,7 @@ export function mountNeuralGuide({document,window,schedule=callback=>requestAnim
  advanced.addEventListener('toggle',()=>{if(advanced.open)pause();else pauseAdvanced();});
  const legacy=new Set(['field','label-lab','step-lab','model-comparison','comparison-title','bridge-title']);
  function route(){const target=window.location.hash.slice(1);if(target==='first-lesson')pauseAdvanced();else if(legacy.has(target))openAdvanced(target);}
- for(const link of document.querySelectorAll('a[href="#first-lesson"]'))link.addEventListener('click',pauseAdvanced);
+ for(const link of document.querySelectorAll('a[href="#first-lesson"],a[href="#gradient-lesson"],a[href="#residual-lesson"]'))link.addEventListener('click',()=>{pause();pauseAdvanced();});
  for(const id of ['label-before-run','label-after-run','play','step','fast'])$(id).addEventListener('click',pause);
  window.addEventListener('hashchange',route);window.addEventListener('pagehide',pause);
  window.addEventListener('neural-gradient-open',pause);

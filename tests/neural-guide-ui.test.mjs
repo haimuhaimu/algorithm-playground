@@ -14,16 +14,24 @@ function setup({noCanvas=false,hash='',reduced=false,withLabel=false}={}){
   getContext(){return noCanvas?null:new Proxy({},{get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>(o[k]=v,true)});}
  }
  const elements=new Map();for(const id of ids)elements.set(id,new Element());
- const firstLinks=[...html.matchAll(/<a\b[^>]*href="#first-lesson"[^>]*>/g)].map(()=>new Element());
- const doc=Object.assign(new EventTarget(),{hidden:false,documentElement:{dataset:{}},querySelectorAll:selector=>{assert.equal(selector,'a[href="#first-lesson"]');return firstLinks;},getElementById:id=>{assert.ok(ids.has(id),'target must exist in real HTML: '+id);return elements.get(id);}});
+ const routeLinks=Object.fromEntries(['first-lesson','gradient-lesson','residual-lesson'].map(target=>[target,[...html.matchAll(new RegExp(`<a\\b[^>]*href="#${target}"[^>]*>`,'g'))].map(()=>new Element())]));
+ const firstLinks=routeLinks['first-lesson'];
+ const doc=Object.assign(new EventTarget(),{hidden:false,documentElement:{dataset:{}},querySelectorAll:selector=>selector.split(',').flatMap(part=>{const target=part.match(/^a\[href="#([\w-]+)"\]$/)?.[1];assert.ok(target in routeLinks);return routeLinks[target];}),getElementById:id=>{assert.ok(ids.has(id),'target must exist in real HTML: '+id);return elements.get(id);}});
  const win=Object.assign(new EventTarget(),{location:{hash},matchMedia:()=>({matches:reduced})});
  Object.defineProperty(win,'localStorage',{get(){throw Error('guide must never access storage');}});
  const queue=[];let pauses=0;win.addEventListener('neural-guide-pause',()=>pauses++);
  const c=ui.mountNeuralGuide({document:doc,window:win,schedule:f=>queue.push(f)}),e=id=>elements.get(id);
  const labelQueue=[],label=withLabel?mountLabelLesson({document:doc,window:win,schedule:f=>labelQueue.push(f)}):null;
  const flush=()=>{let n=0;while(queue.length){assert.ok(n++<200);queue.shift()();}};
- return {c,e,doc,win,queue,flush,pauses:()=>pauses,label,labelQueue,firstLinks};
+ return {c,e,doc,win,queue,flush,pauses:()=>pauses,label,labelQueue,firstLinks,routeLinks};
 }
+for(const target of ['gradient-lesson','residual-lesson'])test(`same-hash ${target} navigation checkpoints active advanced training`,()=>{
+ const {e,label,labelQueue,routeLinks}=setup({hash:'#'+target,withLabel:true});
+ e('guide-open-free').click();e('label-before-run').click();labelQueue.shift()();
+ const checkpoint=label.snapshot(),stale=labelQueue.shift();assert.equal(checkpoint.lesson.before.epoch,25);
+ assert.ok(routeLinks[target].length>0);routeLinks[target][0].click();stale();
+ assert.equal(label.snapshot().running,null);assert.deepEqual(label.snapshot().lesson,checkpoint.lesson);
+});
 for(const navigation of ['changed hash','same-hash link'])test(`returning to the first lesson via ${navigation} checkpoints actual label training`,()=>{
  const {e,win,label,labelQueue,firstLinks}=setup({hash:navigation==='changed hash'?'#label-lab':'#first-lesson',withLabel:true});
  e('guide-open-free').click();e('label-before-run').click();labelQueue.shift()();
