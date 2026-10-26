@@ -25,6 +25,8 @@ for(const name of ['neural-guide.mjs','neural-guide-ui.mjs','neural-guide-view.m
 for(const name of ['neural-gradient.mjs','neural-gradient-ui.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 TYPES['neural-residual.css']='text/css; charset=utf-8';
+for(const name of ['neural-generalization.mjs','neural-generalization-ui.mjs','neural-generalization-view.mjs'])TYPES[name]='text/javascript; charset=utf-8';
+TYPES['neural-generalization.css']='text/css; charset=utf-8';
 TYPES['neural-guide.css']='text/css; charset=utf-8';
 TYPES['space-theme.css']='text/css; charset=utf-8';
 TYPES['Silkscreen-Regular.ttf']='font/ttf';
