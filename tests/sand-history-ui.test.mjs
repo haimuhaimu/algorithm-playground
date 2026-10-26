@@ -113,3 +113,23 @@ test('undo during a gesture seals and rewinds once, with late pointer release un
   u.click('history-redo');assert.equal(u.count('wall'),13);
  }finally{u.restore();}
 });
+
+test('undo cancels a held painting key so orphan repeats cannot repaint or destroy redo',async()=>{
+ const u=await boot();try{
+  u.scene('empty');u.material(3);u.brush(0);u.key('Enter');assert.equal(u.count('wall'),1);
+  u.key('z',{ctrlKey:true});assert.equal(u.count('wall'),0);assert.equal(u.els.get('history-redo').disabled,false);
+  u.key('Enter',{repeat:true});assert.equal(u.count('wall'),0,'undo must suppress the old held-key continuation');
+  assert.equal(u.els.get('history-redo').disabled,false);u.key('Enter',{},'keyup');
+  u.key('z',{ctrlKey:true,shiftKey:true});assert.equal(u.count('wall'),1);
+  u.key('ArrowRight');u.key('Enter');u.key('Enter',{},'keyup');assert.equal(u.count('wall'),2,'a fresh intentional keypress can paint again');
+ }finally{u.restore();}
+});
+
+test('visible history describes both destination ticks before the user chooses undo or redo',async()=>{
+ const u=await boot();try{
+  u.scene('empty');u.material(3);u.brush(0);u.stamp();u.click('step');u.click('step');u.click('step');
+  assert.match(u.els.get('history-summary').textContent,/筑墙.*第 0 拍/,'the visible undo destination must not hide only in an accessible name');
+  u.click('history-undo');assert.match(u.els.get('history-summary').textContent,/恢复.*筑墙.*第 3 拍/);
+  u.click('history-redo');assert.match(u.els.get('history-summary').textContent,/筑墙.*第 0 拍/);
+ }finally{u.restore();}
+});

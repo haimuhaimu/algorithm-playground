@@ -5,7 +5,7 @@ const names=['橡皮','沙子','水','墙'],sizes=['细','小','中','大','很�
 const tips={splitter:'往屋顶尖端倒水，再擦掉一小段斜坡。两边的去向会怎么变？',hourglass:'在沙漏的细口补一堵墙，让时间停住；再挖开它，让沙继续走。',empty:'造一只杯子，装点水，再撒一把沙。也可以在杯底开一道口。'};
 let scene='splitter',world=createWorld(scene),material=SAND,radius=2,stroke=null,cursor={x:36,y:5},showCursor=false;
 let playing=!matchMedia('(prefers-reduced-motion:reduce)').matches,raf=null,lastTick=performance.now(),lastPour=0;
-let history=createHistory(),pendingEdit=null,frameToken=0;
+let history=createHistory(),pendingEdit=null,frameToken=0,activePaintKey=null;
 const sceneNames={splitter:'分流器',hourglass:'沙漏',empty:'空白'},editNames=['擦除','倒沙','倒水','筑墙'];
 const unit=canvas.width/world.width;
 const currentState=()=>snapshot(scene,world);
@@ -14,7 +14,8 @@ function renderHistory(){
  $('history-undo').disabled=!previous;$('history-redo').disabled=!next||Boolean(pending);
  $('history-undo').setAttribute('aria-label',previous?`退回${previous.label}，回到第 ${previous.state.world.tick} 拍`:'退回修改，没有可退回的记录');
  $('history-redo').setAttribute('aria-label',next?`恢复${next.label}，回到第 ${next.state.world.tick} 拍`:'恢复修改，没有可恢复的记录');
- const text=previous?`可退回 ${Math.min(history.limit,history.past.length+(pending?1:0))} 次 · 上次：${previous.label}`:'还没有修改，放心画一笔。';
+ const undoText=previous?`可退回 ${Math.min(history.limit,history.past.length+(pending?1:0))} 次 · ${previous.label} → 第 ${previous.state.world.tick} 拍`:next?'已回到最早记录。':'还没有修改，放心画一笔。';
+ const text=undoText+(next&&!pending?`；恢复：${next.label} → 第 ${next.state.world.tick} 拍`:'');
  if($('history-summary').textContent!==text)$('history-summary').textContent=text;
 }
 function beginEdit(kind){if(!pendingEdit)pendingEdit={kind,before:currentState(),label:editNames[material],changed:false};}
@@ -80,7 +81,7 @@ function stop(){
  playing=false;frameToken++;if(raf!==null){cancelAnimationFrame(raf);raf=null;}controls();
 }
 function endStroke(){
- const old=stroke;stroke=null;finishEdit();
+ const old=stroke;stroke=null;activePaintKey=null;finishEdit();
  if(old&&canvas.hasPointerCapture(old.id))canvas.releasePointerCapture(old.id);
  if(!playing&&raf!==null){frameToken++;cancelAnimationFrame(raf);raf=null;}
 }
@@ -126,10 +127,14 @@ canvas.addEventListener('keydown',event=>{
  }
  const delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];
  if(delta){event.preventDefault();cursor={x:Math.max(0,Math.min(world.width-1,cursor.x+delta[0])),y:Math.max(0,Math.min(world.height-1,cursor.y+delta[1]))};showCursor=true;announceCursor();render();}
- else if(event.key===' '||event.key==='Enter'){event.preventDefault();if(stroke)return;beginEdit('keyboard');paint(cursor,cursor);announceCursor();}
+ else if(event.key===' '||event.key==='Enter'){
+  event.preventDefault();if(stroke||document.hidden||event.repeat&&activePaintKey!==event.key)return;
+  if(!event.repeat){if(activePaintKey&&activePaintKey!==event.key)finishEdit();activePaintKey=event.key;}
+  beginEdit('keyboard');paint(cursor,cursor);announceCursor();
+ }
  else if(['1','2','3','4'].includes(event.key)){event.preventDefault();setMaterial([SAND,WATER,WALL,EMPTY][Number(event.key)-1]);}
 });
-canvas.addEventListener('keyup',event=>{if((event.key===' '||event.key==='Enter')&&pendingEdit?.kind==='keyboard')finishEdit();});
+canvas.addEventListener('keyup',event=>{if(event.key===activePaintKey){activePaintKey=null;if(pendingEdit?.kind==='keyboard')finishEdit();}});
 document.querySelectorAll('[data-material]').forEach(b=>b.addEventListener('click',()=>setMaterial(Number(b.dataset.material))));
 $('brush').addEventListener('input',()=>{endStroke();radius=Number($('brush').value);$('brush-size').textContent=sizes[radius];$('brush').setAttribute('aria-valuetext',sizes[radius]+'，半径 '+radius+' 格');announceCursor();render();});
 function reset(nextScene){
