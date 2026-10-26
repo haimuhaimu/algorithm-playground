@@ -6,10 +6,10 @@ const api=await import('../neural-generalization-ui.mjs').catch(()=>({}));
 function setup({hash='',noCanvas=false}={}){
  assert.equal(typeof api.mountGeneralizationLesson,'function','generalization controller must exist');
  class Element extends EventTarget{
-  constructor(){super();this.hidden=false;this.disabled=false;this.attributes={};this.width=800;this.height=600;this.textContent='';}
+  constructor(){super();this.hidden=false;this.disabled=false;this.attributes={};this.width=800;this.height=600;this.textContent='';this.rect={left:10,top:20,width:400,height:300};}
   setAttribute(k,v){this.attributes[k]=String(v);}getAttribute(k){return this.attributes[k];}
   click(){if(!this.disabled)this.dispatchEvent(new Event('click'));}focus(){this.focused=true;}scrollIntoView(){this.scrolled=true;}
-  getBoundingClientRect(){return {left:10,top:20,width:400,height:300};}
+  getBoundingClientRect(){return {...this.rect};}
   getContext(){return noCanvas?null:new Proxy({},{get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>(o[k]=v,true)});}
  }
  const elements=new Map([...ids].map(id=>[id,new Element()])),links=[...html.matchAll(/<a\b[^>]*href="#generalization-lesson"[^>]*>/g)].map(()=>new Element());
@@ -49,4 +49,18 @@ test('keyboard and real point taps select the same evidence; dragging, cancellat
 test('missing Canvas disables this visual exercise without touching other course links or drafts',()=>{
  const f=setup({hash:'#generalization-lesson',noCanvas:true});assert.equal(f.e('generalization-train').disabled,true);
  assert.match(f.e('generalization-status').textContent,/Canvas/);assert.equal(f.c.snapshot().model.epoch,0);
+});
+test('an expanded provenance section conceals its computed result until reveal and again after reset',()=>{
+ const f=setup({hash:'#generalization-lesson'}),scope=f.e('generalization-scope');scope.open=true;
+ const result=f.e('generalization-scope-result');assert.equal(result.hidden,true);assert.equal(result.textContent,'');
+ f.e('generalization-train').click();assert.equal(result.hidden,true);assert.equal(result.textContent,'');
+ f.e('generalization-guess-all').click();assert.equal(result.hidden,false);assert.match(result.textContent,/13.*16/);
+ f.e('generalization-reset').click();assert.equal(scope.open,true);assert.equal(result.hidden,true);assert.equal(result.textContent,'');
+});
+test('scroll, layout or resize during a held pointer cannot retarget the selected evidence',()=>{
+ const f=setup({hash:'#generalization-lesson'});play(f);const canvas=f.e('generalization-map'),before=f.c.snapshot();
+ const emit=(type,x=78,y=214.1)=>canvas.dispatchEvent(Object.assign(new Event(type),{clientX:x,clientY:y,pointerId:8,button:0,isPrimary:true}));
+ emit('pointerdown');canvas.rect.top=-43;f.win.dispatchEvent(new Event('scroll'));emit('pointerup');assert.deepEqual(f.c.snapshot(),before);
+ canvas.rect.top=20;emit('pointerdown');canvas.rect.top=-43;emit('pointerup');assert.deepEqual(f.c.snapshot(),before,'layout shift without a scroll event is also cancelled');
+ canvas.rect.top=20;emit('pointerdown');canvas.rect.width=200;f.win.dispatchEvent(new Event('resize'));emit('pointerup');assert.deepEqual(f.c.snapshot(),before);
 });

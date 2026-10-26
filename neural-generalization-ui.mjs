@@ -14,6 +14,7 @@ export function mountGeneralizationLesson({document,window}){
   set('generalization-prompt',s.phase==='intro'?'还是前面的 6 个练习点。先让同一条线学习，再把模型封存起来。':s.phase==='guess'?'模型已经停在第 120 步。接下来只揭开 16 个新位置，不会再教它答案。':'实心小点是练习题，空心编号点是新题。选一个圈出的错点，看看同一条线怎样分错了它。');
   set('generalization-practice-score',e.frozen?`${e.train.correct} / ${e.train.total} 个分对`:'6 个练习点');
   set('generalization-test-score',revealed?`${e.test.correct} / ${e.test.total} 个分对`:e.frozen?'等你先猜一次':'尚未揭晓');
+  $('generalization-scope-result').hidden=!revealed;set('generalization-scope-result',revealed?`本轮固定小题：分对 ${e.test.correct} / ${e.test.total} 个。新题只被评估，没有继续训练。`:'');
   set('generalization-frozen',e.frozen?'已封存 · 120 步 · 不再训练':'只用练习点学习');
   $('generalization-train').hidden=s.phase!=='intro';$('generalization-train').disabled=!supported;
   $('generalization-guess').hidden=s.phase!=='guess';$('generalization-result').hidden=!revealed;$('generalization-reflect').hidden=!revealed;
@@ -53,10 +54,13 @@ export function mountGeneralizationLesson({document,window}){
  for(const answer of ['practice','unseen'])$('generalization-answer-'+answer).addEventListener('click',()=>{if(!canAct()||s.phase!=='reveal')return;answerGeneralization(s,answer);render();});
  $('generalization-reset').addEventListener('click',()=>{if(!opened||document.hidden)return;resetGeneralization(s);showRule=true;gesture=null;render();top();});
  canvas.addEventListener('keydown',event=>{if(!canAct()||!hasTest()||!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();choose((s.selected+(event.key==='ArrowLeft'?-1:1)+s.test.length)%s.test.length);});
- canvas.addEventListener('pointerdown',event=>{if(!canAct()||!hasTest()||s.view!=='test'||event.button!==0||event.isPrimary===false)return;gesture={id:event.pointerId,x:event.clientX,y:event.clientY,moved:false};});
+ const geometry=()=>{const r=canvas.getBoundingClientRect();return [r.left,r.top,r.width,r.height];};
+ canvas.addEventListener('pointerdown',event=>{if(!canAct()||!hasTest()||s.view!=='test'||event.button!==0||event.isPrimary===false)return;gesture={id:event.pointerId,x:event.clientX,y:event.clientY,index:hitGeneralizationPoint(canvas,event,s),box:geometry(),moved:false};});
  canvas.addEventListener('pointermove',event=>{if(gesture?.id===event.pointerId&&Math.hypot(event.clientX-gesture.x,event.clientY-gesture.y)>8)gesture.moved=true;});
  canvas.addEventListener('pointercancel',()=>{gesture=null;});
- canvas.addEventListener('pointerup',event=>{const old=gesture;if(old?.id!==event.pointerId)return;gesture=null;if(old.moved||Math.hypot(event.clientX-old.x,event.clientY-old.y)>8||!canAct())return;const index=hitGeneralizationPoint(canvas,event,s);if(index!==null)choose(index);});
+ canvas.addEventListener('pointerup',event=>{const old=gesture;if(old?.id!==event.pointerId)return;gesture=null;if(old.moved||old.index===null||Math.hypot(event.clientX-old.x,event.clientY-old.y)>8||!canAct()||geometry().some((value,i)=>value!==old.box[i]))return;const index=hitGeneralizationPoint(canvas,event,s);if(index===old.index)choose(index);});
+ for(const event of ['scroll','resize'])window.addEventListener(event,()=>{gesture=null;},true);
+ window.addEventListener('pointerup',event=>{if(gesture?.id===event.pointerId)gesture=null;});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)gesture=null;});
  window.addEventListener('pagehide',()=>{gesture=null;});
  function route(){if(window.location.hash==='#generalization-lesson')open();}window.addEventListener('hashchange',route);
