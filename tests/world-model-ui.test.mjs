@@ -46,8 +46,13 @@ test('planning cards inspect frozen alternatives without changing the chosen fli
   assert.equal(u.els.get('planning-lab').hidden,false);
   const route=u.els.get('prediction-path').getAttribute('points'),model=u.els.get('model-label').textContent;
   const record=u.els.get('record-after-predicted').getAttribute('points');
+  assert.ok(u.els.has('planning-map-route'),'mobile inspection needs a readable shared route map');
   u.click('planning-original');
   assert.equal(u.els.get('planning-original').getAttribute('aria-pressed'),'true');
+  assert.equal(u.els.get('planning-map-route').getAttribute('points'),u.els.get('planning-original-path').getAttribute('points'));
+  const axes=u.els.get('planning-map').getAttribute('viewBox');
+  u.click('planning-best');assert.equal(u.els.get('planning-map').getAttribute('viewBox'),axes,'switching cards cannot move the coordinate system');
+  u.click('planning-original');
   assert.equal(u.els.get('prediction-path').getAttribute('points'),route,'inspection cannot silently change the next guided flight');
   assert.equal(u.els.get('model-label').textContent,model);
   assert.equal(u.els.get('record-after-predicted').getAttribute('points'),record);
@@ -73,6 +78,10 @@ test('planning launch cannot replace a partial flight and learning clears stale 
   u.click('plan');u.click('planning-original');u.click('planning-launch');u.tick(0);u.tick(500);
   const actual=u.els.get('actual-path').getAttribute('points');
   assert.equal(u.els.get('planning-best').disabled,true);assert.equal(u.els.get('planning-launch').disabled,true);
+  assert.equal(u.doc.activeElement,u.els.get('pause'),'launch must hand focus to the visible Pause control');
+  const detail=u.els.get('planning-detail');let announcements=0,text=detail.textContent;
+  Object.defineProperty(detail,'textContent',{get:()=>text,set:value=>{text=value;announcements++;},configurable:true});
+  u.tick(500);assert.equal(announcements,0,'animation must not rewrite an unchanged live explanation every frame');
   u.click('planning-best');u.click('planning-launch');assert.equal(u.els.get('actual-path').getAttribute('points'),actual);
   u.click('pause');u.click('planning-launch');assert.equal(u.els.get('actual-path').getAttribute('points'),actual);
   u.click('next');u.finish();assert.equal(u.els.get('planning-result').hidden,false);

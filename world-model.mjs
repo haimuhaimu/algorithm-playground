@@ -108,6 +108,14 @@ function renderPlanning(){
  if(inspectedPlan!==plan){inspectedPlan=plan;inspectedRoute=plan.selectedKey;}
  const selected=plan.alternatives.find(c=>c.key===inspectedRoute),best=plan.alternatives.at(-1);
  const axes=bounds(plan.alternatives.map(c=>c.path),plan.target);
+ const reference=plan.alternatives[inspectedRoute==='original'?2:0],end=selected.path.at(-1);
+ $('planning-map').setAttribute('viewBox',axes);
+ $('planning-map-route').setAttribute('points',points(selected.path));
+ $('planning-map-reference').setAttribute('points',points(reference.path));
+ $('planning-map-target').setAttribute('cx',plan.target.x);$('planning-map-target').setAttribute('cy',plan.target.y);
+ $('planning-map-end').setAttribute('cx',end.x);$('planning-map-end').setAttribute('cy',end.y);
+ $('planning-map-caption').textContent=`彩色虚线：${routeNames[inspectedRoute]} · 灰线：${routeNames[reference.key]}`;
+ $('planning-map-desc').textContent=`同坐标对照。所选「${routeNames[inspectedRoute]}」预测距靶心 ${errorText(selected.distance)} 单位；对照「${routeNames[reference.key]}」为 ${errorText(reference.distance)} 单位。圆环是目标，线尾实心点是预计落点。`;
  $('planning-context').textContent=`同一 M${plan.modelVersion} · 同一起点与目标 · 未重新学习`;
  for(const candidate of plan.alternatives){
   const key=candidate.key,end=candidate.path.at(-1),controls=candidate.controls;
@@ -123,7 +131,8 @@ function renderPlanning(){
  const same=selected.controls.angle===prior.controls.angle&&selected.controls.power===prior.controls.power;
  const difference=prior.distance-selected.distance;
  const why=inspectedRoute==='original'?'这是规划前的出发方式，作为比较起点。':same?'这次两张卡的方向与推力相同，所以预测完全相同，没有额外改善。':`比「${routeNames[prior.key]}」${difference>=0?'近':'远'} ${errorText(Math.abs(difference))} 单位。${inspectedRoute==='direction'?'只换成搜索选中的方向，推力还没动。':'方向相同，再换成搜索选中的推力。'}`;
- $('planning-detail').textContent=`正在看「${routeNames[inspectedRoute]}」：预测${selected.distance<=plan.target.radius?'落在圈内':'没进圈'}。${why} 完整搜索选中的组合预测距靶心 ${errorText(best.distance)} 单位，但这不是实飞成绩。`;
+ const detail=`正在看「${routeNames[inspectedRoute]}」：预测${selected.distance<=plan.target.radius?'落在圈内':'没进圈'}。${why} 完整搜索选中的组合预测距靶心 ${errorText(best.distance)} 单位，但这不是实飞成绩。`;
+ if($('planning-detail').textContent!==detail)$('planning-detail').textContent=detail;
  $('planning-launch').textContent=`用「${routeNames[inspectedRoute]}」实飞 ↗`;$('planning-launch').disabled=active;
  const f=session.flight,hasResult=view==='flight'&&f?.done&&f.modelVersion===plan.modelVersion;
  $('planning-result').hidden=!hasResult;
@@ -266,6 +275,7 @@ for(const key of Object.keys(routeNames))$(`planning-${key}`).addEventListener('
 $('planning-launch').addEventListener('click',()=>{
  if(document.hidden||!session.plan||session.flight&&!session.flight.done)return;
  session=usePlanningRoute(session,inspectedRoute);enterFree();fly();
+ ($('pause').hidden?$('next'):$('pause')).focus();
  $('scene-wrap').scrollIntoView({block:'start',behavior:'instant'});
 });
 for(const id of ['angle','power'])$(id).addEventListener('input',()=>{
