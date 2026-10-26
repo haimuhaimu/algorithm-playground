@@ -1,4 +1,4 @@
-import {EMPTY,SAND,WALL,observeSandStep} from './sand-core.mjs?v=grain-decision-1';
+import {EMPTY,SAND,WALL,observeSandStep} from './sand-core.mjs?v=edit-history-1';
 
 export const SAND_ORIGIN=Object.freeze({x:2,y:1});
 export const SAND_OUTCOMES=Object.freeze({down:'往下 ↓',left:'左下 ↙',right:'右下 ↘',stay:'停住 ·'});
