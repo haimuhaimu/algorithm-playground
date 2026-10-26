@@ -22,7 +22,7 @@ files.push('mining-shared-evidence.mjs','mining-shared-ui.mjs');
 files.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');
 files.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');
 files.push('evolution-birth.mjs','local-drafts.mjs','world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
-files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.sort();
+files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');files.sort();
 test('server serves only runtime assets with correct types, headers and methods',async()=>{
  const server=createAppServer(root);
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));

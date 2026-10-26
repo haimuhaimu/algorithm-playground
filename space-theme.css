@@ -66,7 +66,7 @@ main,.path-main,.sand-main,.firefly-main,.evolution-main,.neural-main,.mining-ma
 .brand-mark i,.brand-mark i:before { background:var(--paper); }
 .header-actions { gap:22px; }
 .edition { font:11px var(--mono); color:var(--muted); }
-.quiet-button { font-size:12px; min-height:44px; display:inline-flex; align-items:center; gap:5px; }
+.quiet-button { font-size:12px; min-height:44px; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
 .theme-button { width:40px; height:40px; min-height:40px; background:var(--surface); border-radius:50%; }
 .experiment-nav {
  max-width:1440px; padding:0 64px; border-block:1px solid var(--line);
@@ -79,6 +79,10 @@ main,.path-main,.sand-main,.firefly-main,.evolution-main,.neural-main,.mining-ma
 }
 .experiment-nav .experiment-links a[aria-current=page] { color:var(--good); border-bottom-color:var(--good); }
 .experiment-nav .experiment-links a:hover { color:var(--ink); }
+.experiment-nav .experiment-links a:focus-visible {
+ /* Keep the entire indicator within the horizontally scrollable directory. */
+ outline:3px solid var(--good); outline-offset:-4px; border-radius:6px;
+}
 .experiment-current { font-size:14px; }
 .experiment-switch { font-size:12px; }
 
@@ -163,7 +167,11 @@ main :is(.intro-copy,.sand-intro>div>p:last-child,.firefly-intro>p:last-child,.r
 .cover-label { font:9px/1.4 var(--pixel); letter-spacing:0; opacity:.85; }
 .slider-control label { font-size:14px; }
 input[type=range] { accent-color:var(--good); }
+input[type=range]::-webkit-slider-runnable-track {
+ background:linear-gradient(to right,var(--good) 0 var(--progress,0%),var(--line) var(--progress,0%) 100%);
+}
 input[type=range]::-webkit-slider-thumb { border-color:var(--good); }
+input[type=range]::-moz-range-progress { background:var(--good); }
 input[type=range]::-moz-range-thumb { border-color:var(--good); }
 .run-button,.play-button,.sand-play,.primary,.listening-primary,.label-primary,.seat-primary,.birth-primary,
 .recipient-primary,.rsi-primary,.send-button,.grain-run,#shared-fly {
@@ -186,6 +194,15 @@ button:not(:disabled):active { transform:translateY(1px); }
 :is(button,a,summary,input,select):focus-visible { outline:3px solid var(--good); outline-offset:4px; }
 button:disabled { cursor:not-allowed; }
 select,input[type=number] { border-radius:8px; min-height:40px; color:var(--ink); background:var(--surface); border:1px solid var(--line); }
+/* Working labels must stay readable after the large display typography ends.
+   Card feedback stays compact; canvas geometry and data colors are untouched. */
+:root main button:not(.feedback-button,.cell,.grain-cell) { font-size:13px; line-height:1.5; }
+:root main select { font-size:14px; line-height:1.5; min-height:44px; max-width:100%; }
+:root main details > summary { font-size:13px; line-height:1.6; min-height:44px; padding-block:10px; }
+.local-draft { flex-wrap:wrap; gap:8px 16px; font-size:12px; line-height:1.7; }
+.local-draft p { flex:1 1 13em; min-width:0; }
+.local-draft button { margin-left:auto; }
+.label-conditions,.label-choices small { font-size:12px; line-height:1.7; }
 .feedback-entry-note { border-radius:16px; padding:18px 20px; background:var(--surface); border-color:var(--edge); box-shadow:inset 0 1px 0 var(--highlight); }
 .feedback-entry-note a { color:var(--good); }
 .feedback-entry-note p { font-size:13px; line-height:1.65; }
@@ -266,7 +283,7 @@ main > :is(.sand-intro,.firefly-intro,.neural-intro,.mining-intro) + :is(.grain-
  .brand small { font-size:8px; letter-spacing:0; }
  .header-actions { gap:12px; }
  .edition { display:none; }
- .quiet-button { font-size:11px; }
+ .quiet-button { font-size:12px; }
  .theme-button { width:36px; height:36px; min-height:36px; }
  .experiment-nav { padding:0 18px; }
  .experiment-toggle { min-height:52px; }
@@ -299,13 +316,21 @@ main > :is(.sand-intro,.firefly-intro,.neural-intro,.mining-intro) + :is(.grain-
  .step-lab h2 { font-size:22px; }
  .feed-grid { gap:12px; }
  .cover { height:112px; }
- .feedback-button { min-height:44px; font-size:10px; }
- .why summary { min-height:40px; font-size:10px; }
+ .feedback-button { min-height:44px; font-size:12px; }
+ .why summary { min-height:44px; font-size:12px; }
  .feedback-entry-note { padding:13px; }
  .post-office { padding:0 16px; }
  .bottom-note,.world-footer,.rsi-footer { margin-top:30px; padding-block:22px; }
  .drawing-toolbar { gap:8px; padding:10px; }
  .drawing-toolbar button { padding:7px 8px; }
+}
+@media (max-width:380px) {
+ .site-header,.header-actions { gap:8px; }
+ .brand small { display:none; }
+ /* Two tiny cards force titles and feedback actions to compete for one line. */
+ .feed-grid { grid-template-columns:minmax(0,1fr); }
+ .post-body h3 { font-size:15px; }
+ .cover { height:148px; }
 }
 @media (orientation:landscape) and (max-height:520px) {
  .site-header { min-height:58px; padding-block:8px; }
@@ -317,7 +342,17 @@ main > :is(.sand-intro,.firefly-intro,.neural-intro,.mining-intro) + :is(.grain-
  button,a,summary,.post-card { transition:none; }
  button:not(:disabled):active,.post-card:hover { transform:none; }
 }
+@media (prefers-reduced-transparency:reduce) {
+ .experiment-nav { background:var(--paper); }
+ dialog::backdrop { backdrop-filter:none; }
+}
+@media (prefers-contrast:more) {
+ .experiment-nav { background:var(--paper); }
+ .panel,.post-office,.grain-lesson,.listening-lesson,.label-lab,.shared-lab,.adapt-lab,.seat-lesson { border-color:var(--ink); }
+}
 @media (forced-colors:active) {
+ :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro)::before,
  :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro)::after { display:none; }
  .experiment-nav .experiment-links a[aria-current=page] { border-color:Highlight; }
+ .experiment-nav .experiment-links a:focus-visible { outline-color:Highlight; }
 }

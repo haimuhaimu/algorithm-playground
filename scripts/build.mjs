@@ -15,6 +15,7 @@ FILES.push('sand-lesson.mjs','sand-lesson-ui.mjs');
 FILES.push('mining-shared-evidence.mjs','mining-shared-ui.mjs');
 FILES.push('world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
 FILES.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');
+FILES.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');
 export async function build(root=ROOT,out=join(root,'dist')){
  await mkdir(out,{recursive:true});
  if(await realpath(root)===await realpath(out))throw Error('Build output must differ from source');

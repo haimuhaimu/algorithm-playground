@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 
 const root=new URL('../',import.meta.url);
-const pages=['index','pathfinding','sand','firefly','evolution','neural','mining','pixel','world-model','rsi'];
+const pages=['recommendation','pathfinding','sand','firefly','evolution','neural','mining','pixel','world-model','rsi'];
 
 test('every experiment loads the shared visual system after its lesson styles',async()=>{
  for(const page of pages){

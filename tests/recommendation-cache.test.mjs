@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 // Reverting a new entry or transitive import to an old unversioned URL
 // can mix the new feedback renderer with a cached core lacking scorePost.
 test('recommendation feedback entries load one fresh complete module graph',async()=>{
- const root=new URL('../',import.meta.url),html=await readFile(new URL('index.html',root),'utf8');
+ const root=new URL('../',import.meta.url),html=await readFile(new URL('recommendation.html',root),'utf8');
  const entries=[...html.matchAll(/(?:src|href)="(\.\/(?:app\.mjs|feedback-story\.css|seat-lesson\.css)[^"]*)"/g)].map(m=>new URL(m[1],root));
  assert.equal(entries.length,3);
  const version=entries[0].searchParams.get('v');assert.ok(version,'entry URL must bypass the previous unversioned browser cache');
