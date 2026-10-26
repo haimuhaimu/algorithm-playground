@@ -21,6 +21,9 @@ TYPES['neural-lesson-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['neural-lesson.css']='text/css; charset=utf-8';
 TYPES['neural-step.mjs']='text/javascript; charset=utf-8';
 TYPES['neural-step-view.mjs']='text/javascript; charset=utf-8';
+TYPES['space-theme.css']='text/css; charset=utf-8';
+TYPES['Silkscreen-Regular.ttf']='font/ttf';
+TYPES['Silkscreen-OFL.txt']='text/plain; charset=utf-8';
 TYPES['feedback-story.mjs']='text/javascript; charset=utf-8';
 TYPES['feedback-story-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['feedback-story.css']='text/css; charset=utf-8';
@@ -41,7 +44,7 @@ export function createAppServer(root=ROOT){
  return createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Cache-Control','no-store');
-  res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+  res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405,{Allow:'GET, HEAD'});res.end();return;}
   try{
    const path=decodeURIComponent((req.url||'/').split('?')[0]);

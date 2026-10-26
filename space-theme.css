@@ -1,0 +1,323 @@
+/* Shared presentation only. Simulation colors, geometry and saved state stay local
+   to each experiment. Apple-inspired restraint, not an Apple component library.
+   Radius system: controls 12px, work surfaces 24px, theme switch circular.
+   Silkscreen is unmodified, self-hosted under the bundled SIL OFL 1.1 license.
+   Source: googlefonts/silkscreen, commit 206ccf3f5234c281461e63ecc59cbc6b0563472b. */
+@font-face {
+ font-family:"Silkscreen";
+ src:url("./Silkscreen-Regular.ttf") format("truetype");
+ font-style:normal; font-weight:400; font-display:swap;
+}
+:root {
+ --paper: #f5f5f7;
+ --surface: #ffffff;
+ --soft: #eef0f4;
+ --ink: #1d1d1f;
+ --muted: #5c6068;
+ --line: #dadde3;
+ --accent: #d5e7ff;
+ --accent-ink: #103d75;
+ --good: #0757b3;
+ --action: #0864ce;
+ --on-action: #ffffff;
+ --grid: #d6e1ef;
+ --glass: #f5f5f7ed;
+ --shadow: 0 10px 32px #29364e07, 0 2px 6px #29364e04, inset 0 1px 0 #ffffffcc;
+ --edge: #e5e7eb;
+ --highlight: #ffffff;
+ --control-radius: 12px;
+ --panel-radius: 24px;
+ --pixel: "Silkscreen", "SFMono-Regular", Consolas, monospace;
+ --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+ font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+ -webkit-font-smoothing: antialiased;
+ text-rendering: optimizeLegibility;
+}
+:root[data-theme="dark"] {
+ --paper: #101114;
+ --surface: #1a1c21;
+ --soft: #252932;
+ --ink: #f4f5f7;
+ --muted: #b0b6c1;
+ --line: #383e49;
+ --accent: #254a7a;
+ --accent-ink: #f2f7ff;
+ --good: #90beff;
+ --action: #96c2ff;
+ --on-action: #08121f;
+ --grid: #22354f;
+ --glass: #101114ed;
+ --shadow: 0 10px 32px #00000020, inset 0 1px 0 #ffffff0a;
+ --edge: #30343d;
+ --highlight: #2b303a;
+}
+
+body { background:var(--paper); color:var(--ink); font-size:15px; }
+main,.path-main,.sand-main,.firefly-main,.evolution-main,.neural-main,.mining-main,.pixel-main,.world-main,.rsi-main {
+ max-width:1440px; margin-inline:auto; padding:0 64px 40px;
+}
+.site-header {
+ max-width:1440px; min-height:64px; padding:10px 64px;
+ border-bottom:0; gap:24px;
+}
+.brand { font-size:18px; font-weight:700; letter-spacing:-.025em; gap:10px; }
+.brand small { font:9px/1.6 var(--pixel); letter-spacing:0; margin-top:2px; }
+.brand-mark { transform:none; border-radius:10px; background:var(--ink); border:1px solid var(--line); }
+.brand-mark i,.brand-mark i:before { background:var(--paper); }
+.header-actions { gap:22px; }
+.edition { font:11px var(--mono); color:var(--muted); }
+.quiet-button { font-size:12px; min-height:44px; display:inline-flex; align-items:center; gap:5px; }
+.theme-button { width:40px; height:40px; min-height:40px; background:var(--surface); border-radius:50%; }
+.experiment-nav {
+ max-width:1440px; padding:0 64px; border-block:1px solid var(--line);
+ background:var(--glass);
+}
+.experiment-links { flex-wrap:nowrap; justify-content:space-between; gap:16px; overflow-x:auto; scrollbar-width:thin; }
+.experiment-nav .experiment-links a {
+ font-size:12px; min-height:48px; padding:12px 0; white-space:nowrap;
+ letter-spacing:-.02em; border-bottom-width:2px;
+}
+.experiment-nav .experiment-links a[aria-current=page] { color:var(--good); border-bottom-color:var(--good); }
+.experiment-nav .experiment-links a:hover { color:var(--ink); }
+.experiment-current { font-size:14px; }
+.experiment-switch { font-size:12px; }
+
+/* The quiet pixel field belongs to the introduction, never behind a drawing. */
+.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro {
+ position:relative; isolation:isolate; padding:64px 0 60px; margin:0;
+}
+:is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro)::after {
+ content:""; position:absolute; z-index:-1; pointer-events:none; right:0; top:30px;
+ width:240px; height:176px; opacity:.45;
+ background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+ background-size:20px 20px;
+ mask-image:linear-gradient(90deg,transparent,#000);
+}
+:is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro)::before {
+ content:""; position:absolute; z-index:-1; pointer-events:none; right:140px; top:62px;
+ width:10px; height:10px; background:var(--good); opacity:.32;
+ box-shadow:20px 0 var(--good),40px 0 var(--good),40px 20px var(--good),60px 20px var(--good),
+  60px 40px var(--good),80px 40px var(--good),80px 60px var(--good),100px 60px var(--good),
+  20px 60px var(--grid),0 80px var(--grid),20px 80px var(--good),120px -20px var(--good);
+}
+main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro) h1 {
+ font-size:clamp(40px,5.2vw,72px); line-height:1.12; letter-spacing:-.045em; font-weight:750;
+ margin:14px 0 24px; text-wrap:balance;
+}
+main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro) h1 span {
+ color:var(--good); font-weight:inherit;
+}
+main :is(.intro-copy,.sand-intro>div>p:last-child,.firefly-intro>p:last-child,.race-intro>p,.neural-intro>p,.mining-intro>div>p:last-child,.pixel-intro>div>p:last-child,.world-intro>p:last-child,.rsi-intro>p:last-child) {
+ font-size:17px; font-weight:500; line-height:1.65; color:var(--muted); max-width:800px; margin-top:0;
+}
+.eyebrow { font:12px/1.6 var(--mono); color:var(--muted); letter-spacing:.015em; }
+.intro-note { transform:none; margin-right:0; padding:16px 0 0 24px; border-left:0; align-self:flex-end; }
+.intro-note p { font-size:12px; }
+.intro-note .note-arrow { font:30px var(--mono); color:var(--good); }
+.live-dot { border-radius:1px; background:var(--good); }
+.lab-stamp { font-family:var(--mono); color:var(--good); }
+.postmark { border-radius:16px; transform:none; width:130px; height:110px; border-style:dashed; background:var(--paper); }
+.round-tag { background:var(--paper); padding:10px 0 10px 16px; border-left:2px solid var(--good); text-align:left; }
+.step-jump { font-size:13px; color:var(--good); text-underline-offset:5px; }
+
+/* Work surfaces share material, not layout: every canvas keeps its own ratio. */
+.panel,.map-toolbar,.algorithm-board,.sand-stage,.habitat,.raceboard,.drawing-board,.mission,.flight-deck,.art-desk,
+.grain-lesson,.listening-lesson,.label-lab,.shared-lab,.step-lab,.recipient-lesson,.adapt-lab,.seat-lesson {
+ border-radius:var(--panel-radius); border-color:var(--edge); box-shadow:var(--shadow);
+}
+.panel,.map-toolbar,.algorithm-board,.raceboard,.drawing-board,.mission,.flight-deck,.art-desk,
+.grain-lesson,.listening-lesson,.label-lab,.shared-lab,.step-lab,.recipient-lesson,.adapt-lab,.seat-lesson {
+ background-color:var(--surface);
+}
+.controls,.live-metrics { padding:28px 22px; }
+.playground { grid-template-columns:250px minmax(320px,1fr) 236px; gap:28px; }
+.post-card { border-radius:20px; border-color:var(--edge); box-shadow:0 3px 12px #25436704; }
+.post-body { padding:18px 18px 14px; }
+.post-body h3 { font-size:16px; font-weight:700; letter-spacing:-.02em; }
+.creator { font-size:12px; margin:8px 0 14px; }
+.feedback-button { min-height:40px; font-size:12px; }
+.why summary { font-size:12px; min-height:36px; }
+.cover { height:132px; }
+.cover::before { width:100%; height:100%; inset:0; border:0; border-radius:0; transform:none; box-shadow:none; background:repeating-linear-gradient(0deg,transparent 0 15px,#ffffff24 15px 16px),repeating-linear-gradient(90deg,transparent 0 15px,#ffffff24 15px 16px); }
+.cover[data-art]::before { width:100%; height:100%; inset:0; border-radius:0; transform:none; box-shadow:none; }
+.cover::after { width:16px; height:16px; right:20px; bottom:20px; border-radius:0; transform:none; background:#ffffff45; box-shadow:-16px -16px #ffffff24,-32px 0 #ffffff45; }
+.cover-glyph { font-family:var(--mono),sans-serif; transform:translate(-50%,-50%); }
+.cover[data-art="1"] .cover-glyph { transform:translate(-50%,-50%); }
+.section-heading h2,.section-label h2 { font-size:21px; font-weight:700; letter-spacing:-.035em; }
+.step { border:0; background:var(--soft); color:var(--good); padding:6px; border-radius:3px; font:12px/1 var(--pixel); }
+.hero-metric { font-family:var(--mono); font-size:48px; font-weight:500; letter-spacing:-.07em; color:var(--good); }
+.mini-metrics strong { font-family:var(--mono); }
+.preset,.material-buttons button,.chorus-presets button,.track-presets button,.dataset-presets button {
+ border-radius:var(--control-radius); background-color:var(--surface);
+}
+.preset { padding:12px 10px; }
+.preset strong { font-size:14px; font-weight:650; }
+.preset small,.slider-control p,.weight-note { font-size:12px; line-height:1.6; }
+.preset[aria-pressed=true],.material-buttons button[aria-pressed=true],.chorus-presets button[aria-pressed=true],
+.track-presets button[aria-pressed=true],.dataset-presets button[aria-pressed=true],.map-presets button[aria-pressed=true] {
+ border-color:var(--good); background:var(--soft);
+}
+.preset-icon { border-radius:5px; }
+.preset-dot { border-radius:1px; }
+.rank { font:10px/1.2 var(--pixel); border-radius:2px; padding:4px; }
+.cover-label { font:9px/1.4 var(--pixel); letter-spacing:0; opacity:.85; }
+.slider-control label { font-size:14px; }
+input[type=range] { accent-color:var(--good); }
+input[type=range]::-webkit-slider-thumb { border-color:var(--good); }
+input[type=range]::-moz-range-thumb { border-color:var(--good); }
+.run-button,.play-button,.sand-play,.primary,.listening-primary,.label-primary,.seat-primary,.birth-primary,
+.recipient-primary,.rsi-primary,.send-button,.grain-run,#shared-fly {
+ background:var(--action); color:var(--on-action); border-color:transparent;
+ border-radius:var(--control-radius); min-height:44px;
+}
+.chorus-transport .primary,.training-actions .primary,.race-transport .primary,.flight-toolbar .primary,
+.listening-actions .listening-primary,.label-actions .label-primary,.seat-lesson .seat-primary,.transport .sand-play {
+ background:var(--action); color:var(--on-action); border-color:transparent;
+}
+.secondary-button,.map-presets button,.drawing-tools button,.scene-buttons button,.transport button,
+.chorus-transport button,.race-tools button,.race-transport button,.drawing-toolbar button,.training-actions button,
+.step-actions button,.step-guesses button,.label-actions button,.label-choices button,.judgment-options button,
+.listening-actions button,.guess-options button,.decision-buttons button,.recipient-color-options button,
+.mission-actions button,.simulation-controls button,.shared-actions button,.grain-guesses button {
+ border-radius:var(--control-radius); min-height:40px;
+}
+button,a,summary { transition:background-color .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease; }
+button:not(:disabled):active { transform:translateY(1px); }
+:is(button,a,summary,input,select):focus-visible { outline:3px solid var(--good); outline-offset:4px; }
+button:disabled { cursor:not-allowed; }
+select,input[type=number] { border-radius:8px; min-height:40px; color:var(--ink); background:var(--surface); border:1px solid var(--line); }
+.feedback-entry-note { border-radius:16px; padding:18px 20px; background:var(--surface); border-color:var(--edge); box-shadow:inset 0 1px 0 var(--highlight); }
+.feedback-entry-note a { color:var(--good); }
+.feedback-entry-note p { font-size:13px; line-height:1.65; }
+.feedback-entry-note strong { font-size:14px; font-weight:650; }
+.comparison,.listening-cards article,.comparison-columns>article,.comparison-view,.adapt-card { border-radius:14px; }
+.neural-status,.race-status,.local-draft,.near-play-status { line-height:1.7; }
+.bottom-note,.world-footer,.rsi-footer { padding-block:28px; margin-top:44px; font-size:11px; color:var(--muted); }
+.signature { letter-spacing:0; font:10px var(--pixel); }
+dialog { border:1px solid var(--line); border-radius:20px; box-shadow:0 24px 80px #0003; }
+dialog::backdrop { background:#07111f80; backdrop-filter:blur(5px); }
+.dialog-close { min-width:40px; min-height:40px; }
+
+/* A night habitat is the subject of this experiment, in either UI theme. */
+.habitat { background:#0b1728; border-color:#31465f; color:#eef4ff; }
+.habitat-heading,.field-caption,.habitat .touch-modes p,.group-readout span,.group-readout p { color:#b8c9df; }
+.group-readout { background:#0b1728; border-color:#31465f; }
+.group-readout strong { color:#eef4ff; }
+.group-readout .group-left { color:#9de3c2; }
+.group-readout .group-right { color:#f4d38b; }
+.chorus-transport { border-color:#31465f; }
+.habitat .touch-modes button { color:#eef4ff; border-color:#536a88; }
+.habitat .touch-modes button[aria-pressed=true] { background:#c8e0ff; color:#102c50; border-color:#c8e0ff; }
+.phase-toggle input,.chorus-transport input { accent-color:#96c2ff; }
+.starfield,:root[data-theme=dark] .starfield {
+ background-color:var(--soft);
+ background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+ background-size:28px 28px;
+}
+.scene-wrap { background:var(--soft); }
+.paper-frame,.received-postcard { border-color:var(--line); }
+.post-office { border:1px solid var(--edge); background:var(--surface); border-radius:var(--panel-radius); padding:0 24px; box-shadow:var(--shadow); }
+
+/* Larger learning moments are separated by space; working controls stay close. */
+.grain-lesson,.listening-lesson,.shared-lab,.adapt-lab,.seat-lesson {
+ margin-top:64px; padding:32px;
+}
+/* These surfaces already have padded children or live inside a workbench.
+   Keep their drawing area wide instead of nesting another layer of padding. */
+.label-lab { padding:0; margin-top:64px; }
+.step-lab { margin-top:0; padding:24px 20px; border-radius:0; box-shadow:none; }
+.recipient-lesson { margin-top:64px; padding:32px; border:1px solid var(--edge); }
+main > :is(.sand-intro,.firefly-intro,.neural-intro,.mining-intro) + :is(.grain-lesson,.listening-lesson,.label-lab,.shared-lab) { margin-top:0; }
+:is(.grain-lesson,.listening-lesson,.label-lab,.shared-lab,.step-lab,.recipient-lesson,.adapt-lab,.seat-lesson) h2 {
+ font-size:clamp(26px,2.7vw,36px); font-weight:700; letter-spacing:-.04em; line-height:1.3;
+}
+.step-lab h2 { font-size:24px; }
+:is(.grain-lesson,.listening-lesson,.label-lab,.shared-lab,.step-lab,.recipient-lesson,.adapt-lab,.seat-lesson) header>p {
+ font-size:15px; line-height:1.8; max-width:72ch;
+}
+.feed-context,.controls-intro,.metric-label,.mini-metrics p,.insight,.challenge-copy,.challenge li { font-size:12px; }
+.controls-intro,.insight,.challenge-copy { line-height:1.8; }
+.section-heading { margin-bottom:22px; }
+.controls>.section-heading { margin-bottom:12px; }
+.feed-grid { gap:18px; }
+.presets { gap:10px; margin-block:24px 28px; }
+.preset { padding:14px 12px; }
+.hero-metric { color:var(--ink); font-size:52px; }
+.bottom-note { padding-top:36px; margin-top:64px; }
+
+@media (hover:hover) {
+ .run-button:hover,.play-button:hover,.sand-play:hover,.primary:hover,.send-button:hover { filter:brightness(1.05); box-shadow:0 4px 14px #0864ce26; }
+ .post-card:hover { transform:translateY(-3px); border-color:var(--line); box-shadow:0 12px 28px #24324a12; }
+}
+@media (max-width:1150px) {
+ main,.path-main,.sand-main,.firefly-main,.evolution-main,.neural-main,.mining-main,.pixel-main,.world-main,.rsi-main { padding-inline:28px; }
+ .site-header,.experiment-nav { padding-inline:28px; }
+ .experiment-links { gap:16px; }
+ .experiment-nav .experiment-links a { font-size:11px; }
+ .playground { grid-template-columns:240px minmax(0,1fr); }
+ .playground>.observations { grid-column:1/-1; }
+ .intro-note { display:none; }
+}
+@media (max-width:760px) {
+ main,.path-main,.sand-main,.firefly-main,.evolution-main,.neural-main,.mining-main,.pixel-main,.world-main,.rsi-main { padding:0 18px 20px; }
+ .site-header { min-height:72px; padding:12px 18px; gap:12px; }
+ .brand { font-size:16px; gap:9px; }
+ .brand-mark { width:32px; height:32px; padding:7px; }
+ .brand small { font-size:8px; letter-spacing:0; }
+ .header-actions { gap:12px; }
+ .edition { display:none; }
+ .quiet-button { font-size:11px; }
+ .theme-button { width:36px; height:36px; min-height:36px; }
+ .experiment-nav { padding:0 18px; }
+ .experiment-toggle { min-height:52px; }
+ .experiment-links { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); overflow:visible; gap:6px; padding:6px 0 14px; }
+ .experiment-nav .experiment-links a { font-size:12px; min-height:44px; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+ .experiment-nav .experiment-links a[aria-current=page] { border-color:var(--good); background:var(--soft); }
+ .intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro { padding:38px 0 36px; }
+ main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro) h1 { font-size:38px; line-height:1.18; margin:12px 0 18px; letter-spacing:-.045em; }
+ main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro) h1 span { display:inline-block; max-width:100%; }
+ main .rsi-intro h1 span { display:block; }
+ main :is(.intro-copy,.sand-intro>div>p:last-child,.firefly-intro>p:last-child,.race-intro>p,.neural-intro>p,.mining-intro>div>p:last-child,.pixel-intro>div>p:last-child,.world-intro>p:last-child,.rsi-intro>p:last-child) { font-size:15px; line-height:1.7; }
+ :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro)::after { width:112px; height:96px; top:22px; opacity:.35; }
+ :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro)::before { right:92px; top:38px; opacity:.12; }
+ .lab-stamp,.postmark { display:none; }
+ .round-tag { padding:6px 0 6px 10px; }
+ .playground { grid-template-columns:minmax(0,1fr); gap:22px; }
+ .playground>.observations { grid-column:auto; }
+ .controls,.live-metrics { padding:20px 16px; }
+ .post-body { padding:14px 12px 10px; }
+ .post-body h3 { font-size:13px; }
+ .section-heading h2,.section-label h2 { font-size:20px; }
+ .presets { margin-block:20px 24px; gap:8px; }
+ .preset { padding:12px 4px; }
+ .preset strong { font-size:13px; }
+ .grain-lesson,.listening-lesson,.shared-lab,.adapt-lab,.seat-lesson { margin-top:36px; padding:22px 18px; }
+ .label-lab { margin-top:36px; }
+ .step-lab { padding:20px 14px; }
+ .recipient-lesson { margin-top:36px; padding:22px 18px; }
+ :is(.grain-lesson,.listening-lesson,.label-lab,.shared-lab,.step-lab,.recipient-lesson,.adapt-lab,.seat-lesson) h2 { font-size:26px; }
+ .step-lab h2 { font-size:22px; }
+ .feed-grid { gap:12px; }
+ .cover { height:112px; }
+ .feedback-button { min-height:44px; font-size:10px; }
+ .why summary { min-height:40px; font-size:10px; }
+ .feedback-entry-note { padding:13px; }
+ .post-office { padding:0 16px; }
+ .bottom-note,.world-footer,.rsi-footer { margin-top:30px; padding-block:22px; }
+ .drawing-toolbar { gap:8px; padding:10px; }
+ .drawing-toolbar button { padding:7px 8px; }
+}
+@media (orientation:landscape) and (max-height:520px) {
+ .site-header { min-height:58px; padding-block:8px; }
+ .experiment-nav .experiment-links a { min-height:44px; }
+ .intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro { padding:18px 0; }
+ main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro) h1 { font-size:30px; margin:6px 0 8px; }
+}
+@media (prefers-reduced-motion:reduce) {
+ button,a,summary,.post-card { transition:none; }
+ button:not(:disabled):active,.post-card:hover { transform:none; }
+}
+@media (forced-colors:active) {
+ :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro)::after { display:none; }
+ .experiment-nav .experiment-links a[aria-current=page] { border-color:Highlight; }
+}

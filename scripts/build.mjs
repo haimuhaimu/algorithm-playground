@@ -7,6 +7,8 @@ FILES.push('local-drafts.mjs','evolution-birth.mjs');
 FILES.push('pixel-recipient.mjs','pixel-recipient-ui.mjs','pixel-recipient.css');
 FILES.push('neural-lesson.mjs','neural-lesson-ui.mjs','neural-lesson.css');
 FILES.push('neural-step.mjs','neural-step-view.mjs');
+FILES.push('space-theme.css');
+FILES.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 FILES.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');
 FILES.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');
 FILES.push('sand-lesson.mjs','sand-lesson-ui.mjs');
