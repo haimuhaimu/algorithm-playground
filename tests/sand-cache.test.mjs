@@ -9,18 +9,14 @@ test('sand entries and their module graph share one release key',async()=>{
  const html=await readFile(new URL('sand.html',root),'utf8');
  const entries=[...html.matchAll(/<(?:link|script)\b[^>]*(?:src|href)="(\.\/sand[^"]+)"/g)].map(m=>new URL(m[1],root));
  assert.deepEqual(entries.map(u=>u.pathname.split('/').at(-1)).sort(),['sand-lesson-ui.mjs','sand.css','sand.mjs']);
- const urls=[...entries];
- for(const file of ['sand.mjs','sand-lesson.mjs','sand-lesson-ui.mjs']){
-  const code=await readFile(new URL(file,root),'utf8');
-  const imports=[...code.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(m=>new URL(m[1],root));
-  assert.equal(imports.length,file==='sand-lesson-ui.mjs'?2:1,file);
-  urls.push(...imports);
- }
  const version=entries[0].searchParams.get('v');
  assert.ok(version,'entry assets must avoid the old unversioned browser cache');
- for(const url of urls){
+ const urls=[...entries],visited=new Set();
+ while(urls.length){
+  const url=urls.shift();if(visited.has(url.href))continue;visited.add(url.href);
   assert.equal(url.searchParams.get('v'),version,url.pathname);
   const file=new URL(url);file.search='';
-  assert.ok((await readFile(file)).length>0,'versioned assets must resolve to shipped files');
+  const source=await readFile(file,'utf8');assert.ok(source.length>0,'versioned assets must resolve to shipped files');
+  if(file.pathname.endsWith('.mjs'))for(const [,path]of source.matchAll(/from\s+['"]([^'"]+)['"]/g))urls.push(new URL(path,file));
  }
 });

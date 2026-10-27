@@ -4,9 +4,9 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="倒一把沙，放一点水，亲手改变它们的去向。一个可编辑、可单步观察的元胞自动机实验。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./sand.css?v=grain-decision-1">
- <script type="module" src="./sand.mjs?v=grain-decision-1"></script><title>算法游乐场 · 落沙实验室</title>
- <script type="module" src="./sand-lesson-ui.mjs?v=grain-decision-1"></script>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./sand.css?v=edit-history-1">
+ <script type="module" src="./sand.mjs?v=edit-history-1"></script><title>算法游乐场 · 落沙实验室</title>
+ <script type="module" src="./sand-lesson-ui.mjs?v=edit-history-1"></script>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head>
@@ -47,17 +47,19 @@
    <div class="sand-stage">
     <div class="stage-top"><span><i class="live-dot"></i> YOUR LITTLE WORLD</span><span id="tick-count">第 0 拍</span></div>
     <p id="brush-preview" class="brush-preview" aria-live="polite">沙子 · 中笔刷</p>
+    <div class="sand-history" role="group" aria-label="修改历史"><div class="history-actions"><button id="history-undo" type="button" disabled>↶ 退回修改</button><button id="history-redo" type="button" disabled>↷ 恢复修改</button></div><span id="history-summary">还没有修改，放心画一笔。</span><p>退回的是整次修改前的世界：沙水、墙和拍数一起恢复，并暂停。</p></div>
     <div class="canvas-wrap"><canvas id="sandbox" width="864" height="576" tabindex="0" role="application" aria-label="可绘画的落沙实验画布" aria-describedby="canvas-help cursor-status">浏览器需要支持 Canvas 才能显示落沙画布。</canvas><span class="canvas-caption" aria-hidden="true">按住倒下 · 拖动改变世界</span></div>
     <div class="transport" aria-label="播放控制"><button id="play" class="sand-play" aria-pressed="true">暂停 <span aria-hidden="true">Ⅱ</span></button><button id="step">走一拍</button><button id="reset">重置场景</button><label for="speed"><span>速度</span><select id="speed" aria-label="速度"><option value="100">慢速</option><option value="40" selected>正常</option><option value="16">快速</option></select></label></div>
     <div class="stage-bottom"><p id="lab-status" role="status">运行中 · 你可以直接画</p><div class="particle-counts" aria-label="当前材料数量"><span>沙 <b id="sand-count">0</b></span><span>水 <b id="water-count">0</b></span><span>墙 <b id="wall-count">0</b></span></div></div>
     <div class="lab-suggestion"><span class="eyebrow">动手试一试</span><p id="scene-tip">往屋顶尖端倒水，再擦掉一小段斜坡。两边的去向会怎么变？</p><p class="paint-rule">沙和水只填空格；画墙会替换材料。想放走它们，就用橡皮开一道口。</p></div>
    </div>
   </section>
-  <p class="canvas-help" id="canvas-help">鼠标或手指在画布上绘画，画布外可滚动。键盘：Tab 进入画布，方向键移动，空格 / Enter 落笔；1–4 换材料。</p><p class="sr-only" id="cursor-status" aria-live="polite"></p>
+  <p class="canvas-help" id="canvas-help">鼠标或手指在画布上绘画，画布外可滚动。键盘：Tab 进入画布，方向键移动，空格 / Enter 落笔；1–4 换材料。画布内 Ctrl / ⌘ Z 退回；Ctrl / ⌘ Shift Z 或 Ctrl Y 恢复。</p><p class="sr-only" id="cursor-status" aria-live="polite"></p>
   <section class="rules-strip" aria-labelledby="rules-title"><div><p class="eyebrow">看懂这套小规则</p><h2 id="rules-title">没有剧本，只有下一格。</h2></div><p><b>沙子</b>往下落，被挡住就试两侧；遇到水，可以沉下去。</p><p><b>水</b>先往下，再试斜下和左右；底下被挡住，就慢慢铺开。</p><p><b>墙</b>留在原地。你的一笔，改变的是所有粒子下一次的选择。</p></section>
   <details class="sand-notes"><summary>这是什么算法？它不是什么？</summary><p>这是一个有限网格上的元胞自动机：每格只有空、沙、水或墙四种状态。每一拍从下往上更新，横向扫描交替反向。每个粒子一拍最多移动一次；在相同状态与拍数下，结果完全一致。</p><p>它没有真实流体的压力、惯性和体积模型，水不会像现实中那样完整模拟连通器；沙粒也不是刚体。这里的「水」是会流动的格子，不是科学级物理模拟。边界封闭，材料不会从画布边缘流失。</p><p>没有持续的隐藏水源。按住才添加材料，松手就停止；暂停只停演化，仍可绘画。切换场景或重置会替换当前画布，刷新也会重置。无账号、上传、追踪或自动保存。后台自动暂停；偏好减少动画时，初始暂停，可按「走一拍」观察。</p></details>
+  <p class="history-boundary">修改历史只保留本页最近 30 次有效修改，包括筑墙、倒沙水、擦除、重置和切换场景。拖完一整笔才记一次；继续演化或作新修改，会替换旧的恢复分支。刷新不保留历史，不会上传。</p>
   <footer class="bottom-note"><span>小规则，大变化。</span><p>试着做个堤坝，再亲手开闸。</p><span class="signature">MADE BY CHEN QUAN</span></footer>
  </main>
- <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">造一个小世界。</h2><ol><li>选沙或水，在画布上按住，它们就会持续落下。</li><li>选墙，拖出斜坡、杯子或堤坝；选橡皮，挖一条新路。</li><li>暂停后仍可以画。「走一拍」让每个粒子只做一次选择。</li><li>试试沙漏，在细口附近补一堵墙，再把它擦掉。</li></ol><p>键盘也能画：方向键移动光标，空格或 Enter 落笔，按 1–4 换材料。当前光标位置与材料会读出。</p><p>切换场景或重置会清掉当前作品。说明打开时自动暂停，关闭后由你继续。</p></dialog>
+ <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">造一个小世界。</h2><ol><li>选沙或水，在画布上按住，它们就会持续落下。</li><li>选墙，拖出斜坡、杯子或堤坝；选橡皮，挖一条新路。</li><li>暂停后仍可以画。「走一拍」让每个粒子只做一次选择。</li><li>试试沙漏，在细口附近补一堵墙，再把它擦掉。</li></ol><p>键盘也能画：方向键移动光标，空格或 Enter 落笔，按 1–4 换材料。当前光标位置与材料会读出。</p><p>画错、重置或切换场景后，可以用「退回修改」恢复之前的完整世界，再用「恢复修改」找回。它们都会暂停，不会自动倒沙。说明打开时自动暂停，关闭后由你继续。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验落沙实验。</p></noscript>
 </body></html>

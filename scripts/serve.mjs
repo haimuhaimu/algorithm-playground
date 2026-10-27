@@ -7,6 +7,7 @@ const ROOT=fileURLToPath(new URL('../',import.meta.url));
 const TYPES={'navigation.css':'text/css; charset=utf-8','navigation.mjs':'text/javascript; charset=utf-8','index.html':'text/html; charset=utf-8','style.css':'text/css; charset=utf-8','app.mjs':'text/javascript; charset=utf-8','core.mjs':'text/javascript; charset=utf-8','data.mjs':'text/javascript; charset=utf-8'};
 Object.assign(TYPES,{'pathfinding.html':'text/html; charset=utf-8','pathfinding.css':'text/css; charset=utf-8','pathfinding.mjs':'text/javascript; charset=utf-8','pathfinding-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'sand.html':'text/html; charset=utf-8','sand.css':'text/css; charset=utf-8','sand.mjs':'text/javascript; charset=utf-8','sand-core.mjs':'text/javascript; charset=utf-8'});
+TYPES['sand-history.mjs']='text/javascript; charset=utf-8';
 Object.assign(TYPES,{'firefly.html':'text/html; charset=utf-8','firefly.css':'text/css; charset=utf-8','firefly.mjs':'text/javascript; charset=utf-8','firefly-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'evolution.html':'text/html; charset=utf-8','evolution.css':'text/css; charset=utf-8','evolution.mjs':'text/javascript; charset=utf-8','evolution-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'neural.html':'text/html; charset=utf-8','neural.css':'text/css; charset=utf-8','neural.mjs':'text/javascript; charset=utf-8','neural-core.mjs':'text/javascript; charset=utf-8'});
