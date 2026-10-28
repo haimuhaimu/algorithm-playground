@@ -5,6 +5,7 @@ const ROOT=fileURLToPath(new URL('../',import.meta.url));
 const FILES=['navigation.css','navigation.mjs','index.html','style.css','app.mjs','core.mjs','data.mjs','pathfinding.html','pathfinding.css','pathfinding.mjs','pathfinding-core.mjs','sand.html','sand.css','sand.mjs','sand-core.mjs','firefly.html','firefly.css','firefly.mjs','firefly-core.mjs','evolution.html','evolution.css','evolution.mjs','evolution-core.mjs','neural.html','neural.css','neural.mjs','neural-core.mjs','mining.html','mining.css','mining.mjs','mining-core.mjs','pixel.html','pixel.css','pixel.mjs','pixel-core.mjs'];
 FILES.push('local-drafts.mjs','evolution-birth.mjs');
 FILES.push('pixel-recipient.mjs','pixel-recipient-ui.mjs','pixel-recipient.css');
+FILES.push('pixel-code.mjs','pixel-code-ui.mjs','pixel-code.css');
 FILES.push('neural-lesson.mjs','neural-lesson-ui.mjs','neural-lesson.css');
 FILES.push('neural-step.mjs','neural-step-view.mjs');
 FILES.push('neural-guide.mjs','neural-guide-ui.mjs','neural-guide-view.mjs','neural-guide.css');

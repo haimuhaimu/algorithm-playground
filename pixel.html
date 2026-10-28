@@ -4,7 +4,8 @@
  <meta name="description" content="画一张像素明信片，用真正的 Huffman 编码打包寄出，再一格不差地还原。亲手玩懂信息量与无损压缩。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pixel.css"><link rel="stylesheet" href="./pixel-recipient.css?v=recipient-1">
- <script type="module" src="./pixel.mjs?v=recipient-1"></script><title>算法游乐场 · 像素邮局</title>
+ <link rel="stylesheet" href="./pixel-code.css?v=code-1">
+ <script type="module" src="./pixel.mjs?v=code-1"></script><title>算法游乐场 · 像素邮局</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head><body>
@@ -35,6 +36,34 @@
     <p class="dispatch-hint">改几笔，再寄一次。邮包大小会变，画里的每一格都不会少。</p>
     <div class="recipient-entry"><span>这串 0 和 1，真的能读成一张画吗？</span><button id="recipient-start" type="button">当一次收件员 ↗</button><small>从当前画纸截取 8 格，你来读暗号。原画和草稿不变。</small></div>
    </div>
+  </section>
+  <div class="code-entry"><div><p class="eyebrow">不只读暗号，也来分暗号</p><h2>暗号到底怎么分？</h2><p>同一张画，你分的暗号，会比算法更省吗？</p></div><button id="code-start" type="button">拿这张画分一次暗号 →</button></div>
+  <section id="code-lab" class="code-lab" aria-labelledby="code-title" hidden>
+   <header class="code-heading"><div><p class="eyebrow">YOUR CODE, YOUR POSTAGE</p><h2 id="code-title" tabindex="-1">暗号到底怎么分？</h2><p>选两组，分一个叉。看看每多一位，要重复写多少次。</p></div><a href="#editor">回到画纸 ↑</a></header>
+   <div class="code-context"><div id="code-miniature" class="code-miniature" aria-hidden="true"></div><p id="code-snapshot"></p></div>
+   <div id="code-build">
+    <div class="code-build-heading"><h3 id="code-instruction">先选两组颜色</h3><span id="code-progress">已组合 0 / 3 次</span></div>
+    <p class="code-note">把两组合在一个分叉下：左边写 0，右边写 1。两组里的每一格，以后都要多写这一位。</p>
+    <div class="code-groups" role="group" aria-label="选择两组来分叉">
+     <button id="code-group-0" type="button" aria-pressed="false"></button><button id="code-group-1" type="button" aria-pressed="false"></button><button id="code-group-2" type="button" aria-pressed="false"></button><button id="code-group-3" type="button" aria-pressed="false"></button>
+    </div>
+    <p id="code-selection" class="code-selection" role="status">先选两组。</p>
+    <div class="code-actions"><button id="code-merge" class="code-primary" type="button" disabled>把这两组合起来 →</button><button id="code-undo" type="button" disabled>↶ 撤回上一步</button><button id="code-hint" type="button">看看算法提示</button></div>
+    <p id="code-hint-copy" class="code-note" role="status"></p>
+    <div id="code-last" class="code-last" hidden><div id="code-fork" class="code-fork" aria-label="刚才增加的暗号分叉"></div><p id="code-last-copy"></p></div>
+    <div class="code-work-codes"><h4>你正在长出来的暗号</h4><p class="code-note">还没连成一棵树时，暗号只是组内片段，不能直接寄出。</p><table><thead><tr><th scope="col">颜色 / 格数</th><th scope="col">组内暗号</th><th scope="col">已累积</th></tr></thead><tbody id="code-codes"></tbody></table></div>
+   </div>
+   <div id="code-result" class="code-result" hidden>
+    <h3 id="code-result-title" tabindex="-1">同一张画，两套暗号</h3><p id="code-difference" class="code-difference"></p><button id="code-result-undo" type="button">↶ 撤回最后一次组合</button>
+    <div class="code-packages"><figure><figcaption><span>你的分法</span><strong id="code-user-cost"></strong></figcaption><div id="code-user-picture" class="code-picture" role="img" aria-label="用你的暗号邮包真实解码的图"></div><p id="code-user-equation"></p></figure><figure><figcaption><span>Huffman 的分法</span><strong id="code-huffman-cost"></strong></figcaption><div id="code-huffman-picture" class="code-picture" role="img" aria-label="用 Huffman 邮包真实解码的同一张图"></div><p id="code-huffman-equation"></p></figure></div>
+    <p id="code-integrity" class="code-note"></p>
+    <h4>省下的位，落在哪种颜色上？</h4><table class="code-compare"><thead><tr><th scope="col">颜色 / 格数</th><th scope="col">你的暗号 / 位数</th><th scope="col">Huffman / 位数</th></tr></thead><tbody id="code-comparison"></tbody></table>
+    <button id="code-huffman-open" type="button">看看 Huffman 怎样分 →</button>
+    <div id="code-huffman-replay" class="code-huffman-replay" hidden><p class="eyebrow">每次合并当前最少的两组</p><div id="code-huffman-fork" class="code-fork"></div><p id="code-huffman-step" role="status"></p><div class="code-actions"><button id="code-huffman-prev" type="button">← 上一步</button><button id="code-huffman-next" type="button">下一步 →</button></div></div>
+    <div class="code-check"><h4>现在，你觉得省空间靠的是什么？</h4><div class="code-actions"><button id="code-answer-loss" type="button">少传一些不常见的颜色</button><button id="code-answer-code" type="button">让常见颜色少重复写几位</button></div><p id="code-takeaway" role="status">选一次，把刚才的分叉变成自己的结论。</p></div>
+    <details class="code-boundary"><summary>这次比较，算了哪些东西？</summary><p>每种颜色的成本 = 格数 × 暗号长度。图案编码之外，两边都计入编码树和补零至整字节的开销；每 8 bit 是 1 B，所以少几位也可能仍占相同字节。固定每格 2 bit 的原始像素是 512 bit（64 B），不是包含本实验编码树的邮包。这里不是 PNG/JPEG 文件大小。</p><p>Huffman 每次合并当前格数最少的两组。这样频繁出现的颜色通常较晚进入分叉，暗号更短；相同次数时可能有不同但同样省的暗号。本练习使用原画的副本，不改变寄件处使用的 Huffman 规则。只有一种颜色时，仍约定每格写一个 0。</p></details>
+   </div>
+   <footer class="code-footer"><div class="code-actions"><button id="code-retry" type="button">用同一张图重新分</button><button id="code-current" type="button">换用当前画纸</button></div><p>分叉只保留在本页；刷新后结束。画纸、草稿、上次来信和其他练习照常保留。</p></footer>
   </section>
   <section id="recipient-lesson" class="recipient-lesson" aria-labelledby="recipient-title" hidden>
    <header class="recipient-heading"><div><p class="eyebrow">像素 → 暗号 → 像素</p><h2 id="recipient-title" tabindex="-1">当一次收件员</h2><p>不是猜一张图，而是亲手读回它的 8 格。</p></div><a href="#editor">回到画纸 ↑</a></header>
