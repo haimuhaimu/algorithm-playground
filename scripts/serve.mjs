@@ -8,6 +8,7 @@ const TYPES={'navigation.css':'text/css; charset=utf-8','navigation.mjs':'text/j
 Object.assign(TYPES,{'pathfinding.html':'text/html; charset=utf-8','pathfinding.css':'text/css; charset=utf-8','pathfinding.mjs':'text/javascript; charset=utf-8','pathfinding-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'sand.html':'text/html; charset=utf-8','sand.css':'text/css; charset=utf-8','sand.mjs':'text/javascript; charset=utf-8','sand-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'firefly.html':'text/html; charset=utf-8','firefly.css':'text/css; charset=utf-8','firefly.mjs':'text/javascript; charset=utf-8','firefly-core.mjs':'text/javascript; charset=utf-8'});
+Object.assign(TYPES,{'firefly-beat.mjs':'text/javascript; charset=utf-8','firefly-beat-ui.mjs':'text/javascript; charset=utf-8','firefly-beat.css':'text/css; charset=utf-8'});
 Object.assign(TYPES,{'evolution.html':'text/html; charset=utf-8','evolution.css':'text/css; charset=utf-8','evolution.mjs':'text/javascript; charset=utf-8','evolution-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'neural.html':'text/html; charset=utf-8','neural.css':'text/css; charset=utf-8','neural.mjs':'text/javascript; charset=utf-8','neural-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'mining.html':'text/html; charset=utf-8','mining.css':'text/css; charset=utf-8','mining.mjs':'text/javascript; charset=utf-8','mining-core.mjs':'text/javascript; charset=utf-8'});
