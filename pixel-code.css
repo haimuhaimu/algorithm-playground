@@ -1,6 +1,6 @@
 .code-entry{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:28px 0;border-bottom:1px solid var(--line)}
 .code-entry h2{font-size:24px;letter-spacing:-.04em;margin:8px 0}.code-entry p:not(.eyebrow){font-size:14px;color:var(--muted);line-height:1.7;margin:8px 0}
-.code-entry button,.code-lab .code-primary{border:0;background:var(--action,var(--accent));color:var(--on-action,var(--accent-ink));border-radius:12px;min-height:48px;padding:14px 20px;font:600 14px/1.5 inherit;cursor:pointer}
+.code-entry button,.code-lab .code-primary{border:0;background:var(--action,var(--accent));color:var(--on-action,var(--accent-ink));border-radius:12px;min-height:48px;padding:14px 20px;font-family:inherit;font-size:14px;font-weight:600;line-height:1.5;cursor:pointer}
 .code-lab{background:var(--surface);border:1px solid var(--edge,var(--line));border-radius:var(--panel-radius,20px);box-shadow:var(--shadow);padding:32px;margin:32px 0;scroll-margin-top:24px;max-width:100%}
 .code-lab[hidden],.code-lab [hidden]{display:none!important}
 .code-heading{display:flex;justify-content:space-between;align-items:start;gap:16px}.code-heading h2{font-size:34px;line-height:1.2;letter-spacing:-.045em;margin:8px 0 12px;font-weight:750}.code-heading p:not(.eyebrow){font-size:15px;line-height:1.7;color:var(--muted)}.code-heading a{font-size:12px;white-space:nowrap;min-height:44px;display:flex;align-items:center;text-underline-offset:5px}
