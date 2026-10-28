@@ -1,4 +1,4 @@
-import {EMPTY,SAND,WALL,observeSandStep} from './sand-core.mjs?v=grain-decision-1';
+import {EMPTY,SAND,WATER,WALL,observeSandStep,countMaterials} from './sand-core.mjs?v=material-1';
 
 export const SAND_ORIGIN=Object.freeze({x:2,y:1});
 export const SAND_OUTCOMES=Object.freeze({down:'往下 ↓',left:'左下 ↙',right:'右下 ↘',stay:'停住 ·'});
@@ -48,4 +48,40 @@ export function summarizeSandLesson(state){
  return {changed,title:changed?'只改一格，去向变了。':'改了一格，去向却没变。',text:`${edit}。第一次${SAND_OUTCOMES[a.outcome]}，这一次${SAND_OUTCOMES[b.outcome]}。`+
   (changed?'下面的尝试记录显示：邻居变了，可走的路也变了。':'这格变化没有改变首条可走的路。被墙角挡住的方向，即使落点变了，也仍不能穿过去。'),
   takeaway:'沙粒不认识整个沙堆，也不计划终点。它只按顺序检查邻居，走第一条可走的路；许多粒子重复这件事，就形成了大画面。'};
+}
+
+// The lower cell is enclosed: water checks its own moves first but cannot escape.
+// Only this cell changes between conditions; the ordinary engine decides the rest.
+export function createMaterialLesson(){
+ return {material:EMPTY,before:materialWorld(EMPTY),prediction:null,record:null,results:{}};
+}
+export function selectMaterialLesson(state,material){
+ if(![EMPTY,WATER,WALL].includes(material))throw Error('Invalid material');
+ return {...state,material,before:materialWorld(material),prediction:null,record:null};
+}
+export function predictMaterialLesson(state,guess){
+ if(!['fall','swap','stay'].includes(guess))throw Error('Invalid prediction');
+ return state.record?state:{...state,prediction:guess};
+}
+export function retryMaterialLesson(state){
+ return {...state,prediction:null,record:null};
+}
+export function runMaterialLesson(state){
+ if(!state.prediction)throw Error('Choose a prediction first');
+ if(state.record)return state;
+ const before=cloneWorld(state.before),result=observeSandStep(before,SAND_ORIGIN);
+ const point=(world,material)=>{const i=world.cells.indexOf(material);return i<0?null:{x:i%5,y:Math.floor(i/5)};};
+ const outcome=result.decision.attempts.some(a=>a.accepted&&a.reason==='swap')?'swap':result.decision.outcome==='stay'?'stay':'fall';
+ const record={before,after:result.world,decision:result.decision,guess:state.prediction,outcome,correct:state.prediction===outcome,
+  waterFrom:point(before,WATER),waterTo:point(result.world,WATER),countsBefore:countMaterials(before),countsAfter:countMaterials(result.world)};
+ return {...state,record,results:{...state.results,[state.material]:record}};
+}
+function materialWorld(material){
+ return {width:5,height:5,tick:0,cells:Uint8Array.from([
+  0,0,0,0,0,
+  0,WALL,SAND,WALL,0,
+  0,WALL,material,WALL,0,
+  0,WALL,WALL,WALL,0,
+  WALL,WALL,WALL,WALL,WALL,
+ ])};
 }
