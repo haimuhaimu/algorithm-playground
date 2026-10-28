@@ -3,6 +3,19 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { memoryStorage } from './storage-helper.mjs';
 let serial = 0;
+test('allocating codes preserves editor, draft writes, last receipt and existing recipient/reorder exercises',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('code-start'),'code allocation must be integrated in the actual postcard page');
+  u.click('send');const drawing=u.pixels('editor'),received=u.pixels('receiver'),writes=storage.writes;
+  u.click('code-start');
+  for(const i of [0,3])u.click('code-group-'+i);u.click('code-merge');
+  u.click('code-undo');u.click('code-retry');
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),received);
+  assert.equal(storage.writes,writes);assert.equal(u.frames.size,0);
+  u.click('recipient-start');assert.equal(u.els.get('recipient-lesson').hidden,false);
+  u.click('reorder-start');assert.equal(u.els.get('reorder-lesson').hidden,false);
+ }finally{u.restore();}
+});
 test('recipient reads actual bits and restores eight cells without editing or saving the postcard',async()=>{
  const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
   assert.ok(u.els.has('recipient-start'),'recipient entry exists');
