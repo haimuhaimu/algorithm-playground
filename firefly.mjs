@@ -1,4 +1,5 @@
-import {TAU,createSwarm,stepSwarm,coherence,configureSwarm,perturbSwarm,measureGroups,createListening,advanceListening,chooseListening,listeningOutcome,answerListening} from './firefly-core.mjs';
+import {TAU,createSwarm,stepSwarm,coherence,configureSwarm,perturbSwarm,measureGroups,createListening,advanceListening,chooseListening,listeningOutcome,answerListening} from './firefly-core.mjs?v=one-beat-1';
+import {mountBeatLesson} from './firefly-beat-ui.mjs?v=one-beat-1';
 
 const $=id=>document.getElementById(id),field=$('fireflies'),ctx=field.getContext('2d');
 const clock=$('phase-clock').getContext('2d'),chart=$('history').getContext('2d');
@@ -147,7 +148,7 @@ if(!ctx||!clock||!chart){
   draw();schedule();
  }
  function cancelGesture(){gesture=null;}
- function pause(message){playing=false;cancelGesture();if(raf!==null)cancelAnimationFrame(raf);raf=null;last=null;accumulator=0;controls(message);draw();}
+ function pause(message){document.dispatchEvent(new Event('firefly-world-action'));playing=false;cancelGesture();if(raf!==null)cancelAnimationFrame(raf);raf=null;last=null;accumulator=0;controls(message);draw();}
  function announceCursor(){ $('cursor-status').textContent=`光标横向 ${Math.round(cursor.x*100)}%，纵向 ${Math.round(cursor.y*100)}%，${mode==='scatter'?'打乱一片':'点亮一片'}`; }
  function apply(){
   if(lesson){$('interaction-status').textContent='引导中只比较听见的范围；退出引导后可自由点乱。';return;}
@@ -189,7 +190,7 @@ if(!ctx||!clock||!chart){
  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{cancelGesture();mode=b.dataset.mode;controls();announceCursor();draw();}));
  for(const key of ['coupling','radius','spread'])$(key).addEventListener('input',()=>{if(lesson)return;cancelGesture();world=configureSwarm(world,{[key]:Number($(key).value)});controls();draw();});
  $('show-phase').addEventListener('change',draw);
- $('play').addEventListener('click',()=>{if(lesson&&['before','after'].includes(lesson.stage))return;if(playing)pause();else{playing=true;last=null;accumulator=0;controls();schedule();}});
+ $('play').addEventListener('click',()=>{if(lesson&&['before','after'].includes(lesson.stage))return;document.dispatchEvent(new Event('firefly-world-action'));if(playing)pause();else{playing=true;last=null;accumulator=0;controls();schedule();}});
  $('step').addEventListener('click',()=>{if(lesson&&['before','after'].includes(lesson.stage))return;pause();tick();controls('已走一拍 · 推进 1/60 秒');draw();});
  function adoptLesson(){
   world=lesson.world;history=lesson.samples.map(s=>({t:s.time,r:s.value}));lastSample=world.time;last=null;accumulator=0;showCursor=false;
@@ -216,5 +217,6 @@ if(!ctx||!clock||!chart){
  const theme=matchMedia('(prefers-color-scheme:dark)');let explicitTheme=false;
  function setTheme(dark){document.documentElement.dataset.theme=dark?'dark':'light';$('theme').setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');const css=getComputedStyle(document.documentElement);ink=css.getPropertyValue('--ink');muted=css.getPropertyValue('--muted');line=css.getPropertyValue('--line');draw();}
  theme.addEventListener('change',e=>{if(!explicitTheme)setTheme(e.matches);});$('theme').addEventListener('click',()=>{explicitTheme=true;setTheme(document.documentElement.dataset.theme!=='dark');});
+ mountBeatLesson({onStart:()=>pause('放大观察一只时已暂停 · 原场景与两群证据保留')});
  controls();setTheme(theme.matches);schedule();
 }
