@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="zh-CN"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="从一张画错的海报开始，亲手决定保留或撤回助手的新办法，看下一次真的有什么不同。">
+<meta name="description" content="一条改法修好了旧委托，却弄错新要求。先亲手试用，看见副作用，再决定保留或撤回。">
 <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
-<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css"><link rel="stylesheet" href="./rsi.css?v=single-poster-1">
-<script type="module" src="./navigation.mjs"></script><script type="module" src="./rsi.mjs?v=single-poster-1"></script>
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css"><link rel="stylesheet" href="./rsi.css?v=rule-trial-1">
+<script type="module" src="./navigation.mjs"></script><script type="module" src="./rsi.mjs?v=rule-trial-1"></script>
 <title>算法游乐场 · 会进化的 AI 创作室</title>
 <link rel="stylesheet" href="./space-theme.css">
 </head><body>
@@ -12,12 +12,12 @@
 <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><a class="quiet-button" href="#boundaries">这算 RSI 吗 ↘</a><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div></header>
 <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./recommendation.html">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html" aria-current="page">10 AI 创作室</a></div></nav>
 <main class="rsi-main">
-<section class="rsi-intro"><p class="eyebrow">10 / AI 创作室 <span>一张海报，约 2 分钟</span></p><h1>修好一张图，<span>然后呢？</span></h1><p>让栗栗陪你分清：改作品，和改变助手的做法。</p></section>
-<ol class="chapter-track" aria-label="故事进度"><li id="chapter-1"><span>01</span>修这张图</li><li id="chapter-2"><span>02</span>你来取舍</li><li id="chapter-3"><span>03</span>看下一次</li></ol>
+<section class="rsi-intro"><p class="eyebrow">10 / AI 创作室 <span>一张海报，先试再决定</span></p><h1>这条改法，<span>真该留下吗？</span></h1><p>修好眼前这张，也可能弄错下一张。让栗栗陪你亲手试一次。</p></section>
+<ol class="chapter-track" aria-label="故事进度"><li id="chapter-1"><span>01</span>修这张图</li><li id="chapter-2"><span>02</span>先试新委托</li><li id="chapter-3"><span>03</span>保留或撤回</li></ol>
 <section class="studio-layout" id="workshop" aria-labelledby="guide-title">
  <section class="art-desk" id="art-desk" aria-label="同一张花园海报">
   <div class="desk-heading"><span>栗栗的花园海报</span><span>有限规则模拟 · 非真实生图</span></div>
-  <div class="reference-strip"><div id="master-art" class="master-art"></div><div><strong>始终是这份要求</strong><p>狐狸 · 绿色外套 · 侧身</p></div><span class="reference-stamp" aria-hidden="true">SAME<br>BRIEF</span></div>
+  <div class="reference-strip"><div id="master-art" class="master-art"></div><div><strong id="brief-title">旧委托 · 先要绿色</strong><p id="brief-copy">狐狸 · 绿色外套 · 侧身</p></div><span class="reference-stamp" aria-hidden="true">SAME<br>POSTER</span></div>
   <div class="art-pair" id="art-pair">
    <figure id="before-figure" hidden><figcaption id="before-label"></figcaption><div id="before-art"></div></figure>
    <figure class="current-art"><figcaption id="after-label">助手刚画的</figcaption><div id="after-art"></div></figure>
@@ -30,25 +30,26 @@
   <p class="guide-copy" id="guide-copy"></p>
   <div class="assistant-note" id="assistant-note" hidden><span>助手这次怎么想</span><p id="assistant-copy"></p></div>
   <button id="story-next" class="rsi-primary"></button>
+  <div id="rule-evidence" class="rule-evidence" hidden><p id="prediction-result"></p><p id="trial-summary"></p></div>
   <div id="choice-controls" hidden>
-   <p class="choice-hint">这次不是“下一步”，由你决定。</p>
+   <p class="choice-hint">看过两份委托的结果，再决定。两条路都能试。</p>
    <div class="decision-buttons" role="group" aria-label="决定是否保留新办法">
-    <button id="keep-rule"><strong>保留这个办法</strong><span>下一张也先找错再改</span></button>
-    <button id="withdraw-rule"><strong>撤回这次试改</strong><span>下一张仍用旧做法</span></button>
+    <button id="keep-rule"><strong>保留这条规则</strong><span>以后都固定绿色</span></button>
+    <button id="withdraw-rule"><strong>撤回这条规则</strong><span>继续使用旧办法</span></button>
    </div>
   </div>
   <div id="challenge-controls" hidden>
-   <div class="guess-options" role="group" aria-label="你觉得这次哪里不对">
-    <button id="guess-identity" aria-pressed="false">角色</button><button id="guess-outfit" aria-pressed="false">衣服</button><button id="guess-pose" aria-pressed="false">动作</button>
+   <div class="guess-options" role="group" aria-label="用固定绿色规则重画，你猜外套会是什么颜色">
+    <button id="predict-green" aria-pressed="false">仍然是绿色</button><button id="predict-brief" aria-pressed="false">按新要求，画珊瑚色</button>
    </div>
    <p id="prediction-note" class="small-note" role="status"></p>
-   <button id="run-assistant" class="rsi-primary" disabled>看助手自己处理 →</button>
+   <button id="run-trial" class="rsi-primary" disabled>用这条规则试画，不保存 →</button>
   </div>
-  <div id="ending-controls" hidden><div class="outcome"><span id="outcome-label"></span><p id="outcome-copy"></p></div><p class="takeaway" id="takeaway"></p></div>
+  <div id="ending-controls" hidden><div class="outcome"><span id="outcome-label"></span><p id="outcome-copy"></p></div><p class="takeaway" id="takeaway"></p><p class="small-note" id="saved-repair"></p></div>
   <button id="revisit" class="text-button" hidden>回到刚才的选择，试试另一条路 ↺</button>
   <details class="evidence" id="evidence" hidden><summary>想看依据？展开这次的记录</summary><p id="evidence-copy"></p></details>
  </section>
 </section>
-<details class="rsi-boundaries" id="boundaries"><summary>这和 RSI 有什么关系？</summary><div><h2>作品变好，不等于助手更会改进。</h2><p>第一步只修这张海报。第二步的候选同时包含“角色只用栗栗母版”和“先找错，再选对应改法”；只有你保留，它们才会带到下一次。最后换一个参考中的衣服错误，检验这个找改法的方法能否继续使用。</p><p>这是递归自我改进（RSI）相关概念的有限教学模拟，不是开放式自主 RSI。角色、错误和可选规则都由作者预设；没有真实生图、大模型、代码自写或训练。一次修对也不证明能无限变强。</p><p>图片由已有角色图形按规则绘制。只检查角色、衣服和动作是否符合要求，不评价审美。新错误的两条路线使用相同参考与同一次试改机会；预测答案不会告诉助手如何修改。没有上传或自动存档，刷新会重新开始。</p></div></details>
+<details class="rsi-boundaries" id="boundaries"><summary>这和 RSI 有什么关系？</summary><div><h2>会提出改法，还得会验证和取舍。</h2><p>先手动修作品，再试一条可复用规则，最后用新委托检查副作用。旧办法会照参考图用色；候选规则把外套固定为绿色。只有你保留，候选规则才会安装。这里没有同时改变助手的诊断或找改法的方法。</p><p>这是递归自我改进（RSI）相关概念中“验证候选改进、保留或回退”的有限教学模拟，不是开放式自主 RSI，也没有让系统真正改进自己的改进算法。角色、任务和规则由作者预设；没有真实生图、大模型、代码自写或训练。两份委托不能证明普遍有效。</p><p>新旧办法读取相同的参考图，角色、姿势和场景不变，只比较外套要求的变化。结果由规则实际绘制并与委托核对，不评价审美。猜测不会改变输出；回到选择点仍使用同一份试验记录。没有上传或自动存档，刷新会重新开始。</p></div></details>
 <footer class="rsi-footer"><button id="reset">从头再玩 ↻</button><span>MADE BY CHEN QUAN</span></footer>
 </main><noscript>请开启 JavaScript 后体验 AI 创作室。</noscript></body></html>
