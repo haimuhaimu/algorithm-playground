@@ -31,7 +31,7 @@
 .art-status{font-size:12px;line-height:1.7;color:var(--good);margin-top:13px;min-height:20px}
 .director{padding:14px 0;min-width:0}
 .director .eyebrow{font-size:11px;color:var(--muted)}
-.director h2{font-size:clamp(23px,2.3vw,29px);line-height:1.4;letter-spacing:-.035em;margin:12px 0}
+.director h2{font-size:clamp(23px,2.3vw,29px);line-height:1.4;letter-spacing:-.035em;margin:12px 0;scroll-margin-top:20px}
 .director h2:focus{outline:none}
 .guide-copy{font-size:15px;line-height:1.9;color:var(--muted);margin-bottom:22px}
 .rsi-primary{display:block;width:100%;background:var(--ink);color:var(--surface);font-size:14px;font-weight:550;line-height:1.5;min-height:48px;border-radius:7px;padding:13px 14px;margin-top:15px;text-align:center}
@@ -46,10 +46,13 @@
 .decision-buttons button:hover{background:var(--soft)}
 .decision-buttons strong{display:block;font-size:14px;font-weight:600}
 .decision-buttons span{display:block;color:var(--muted);font-size:11px;line-height:1.6;margin-top:5px}
-.guess-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.guess-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .guess-options button{min-height:46px;border:1px solid var(--line);border-radius:6px;font-size:14px;background:var(--surface)}
 .guess-options [aria-pressed=true]{border-color:var(--good);box-shadow:inset 0 0 0 1px var(--good);background:var(--soft);color:var(--good)}
 .small-note{font-size:12px;line-height:1.8;color:var(--muted);margin:12px 0}
+.rule-evidence{border:1px solid var(--line);border-radius:8px;padding:12px 15px;background:var(--soft);margin:16px 0}
+.rule-evidence p{font-size:12px;line-height:1.8;color:var(--muted)}
+.rule-evidence p:first-child{color:var(--ink);font-weight:600;margin-bottom:6px}
 .outcome{border-left:2px solid var(--good);padding:12px 15px;background:var(--soft);margin:20px 0}
 .outcome>span{font-size:13px;font-weight:600;color:var(--good)}
 .outcome p{font-size:14px;line-height:1.9;margin-top:8px}

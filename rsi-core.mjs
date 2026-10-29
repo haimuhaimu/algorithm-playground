@@ -18,7 +18,7 @@ export function draw(workflow,job,variation=0){
  if(!Number.isInteger(variation)||variation<0)throw Error('Invalid variation');
  const v=variation%3,ref=job.reference;
  return {id:job.id,scene:job.scene,species:workflow.identity==='locked'?job.target.species:[ref.species,ref.species==='fox'?'rabbit':'fox',ref.species][v],
- coat:workflow.outfit==='locked'?job.target.coat:[ref.coat,ref.coat==='green'?'coral':'green',ref.coat][v],
+ coat:workflow.outfit==='fixed-green'?'green':workflow.outfit==='locked'?job.target.coat:[ref.coat,ref.coat==='green'?'coral':'green',ref.coat][v],
  pose:workflow.pose==='brief'?job.target.pose:workflow.pose==='front'?'front':[ref.pose,ref.pose,ref.pose==='front'?'jump':'front'][v],variation};
 }
 export function produce(workflow,jobs){return jobs.map(job=>draw(workflow,job));}

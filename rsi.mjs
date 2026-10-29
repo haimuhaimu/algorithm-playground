@@ -1,5 +1,5 @@
-import {PATCH_LABELS} from './rsi-core.mjs?v=single-poster-1';
-import {createPosterStory,posterStoryAction,posterStoryView} from './rsi-session.mjs?v=single-poster-1';
+import {ISSUE_LABELS} from './rsi-core.mjs?v=rule-trial-1';
+import {createPosterStory,posterStoryAction,posterStoryView} from './rsi-session.mjs?v=rule-trial-1';
 
 const POSES={front:'正面打招呼',side:'侧身',jump:'跃起'};
 export function poster(art){
@@ -20,20 +20,18 @@ export function poster(art){
  return '<svg viewBox="0 0 240 300" role="img" aria-label="'+label+'"><title>'+label+'</title><rect width="240" height="300" fill="'+bg+'"/><rect x="10" y="10" width="220" height="280" rx="2" fill="none" stroke="'+ink+'" opacity=".28"/><text x="22" y="35" fill="'+ink+'" font-family="Georgia,serif" font-size="17" letter-spacing="1">'+title+'</text><text x="23" y="49" fill="'+ink+'" font-family="sans-serif" font-size="6.5" letter-spacing="2.5">A LITTLE ADVENTURE / LILI</text>'+scenery+'<ellipse cx="120" cy="255" rx="'+(jump?30:43)+'" ry="7" fill="#354a35" opacity=".18"/><g transform="'+(jump?'translate(-13 -9) rotate(-7 120 170)':'translate(0 0)')+'"><path d="M149 208 Q213 198 193 158 Q168 158 151 193" fill="'+fur+'" stroke="'+dark+'" stroke-width="2.5"/><path d="M192 158 Q208 178 188 191 L180 173Z" fill="'+cream+'"/>'+legs+arms+'<path d="M91 168 Q120 158 149 168 L156 221 Q119 231 85 221Z" fill="'+coat+'" stroke="'+dark+'" stroke-width="2.5"/><path d="M120 172v51" stroke="'+dark+'" opacity=".35"/><circle cx="137" cy="184" r="7" fill="#efd98f"/><path d="M137 179v10m-5-5h10" stroke="'+dark+'" stroke-width="1.5"/>'+ears+face+'</g><text x="22" y="281" fill="'+ink+'" font-family="sans-serif" font-size="7" letter-spacing="1.8">LILI STUDIO — ORIGINAL CHARACTER</text></svg>';
 }
 
-const ISSUE_NAMES={identity:'角色',outfit:'衣服',pose:'动作'};
-const NEXT={mistake:'fix',repaired:'redraw',repeat:'propose',proof:'challenge'};
+const NEXT={mistake:'fix',repaired:'redraw',repeat:'propose',trial:'challenge'};
 function storyCopy(s){
  const kept=s.decision==='keep';
  const pages={
-  mistake:['01 / 先看这张图','栗栗怎么变成兔子了？','要求是狐狸，它却画了一只兔子。先只修角色，别动衣服和姿势。','把兔子修回狐狸 →'],
-  repaired:['01 / 你修好了作品','这张好了。助手也学会了吗？','刚才改的是这张海报。再给它同一份要求，看看下一张会怎样。','让助手再画一次 →'],
-  repeat:['02 / 还是同一份要求','怎么又是兔子？','因为你只修了作品，没改它的做法。这次，让助手先检查哪里不对，再试一个改法。','让助手先找错，再试改 →'],
-  decision:['02 / 现在由你做决定','这条改法，要留下吗？','看看前后：角色变回狐狸，衣服和姿势没动。你决定把这个办法带到下一次，还是撤回。',''],
-  proof:['03 / 按你的选择重新画',kept?'这次没再画成兔子。':'撤回后，它又画成了兔子。',
-   kept?'你保留了新办法。这是助手重新画的，不是刚才那张修过的图。':'你没有留下新办法。助手仍按旧做法画，所以同一个错误又回来了。','换一个错误，看看它会不会处理 →'],
-  challenge:['03 / 同一张海报，换个错误','这次哪里不对？','要求还是上方那一份。先选出你看到的问题，再让助手按你留下的办法处理。',''],
-  ending:['本轮结束',kept?'它换了问题，也换了改法。':'旧办法没有解决这次的问题。',
-   kept?'这次不再是角色错了。助手先找到衣服问题，再试着锁定绿色外套。':'它还在按固定顺序试：先改成正面。但要求是侧身，衣服也依然不对，因此没有留下这次试改。','']
+  mistake:['01 / 先修这张图','这次，外套颜色画错了。','委托要绿色外套，助手却用了珊瑚色。先只改这张海报，角色和姿势都保留。','把这张外套改成绿色 →'],
+  repaired:['01 / 你修好了作品','这张好了，下一张呢？','刚才只修了作品，没有改助手的规则。用同一份要求重新画一次。','让助手再画一次 →'],
+  repeat:['01 / 错误又回来了','它还是照着参考图用色。','助手提出一个办法：“以后不管收到什么要求，外套都固定绿色。”先试，不急着留下。','先试“固定绿色”这个办法 →'],
+  trial:['02 / 只在旧委托上试过','这张对了，就能留下吗？','这条规则确实修好了绿色委托。但它说的是“以后都绿色”。先换一份要求，看看有没有副作用。','先试一份新委托 →'],
+  challenge:['02 / 新委托，只换外套颜色','这次要珊瑚色，它会听吗？','还是同一张花园海报，角色和姿势不变。只把外套要求换成珊瑚色：用“固定绿色”重画，会发生什么？',''],
+  decision:['03 / 看过副作用，再取舍','这条改法，真该留下吗？','左边是旧办法，右边是候选规则，拿到完全相同的新委托。旧任务变好了，新任务却被改错了。你还要把这条规则带到以后吗？',''],
+  ending:['本轮结束',kept?'规则留下了，副作用也留下了。':'撤回规则，修好的作品还在。',
+   kept?'接到同一份珊瑚色委托，助手依然固定画绿色。保留会真的改变以后的做法，但不保证符合新要求。':'你没有安装“固定绿色”。助手继续按旧办法用参考图的颜色，这次恰好符合珊瑚色要求。撤回不是丢掉你修好的图。','']
  };
  return pages[s.stage];
 }
@@ -45,44 +43,49 @@ export function initStudio(doc=document,win=window){
   if(box&&doc.documentElement.style)doc.documentElement.style.setProperty('--pinned-art-height',Math.ceil(box.height+18)+'px');
  }
  function render(){
-  const v=posterStoryView(state),[stage,title,copy,next]=storyCopy(state),s=state;
+  const v=posterStoryView(state),[stage,title,copy,next]=storyCopy(state),s=state,newBrief=s.job.target.coat==='coral';
   for(let n=1;n<=3;n++){if(n===v.chapter)$('chapter-'+n).setAttribute('aria-current','step');else $('chapter-'+n).removeAttribute('aria-current');}
   $('guide-stage').textContent=stage;$('guide-title').textContent=title;$('guide-copy').textContent=copy;
   $('master-art').innerHTML=poster({...s.job.target,scene:s.job.scene});
+  $('brief-title').textContent=newBrief?'新委托 · 只换外套颜色':'旧委托 · 先要绿色';
+  $('brief-copy').textContent='狐狸 · '+(newBrief?'珊瑚色':'绿色')+'外套 · 侧身';
   $('before-figure').hidden=!v.before;$('art-pair').dataset.single=String(!v.before);
   $('before-art').innerHTML=v.before?poster(v.before):'';$('after-art').innerHTML=poster(v.after);
   const captions={
-   mistake:['','助手刚画的'],repaired:['你动手前','你修好这张'],repeat:['你刚修好的','助手重新画的'],
-   decision:['试改前','试改后 · 等你决定'],
-   proof:s.decision==='keep'?['改助手之前','保留后，重新画']:['刚才的试改','撤回后，重新画'],
-   challenge:['','新的参考，让它画成这样'],ending:['处理前','助手处理后']
+   mistake:['','助手刚画的'],repaired:['你动手前','你修好这张'],repeat:['你刚修好的','旧办法重新画'],
+   trial:['旧办法 · 旧委托','候选规则 · 只试不保存'],
+   challenge:['','新委托 · 用旧办法画'],
+   decision:['旧办法 · 同一份新委托','候选规则 · 同一份新委托'],
+   ending:['旧办法 · 同一份新委托',s.decision==='keep'?'保留规则后，重新画':'撤回规则后，重新画']
   };
   [$('before-label').textContent,$('after-label').textContent]=captions[s.stage];
   $('art-status').hidden=s.stage==='challenge';
-  $('art-status').textContent=v.issues.length?'这张还不符合：'+v.issues.map(i=>ISSUE_NAMES[i]).join('、'):'角色、衣服、姿势都符合这份要求。';
+  $('art-status').textContent=v.issues.length?'与当前要求不符：'+v.issues.map(i=>ISSUE_LABELS[i]).join('、'):'角色、衣服、姿势都符合当前委托。';
   $('story-next').hidden=!NEXT[s.stage];$('story-next').textContent=next;
   $('choice-controls').hidden=s.stage!=='decision';$('challenge-controls').hidden=s.stage!=='challenge';
   $('ending-controls').hidden=s.stage!=='ending';
-  $('assistant-note').hidden=s.stage!=='decision';
-  $('assistant-copy').textContent='我发现角色不像栗栗。先试“画角色时只用栗栗的母版”。如果你留下，以后我也先检查错在哪里，再选改法。';
-  for(const issue of Object.keys(ISSUE_NAMES))$('guess-'+issue).setAttribute('aria-pressed',String(s.prediction===issue));
-  $('run-assistant').disabled=!s.prediction;
-  $('prediction-note').textContent=s.prediction?'你猜是'+ISSUE_NAMES[s.prediction]+'。先不公布答案，看看助手会怎么做。':'先选一个。你的猜测不会改变助手的做法。';
-  $('revisit').hidden=!['proof','challenge','ending'].includes(s.stage);
-  $('evidence').hidden=!['decision','proof','ending'].includes(s.stage);
-  $('evidence-copy').textContent=s.stage==='ending'&&s.transfer
-   ?'你'+(s.decision==='keep'?'保留':'撤回')+'了新办法。新参考只有衣服不符合要求；你猜的是'+ISSUE_NAMES[s.prediction]+'。助手实际试了「'+PATCH_LABELS[s.transfer.attempts[0].patch]+'」。符合全部要求的图片：'+s.transfer.before.passed+' → '+s.transfer.after.passed+' / 1。'
-   :s.stage==='proof'?(s.decision==='keep'
-    ?'已保留“角色只用栗栗母版”和“先找错再选改法”。现在这张狐狸是用新办法重新画的，不是把刚才修过的图拿回来。'
-    :'未保留这次试改，也未改变助手找改法的方式。现在这只兔子是按旧办法重新画的；你刚才手动修好的那张仍留在本次故事记录里。')
-   :'同一份花园委托，只试“角色只用栗栗母版”。其他条件没有变。试改前是一只兔子，试改后是一只狐狸；在你做决定前，助手的旧办法保持不变。';
+  $('assistant-note').hidden=!['trial','challenge','decision'].includes(s.stage);
+  $('assistant-copy').textContent='候选规则：外套永远固定绿色。只改衣服，不改变角色、姿势，也不改变助手找改法的方法。现在只是试用，尚未保存。';
+  for(const prediction of ['green','brief'])$('predict-'+prediction).setAttribute('aria-pressed',String(s.prediction===prediction));
+  $('run-trial').disabled=!s.prediction;
+  $('prediction-note').textContent=s.prediction?'你猜它会'+(s.prediction==='green'?'仍画绿色':'按新要求画珊瑚色')+'。试一次，看实际结果。':'先猜一下，再亲手试。你的猜测不会改变规则的输出。';
+  $('revisit').hidden=s.stage!=='ending';
+  $('rule-evidence').hidden=!s.transfer;
+  if(s.transfer){
+   $('trial-summary').textContent='同一条候选规则：旧委托（要绿色）'+(s.proposal.after.passed?'通过':'未通过')+'；新委托（要珊瑚色）'+(s.transfer.after.passed?'通过':'未通过')+'。';
+   $('prediction-result').textContent=s.prediction==='green'?'你猜对了：它仍画绿色，没有读取新的颜色要求。':'你猜它会听新要求，实际仍是绿色：固定颜色覆盖了新要求。';
+  }
+  $('evidence').hidden=!s.proposal;
+  $('evidence-copy').textContent=s.proposal
+   ?'固定绿色规则只改外套，未改变角色、动作或改进方法。旧委托通过数：'+s.proposal.before.passed+' → '+s.proposal.after.passed+' / 1。'+(s.transfer?'同一份新委托、同一张参考图，旧办法通过 '+s.transfer.before.passed+' / 1，候选规则通过 '+s.transfer.after.passed+' / 1。':'尚未测试新委托。')+(s.decision==='keep'?'你已保留这条规则。':s.decision==='withdraw'?'你已撤回这条规则，旧办法未改变。':'助手仍用旧办法；候选规则没有安装。')
+   :'';
   if(s.stage==='ending'){
-   const correct=s.prediction==='outfit';
-   $('outcome-label').textContent=correct?'你找对了：是衣服。':'你猜的是'+ISSUE_NAMES[s.prediction]+'，实际变的是衣服。';
+   $('outcome-label').textContent=s.decision==='keep'?'已保留：以后仍固定绿色。':'已撤回：不安装固定绿色规则。';
    $('outcome-copy').textContent=s.decision==='keep'
-    ?'你保留的“先找错再改”起作用了：它这次选的是衣服规则，而不是重复改角色。绿色外套回来了。'
-    :'你撤回了“先找错再改”，它仍先试正面构图。衣服没有修好；撤回保护了旧做法，也放弃了这次改进。';
-   $('takeaway').textContent='修图，只救回这一张。保留一个找错再改的办法，才可能帮助下一次。这个小实验有固定规则，不代表 AI 已能无限进化。';
+    ?'试用发现的问题没有消失：助手仍忽略珊瑚色要求。这是保留后的真实输出，不会为了奖励你的选择而改成正确颜色。'
+    :'旧办法未被覆盖。这次按参考图画出了珊瑚色；它也并非总是正确——之前的绿色委托就画错过。';
+   $('saved-repair').textContent='你最初手动修好的绿色海报仍保留在本轮记录里，保留或撤回规则都不会改写它。';
+   $('takeaway').textContent='修好当前作品，不代表这条办法值得带到以后。先试新要求，看有没有副作用，再决定保留或撤回。两份委托只是有限证据，不代表规则在所有任务上都有效。';
   }
   measureArt();
  }
@@ -91,13 +94,13 @@ export function initStudio(doc=document,win=window){
   state=next;render();
   if(old.stage!==state.stage){
    $('guide-title').focus({preventScroll:true});
-   if(win.innerWidth<=700||win.innerHeight<=500)$('guide-title').scrollIntoView({block:'start',behavior:'instant'});
+   $('guide-title').scrollIntoView({block:'start',behavior:'instant'});
   }
  }
  $('story-next').addEventListener('click',()=>act(NEXT[state.stage]));
  for(const decision of ['keep','withdraw'])$(decision+'-rule').addEventListener('click',()=>act('decide',{decision}));
- for(const issue of Object.keys(ISSUE_NAMES))$('guess-'+issue).addEventListener('click',()=>act('predict',{issue}));
- $('run-assistant').addEventListener('click',()=>act('run'));
+ for(const prediction of ['green','brief'])$('predict-'+prediction).addEventListener('click',()=>act('predict',{prediction}));
+ $('run-trial').addEventListener('click',()=>act('run'));
  $('revisit').addEventListener('click',()=>act('revisit'));
  $('reset').addEventListener('click',()=>act('reset'));
  $('theme').addEventListener('click',()=>{
