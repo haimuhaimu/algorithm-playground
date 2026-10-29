@@ -1,7 +1,13 @@
-import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs';
+import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=learning-route-20261029';
 import {paintGuide} from './neural-guide-view.mjs';
 import {paintGeneralization} from './neural-generalization-view.mjs';
 const shape=n=>n?'方':'圆';
+function markExample(canvas,p,dark){
+ if(!p)return;
+ const ctx=canvas.getContext('2d'),x=(p.x+1)*canvas.width/2,y=(1-p.y)*canvas.height/2;
+ ctx.strokeStyle=dark?'#ff91c5':'#ad2868';ctx.lineWidth=5;ctx.beginPath();ctx.arc(x,y,31,0,Math.PI*2);ctx.stroke();
+ ctx.fillStyle=dark?'#242028':'#ffffff';ctx.fillRect(x-35,y-72,70,33);ctx.fillStyle=dark?'#ff91c5':'#ad2868';ctx.font='700 25px system-ui';ctx.textAlign='center';ctx.fillText(p.id+'号',x,y-47);ctx.textAlign='start';
+}
 
 export function mountLearningRoute({document,window}){
  const $=id=>document.getElementById(id),set=(id,t)=>{$(id).textContent=t;},show=(id,value)=>{$(id).hidden=!value;};
@@ -47,7 +53,7 @@ export function mountLearningRoute({document,window}){
    if(s.gradient.answer==='points')set('route-explain-feedback','圆点和方点坐标没变。变化发生在决定这条线的参数上。');
    if(s.gradient.answer==='parameters')set('route-explain-feedback','对，这就是一次梯度更新。步长控制改多少，不代表越大越好。');
    set('route-metric',stepped?`练习误差：${e.gradient.lossBefore.toFixed(3)} → ${e.gradient.lossAfter.toFixed(3)}`:`起点练习误差：${e.gradient.lossBefore.toFixed(3)}，尚未更新`);
-   set('route-evidence',stepped?`你猜${s.stepGuess==='points'?'点会移动':'分界线会变'}。实际：点和标签不变，参数更新了一次，分错数 ${e.gradient.mistakesBefore.length} → ${e.gradient.mistakesNow.length}。分错数没变也可能发生学习，预测离标签的距离仍会变化。`:'先选一个预测，才能运行。误差来自模型真实计算，不是预设的进度分数。');
+   set('route-evidence',stepped?`你猜${s.stepGuess==='points'?'点会移动':'分界线会变'}；实际只改了参数。分错数 ${e.gradient.mistakesBefore.length} → ${e.gradient.mistakesNow.length}，再看同一个点的读数。`:'先选一个预测，才能运行。误差来自模型真实计算，不是预设的进度分数。');
    set('route-map-label',before||!stepped?'共同起点的分界，尚未更新':'这一步之后的分界');set('route-map-text',`圆点、方点位置不变。${e.gradient.steps} 次真实更新，当前分错 ${e.gradient.mistakesNow.length} 个。`);
    set('route-legend',stepped?'实线是这一步的结果，虚线保留共同起点。可以单独看原来的线。':'这条实线是共同起点。运行后才会叠加前后两条线；现在还没有更新结果。');
    if(stepped)set('route-formula',`新参数 = 旧参数 − 步长 × 当前梯度。本次步长 ${e.gradient.rate}；横向权重 ${e.gradient.lastWeights[0].toFixed(4)} → ${s.gradient.model.weights[0].toFixed(4)}，纵向权重 ${e.gradient.lastWeights[1].toFixed(4)} → ${s.gradient.model.weights[1].toFixed(4)}。误差是练习题的平均交叉熵，不是新题正确率。`);
@@ -73,13 +79,32 @@ export function mountLearningRoute({document,window}){
    set('route-summary-gradient',`你用步长 ${e.gradient.rate} 走了 ${e.gradient.steps} 步，练习误差从 ${e.gradient.lossBefore.toFixed(3)} 变成 ${e.gradient.lossAfter.toFixed(3)}。点和标签不变，变的是决定分界的参数。`);
    set('route-summary-test',`回到固定的 120 步模型，练习分对 ${e.test.train.correct} / 6，新题分对 ${e.test.test.correct} / 16。这不是“模型永远会错 ${e.test.test.total-e.test.test.correct} 题”，只是这组固定小题的实际结果。`);
   }
-  set('route-status',!supported?'此浏览器不支持 Canvas，无法运行这条路线。完整实验与学习说明链接仍可打开。':e.canAdvance?'这一站已完成实际操作和判断，可以继续。':'结果由现有模型真实计算。本路线不读取或覆盖自由涂鸦草稿。');
+  show('route-inspector',!!e.point);show('route-after-reading',!!e.point?.after);
+  if(e.point){
+   const p=e.point,kind=shape(p.label),reading=r=>`判${shape(r.predicted)}区 · 给${kind}区 ${(r.towardLabel*100).toFixed(1)}%`;
+   set('route-inspect-title',`盯住 ${p.id} 号${kind}点 · 答案是${kind}区`);
+   for(const id of [3,6])$('route-inspect-'+id).setAttribute('aria-pressed',String(p.id===id));
+   set('route-point-before',reading(p.before));set('route-point-after',p.after?reading(p.after):'尚未运行');
+   $('route-score-before').value=p.before.towardLabel*100;$('route-score-after').value=p.after?p.after.towardLabel*100:0;
+   for(const [name,value]of [['before',p.before],['after',p.after]])$('route-score-'+name).setAttribute('aria-label',`${p.id} 号${kind}点，${name==='before'?'起点':'运行后'}对${kind}区的倾向${value?' '+(value.towardLabel*100).toFixed(1)+'%':'尚未运行'}`);
+   set('route-point-verdict',!p.after?'先运行，再看同一个点的判断怎样变化。':p.after.correct?'这个例子分对了。点没有移动，改变的是分界线。':p.after.towardLabel>p.before.towardLabel?`更偏向${kind}区了，但还没分对。学了一步，不等于立刻改对类别。`:`这个例子仍然分错。一次变化不能直接当作改进。`);
+   set('route-view-note',before?'画布正在显示共同起点；运行后读数仍是保留的真实记录。':p.after?'画布显示运行后，虚线保留共同起点；两栏读的是同一个点。':'画布和起点读数来自同一个未更新模型。');
+   if(supported)markExample(canvas,p,document.documentElement.dataset.theme==='dark');
+  }
+  if(before){
+   set('route-metric','运行记录（画布看起点）：'+$('route-metric').textContent);
+   set('route-legend','只显示共同起点的实线；运行后的分界没有覆盖这张起点图。');
+   if(stage==='gradient')set('route-map-text',`画布显示未更新的共同起点，分错 ${e.gradient.mistakesBefore.length} 个；${e.gradient.steps} 次更新的实际结果仍保留在记录中。`);
+  }
+  set('route-status',!supported?'此浏览器不支持 Canvas，无法运行这条路线。完整实验与学习说明链接仍可打开。':e.canAdvance?'这一站已完成，可以继续下一站。':stage==='gradient'&&!e.gradient.steps?'选好步长和预测，再真实走一步。':stage==='classify'&&s.guide.phase==='trained'?'看清变化后，用这条线判断一个新点。':'按当前提示动手，再用看到的变化作判断。');
  }
  function move(action,value){
   if(document.hidden||!supported)return;
-  const old=s.stage;actLearningRoute(s,action,value);before=false;render();
+  const old=s.stage;actLearningRoute(s,action,value);if(action!=='inspect')before=false;render();
   if(old!==s.stage||['train','probe','step','retry','reset'].includes(action)||(action==='guess'&&s.stage!=='gradient')){
-   const target=$(s.stage==='summary'?'route-summary-title':'route-title');target.focus({preventScroll:true});$(s.stage==='summary'?'route-summary':'route-task').scrollIntoView({block:'start',behavior:'instant'});
+   const observation=['train','step','retry'].includes(action),narrow=window.innerWidth<=760||window.innerHeight<=450;
+   const target=$(s.stage==='summary'?'route-summary-title':observation?narrow?'route-metric':'route-map-label':'route-title');target.focus({preventScroll:true});
+   $(s.stage==='summary'?'route-summary':observation?narrow?'route-metric':'route-observation':'route-task').scrollIntoView({block:'start',behavior:'instant'});
   }
  }
  $('route-main').addEventListener('click',()=>move(s.stage==='gradient'?'step':s.stage==='classify'&&s.guide.phase==='trained'?'probe':'train'));
@@ -88,6 +113,7 @@ export function mountLearningRoute({document,window}){
  $('route-rate').addEventListener('change',()=>move('rate',Number($('route-rate').value)));
  $('route-point-next').addEventListener('click',()=>move('point',(s.test.selected+1)%s.test.test.length));
  $('route-before').addEventListener('click',()=>{if(document.hidden||!supported)return;before=!before;render();});
+ for(const id of [3,6])$('route-inspect-'+id).addEventListener('click',()=>move('inspect',id-1));
  function theme(dark){document.documentElement.dataset.theme=dark?'dark':'light';$('home-theme').setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');render();}
  $('home-theme').hidden=false;$('home-theme').addEventListener('click',()=>{explicitTheme=true;theme(document.documentElement.dataset.theme!=='dark');});
  media.addEventListener('change',()=>{if(!explicitTheme)theme(media.matches);});theme(media.matches);

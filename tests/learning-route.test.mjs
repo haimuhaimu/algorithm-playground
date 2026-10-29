@@ -39,3 +39,23 @@ test('invalid or out-of-phase actions cannot fabricate progress or corrupt state
  const r=setup(),old=structuredClone(r.s);for(const [a,v]of [['guess',0],['step'],['explain','parameters'],['point',999],['back'],['rate',99],['next'],['unknown']])r.act(a,v);
  assert.deepEqual(r.s,old);
 });
+test('same-point observation derives an unrun baseline and a real still-wrong one-step result',()=>{
+ const r=setup();let p=r.e().point;
+ assert.ok(p,'route must expose a concrete supplied example, not a made-up progress score');
+ assert.equal(p.id,3);assert.equal(p.label,0);assert.equal(p.before.predicted,1);assert.equal(p.after,null);
+ assert.ok(Math.abs(p.before.towardLabel-.389360766050778)<1e-12,'circle tendency from logit .45 is 1-sigmoid(.45)');
+ classify(r);r.act('next');r.act('rate',.03);r.act('guess','parameters');r.act('step');p=r.e().point;
+ assert.equal(p.after.predicted,1,'a small genuine update does not magically fix this example');
+ assert.equal(p.after.correct,false);assert.ok(p.after.towardLabel>p.before.towardLabel);
+ r.s.gradient.model.weights=[0,0,0];p=r.e().point;assert.equal(p.after.towardLabel,.5,'observation must read the current real model');
+ r.act('retry');assert.equal(r.e().point.after,null,'retry must not retain a completed result');
+});
+test('looking at the other wrong example never trains and keeps each station selection independent',()=>{
+ const r=setup(),start=structuredClone(r.s.guide);r.act('inspect',5);assert.equal(r.e().point.id,6);assert.equal(r.e().point.label,1);
+ assert.ok(Math.abs(r.e().point.before.towardLabel-.389360766050778)<1e-12);assert.deepEqual(r.s.guide,start);
+ r.act('inspect',4);assert.equal(r.e().point.id,6,'only the supplied inspectable examples are selectable');
+ classify(r);assert.equal(r.e().point,null,'the unseen-probe question must not show an unrelated training inspector');r.act('next');
+ assert.equal(r.e().point.id,3);r.act('inspect',5);gradient(r);r.act('retry');assert.equal(r.e().point.id,6);
+ r.act('back');assert.equal(r.s.stage,'classify');assert.equal(r.e().point,null);
+ r.act('reset');assert.equal(r.e().point.id,3);assert.equal(r.e().point.after,null);
+});
