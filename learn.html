@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="description" content="从六个例子开始，亲眼看分类、动一次梯度，再用新题检验。陈全的算法游乐场精选学习路线。">
+ <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+ <link rel="stylesheet" href="./home.css"><link rel="stylesheet" href="./learning-route.css">
+ <script type="module" src="./learning-route-ui.mjs"></script><title>AI 怎么从例子里学会？ · 算法游乐场</title>
+</head>
+<body>
+ <a class="skip-link" href="#route-task">跳到当前任务</a>
+ <header class="home-header"><a class="home-brand" href="./"><span class="pixel-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>算法游乐场</span></a><nav aria-label="学习路线导航"><a href="./#experiments">全部实验</a><button id="home-theme" type="button" aria-label="切换深色模式" hidden>◐</button></nav></header>
+ <main class="route-main">
+  <header class="route-intro"><a class="route-back-home" href="./#learning-routes">精选学习路线 / 涂鸦训练场</a><h1>AI 怎么从<br>例子里学会？</h1><p>给它例子，看它改规则，再拿新题检验。<br>先不用背公式，亲手走一遍。</p><a class="route-primary route-start" href="#route-task">从两个错点开始 ↓</a></header>
+  <ol class="route-progress" aria-label="三站学习路线"><li id="route-progress-0" aria-current="step"><span>看它学会分组</span><small>例子与规则</small></li><li id="route-progress-1"><span>亲手改一步</span><small>梯度与步长</small></li><li id="route-progress-2"><span>拿新题检验</span><small>学习与使用</small></li></ol>
+  <section class="route-task" id="route-task" aria-labelledby="route-title">
+   <header class="route-task-heading"><span id="route-station">看它学会分组</span><h2 id="route-title" tabindex="-1">这两个错点，能分回来吗？</h2><p id="route-description">圆点进圆区，方点进方区。点的位置不变，看看分界线会怎样调整。</p></header>
+   <div class="route-workbench">
+    <figure class="route-map"><figcaption><b id="route-map-label">先看原来的分法</b><button id="route-before" type="button" aria-pressed="false" hidden>单独看原来的线</button></figcaption><canvas id="route-map" width="800" height="480" role="img" aria-label="圆点、方点与真实模型计算的分界" aria-describedby="route-map-text route-evidence"></canvas><p id="route-map-text" class="route-sr-only"></p><p id="route-legend">圆点进圆区，方点进方区。实线是现在，虚线是原来。</p></figure>
+    <div class="route-tools">
+     <p id="route-condition" class="route-condition">固定六个例子，只调整分界，不移动点。</p>
+     <div id="route-rate-control" hidden><label for="route-rate">这一步改多少？</label><select id="route-rate"><option value="0.03">小步 0.03</option><option value="0.15" selected>中步 0.15</option><option value="0.6">大步 0.60</option></select></div>
+     <div id="route-prediction" class="route-options" role="group" aria-label="先猜一次更新会改变什么" hidden><p>先猜，再走一步。</p><button id="route-predict-points" type="button" aria-pressed="false">点会被搬到另一边</button><button id="route-predict-rule" type="button" aria-pressed="false">点不动，分界线会变</button></div>
+     <div id="route-probe" class="route-options" role="group" aria-label="用学到的线判断新点" hidden><button id="route-guess-round" type="button">我猜圆区</button><button id="route-guess-square" type="button">我猜方区</button></div>
+     <div id="route-test-guess" class="route-options" role="group" aria-label="先猜未参与训练的新题成绩" hidden><button id="route-guess-all" type="button">我猜新题也会全对</button><button id="route-guess-not-all" type="button">我猜新题不一定全对</button></div>
+     <button id="route-main" class="route-primary" type="button" disabled>教它一次，看线怎样变化</button>
+     <button id="route-retry" class="route-text-button" type="button" hidden>退回同一起点，换步长再试</button>
+     <div id="route-point-controls" hidden><p id="route-point" class="route-point"></p><button id="route-point-next" type="button">看下一个位置 →</button></div>
+     <p id="route-status" role="status">正在准备这条学习路线。原有涂鸦和草稿不会被覆盖。</p>
+    </div>
+   </div>
+   <div class="route-evidence"><strong id="route-metric"></strong><p id="route-evidence"></p></div>
+   <section id="route-reflect" class="route-reflect" aria-labelledby="route-reflect-title" hidden><h3 id="route-reflect-title"></h3><div class="route-options"><button id="route-explain-bad" type="button"></button><button id="route-explain-good" type="button"></button></div><p id="route-explain-feedback" role="status"></p></section>
+   <details class="route-details"><summary>这次实验的条件与边界</summary><p id="route-boundary">这是位置分类，不是识别手写图像。例子和起点是固定的教学案例，各站过程独立于自由涂鸦草稿。刷新会重来，没有上传或跨站学习记录。</p><p id="route-formula"></p></details>
+  </section>
+  <section id="route-summary" class="route-summary" aria-labelledby="route-summary-title" hidden><p class="route-summary-label">这次的实际记录</p><h2 id="route-summary-title" tabindex="-1">从看懂变化，<br>到知道怎样验证。</h2><ol><li><h3>从例子里学一条规则</h3><p id="route-summary-guide"></p></li><li><h3>改的是参数，不是例子</h3><p id="route-summary-gradient"></p></li><li><h3>学过，不等于处处都会</h3><p id="route-summary-test"></p></li></ol><p class="route-summary-limit">这轮只说明你完成了这组小实验，不证明已掌握机器学习。下次遇到分类问题，可以先问：例子是什么、规则改了什么、拿什么新题验证？</p><div class="route-exits"><a class="route-primary" href="./neural.html#field">自己画一组题，再试试 ↗</a><a href="https://haimuhaimu.github.io/genai-learning-os/?page=math-primer" target="_blank" rel="noopener noreferrer">带着实验，去 GenAI OS 读公式 ↗</a></div></section>
+  <footer class="route-controls"><button id="route-back" type="button" hidden>← 上一站</button><button id="route-continue" class="route-primary" type="button" disabled>完成这一站，再继续</button><button id="route-reset" class="route-text-button" type="button">重走整条路线</button></footer>
+  <aside class="route-free"><a id="route-free" href="./neural.html#field">也可以直接进入完整涂鸦训练场 ↗</a><p>原有自由绘画、草稿、残差连接和其他进阶实验都保留。本路线不读写它们。</p></aside>
+ </main>
+ <footer class="home-footer"><a href="./">回到算法游乐场</a><span>MADE BY CHEN QUAN</span><a href="./#experiments">探索十个实验 ↗</a></footer>
+ <noscript><p class="no-script">这条互动路线需要 JavaScript。仍可打开上方完整实验与学习说明链接。</p></noscript>
+</body>
+</html>

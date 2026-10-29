@@ -13,6 +13,7 @@ FILES.push('neural-gradient.mjs','neural-gradient-ui.mjs');
 FILES.push('neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs','neural-residual.css');
 FILES.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-generalization-view.mjs','neural-generalization.css');
 FILES.push('space-theme.css');
+FILES.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css');
 FILES.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 FILES.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');
 FILES.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');
