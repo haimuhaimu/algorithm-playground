@@ -1,5 +1,5 @@
-import {BUDGET,createWorld,createRecord,pull,runPolicyTrace,traceChoices} from './mining-core.mjs?v=shared-evidence-1';
-import {initSharedLesson} from './mining-shared-ui.mjs?v=shared-evidence-1';
+import {BUDGET,createWorld,createRecord,pull,runPolicyTrace,traceChoices} from './mining-core.mjs?v=feedback-20261029';
+import {initSharedLesson} from './mining-shared-ui.mjs?v=feedback-20261029';
 
 const $=id=>document.getElementById(id);
 const names=['苔原','珊瑚','琥珀','雾蓝','月白'];
