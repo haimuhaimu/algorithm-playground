@@ -5,7 +5,7 @@
  <meta name="description" content="接管推荐首页，调一调算法，看见点击、多样性和新作者之间的取舍。一个使用合成数据的可玩实验。">
  <meta name="color-scheme" content="light dark">
  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e3ed78'/%3E%3Cpath d='M16 22h32M16 42h32M25 15v14M39 35v14' stroke='%2321231c' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./feedback-story.css?v=seats-20261025"><link rel="stylesheet" href="./seat-lesson.css?v=seats-20261025"><script type="module" src="./app.mjs?v=seats-20261025"></script>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./feedback-story.css?v=seat-carryover-20261029"><link rel="stylesheet" href="./seat-lesson.css?v=seat-carryover-20261029"><script type="module" src="./app.mjs?v=seat-carryover-20261029"></script>
  <title>算法游乐场 · 首页，交给你了</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
  <link rel="stylesheet" href="./space-theme.css">
@@ -67,11 +67,16 @@
    <div id="seat-stage" hidden>
     <p class="seat-settings" id="seat-settings"></p><p class="seat-taste" id="seat-taste"></p>
     <ol class="seat-row" id="seat-row" aria-label="六个首页席位"></ol>
-    <h3 id="seat-turn" tabindex="-1"></h3><p id="seat-context"></p>
-    <div class="seat-choice-grid" role="group" aria-label="猜谁会拿到这一席"><button id="seat-guess-0" type="button" aria-pressed="false"></button><button id="seat-guess-1" type="button" aria-pressed="false"></button><button id="seat-guess-2" type="button" aria-pressed="false"></button></div>
+    <h3 id="seat-turn" tabindex="-1"></h3><p id="seat-context"></p><p class="seat-carry-note" id="seat-carry-note" hidden></p>
+    <div class="seat-choice-grid" id="seat-choices" role="group" aria-label="猜谁会拿到这一席"><button id="seat-guess-0" type="button" aria-pressed="false"></button><button id="seat-guess-1" type="button" aria-pressed="false"></button><button id="seat-guess-2" type="button" aria-pressed="false"></button></div>
     <p class="seat-subset" id="seat-subset"></p>
     <div class="seat-evidence" id="seat-evidence" hidden>
      <h3 id="seat-result-title" tabindex="-1"></h3><p id="seat-guess-result"></p>
+     <section class="seat-carryover" id="seat-carryover" aria-labelledby="seat-carryover-title" hidden>
+      <p class="eyebrow">跟住同一张卡 / 只换已有席位</p><h4 id="seat-carryover-title"></h4><p id="seat-carry-fixed">固定口味、权重和本席剩余候选。只切换刚入座那张卡的计数影响，不把它放回候选池。不会改变实际首页、猜测或反馈。</p>
+      <div class="seat-occupancy" role="group" aria-label="只改变已有同主题席位，比较这两张卡"><button id="seat-occupancy-before" type="button" aria-pressed="false"></button><button id="seat-occupancy-after" type="button" aria-pressed="true"></button></div>
+      <div class="seat-carry-cards" id="seat-carry-cards"></div><p class="seat-carry-reason" id="seat-carry-reason" role="status" aria-live="polite"></p>
+     </section>
      <div class="seat-formula seat-winner-score" id="seat-winner-score" aria-label="赢家的得分组成"></div><p id="seat-reason"></p>
      <p class="seat-change" id="seat-change"></p>
      <details class="seat-all-details" id="seat-all-details"><summary id="seat-all-summary">查看全部候选</summary><div class="seat-list" tabindex="0" role="region" aria-label="本席所有候选及分数"><ol id="seat-all"></ol></div><p>这里只比较同一席位的分数，已坐下的卡不再参选。显示值经过舍入；排序使用未取整分数。同分按固定内容编号决定先后。</p></details>
