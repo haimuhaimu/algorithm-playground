@@ -3,8 +3,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="30 次探测，5 颗未知星球。继续挖刚才赚到的，还是去试没挖过的？亲手体验多臂老虎机的探索与利用。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=shared-evidence-1">
- <script type="module" src="./mining.mjs?v=shared-evidence-1"></script><title>算法游乐场 · 盲盒探矿</title>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=feedback-20261029">
+ <script type="module" src="./mining.mjs?v=feedback-20261029"></script><title>算法游乐场 · 盲盒探矿</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head><body>
@@ -39,6 +39,22 @@
    <section class="shared-result" id="shared-result" hidden aria-labelledby="shared-result-title">
     <p class="eyebrow">带回的不是答案，而是一条新线索</p><h3 id="shared-result-title" tabindex="-1">这一次，你学到了什么？</h3>
     <h4 id="shared-outcome"></h4><p id="shared-change"></p>
+    <section class="feedback-lab" id="feedback-lab" hidden aria-labelledby="feedback-title">
+     <p class="eyebrow">第 22 趟之前 / 同一条新反馈</p><h4 id="feedback-title" tabindex="-1">挖空一次，就该换星球吗？</h4>
+     <p id="feedback-observation"></p><p class="feedback-boundary">现在把你这趟带回的这一条反馈，同时交给两种算法。上方三条航行分支仍保留；这里不混用它们各自的收获，也不真的飞第 22 趟。</p>
+     <div class="feedback-guesses">
+      <fieldset><legend id="feedback-greedy-question"></legend><button id="feedback-greedy-stay" type="button" aria-pressed="false">我猜仍去原星球</button><button id="feedback-greedy-switch" type="button" aria-pressed="false">我猜会换星球</button></fieldset>
+      <fieldset><legend id="feedback-ucb-question"></legend><button id="feedback-ucb-stay" type="button" aria-pressed="false">我猜仍去原星球</button><button id="feedback-ucb-switch" type="button" aria-pressed="false">我猜会换星球</button></fieldset>
+     </div>
+     <button id="feedback-reveal" type="button" disabled>两边都猜一次，再揭晓 →</button>
+     <div id="feedback-evidence" hidden>
+      <h4 id="feedback-result-title" tabindex="-1">多一条反馈，第一名一定变吗？</h4><p id="feedback-verdict" role="status" aria-live="polite"></p>
+      <div class="feedback-policies" role="group" aria-label="用同一条反馈，看哪种算法"><button id="feedback-greedy" type="button" aria-pressed="true">守成派 · 只看均值</button><button id="feedback-ucb" type="button" aria-pressed="false">好奇派 · 均值＋探索</button></div>
+      <p id="feedback-cause"></p><div class="feedback-cards" id="feedback-cards"></div>
+      <details id="feedback-all"><summary>查看全部 5 颗星球的前后排名</summary><table><caption>同一份日志，只多你带回的 1 次观测。分数用于排序，不是产矿概率。</caption><thead><tr><th scope="col">星球</th><th scope="col">收到反馈前</th><th scope="col">收到反馈后</th></tr></thead><tbody id="feedback-ranking"></tbody></table><p>显示值经过舍入；排序比较完整精度，同分按星球的固定顺序。没有第一名变化，也不制造一次换星球。</p></details>
+      <p class="feedback-takeaway">新反馈先更新记录，再按同一规则重新计算分数、比较候选；分数和第一名都可能保持不变。只有重新排序后的第一名变了，才会改选。同分按星球固定顺序决定。这里没有看到下一趟的矿石，也没有消耗自由探索次数。</p>
+     </div>
+    </section>
     <p>这份特意选出的教学案例里，守成派空手、好奇派有矿。<b>不能由这一趟推断 UCB 总会赢。</b>选择的依据是出发前的线索；收获还受到运气影响。</p>
     <fieldset><legend>两种算法为什么选了不同的星球？</legend><button id="shared-answer-rules">同一份线索，对“还没摸清”的重视不同</button><button id="shared-answer-luck">好奇派提前知道哪里有矿</button></fieldset>
     <p id="shared-learning" role="status" aria-atomic="true"></p>

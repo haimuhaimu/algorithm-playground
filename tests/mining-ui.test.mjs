@@ -43,6 +43,86 @@ test('number shortcuts inside shared lesson never launch the unrelated thirty-fl
   u.doc.activeElement=u.els.get('shared-fly');u.key('3');assert.equal(u.els.get('remaining').textContent,'30');
  }finally{u.restore();}
 });
+test('feedback lesson waits for arrival and two predictions before exposing scores or rankings',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('feedback-lab'),'returning trip must lead into the next-decision question');
+  assert.equal(u.els.get('feedback-lab').hidden,true);
+  u.click('feedback-reveal');assert.equal(u.els.get('feedback-evidence').hidden,true);
+  u.click('shared-planet-0');u.click('shared-reveal');u.click('shared-fly');
+  assert.equal(u.els.get('feedback-lab').hidden,false);assert.match(u.els.get('feedback-observation').textContent,/苔原.*空手/);
+  assert.equal(u.els.get('feedback-evidence').hidden,true);assert.equal(u.els.get('feedback-cards').innerHTML,'');
+  assert.equal(u.els.get('feedback-reveal').disabled,true);
+  u.click('feedback-greedy-switch');assert.equal(u.els.get('feedback-reveal').disabled,true);
+  u.click('feedback-ucb-stay');assert.equal(u.els.get('feedback-reveal').disabled,false);
+  u.click('feedback-reveal');assert.equal(u.els.get('feedback-evidence').hidden,false);
+  assert.match(u.els.get('feedback-verdict').textContent,/守成派.*仍选苔原/);
+  assert.match(u.els.get('feedback-verdict').textContent,/好奇派.*仍选珊瑚/);
+  assert.match(u.els.get('feedback-cards').innerHTML,/0\.6667/);assert.match(u.els.get('feedback-cards').innerHTML,/0\.75/);
+  assert.equal(u.doc.activeElement,u.els.get('feedback-result-title'));
+  assert.equal(u.els.get('remaining').textContent,'30');assert.equal(u.els.get('minerals').textContent,'0');
+ }finally{u.restore();}
+});
+test('policy tabs share the human feedback, retain guesses and leave the old three-way comparison intact',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('feedback-ucb'));
+  u.click('shared-planet-0');u.click('shared-reveal');u.click('shared-fly');
+  const old=u.els.get('shared-ucb-outcome').textContent;
+  assert.match(old,/1 块/);
+  u.click('feedback-greedy-stay');u.click('feedback-ucb-switch');u.click('feedback-reveal');
+  const verdict=u.els.get('feedback-verdict').textContent;
+  u.click('feedback-ucb');
+  assert.match(u.els.get('feedback-cause').textContent,/20.*21/);
+  assert.match(u.els.get('feedback-cause').textContent,/没去.*探索加分/);
+  assert.match(u.els.get('feedback-cards').innerHTML,/2\.2449/,'UCB still has 1 win in 2 visits on coral, not its separate flight reward');
+  assert.equal(u.els.get('feedback-verdict').textContent,verdict);assert.equal(u.els.get('shared-ucb-outcome').textContent,old);
+  assert.equal(u.els.get('feedback-ucb-switch').getAttribute('aria-pressed'),'true');
+  u.click('feedback-greedy');assert.match(u.els.get('feedback-cards').innerHTML,/0\.6667/);
+  assert.equal(u.els.get('remaining').textContent,'30');
+ }finally{u.restore();}
+});
+test('feedback retry clears revealed evidence and accepts a real positive result without rerolling',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('feedback-lab'));
+  u.click('shared-planet-0');u.click('shared-reveal');u.click('shared-fly');
+  u.click('feedback-greedy-stay');u.click('feedback-ucb-stay');u.click('feedback-reveal');
+  u.click('shared-retry');assert.equal(u.els.get('feedback-lab').hidden,true);assert.equal(u.els.get('feedback-cards').innerHTML,'');
+  assert.equal(u.els.get('feedback-greedy-stay').getAttribute('aria-pressed'),'false');
+  u.click('shared-planet-1');u.click('shared-reveal');u.click('shared-fly');
+  assert.match(u.els.get('feedback-observation').textContent,/珊瑚.*1 块/);assert.equal(u.els.get('feedback-evidence').hidden,true);
+  u.click('feedback-greedy-stay');u.click('feedback-ucb-stay');u.click('feedback-reveal');u.click('feedback-ucb');
+  assert.match(u.els.get('feedback-cards').innerHTML,/0\.6667/);
+  u.click('shared-retry');u.click('shared-planet-1');u.click('shared-reveal');u.click('shared-fly');
+  assert.match(u.els.get('feedback-observation').textContent,/珊瑚.*1 块/);
+ }finally{u.restore();}
+});
+test('hidden help and stale flight callbacks cannot reveal or change next-decision predictions',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('feedback-lab'));
+  u.click('shared-planet-0');u.click('shared-reveal');u.click('shared-fly');u.tick(0);
+  const stale=[...u.frames.values()][0];u.click('shared-retry');stale(9000);
+  assert.equal(u.els.get('feedback-lab').hidden,true);
+  u.media.matches=true;u.click('shared-planet-0');u.click('shared-reveal');u.click('shared-fly');
+  u.hide();u.click('feedback-greedy-switch');assert.equal(u.els.get('feedback-greedy-switch').getAttribute('aria-pressed'),'false');u.show();
+  u.click('feedback-greedy-stay');u.click('feedback-ucb-stay');u.click('about');u.click('feedback-reveal');
+  assert.equal(u.els.get('feedback-evidence').hidden,true);u.els.get('guide').close();u.click('feedback-reveal');
+  const before=u.els.get('feedback-verdict').textContent;u.click('feedback-greedy-switch');u.click('feedback-reveal');
+  assert.equal(u.els.get('feedback-verdict').textContent,before);
+ }finally{u.restore();}
+});
+test('extra zero-reward samples and unchanged rivals are not falsely described as changed scores',async()=>{
+ for(const arm of [3,4,0]){
+  const u=await boot({reduced:true});try{
+   u.click('shared-planet-'+arm);u.click('shared-reveal');u.click('shared-fly');
+   u.click('feedback-greedy-stay');u.click('feedback-ucb-stay');u.click('feedback-reveal');
+   if(arm===0)assert.match(u.els.get('feedback-cards').innerHTML,/珊瑚[\s\S]*分数没变/);
+   else{
+    assert.match(u.els.get('feedback-result-title').textContent,/分数没变/);
+    assert.doesNotMatch(u.els.get('feedback-cards').innerHTML,/分数变了/);
+    assert.match(u.els.get('feedback-cause').textContent,/均值 0 → 0/);
+   }
+  }finally{u.restore();}
+ }
+});
 test('fresh-page and noninteractive lesson focus cannot spend mission attempts; mission focus enables shortcuts',async()=>{
  const u=await boot({reduced:true});try{
   u.key('2');assert.equal(u.els.get('remaining').textContent,'30','body focus on entry must not launch an offscreen mission');
@@ -60,7 +140,7 @@ async function boot({reduced=false,seed}={}){
   setAttribute(k,v){this.attributes.set(k,v);}getAttribute(k){return this.attributes.get(k);}
   getBoundingClientRect(){return {left:0,top:0,width:900,height:400};}
   scrollIntoView(){this.scrolls=(this.scrolls||0)+1;}
-  replaceChildren(...children){this.children=children;}append(...children){this.children.push(...children);}focus(){}
+  replaceChildren(...children){this.children=children;}append(...children){this.children.push(...children);}focus(){doc.activeElement=this;}
   showModal(){this.open=true;}close(){this.open=false;this.dispatchEvent(new Event('close'));}
  }
  const els=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([,id])=>[id,new Element()]));
