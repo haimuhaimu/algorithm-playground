@@ -32,6 +32,7 @@ files.push('neural-gradient.mjs','neural-gradient-ui.mjs');
 files.push('neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs','neural-residual.css');
 files.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-generalization-view.mjs','neural-generalization.css');
 files.push('space-theme.css');
+files.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css');
 files.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 files.push('pixel-recipient.mjs','pixel-recipient-ui.mjs','pixel-recipient.css');
 files.push('pixel-code.mjs','pixel-code-ui.mjs','pixel-code.css');
