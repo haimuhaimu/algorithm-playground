@@ -1,8 +1,8 @@
-import {POSTS,TOPICS,PRESETS,INITIAL_PROFILE} from './data.mjs?v=seats-20261025';
-import {rankPosts,metrics,feedback,challenge,probability,experiment} from './core.mjs?v=seats-20261025';
-import {captureFeedback} from './feedback-story.mjs?v=seats-20261025';
-import {mountFeedbackStory} from './feedback-story-ui.mjs?v=seats-20261025';
-import {mountSeatLesson} from './seat-lesson-ui.mjs?v=seats-20261025';
+import {POSTS,TOPICS,PRESETS,INITIAL_PROFILE} from './data.mjs?v=seat-carryover-20261029';
+import {rankPosts,metrics,feedback,challenge,probability,experiment} from './core.mjs?v=seat-carryover-20261029';
+import {captureFeedback} from './feedback-story.mjs?v=seat-carryover-20261029';
+import {mountFeedbackStory} from './feedback-story-ui.mjs?v=seat-carryover-20261029';
+import {mountSeatLesson} from './seat-lesson-ui.mjs?v=seat-carryover-20261029';
 
 const $=id=>document.getElementById(id);
 const feedbackStory=mountFeedbackStory({document});

@@ -70,3 +70,39 @@ test('zero-diversity lessons explain unchanged scores rather than teaching a non
  for(let i=1;i<6;i++){e['seat-guess-0'].click();if(i<5)e['seat-next'].click();}
  assert.match(e['seat-conclusion'].textContent,/等同于按固定点击分排序/);
 });
+test('second seat keeps the previous cat beside food before guessing, without revealing the result early',async()=>{
+ const {e}=await setup();e['seat-start'].click();e['seat-guess-0'].click();e['seat-next'].click();
+ assert.match(e['seat-guess-0'].innerHTML,/给老猫做了一段小楼梯/);
+ assert.match(e['seat-guess-1'].innerHTML,/这碗面让我想再来一碗/);
+ assert.equal(e['seat-guess-2'].hidden,true);assert.equal(e['seat-carryover'].hidden,true);
+ assert.match(e['seat-carry-note'].textContent,/上一席/);assert.equal(e['seat-evidence'].hidden,true);
+});
+test('occupied-seat toggle changes only the isolated pair scores, never actual seats guesses or app inputs',async()=>{
+ const {e,inputs}=await setup(),original=structuredClone(inputs);
+ e['seat-start'].click();e['seat-guess-0'].click();e['seat-next'].click();e['seat-guess-0'].click();
+ assert.equal(e['seat-carryover'].hidden,false);assert.equal(e['seat-occupancy-after'].attributes['aria-pressed'],'true');
+ assert.match(e['seat-carry-cards'].innerHTML,/0\.9168/);assert.match(e['seat-carry-cards'].innerHTML,/1\.06364/);
+ const rows=e['seat-row'].innerHTML,result=e['seat-result-title'].textContent,guess=e['seat-guess-result'].textContent;
+ e['seat-occupancy-before'].click();assert.equal(e['seat-occupancy-before'].attributes['aria-pressed'],'true');
+ assert.match(e['seat-carry-cards'].innerHTML,/1\.1293/);assert.match(e['seat-carry-cards'].innerHTML,/1\.06364/);
+ assert.match(e['seat-carry-reason'].textContent,/教学对照/);
+ assert.equal(e['seat-row'].innerHTML,rows);assert.equal(e['seat-result-title'].textContent,result);assert.equal(e['seat-guess-result'].textContent,guess);
+ e['seat-occupancy-after'].click();assert.match(e['seat-carry-cards'].innerHTML,/0\.9168/);
+ assert.deepEqual(inputs,original);assert.equal(e['seat-row'].innerHTML,rows);
+});
+test('carryover evidence remains frozen under free edits, and next seat restart and global reset clear stale toggles',async()=>{
+ const {e,inputs,controller}=await setup();e['seat-start'].click();e['seat-guess-0'].click();e['seat-next'].click();e['seat-guess-0'].click();
+ e['seat-occupancy-before'].click();const cards=e['seat-carry-cards'].innerHTML;
+ inputs.weights.diversity=0;inputs.profile.cat=0;controller.sync();assert.equal(e['seat-carry-cards'].innerHTML,cards);assert.match(e['seat-state'].textContent,/已变化/);
+ e['seat-next'].click();assert.equal(e['seat-carryover'].hidden,true);
+ e['seat-guess-0'].click();assert.equal(e['seat-occupancy-after'].attributes['aria-pressed'],'true');
+ e['seat-example'].click();assert.equal(e['seat-carryover'].hidden,true);assert.equal(e['seat-carry-note'].hidden,true);
+ controller.reset();assert.equal(e['seat-carryover'].hidden,true);assert.equal(e['seat-stage'].hidden,true);
+});
+test('zero diversity shows unchanged pair ordering instead of promising a ranking reversal',async()=>{
+ const {e}=await setup(PRESETS.click.weights);e['seat-start'].click();e['seat-guess-0'].click();e['seat-next'].click();e['seat-guess-0'].click();
+ assert.equal(e['seat-carryover'].hidden,false);assert.match(e['seat-carry-reason'].textContent,/权重为 0/);
+ e['seat-occupancy-before'].click();const before=e['seat-carry-cards'].innerHTML;
+ e['seat-occupancy-after'].click();assert.equal(e['seat-carry-cards'].innerHTML,before);
+ assert.match(e['seat-carry-reason'].textContent,/没有翻转/);
+});

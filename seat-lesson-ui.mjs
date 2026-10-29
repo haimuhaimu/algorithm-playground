@@ -1,6 +1,6 @@
-import {TOPICS,PRESETS} from './data.mjs?v=seats-20261025';
-import {probability,scorePost} from './core.mjs?v=seats-20261025';
-import {createSeatLesson,chooseSeat,nextSeat,currentRound,lessonMatches,diversityCounterfactual} from './seat-lesson.mjs?v=seats-20261025';
+import {TOPICS,PRESETS} from './data.mjs?v=seat-carryover-20261029';
+import {probability,scorePost} from './core.mjs?v=seat-carryover-20261029';
+import {createSeatLesson,chooseSeat,nextSeat,currentRound,lessonMatches,diversityCounterfactual,carryoverComparison,seatGuessOptions} from './seat-lesson.mjs?v=seat-carryover-20261029';
 
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const label=post=>TOPICS[post.topic]?.short||post.topic;
@@ -13,7 +13,7 @@ function compactCards(feed){
 }
 export function mountSeatLesson({document,getInputs}){
  const $=id=>document.getElementById(id);
- let session=null,example=false,options=[];
+ let session=null,example=false,options=[],occupancy='after';
  function showStep(id){
   $(id).focus({preventScroll:true});
   $(id).scrollIntoView({block:'start',behavior:'instant'});
@@ -31,8 +31,28 @@ export function mountSeatLesson({document,getInputs}){
   for(const id of ['seat-answer-taste','seat-answer-seats'])$(id).setAttribute('aria-pressed','false');
  }
  function reset(){
-  session=null;options=[];example=false;
-  $('seat-stage').hidden=true;clearEnding();sync();
+  session=null;options=[];example=false;occupancy='after';
+  $('seat-stage').hidden=true;$('seat-carryover').hidden=true;$('seat-carry-note').hidden=true;clearEnding();sync();
+ }
+ function renderCarryover(){
+  const c=session?.revealed?carryoverComparison(session):null;
+  $('seat-carryover').hidden=!c;if(!c)return;
+  const topic=label(c.justSeated),actual=occupancy==='after';
+  const winnerId=actual?c.afterWinnerId:c.beforeWinnerId;
+  const carried=c.carried[occupancy],rival=c.rival[occupancy];
+  const changed=c.beforeWinnerId!==c.afterWinnerId;
+  $('seat-carryover-title').textContent=changed?'同一张卡，为什么换一席就落选了？':'同一张卡，换一席后分数变了吗？';
+  $('seat-occupancy-before').textContent=`${topic}已有 ${c.beforeCount} 席 · 教学对照`;
+  $('seat-occupancy-after').textContent=`${topic}已有 ${c.afterCount} 席 · 实际本席`;
+  for(const mode of ['before','after'])$('seat-occupancy-'+mode).setAttribute('aria-pressed',String(occupancy===mode));
+  $('seat-carry-cards').innerHTML=[carried,rival].map((post,i)=>`<article data-compare-id="${escape(post.id)}" class="${post.id===winnerId?'is-leading':''}"><span class="seat-choice-topic">${i===0?'上一席留下的候选':'这一席的另一主题'} · ${escape(label(post))}</span><h5>${escape(post.title)}</h5><p>点击分 ${number(post.parts.click)} · 新人分 ${number(post.parts.newcomer)}<br>两项始终不变</p><div class="seat-diversity-part">多样性加分 <strong>${number(post.parts.diversity)}</strong></div><div class="seat-pair-total">总分 <strong>${number(post.score)}</strong></div><p class="seat-pair-rank">${post.id===winnerId?'这两张里排在前面':post.score===([carried,rival].find(p=>p.id!==post.id).score)?'同分，按固定编号排在后面':'这两张里暂时落后'}</p></article>`).join('');
+  const order=changed
+   ?`原先《${c.carried.before.title}》在前；计入刚坐下的${topic}卡后，《${c.rival.after.title}》在前。`
+   :'这两张卡的先后没有翻转；加分改变不保证排名一定改变。';
+  const effect=session.weights.diversity===0
+   ?'多样权重为 0，占座前后这一项都是 0，排名没有翻转。'
+   :`《${c.carried.after.title}》的多样性加分 ${number(c.carried.before.parts.diversity)} → ${number(c.carried.after.parts.diversity)}。点击分、新人分没变，不是你的口味变了。${order}`;
+  $('seat-carry-reason').textContent=(actual?`实际本席：${topic}已有 ${c.afterCount} 席。`:`教学对照：暂不计刚坐下的这张${topic}卡，按 ${c.beforeCount} 席算。`)+effect+' 实际排出的席位保持不变。';
  }
  function render(){
   const round=currentRound(session),seated=session.index+(session.revealed?1:0);
@@ -48,8 +68,13 @@ export function mountSeatLesson({document,getInputs}){
   $('seat-context').textContent=rule+(counts
    ?`这一席之前，首页已有：${counts}。`+(session.weights.diversity===0?'多样权重为 0，候选分数不会因为占座而改变。':'口味没变，但同主题已占的席位会减少多样性加分。')
    :'这是第一席，还没有主题占座。先看预测点击、新人身份，猜算法会选哪张。');
-  options=round.ranked.slice(0,3).sort((a,b)=>String(a.id).localeCompare(String(b.id),'en'));
-  $('seat-subset').textContent=`先猜最接近入选的 ${options.length} 张（按编号展示，不是得分顺序）。它们只是本席 ${round.ranked.length} 张候选的一部分，揭晓后可查全部。猜测不等于给首页反馈。`;
+  const carry=carryoverComparison(session);options=seatGuessOptions(session);
+  $('seat-choices').setAttribute('data-pair',String(Boolean(carry)));
+  $('seat-carry-note').hidden=!carry;
+  if(carry)$('seat-carry-note').textContent=`跟住上一席的《${carry.carried.before.title}》：它没有被屏蔽，还在争取席位。现在和《${carry.rival.after.title}》并排，猜谁会在前。`;
+  $('seat-subset').textContent=carry
+   ?`这两张都仍在本席 ${round.ranked.length} 张候选里；左边是带来的旧候选，右边是另一主题，不按当前得分排列。真实赢家在其中，猜测不会改变排序。`
+   :`先猜最接近入选的 ${options.length} 张（按编号展示，不是得分顺序）。它们只是本席 ${round.ranked.length} 张候选的一部分，揭晓后可查全部。猜测不等于给首页反馈。`;
   for(let i=0;i<3;i++){
    const post=options[i],button=$(`seat-guess-${i}`);
    button.hidden=!post;button.disabled=session.revealed;
@@ -58,6 +83,8 @@ export function mountSeatLesson({document,getInputs}){
    button.innerHTML=`<span class="seat-choice-topic">${escape(label(post))} · ${post.isNew?'新作者':'已有作者'} · #${escape(post.id)}</span><strong>${escape(post.title)}</strong><span>预测点击 ${(probability(post,session.profile)*100).toFixed(1)}% · 同主题已坐 ${round.countsBefore[post.topic]||0} 张</span><b class="seat-choice-action">${session.revealed?post.id===round.ranked[0].id?'✓ 算法选了它':post.id===session.guess?'你猜的 · 本席未选中':'本席未选中':'我猜这张入选 →'}</b>`;
   }
   $('seat-evidence').hidden=!session.revealed;$('seat-next').hidden=!session.revealed||session.complete;
+  for(const id of ['seat-winner-score','seat-reason','seat-change'])$(id).hidden=Boolean(carry);
+  renderCarryover();
   if(!session.revealed){$('seat-all-details').open=false;sync();return;}
   const winner=round.ranked[0],runner=round.ranked[1],guess=round.ranked.find(p=>p.id===session.guess);
   $('seat-result-title').textContent=`第 ${round.slot} 席坐下的是《${winner.title}》`;
@@ -87,6 +114,7 @@ export function mountSeatLesson({document,getInputs}){
  }
  function start(useExample){
   const {posts,weights,profile}=getInputs();example=useExample;
+  occupancy='after';
   session=createSeatLesson(posts,useExample?PRESETS.balanced.weights:weights,profile);
   clearEnding();render();showStep('seat-turn');
  }
@@ -95,11 +123,15 @@ export function mountSeatLesson({document,getInputs}){
  for(let i=0;i<3;i++)$(`seat-guess-${i}`).addEventListener('click',()=>{
   if(!session||!options[i])return;
   const next=chooseSeat(session,options[i].id);if(next===session)return;
-  session=next;render();showStep('seat-result-title');
+  session=next;occupancy='after';render();showStep('seat-result-title');
  });
  $('seat-next').addEventListener('click',()=>{
   if(!session)return;const next=nextSeat(session);if(next===session)return;
-  session=next;render();showStep('seat-turn');
+  session=next;occupancy='after';render();showStep('seat-turn');
+ });
+ for(const mode of ['before','after'])$('seat-occupancy-'+mode).addEventListener('click',()=>{
+  if(!session?.revealed||!carryoverComparison(session))return;
+  occupancy=mode;renderCarryover();
  });
  $('seat-compare').addEventListener('click',()=>{
   if(!session?.complete)return;
