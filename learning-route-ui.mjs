@@ -1,6 +1,7 @@
-import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=learning-route-20261029';
+import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=learning-tool-v1';
 import {paintGuide} from './neural-guide-view.mjs';
 import {paintGeneralization} from './neural-generalization-view.mjs';
+import {runLearningRoute} from './learning-tool.mjs?v=learning-tool-v1';
 const shape=n=>n?'方':'圆';
 function markExample(canvas,p,dark){
  if(!p)return;
@@ -11,11 +12,11 @@ function markExample(canvas,p,dark){
 
 export function mountLearningRoute({document,window}){
  const $=id=>document.getElementById(id),set=(id,t)=>{$(id).textContent=t;},show=(id,value)=>{$(id).hidden=!value;};
- const s=createLearningRoute(),canvas=$('route-map'),supported=!!canvas.getContext('2d');let before=false,explicitTheme=false;
+ const s=createLearningRoute(),canvas=$('route-map'),supported=!!canvas.getContext('2d');let before=false,explicitTheme=false,journal=[],exportGeneration=0;
  const media=window.matchMedia('(prefers-color-scheme: dark)');
  function render(){
   const e=learningRouteEvidence(s),stage=s.stage,summary=stage==='summary';
-  show('route-task',!summary);show('route-summary',summary);show('route-back',e.index>0);show('route-continue',!summary);
+  show('route-task',!summary);show('route-summary',summary);show('route-export',summary);show('route-back',e.index>0);show('route-continue',!summary);
   for(let i=0;i<3;i++){$('route-progress-'+i).setAttribute('aria-current',e.index===i?'step':'false');$('route-progress-'+i).dataset.complete=String(e.completed[i]);}
   $('route-continue').disabled=!e.canAdvance||!supported;
   set('route-continue',e.canAdvance?(stage==='classify'?'继续：亲手改一步 →':stage==='gradient'?'继续：拿新题检验 →':'看看这次的学习记录 →'):'完成这一站，再继续');
@@ -100,13 +101,35 @@ export function mountLearningRoute({document,window}){
  }
  function move(action,value){
   if(document.hidden||!supported)return;
-  const old=s.stage;actLearningRoute(s,action,value);if(action!=='inspect')before=false;render();
+  const old=s.stage;actLearningRoute(s,action,value);
+  if(action==='reset')journal=[];else journal.push(value===undefined?{action}:{action,value});
+  clearExport();if(action!=='inspect')before=false;render();
   if(old!==s.stage||['train','probe','step','retry','reset'].includes(action)||(action==='guess'&&s.stage!=='gradient')){
    const observation=['train','step','retry'].includes(action),narrow=window.innerWidth<=760||window.innerHeight<=450;
    const target=$(s.stage==='summary'?'route-summary-title':observation?narrow?'route-metric':'route-map-label':'route-title');target.focus({preventScroll:true});
    $(s.stage==='summary'?'route-summary':observation?narrow?'route-metric':'route-observation':'route-task').scrollIntoView({block:'start',behavior:'instant'});
   }
  }
+ function clearExport(){exportGeneration++;$('route-export-text').value='';show('route-export-record',false);set('route-export-status','');}
+ $('route-export-generate').addEventListener('click',()=>{
+  if(document.hidden||!supported||s.stage!=='summary')return;
+  clearExport();
+  try{
+   $('route-export-text').value=JSON.stringify(runLearningRoute(journal,{producer:'browser-session'}),null,2);
+   show('route-export-record',true);set('route-export-status','记录已生成，只在本页。复制给外部 AI 后才会离开这里；它不证明你已掌握，也不会导入 GenAI OS 进度。');
+  }catch{set('route-export-status','这轮操作超出记录上限，暂未导出；当前实验结果仍保留，没有截断或伪造记录。');}
+ });
+ $('route-export-copy').addEventListener('click',async()=>{
+  const text=$('route-export-text').value,generation=exportGeneration;if(!text||document.hidden)return;
+  try{
+   if(!window.navigator?.clipboard?.writeText)throw Error('Clipboard unavailable');
+   await window.navigator.clipboard.writeText(text);
+   if(generation===exportGeneration)set('route-export-status','已复制。可交给你自己的 AI，请它只根据本轮证据解释，并先重放核验，不要把完成流程当成已掌握。');
+  }catch{
+   if(generation!==exportGeneration)return;
+   $('route-export-text').focus();$('route-export-text').select?.();set('route-export-status','浏览器未允许复制。记录仍保留，请在下方文本框手动全选、复制；没有自动发送。');
+  }
+ });
  $('route-main').addEventListener('click',()=>move(s.stage==='gradient'?'step':s.stage==='classify'&&s.guide.phase==='trained'?'probe':'train'));
  for(const [id,a,v]of [['continue','next'],['back','back'],['reset','reset'],['retry','retry'],['guess-round','guess',0],['guess-square','guess',1],['predict-points','guess','points'],['predict-rule','guess','parameters'],['guess-all','guess','all'],['guess-not-all','guess','not-all']])$('route-'+id).addEventListener('click',()=>move(a,v));
  for(const [id,good]of [['good',true],['bad',false]])$('route-explain-'+id).addEventListener('click',()=>move('explain',s.stage==='test'?(good?'unseen':'practice'):s.stage==='classify'?(good?'parameters':'memorize'):(good?'parameters':'points')));
@@ -116,7 +139,7 @@ export function mountLearningRoute({document,window}){
  for(const id of [3,6])$('route-inspect-'+id).addEventListener('click',()=>move('inspect',id-1));
  function theme(dark){document.documentElement.dataset.theme=dark?'dark':'light';$('home-theme').setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');render();}
  $('home-theme').hidden=false;$('home-theme').addEventListener('click',()=>{explicitTheme=true;theme(document.documentElement.dataset.theme!=='dark');});
- media.addEventListener('change',()=>{if(!explicitTheme)theme(media.matches);});theme(media.matches);
+ media.addEventListener('change',()=>{if(!explicitTheme)theme(media.matches);});clearExport();theme(media.matches);
  return {snapshot:()=>structuredClone(s)};
 }
 if(typeof document!=='undefined'&&document.getElementById('route-task'))mountLearningRoute({document,window});

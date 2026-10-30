@@ -1,0 +1,19 @@
+{
+  "name": "algorithm-playground-learning-tool",
+  "schemaVersion": 1,
+  "engineVersion": "learning-route-v1",
+  "numericFormat": "decimal-12-significant-digits",
+  "description": "Reproducible fixed-fixture learning experiments. Workflow completion is not mastery.",
+  "runnable": {"id": "learning-route", "transport": "local-cli-or-library", "engine": "./learning-tool.mjs", "cli": "scripts/learning-tool.mjs"},
+  "discovery": "Run the local CLI list/describe operations for the experiment catalog, action schema and GenAI concept links.",
+  "operations": ["list", "describe", "run", "replay"],
+  "documentation": "./AI_USAGE.md",
+  "inputLimitBytes": 65536,
+  "maxActions": 256,
+  "hostedExecution": false,
+  "mcpTransport": false,
+  "genaiProgressImport": false,
+  "privacy": "No automatic uploads or private storage reads. Explicitly sharing a receipt sends its content outside this page.",
+  "identity": "Replay consistency does not authenticate the producer or certify a human learner.",
+  "licenseStatus": "UNLICENSED; no new distribution license is granted by this manifest."
+}

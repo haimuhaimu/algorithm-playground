@@ -4,8 +4,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="从六个例子开始，亲眼看分类、动一次梯度，再用新题检验。陈全的算法游乐场精选学习路线。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./home.css?v=learning-route-20261029"><link rel="stylesheet" href="./learning-route.css?v=learning-route-20261029">
- <script type="module" src="./learning-route-ui.mjs?v=learning-route-20261029"></script><title>AI 怎么从例子里学会？ · 算法游乐场</title>
+ <link rel="stylesheet" href="./home.css?v=learning-tool-v1"><link rel="stylesheet" href="./learning-route.css?v=learning-tool-v1">
+ <script type="module" src="./learning-route-ui.mjs?v=learning-tool-v1"></script><title>AI 怎么从例子里学会？ · 算法游乐场</title>
 </head>
 <body>
  <a class="skip-link" href="#route-task">跳到当前任务</a>
@@ -33,6 +33,15 @@
    <details class="route-details"><summary>这次实验的条件与边界</summary><p id="route-condition" class="route-condition">固定六个例子，只调整分界，不移动点。</p><p id="route-boundary">这是位置分类，不是识别手写图像。例子和起点是固定的教学案例，各站过程独立于自由涂鸦草稿。刷新会重来，没有上传或跨站学习记录。</p><p id="route-formula"></p></details>
   </section>
   <section id="route-summary" class="route-summary" aria-labelledby="route-summary-title" hidden><p class="route-summary-label">这次的实际记录</p><h2 id="route-summary-title" tabindex="-1">从看懂变化，<br>到知道怎样验证。</h2><ol><li><h3>从例子里学一条规则</h3><p id="route-summary-guide"></p></li><li><h3>改的是参数，不是例子</h3><p id="route-summary-gradient"></p></li><li><h3>学过，不等于处处都会</h3><p id="route-summary-test"></p></li></ol><p class="route-summary-limit">这轮只说明你完成了这组小实验，不证明已掌握机器学习。下次遇到分类问题，可以先问：例子是什么、规则改了什么、拿什么新题验证？</p><div class="route-exits"><a class="route-primary" href="./neural.html#field">自己画一组题，再试试 ↗</a><a href="https://haimuhaimu.github.io/genai-learning-os/?page=math-primer" target="_blank" rel="noopener noreferrer">带着实验，去 GenAI OS 读公式 ↗</a></div></section>
+  <section id="route-export" class="route-export" aria-labelledby="route-export-title" hidden>
+   <p class="route-summary-label">把这次观察，接到下一次理解</p><h2 id="route-export-title">同一份实验，人和 AI 都能读。</h2>
+   <p>保留你实际的预测、重试、步长与计算结果，不只留最后一个正确答案。生成记录不会发送数据，也不读取自由画布或草稿。</p>
+   <button id="route-export-generate" class="route-primary" type="button">生成本轮实验记录 ↗</button>
+   <div id="route-export-record" hidden><label for="route-export-text">可重放的 JSON 记录 · 只含本条固定教学路线</label><textarea id="route-export-text" rows="9" readonly spellcheck="false" aria-describedby="route-export-status"></textarea><button id="route-export-copy" type="button">复制记录，交给我的 AI</button></div>
+   <p id="route-export-status" role="status"></p>
+   <nav aria-label="带着问题继续学习"><a href="https://haimuhaimu.github.io/genai-learning-os/?page=math-primer" target="_blank" rel="noopener noreferrer">GenAI OS：把公式翻译成人话 ↗</a><a href="https://haimuhaimu.github.io/genai-learning-os/?page=foundation&amp;node=gradient-descent" target="_blank" rel="noopener noreferrer">GenAI OS：对照梯度下降的机制 ↗</a><a href="./AI_USAGE.md" target="_blank" rel="noopener noreferrer">给 AI / 开发者的调用说明 ↗</a></nav>
+   <p class="route-export-limit">这些是概念出口，不会自动携带或导入记录。外部 AI 可用本地工具重放本轮计算；记录来源不是身份认证，走完也不等于学会。</p>
+  </section>
   <footer class="route-controls"><button id="route-back" type="button" hidden>← 上一站</button><button id="route-continue" class="route-primary" type="button" disabled>完成这一站，再继续</button><button id="route-reset" class="route-text-button" type="button">重走整条路线</button></footer>
   <aside class="route-free"><a id="route-free" href="./neural.html#field">也可以直接进入完整涂鸦训练场 ↗</a><p>原有自由绘画、草稿、残差连接和其他进阶实验都保留。本路线不读写它们。</p></aside>
  </main>

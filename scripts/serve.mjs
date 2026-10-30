@@ -53,6 +53,7 @@ TYPES['rsi.html']='text/html; charset=utf-8';TYPES['rsi.css']='text/css; charset
 TYPES['recommendation.html']='text/html; charset=utf-8';
 TYPES['home.css']='text/css; charset=utf-8';
 TYPES['learn.html']='text/html; charset=utf-8';TYPES['learning-route.css']='text/css; charset=utf-8';
+TYPES['learning-tool.mjs']='text/javascript; charset=utf-8';TYPES['learning-tool-manifest.json']='application/json; charset=utf-8';TYPES['AI_USAGE.md']='text/plain; charset=utf-8';
 for(const name of ['learning-route.mjs','learning-route-ui.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['home.mjs','home-core.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg'])TYPES[name]='image/jpeg';

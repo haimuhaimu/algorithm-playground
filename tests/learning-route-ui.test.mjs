@@ -70,3 +70,22 @@ test('a narrow-screen update starts at the computed metric so map and nearby poi
 test('a short landscape uses the same compact result anchor rather than clipping the watched point',()=>{
  const r=setup({width:844,height:390});r.e('route-main').click();assert.equal(r.e('route-metric').focused,true);assert.equal(r.e('route-metric').scrolled,true);
 });
+test('explicit browser export preserves actual guesses and computed results, not a canned completed example',async()=>{
+ const r=setup();assert.ok(r.e('route-export-generate'),'summary must offer an explicit evidence handoff');
+ first(r);second(r);r.e('route-main').click();r.e('route-guess-all').click();r.e('route-explain-good').click();r.e('route-continue').click();
+ assert.equal(r.e('route-export-text').value,'','no record is copied or generated before the user asks');
+ r.e('route-export-generate').click();const receipt=JSON.parse(r.e('route-export-text').value);
+ assert.equal(receipt.producer,'browser-session');assert.equal(receipt.result.evidence.guide.guess,1);assert.equal(receipt.result.evidence.stepGuess,'points');
+ assert.equal(receipt.result.evidence.test.guess,'all');assert.equal(receipt.result.evidence.test.test.correct,13);assert.equal(receipt.result.mastery,'not-assessed');
+ const verifier=await import('../learning-tool.mjs');assert.equal(verifier.replayLearningReceipt(receipt).matches,true);
+ r.e('route-back').click();assert.equal(r.e('route-export-text').value,'','returning to edit cannot leave a stale completed record');
+ r.e('route-continue').click();r.e('route-export-generate').click();assert.equal(JSON.parse(r.e('route-export-text').value).result.workflowComplete,true);
+ r.e('route-reset').click();assert.equal(r.e('route-export-text').value,'');assert.equal(r.e('route-export-record').hidden,true);
+});
+test('denied or missing clipboard access preserves the generated text for manual copying',async()=>{
+ const r=setup();assert.ok(r.e('route-export-generate'));first(r);second(r);r.e('route-main').click();r.e('route-guess-not-all').click();r.e('route-explain-good').click();r.e('route-continue').click();r.e('route-export-generate').click();
+ const text=r.e('route-export-text').value;r.win.navigator={clipboard:{writeText:async()=>{throw Error('permission denied');}}};
+ r.e('route-export-copy').click();await new Promise(done=>setImmediate(done));assert.equal(r.e('route-export-text').value,text);assert.match(r.e('route-export-status').textContent,/手动/);
+ r.win.navigator={};r.e('route-export-copy').click();await new Promise(done=>setImmediate(done));assert.equal(r.e('route-export-text').value,text);assert.match(r.e('route-export-status').textContent,/手动/);
+ let copied=null;r.win.navigator={clipboard:{writeText:async value=>{copied=value;}}};r.e('route-export-copy').click();await new Promise(done=>setImmediate(done));assert.equal(copied,text);assert.match(r.e('route-export-status').textContent,/已复制/);
+});
