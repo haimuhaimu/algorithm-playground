@@ -14,6 +14,7 @@ FILES.push('neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.
 FILES.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-generalization-view.mjs','neural-generalization.css');
 FILES.push('space-theme.css');
 FILES.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css');
+FILES.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
 FILES.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 FILES.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');
 FILES.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');

@@ -11,6 +11,7 @@
   "scripts": {
     "preverify": "node --check home-core.mjs && node --check home.mjs && node --check neural-step.mjs && node --check neural-step-view.mjs && node --check neural-guide.mjs && node --check neural-guide-ui.mjs && node --check neural-guide-view.mjs && node --check neural-gradient.mjs && node --check neural-gradient-ui.mjs && node --check neural-residual-core.mjs && node --check neural-residual.mjs && node --check neural-residual-ui.mjs && node --check neural-residual-view.mjs && node --check neural-generalization.mjs && node --check neural-generalization-ui.mjs && node --check neural-generalization-view.mjs",
     "start": "node scripts/serve.mjs",
+    "tool": "node scripts/learning-tool.mjs",
     "test": "node --test tests/*.test.mjs",
     "prebuild": "node --check world-model-planning.mjs && node --check firefly-beat.mjs && node --check firefly-beat-ui.mjs && node --check pixel-code.mjs && node --check pixel-code-ui.mjs",
     "build": "node scripts/build.mjs",
