@@ -19,6 +19,7 @@ TYPES['pixel-recipient-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['pixel-recipient.css']='text/css; charset=utf-8';
 for(const name of ['pixel-code.mjs','pixel-code-ui.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 TYPES['pixel-code.css']='text/css; charset=utf-8';
+TYPES['pixel-delivery.mjs']='text/javascript; charset=utf-8';
 TYPES['neural-lesson.mjs']='text/javascript; charset=utf-8';
 TYPES['neural-lesson-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['neural-lesson.css']='text/css; charset=utf-8';

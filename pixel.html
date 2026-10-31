@@ -5,7 +5,7 @@
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pixel.css"><link rel="stylesheet" href="./pixel-recipient.css?v=recipient-1">
  <link rel="stylesheet" href="./pixel-code.css?v=code-1">
- <script type="module" src="./pixel.mjs?v=code-1"></script><title>算法游乐场 · 像素邮局</title>
+ <script type="module" src="./pixel.mjs?v=delivery-1"></script><title>算法游乐场 · 像素邮局</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head><body>
@@ -29,9 +29,22 @@
     <div class="size-comparison"><div><span>原始像素</span><strong>64<small>B</small></strong></div><span class="size-arrow" aria-hidden="true">→</span><div><span>打包后</span><strong id="packed-size">—</strong><small class="unit">B</small></div></div>
     <p id="saving" class="saving"></p>
     <button id="send" class="send-button">打包寄出 <span aria-hidden="true">↗</span></button><p class="local-note">只在本页模拟寄送，没有网络上传</p>
+    <div class="delivery-entry"><span>这一格，凭哪几位出现？</span><button id="delivery-replay" type="button" disabled>逐位拆这封信 ↗</button></div>
+    <section id="delivery-panel" class="delivery-panel" aria-labelledby="delivery-title" hidden>
+     <div class="delivery-heading"><h3 id="delivery-title" tabindex="-1">暗号收齐，这一格才出现。</h3><span id="delivery-count">0 bit</span></div>
+     <div class="delivery-progress" aria-hidden="true"><i id="delivery-track"></i></div>
+     <p id="delivery-note" class="delivery-note"></p>
+     <div class="delivery-observe">
+      <figure><canvas id="delivery-preview" width="512" height="512" role="img" aria-label="当前邮包按已收到的真实位数还原，灰格尚未收到"></canvas><figcaption id="delivery-decoded">已还原 0 / 256 格</figcaption></figure>
+      <div class="delivery-reading"><p id="delivery-cell"></p><div class="delivery-code-focus"><code id="delivery-prefix">—</code><span aria-hidden="true">→</span><i id="delivery-cell-result" role="img" aria-label="放大后的这一格：暗号未收齐"></i></div><div id="delivery-codebook" class="delivery-codebook" aria-label="当前这封信的暗号表"></div></div>
+     </div>
+     <p id="delivery-explanation" class="delivery-explanation" aria-live="off"></p>
+     <div class="delivery-controls"><button id="delivery-toggle" type="button">暂停</button><button id="delivery-bit" type="button">读下一位 <span aria-hidden="true">+1 bit</span></button></div>
+     <p id="delivery-skipped" class="delivery-note"></p>
+    </section>
     <div class="receiving-desk">
      <div class="received-postcard"><canvas id="receiver" width="512" height="512" aria-label="从二进制包解码还原的明信片"></canvas><span class="postcard-address" aria-hidden="true">TO: THE OTHER SIDE</span></div>
-     <div class="receipt-copy"><h2>收件处 <span>逐格验收</span></h2><p id="receipt" role="status">还没有来信</p><p class="challenge" id="challenge">小挑战：画一张你喜欢的图，让它不超过 48 B。</p></div>
+     <div class="receipt-copy"><h2>成功收到的信 <span>新信送达前，保留上一封</span></h2><p id="receipt" role="status">还没有来信</p><p class="challenge" id="challenge">小挑战：画一张你喜欢的图，让它不超过 48 B。</p></div>
     </div>
     <p class="dispatch-hint">改几笔，再寄一次。邮包大小会变，画里的每一格都不会少。</p>
     <div class="recipient-entry"><span>这串 0 和 1，真的能读成一张画吗？</span><button id="recipient-start" type="button">当一次收件员 ↗</button><small>从当前画纸截取 8 格，你来读暗号。原画和草稿不变。</small></div>
