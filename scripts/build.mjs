@@ -6,6 +6,7 @@ const FILES=['navigation.css','navigation.mjs','index.html','style.css','app.mjs
 FILES.push('local-drafts.mjs','evolution-birth.mjs');
 FILES.push('pixel-recipient.mjs','pixel-recipient-ui.mjs','pixel-recipient.css');
 FILES.push('pixel-code.mjs','pixel-code-ui.mjs','pixel-code.css');
+FILES.push('pixel-delivery.mjs');
 FILES.push('neural-lesson.mjs','neural-lesson-ui.mjs','neural-lesson.css');
 FILES.push('neural-step.mjs','neural-step-view.mjs');
 FILES.push('neural-guide.mjs','neural-guide-ui.mjs','neural-guide-view.mjs','neural-guide.css');

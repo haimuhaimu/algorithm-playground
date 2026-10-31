@@ -37,6 +37,7 @@ files.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
 files.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 files.push('pixel-recipient.mjs','pixel-recipient-ui.mjs','pixel-recipient.css');
 files.push('pixel-code.mjs','pixel-code-ui.mjs','pixel-code.css');
+files.push('pixel-delivery.mjs');
 files.push('sand-lesson.mjs','sand-lesson-ui.mjs');
 files.push('mining-shared-evidence.mjs','mining-shared-ui.mjs');
 files.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');

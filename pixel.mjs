@@ -1,6 +1,7 @@
 import { encode, decode, preset, stroke, rearrangement } from './pixel-core.mjs?v=recipient-1';
 import { setupRecipient } from './pixel-recipient-ui.mjs?v=recipient-1';
 import { setupCodeLesson } from './pixel-code-ui.mjs?v=code-1';
+import { createDelivery, deliveryAt } from './pixel-delivery.mjs?v=delivery-1';
 import {DRAFT_KEYS,readDraft,writeDraft,clearDraft,validatePixelDraft,draftMessage} from './local-drafts.mjs';
 
 const $ = id => document.getElementById(id);
@@ -11,6 +12,8 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)');
 let pixels = preset('cat'), color = 1, cursor = { x: 0, y: 0 }, focused = false;
 let gesture = null, history = [], received = null, job = null, frame = 0;
 let reorder = null, recipient = null, codeLesson = null;
+let lastParcel = null, deliveryView = null;
+const deliveryContext = $('delivery-preview').getContext('2d');
 const equal = (a, b) => a.length === b.length && a.every((value, i) => value === b[i]);
 const available = () => context && receivedContext && !document.hidden && !$('guide').open;
 function saveDraft(){
@@ -26,7 +29,7 @@ function draw(ctx, data, showCursor = false) {
   if (!ctx) return;
   ctx.clearRect(0, 0, 512, 512);
   for (let i = 0; i < 256; i++) {
-    ctx.fillStyle = data ? colors[data[i]] : colors[0];
+    ctx.fillStyle = data?.[i] === null ? ((i % 16 + Math.floor(i / 16)) % 2 ? '#d5d5dc' : '#e4e4e9') : data ? colors[data[i]] : colors[0];
     ctx.fillRect(i % 16 * 32, Math.floor(i / 16) * 32, 32, 32);
   }
   if (ctx === context) {
@@ -38,12 +41,12 @@ function draw(ctx, data, showCursor = false) {
   }
 }
 function receipt() {
-  if (job) $('receipt').textContent = '寄送中… 上次来信会保留到新信送达';
+  if (job && !job.replay) $('receipt').textContent = '寄送中… 上次来信会保留到新信送达';
   else if (!received) $('receipt').textContent = '还没有来信';
   else $('receipt').textContent = equal(received.pixels, pixels) ? `完整收到 · 256 / 256 格一致 · ${received.bytes} B` : `上次收到 ${received.bytes} B · 画纸已改，待重新寄出`;
 }
 function renderIdleWire(packet) {
-  if (job) return;
+  if (job || deliveryView?.replay) return;
   const bits = [...packet.packet].map(byte => byte.toString(2).padStart(8, '0')).join('');
   const delivered = received && equal(received.pixels, pixels);
   $('wire-count').textContent = delivered ? `已送达 · ${bits.length} / ${bits.length} bit` : `当前画纸待寄出 · ${bits.length} bit`;
@@ -71,9 +74,11 @@ function render() {
   $('payload').textContent = `${packet.payloadBits} bit`;
   $('overhead').textContent = `${packet.treeBits} + ${packet.paddingBits} bit`;
   $('undo').disabled = !history.length || !context || !receivedContext;
-  $('send').setAttribute('aria-disabled', !!job);
+  $('send').setAttribute('aria-disabled', !!job && !job.replay);
+  $('delivery-replay').disabled = !lastParcel || !deliveryContext;
   $('challenge').textContent = size <= 48 ? `轻装达成 · ${size} B / 48 B。还能画点什么？` : `小挑战：把一张喜欢的画装进 48 B。还差 ${size - 48} B。`;
   receipt();
+  if (deliveryView) renderDelivery(deliveryView);
   renderIdleWire(packet);
   renderReorder();
   recipient?.refresh();
@@ -124,6 +129,8 @@ for(const guess of ['more','same','less'])$('guess-'+guess).addEventListener('cl
 function cancelSend(message) {
   if (!job) return;
   job = null; cancelAnimationFrame(frame); frame = 0;
+  deliveryView = null;
+  $('delivery-panel').hidden = true;
   draw(receivedContext, received?.pixels);
   if (message) $('status').textContent = message;
   render();
@@ -184,34 +191,115 @@ $('undo').addEventListener('click', () => {
   for (const name of ['cat', 'heart', 'noise', 'blank']) $('preset-' + name).setAttribute('aria-pressed', equal(pixels, preset(name)));
   render(); saveDraft();
 });
-$('send').addEventListener('click', () => {
-  if (!available() || job) return;
-  cancelStroke();
-  const snapshot = [...pixels], encoded = encode(snapshot), decoded = decode(encoded.packet, 256);
-  const current = { snapshot, decoded, encoded, start: null }; job = current;
-  const bits = [...encoded.packet].map(byte => byte.toString(2).padStart(8, '0')).join('');
-  $('wire-count').textContent = `0 / ${bits.length} bit`;
-  $('wire-bits').textContent = '正在把编码树与图案装进字节…';
-  $('wire-progress').style.width = '0%';
-  $('wire-caption').textContent = '正在模拟寄送当前邮包。这里只展示最近经过的 96 位，新信送达前保留上次来信。';
-  function advance(time) {
-    if (job !== current) return;
-    if (current.start === null) current.start = time;
-    const progress = motion.matches ? 1 : Math.min(1, (time - current.start) / 1200);
-    const sent = Math.floor(progress * bits.length);
-    $('wire-count').textContent = `${sent} / ${bits.length} bit`;
-    $('wire-bits').textContent = sent ? bits.slice(Math.max(0, sent - 96), sent) : '正在把编码树与图案装进字节…';
-    $('wire-progress').style.width = `${progress * 100}%`;
-    if (!received) { const partial = Array(256).fill(0); for (let i = 0; i < Math.floor(progress * 16) * 16; i++) partial[i] = decoded[i]; draw(receivedContext, partial); }
-    if (progress < 1) { frame = requestAnimationFrame(advance); return; }
-    job = null; frame = 0;
-    const matches = decoded.reduce((n, value, i) => n + (value === snapshot[i]), 0);
-    if (matches !== 256) { $('status').textContent = '还原校验未通过，保留上次来信。'; draw(receivedContext, received?.pixels); render(); return; }
-    received = { pixels: decoded, bytes: encoded.packet.length }; draw(receivedContext, decoded);
-    $('status').textContent = `送达了！${encoded.packet.length} 字节，256 格一格不少。`; render(); saveDraft();
+function renderDelivery(current) {
+  const state = deliveryAt(current.trace, current.sent), {bits, treeBits, payloadEnd} = current.trace;
+  const focus = current.replay && current.sent === current.sample.startBit ? current.sample : state.focus;
+  const prefix = focus ? bits.slice(focus.startBit,Math.min(state.sent,focus.endBit)) : '';
+  $('delivery-panel').hidden = false;
+  $('delivery-preview').dataset.decoded = String(state.decoded);
+  draw(deliveryContext, state.pixels);
+  if (focus && deliveryContext) {
+    const x = focus.index % 16 * 32, y = Math.floor(focus.index / 16) * 32;
+    deliveryContext.lineWidth = 5; deliveryContext.strokeStyle = '#b82465';
+    deliveryContext.strokeRect(x + 3, y + 3, 26, 26);
   }
-  $('status').textContent = '正在模拟寄送，收件端只从真实字节包解码。'; render();
-  if (motion.matches) advance(0); else frame = requestAnimationFrame(advance);
+  $('delivery-count').textContent = `${state.sent} / ${bits.length} bit`;
+  $('delivery-decoded').textContent = `已还原 ${state.decoded} / 256 格`;
+  $('delivery-track').style.width = `${state.sent / bits.length * 100}%`;
+  $('delivery-toggle').textContent = state.complete ? '已读完' : motion.matches ? '逐位模式' : current.paused ? '继续播放' : '暂停';
+  $('delivery-toggle').disabled = state.complete || motion.matches;
+  $('delivery-bit').disabled = state.complete;
+  $('delivery-note').textContent = current.replay || state.complete
+    ? `慢拆刚才封存的同一封信，不重新寄送、不覆盖画纸或草稿。${equal(current.parcel.snapshot,pixels)?'':'画纸已改，这里仍保留旧图。'}`
+    : '本次还原中 · 灰格尚未收到；下方成功来信在送达前不变。动画速度不代表运算速度。';
+  $('delivery-cell').textContent = focus ? `第 ${Math.floor(focus.index/16)+1} 行 · 第 ${focus.index%16+1} 列` : '先读这封信的暗号表';
+  $('delivery-prefix').textContent = focus ? (prefix || '—') : `${state.sent} / ${treeBits} 位`;
+  $('delivery-prefix').dataset.complete = String(!!focus && state.sent >= focus.endBit);
+  const ready = !!focus && state.sent >= focus.endBit, result = $('delivery-cell-result');
+  result.dataset.ready = String(ready);
+  result.style.backgroundColor = ready ? colors[focus.color] : '';
+  result.setAttribute('aria-label',`放大后的这一格：${ready?names[focus.color]:'暗号未收齐'}`);
+  const explanation = state.phase === 'tree' ? '先收到编码树，才能知道每种颜色用什么暗号。现在还不能还原像素。'
+    : state.phase === 'padding' ? `256 格已经齐了。还要收齐 ${bits.length-payloadEnd} 位字节补零，邮包才算送达；补零不会多出像素。`
+    : state.complete ? '一格没删：同一份字节包还原出全部 256 格。常见颜色用短暗号，不是提前猜出颜色。'
+    : state.sent >= focus.endBit ? `「${focus.code}」完整了 → ${names[focus.color]}。这一格现在才出现；下一位从新的暗号开始。`
+    : `「${prefix || '尚未开始'}」还不是完整暗号，这一格继续留灰。再读一位，看看它是否对应表里的一种颜色。`;
+  const output = $('delivery-explanation');
+  output.setAttribute('aria-live', current.paused ? 'polite' : 'off');
+  if (output.textContent !== explanation) output.textContent = explanation;
+  // The existing detailed wire follows this same playhead, including on replay.
+  if (!job && !current.replay) return;
+  $('wire-count').textContent = `${state.sent} / ${bits.length} bit`;
+  $('wire-bits').textContent = bits.slice(Math.max(0,state.sent-96),state.sent) || '正在读编码树…';
+  $('wire-progress').style.width = `${state.sent/bits.length*100}%`;
+  $('wire-caption').textContent = current.replay ? '这是刚才封存邮包的逐位回放，不是当前画纸的新寄送。' : '当前邮包的实际位流；树、图案编码和补齐共用同一个进度。';
+}
+function finishDelivery(current) {
+  if (job !== current) return;
+  current.sent = current.trace.bits.length;
+  current.paused = true; current.epoch++; cancelAnimationFrame(frame); frame = 0;
+  if (!current.replay) {
+    const decoded = decode(current.parcel.encoded.packet,256);
+    if (!equal(decoded,current.parcel.snapshot)) { cancelSend('还原校验未通过，保留上次来信。'); return; }
+    received = {pixels:decoded,bytes:current.parcel.encoded.packet.length};
+    draw(receivedContext,decoded);
+    $('status').textContent = `送达了！${received.bytes} 字节，256 格一格不少。可以逐位拆这封信。`;
+    job = null; render(); saveDraft();
+  } else { job = null; $('status').textContent = '回放完成。没有重新寄送，也没有覆盖画纸或草稿。'; render(); }
+  renderDelivery(current);
+}
+function playDelivery(current) {
+  if (motion.matches) return; // Reduced-motion users retain manual, non-animated replay.
+  current.paused = false; current.start = null; current.base = current.sent;
+  const epoch = ++current.epoch;
+  function advance(time) {
+    if (job !== current || current.paused || current.epoch !== epoch) return;
+    if (current.start === null) current.start = time;
+    current.sent = Math.min(current.trace.bits.length,current.base+Math.floor(Math.max(0,time-current.start)/6000*current.trace.bits.length));
+    renderDelivery(current);
+    if (current.sent === current.trace.bits.length) finishDelivery(current);
+    else frame = requestAnimationFrame(advance);
+  }
+  renderDelivery(current); frame = requestAnimationFrame(advance);
+}
+function openDelivery(parcel,replay=false) {
+  const trace = createDelivery(parcel.encoded.packet,256);
+  // Skip only a clearly labelled prefix when replaying, to reach a multi-bit color.
+  const sample = trace.entries.find(entry=>entry.color!==trace.pixels[0] && entry.code.length>1) ?? trace.entries[0];
+  const current = {parcel,trace,replay,sample,sent:replay?sample.startBit:0,paused:true,epoch:0};
+  deliveryView = current;
+  job = current;
+  $('delivery-codebook').innerHTML = names.map((name,i)=>`<div><i class="color-${i}" aria-hidden="true"></i><span>${name}</span><code>${trace.entries.find(entry=>entry.color===i)?.code??'未使用'}</code></div>`).join('');
+  $('delivery-skipped').textContent = replay ? `已快进：读好暗号表和前 ${sample.index} 格。从粉框这一格开始，每点一次只多收 1 bit。` : '可以暂停，再点「读下一位」；只有读到完整暗号，粉框里的像素才出现。';
+  render(); renderDelivery(current);
+  $('delivery-title').focus({preventScroll:true}); $('delivery-panel').scrollIntoView({block:'start',behavior:'instant'});
+  if (!replay) {
+    if (motion.matches) finishDelivery(current); else playDelivery(current);
+  }
+}
+$('send').addEventListener('click', () => {
+  if (!available() || (job && !job.replay)) return;
+  cancelStroke(); cancelSend();
+  const snapshot = [...pixels]; lastParcel = {snapshot,encoded:encode(snapshot)};
+  $('status').textContent = '正在模拟寄送，收件端只从真实字节包解码。';
+  openDelivery(lastParcel);
+});
+$('delivery-toggle').addEventListener('click',()=>{
+  if (!available() || !job) return;
+  if (job.paused) { playDelivery(job); return; }
+  job.paused = true; job.epoch++; cancelAnimationFrame(frame); frame = 0; renderDelivery(job);
+});
+$('delivery-bit').addEventListener('click',()=>{
+  if (!available() || !job) return;
+  const current=job;current.paused=true;current.epoch++;cancelAnimationFrame(frame);frame=0;
+  current.sent=Math.min(current.trace.bits.length,current.sent+1);renderDelivery(current);
+  if(current.sent===current.trace.bits.length)finishDelivery(current);
+});
+$('delivery-replay').addEventListener('click',()=>{
+  if(!available() || !lastParcel || !deliveryContext)return;
+  const interrupted = job && !job.replay;
+  cancelStroke();cancelSend();openDelivery(lastParcel,true);
+  $('status').textContent = interrupted ? '原寄送已取消，切到逐位回放。只拆刚才封存的邮包，成功来信保持不变。' : '正在逐位回放刚才封存的邮包；不重新寄送，成功来信保持不变。';
 });
 function interrupt() { cancelStroke(); cancelSend('寄送已取消，画纸和上一张来信已保留。需要时再寄一次。'); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) interrupt(); });

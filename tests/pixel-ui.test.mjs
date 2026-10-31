@@ -98,13 +98,104 @@ async function boot({ reduced = false, missingCanvas = false, storage = memorySt
   try { await import(new URL('../pixel.mjs?t=' + ++serial, import.meta.url)); } catch (e) { restore(); throw e; }
   const fire = (el, type, props = {}) => el.dispatchEvent(Object.assign(new Event(type, { cancelable: true }), props));
   return { els, doc, frames, media, restore, fire, click: id => fire(els.get(id), 'click'),
+    advance(t) { const q = [...frames.values()]; frames.clear(); for (const fn of q) fn(t); },
     pointer(type, x, y, id = 1) { fire(els.get('editor'), type, { clientX: x, clientY: y, pointerId: id, button: 0 }); },
     key(key, props = {}) { fire(els.get('editor'), 'keydown', { key, ...props }); },
-    finish() { for (const t of [0, 2000]) { const q = [...frames.values()]; frames.clear(); for (const fn of q) fn(t); } },
+    finish() { for (const t of [0, 20000]) { const q = [...frames.values()]; frames.clear(); for (const fn of q) fn(t); } },
     hide() { doc.hidden = true; fire(doc, 'visibilitychange'); },
     pixels: id => [...els.get(id).ctx.pixels.values()],
   };
 }
+test('delivery never reveals the cat green cells before their actual code bits arrive',async()=>{
+ const u=await boot();try{
+  u.click('send');u.advance(0);u.advance(5250);
+  assert.notEqual(u.pixels('receiver')[220],'#bdd754','bit 393 is required for this green pixel, not 378');
+  assert.equal(u.els.get('delivery-preview')?.dataset.decoded,'216');
+ }finally{u.restore();}
+});
+test('paused delivery reads one bit, guards queued frames, and resumes without catching up',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('delivery-toggle'),'pause control is in the real page');
+  u.click('send');u.advance(0);u.advance(100);const stale=[...u.frames.values()][0];
+  u.click('delivery-toggle');const count=u.els.get('delivery-count').textContent;
+  stale(9999);assert.equal(u.els.get('delivery-count').textContent,count);assert.equal(u.frames.size,0);
+  u.click('delivery-bit');assert.equal(u.frames.size,0);
+  assert.equal(parseInt(u.els.get('delivery-count').textContent),parseInt(count)+1);
+  u.click('delivery-toggle');u.advance(20000);assert.equal(parseInt(u.els.get('delivery-count').textContent),parseInt(count)+1);
+  stale(99999);assert.equal(parseInt(u.els.get('delivery-count').textContent),parseInt(count)+1);
+  u.advance(30000);assert.deepEqual(u.pixels('receiver'),u.pixels('editor'));
+ }finally{u.restore();}
+});
+test('slow replay uses the last fixed parcel without changing a drawing or successful mail',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('delivery-replay'));
+  u.click('send');const old=u.pixels('receiver');u.click('preset-heart');
+  const drawing=u.pixels('editor'),writes=storage.writes;
+  u.click('delivery-replay');assert.equal(u.frames.size,0);
+  assert.match(u.els.get('delivery-note').textContent,/旧|刚才|同一/);
+  for(let n=0;n<600;n++)u.click('delivery-bit');
+  assert.deepEqual(u.pixels('receiver'),old);assert.deepEqual(u.pixels('editor'),drawing);assert.equal(storage.writes,writes);
+ }finally{u.restore();}
+});
+test('slow replay starts on the next undecoded cell and visibly waits for its full three-bit code',async()=>{
+ const u=await boot({reduced:true});try{
+  u.click('send');u.click('delivery-replay');
+  assert.ok(u.els.has('delivery-cell-result'),'the target pixel has a visible magnified result');
+  assert.equal(u.els.get('delivery-cell-result').dataset.ready,'false');
+  assert.match(u.els.get('delivery-cell').textContent,/3 行.*4 列/);
+  assert.equal(u.els.get('delivery-prefix').textContent,'—');
+  for(const [prefix,count] of [['0','35'],['01','35'],['011','36']]){
+   u.click('delivery-bit');assert.equal(u.els.get('delivery-prefix').textContent,prefix);
+   assert.equal(u.els.get('delivery-preview').dataset.decoded,count);
+  }
+  assert.match(u.els.get('delivery-explanation').textContent,/墨黑/);
+  assert.equal(u.els.get('delivery-cell-result').dataset.ready,'true');
+  assert.equal(u.els.get('delivery-cell-result').style.backgroundColor,'#30352a');
+ }finally{u.restore();}
+});
+test('completed old-parcel replay keeps the detailed wire on that same snapshot through rerenders',async()=>{
+ const u=await boot({reduced:true});try{
+  u.click('send');u.click('preset-noise');u.click('delivery-replay');
+  for(let n=0;n<500;n++)u.click('delivery-bit');
+  const bits=u.els.get('wire-bits').textContent;
+  u.fire(u.els.get('editor'),'focus');
+  assert.equal(u.els.get('wire-count').textContent,'432 / 432 bit');
+  assert.equal(u.els.get('wire-bits').textContent,bits);
+  assert.match(u.els.get('wire-caption').textContent,/回放/);
+ }finally{u.restore();}
+});
+test('switching an in-flight parcel to replay does not claim it was delivered or leave a sending status',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  u.click('send');u.advance(0);u.click('delivery-toggle');u.click('delivery-replay');
+  assert.match(u.els.get('status').textContent,/回放/);
+  assert.match(u.els.get('receipt').textContent,/没有来信/);
+  assert.equal(u.frames.size,0);
+  for(let n=0;n<500;n++)u.click('delivery-bit');
+  assert.match(u.els.get('status').textContent,/回放完成/);
+  assert.match(u.els.get('receipt').textContent,/没有来信/);
+  assert.equal(storage.writes,0);
+ }finally{u.restore();}
+});
+test('all cat pixels can be decoded before padding but successful mail and storage wait for the whole packet',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  u.click('send');u.advance(0);u.advance(5950);
+  assert.equal(u.els.get('delivery-preview').dataset.decoded,'256');
+  assert.match(u.els.get('delivery-explanation').textContent,/补零/);
+  assert.match(u.els.get('receipt').textContent,/寄送中/);assert.equal(storage.writes,0);
+  for(let n=0;n<3;n++)u.click('delivery-bit');assert.equal(storage.writes,0);
+  u.click('delivery-bit');assert.match(u.els.get('receipt').textContent,/256.*256/);
+  const writes=storage.writes;u.click('delivery-bit');assert.equal(storage.writes,writes);
+ }finally{u.restore();}
+});
+test('hiding a paused one-bit replay invalidates it without changing old mail or restarting on return',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  u.click('send');const received=u.pixels('receiver'),writes=storage.writes;
+  u.click('delivery-replay');u.click('delivery-bit');u.hide();
+  u.doc.hidden=false;u.click('delivery-bit');u.click('delivery-toggle');
+  assert.equal(u.frames.size,0);assert.equal(u.els.get('delivery-panel').hidden,true);
+  assert.deepEqual(u.pixels('receiver'),received);assert.equal(storage.writes,writes);
+ }finally{u.restore();}
+});
 test('restoring an unchanged delivered draft restores actual wire bits without sending again',async()=>{
  const storage=memoryStorage();let bits,count;
  const u=await boot({storage,reduced:true});try{
