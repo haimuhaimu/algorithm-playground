@@ -1,4 +1,4 @@
-import {createSharedCase,compareSharedChoice,resolveSharedChoice,compareObservedFeedback} from './mining-shared-evidence.mjs?v=feedback-20261029';
+import {createSharedCase,compareSharedChoice,resolveSharedChoice,compareObservedFeedback} from './mining-shared-evidence.mjs?v=bayes-1';
 
 const NAMES=['苔原','珊瑚','琥珀','雾蓝','月白'];
 const percent=value=>(value*100).toFixed(value*100%1?1:0)+'%';
@@ -156,4 +156,5 @@ export function initSharedLesson(){
  window.addEventListener('pagehide',stop);reduced.addEventListener('change',stop);
  $('about').addEventListener('click',stop);
  clearFeedback();render();status('先选一颗星球。这是一份固定教学航海日志，不需要先玩完 30 趟。');
+ return {pause:stop};
 }

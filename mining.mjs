@@ -1,5 +1,6 @@
-import {BUDGET,createWorld,createRecord,pull,runPolicyTrace,traceChoices} from './mining-core.mjs?v=feedback-20261029';
-import {initSharedLesson} from './mining-shared-ui.mjs?v=feedback-20261029';
+import {BUDGET,createWorld,createRecord,pull,runPolicyTrace,traceChoices} from './mining-core.mjs?v=bayes-1';
+import {initSharedLesson} from './mining-shared-ui.mjs?v=bayes-1';
+import {initBayesLesson} from './mining-bayes-ui.mjs?v=bayes-1';
 
 const $=id=>document.getElementById(id);
 const names=['苔原','珊瑚','琥珀','雾蓝','月白'];
@@ -211,4 +212,7 @@ $('theme').addEventListener('click',()=>{
  $('theme').setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');
 });
 render();setStatus('这里没有地图。第一趟，凭直觉选就好。');
-initSharedLesson();
+const sharedLesson=initSharedLesson();
+initBayesLesson({onEnter:()=>{
+ pauseSimulation();cancel('航行已暂停，没有扣除探测次数。你的已完成记录仍然保留。');sharedLesson.pause();
+}});

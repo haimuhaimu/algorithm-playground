@@ -7,12 +7,12 @@ import {readFile} from 'node:fs/promises';
 test('mining entry assets and lesson module graph share a release key',async()=>{
  const root=new URL('../',import.meta.url),html=await readFile(new URL('mining.html',root),'utf8');
  const entries=[...html.matchAll(/<(?:link|script)\b[^>]*(?:src|href)="(\.\/mining[^"]+)"/g)].map(m=>new URL(m[1],root));
- assert.deepEqual(entries.map(u=>u.pathname.split('/').at(-1)).sort(),['mining.css','mining.mjs']);
+ assert.deepEqual(entries.map(u=>u.pathname.split('/').at(-1)).sort(),['mining-bayes.css','mining.css','mining.mjs']);
  const urls=[...entries];
- for(const file of ['mining.mjs','mining-shared-ui.mjs','mining-shared-evidence.mjs']){
+ for(const file of ['mining.mjs','mining-shared-ui.mjs','mining-shared-evidence.mjs','mining-bayes-ui.mjs','mining-bayes.mjs']){
   const code=await readFile(new URL(file,root),'utf8');
   const imports=[...code.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(m=>new URL(m[1],root));
-  assert.equal(imports.length,file==='mining.mjs'?2:1,file);urls.push(...imports);
+  assert.equal(imports.length,file==='mining.mjs'?3:file==='mining-bayes.mjs'?0:1,file);urls.push(...imports);
  }
  const version=entries[0].searchParams.get('v');
  assert.ok(version,'new mining HTML must not reuse the previous unversioned browser cache');

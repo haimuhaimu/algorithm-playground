@@ -2,6 +2,72 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 let serial=0;
+test('Bayesian entry keeps the old game and waits for a prediction before showing uncertainty',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('bayes-start'),'a scoped Bayesian lesson needs an explicit entry');
+  assert.equal(u.els.get('bayes-lesson').hidden,true);u.click('bayes-reveal');assert.equal(u.els.get('bayes-comparison').hidden,true);
+  u.click('bayes-start');assert.equal(u.els.get('bayes-lesson').hidden,false);assert.equal(u.els.get('bayes-reveal').disabled,true);
+  u.click('bayes-guess-many');assert.equal(u.els.get('bayes-guess-many').getAttribute('aria-pressed'),'true');u.click('bayes-reveal');
+  assert.equal(u.els.get('bayes-comparison').hidden,false);assert.match(u.els.get('bayes-mean-little').textContent,/57\.1/);assert.match(u.els.get('bayes-mean-many').textContent,/59\.4/);
+  assert.match(u.els.get('bayes-chart-overview').innerHTML,/<path/);assert.match(u.els.get('bayes-interval-many').textContent,/90%/);
+  assert.equal(u.els.get('remaining').textContent,'30');assert.equal(u.els.get('minerals').textContent,'0');
+ }finally{u.restore();}
+});
+test('one controlled failure is gated and preserves the actual before/after estimate for both logs',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('bayes-start'));u.click('bayes-start');u.click('bayes-guess-same');u.click('bayes-reveal');
+  u.click('bayes-update');assert.equal(u.els.get('bayes-updated').hidden,true);
+  u.click('bayes-change-little');u.click('bayes-update');
+  assert.equal(u.els.get('bayes-updated').hidden,false);assert.match(u.els.get('bayes-change-summary-little').textContent,/57\.1.*50\.0/);assert.match(u.els.get('bayes-change-summary-many').textContent,/59\.4.*57\.6/);
+  assert.match(u.els.get('bayes-change-summary-little').textContent,/7\.1/);assert.match(u.els.get('bayes-change-summary-many').textContent,/1\.8/);
+  assert.match(u.els.get('bayes-mean-little').textContent,/57\.1/,'old comparison must stay frozen');
+  const same=u.els.get('bayes-change-summary-little').textContent;u.click('bayes-update');assert.equal(u.els.get('bayes-change-summary-little').textContent,same);
+ }finally{u.restore();}
+});
+test('transfer preserves a wrong first choice before correction and never claims mastery',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('bayes-start'));u.click('bayes-start');u.click('bayes-answer-evidence');assert.equal(u.els.get('bayes-ending').hidden,true);
+  u.click('bayes-guess-many');u.click('bayes-reveal');u.click('bayes-change-little');u.click('bayes-update');
+  assert.equal(u.els.get('bayes-transfer-results').hidden,true);u.click('bayes-answer-never');
+  assert.equal(u.els.get('bayes-transfer-results').hidden,false);assert.equal(u.els.get('bayes-ending').hidden,true);assert.match(u.els.get('bayes-answer-feedback').textContent,/不能|不等于/);
+  u.click('bayes-answer-evidence');assert.equal(u.els.get('bayes-ending').hidden,false);assert.match(u.els.get('bayes-ending-evidence').textContent,/修正|第一次/);assert.doesNotMatch(u.els.get('bayes-ending-evidence').textContent,/已掌握/);
+ }finally{u.restore();}
+});
+test('closing preserves lesson evidence while explicit restart removes predictions and results',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('bayes-start'));u.click('bayes-start');u.click('bayes-guess-little');u.click('bayes-reveal');
+  u.click('bayes-close');assert.equal(u.els.get('bayes-lesson').hidden,true);u.click('bayes-start');assert.equal(u.els.get('bayes-comparison').hidden,false);
+  u.click('bayes-reset');assert.equal(u.els.get('bayes-comparison').hidden,true);assert.equal(u.els.get('bayes-updated').hidden,true);assert.equal(u.els.get('bayes-guess-little').getAttribute('aria-pressed'),'false');
+  assert.equal(u.els.get('bayes-chart-overview').innerHTML,'');assert.equal(u.els.get('remaining').textContent,'30');
+ }finally{u.restore();}
+});
+test('corrected endings visibly preserve each actual first wrong answer and identify the interval target',async()=>{
+ for(const [answer,label] of [['never','能，命中率都是 0%'],['guarantee','样本更多，下一趟就一定挖得到']]){
+  const u=await boot({reduced:true});try{
+   u.click('bayes-start');u.click('bayes-guess-many');u.click('bayes-reveal');u.click('bayes-change-little');u.click('bayes-update');
+   u.click('bayes-answer-'+answer);u.click('bayes-answer-evidence');
+   const ending=u.els.get('bayes-ending-evidence').textContent;
+   assert.ok(ending.includes(label),'the actual first wrong option remains visible after correction');
+   assert.match(ending,/修正.*不能/);
+   assert.match(u.els.get('bayes-interval-little').textContent,/真实成功率的 90% 可信区间/);
+  }finally{u.restore();}
+ }
+});
+test('hidden help and number shortcuts cannot advance Bayesian answers or the unrelated game',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('bayes-start'));u.click('bayes-start');u.hide();u.click('bayes-guess-many');u.show();assert.equal(u.els.get('bayes-reveal').disabled,true);
+  u.click('about');u.click('bayes-guess-many');assert.equal(u.els.get('bayes-reveal').disabled,true);u.els.get('guide').close();
+  u.doc.activeElement=u.els.get('bayes-guess-many');u.key('1');assert.equal(u.els.get('remaining').textContent,'30');
+ }finally{u.restore();}
+});
+test('opening Bayesian lesson cancels old pending free and shared flights without losing completed records',async()=>{
+ const u=await boot({seed:42});try{
+  assert.ok(u.els.has('bayes-start'));u.click('planet-0');u.finish();assert.equal(u.els.get('remaining').textContent,'29');
+  u.click('planet-1');const stale=[...u.frames.values()][0];u.click('bayes-start');stale(9000);assert.equal(u.frames.size,0);assert.equal(u.els.get('remaining').textContent,'29');
+  u.click('bayes-close');u.click('shared-planet-1');u.click('shared-reveal');u.click('shared-fly');u.tick(0);const old=[...u.frames.values()][0];u.click('bayes-start');old(9000);
+  assert.equal(u.frames.size,0);assert.equal(u.els.get('shared-result').hidden,true);assert.equal(u.els.get('remaining').textContent,'29');
+ }finally{u.restore();}
+});
 test('shared lesson reveals rules only after committing a choice, then records just one flight',async()=>{
  const u=await boot();try{
   assert.ok(u.els.has('shared-reveal'),'same-evidence lesson must be available before completing thirty flights');
