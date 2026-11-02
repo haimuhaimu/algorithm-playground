@@ -97,7 +97,7 @@ async function boot({ reduced = false, missingCanvas = false, storage = memorySt
   Object.assign(globalThis, globals);
   try { await import(new URL('../pixel.mjs?t=' + ++serial, import.meta.url)); } catch (e) { restore(); throw e; }
   const fire = (el, type, props = {}) => el.dispatchEvent(Object.assign(new Event(type, { cancelable: true }), props));
-  return { els, doc, frames, media, restore, fire, click: id => fire(els.get(id), 'click'),
+  return { els, doc, win:globals.window, frames, media, restore, fire, click: id => fire(els.get(id), 'click'),
     advance(t) { const q = [...frames.values()]; frames.clear(); for (const fn of q) fn(t); },
     pointer(type, x, y, id = 1) { fire(els.get('editor'), type, { clientX: x, clientY: y, pointerId: id, button: 0 }); },
     key(key, props = {}) { fire(els.get('editor'), 'keydown', { key, ...props }); },
@@ -194,6 +194,55 @@ test('hiding a paused one-bit replay invalidates it without changing old mail or
   u.doc.hidden=false;u.click('delivery-bit');u.click('delivery-toggle');
   assert.equal(u.frames.size,0);assert.equal(u.els.get('delivery-panel').hidden,true);
   assert.deepEqual(u.pixels('receiver'),received);assert.equal(storage.writes,writes);
+ }finally{u.restore();}
+});
+test('pixel AI export is explicit, replayable, and keeps actual single-bit actions without changing drafts or mail',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('pixel-ai-generate'),'pixel replay needs an explicit export entry');
+  assert.equal(u.els.get('pixel-ai-text').value,'');
+  u.click('send');u.click('delivery-replay');u.click('delivery-bit');
+  const drawing=u.pixels('editor'),mail=u.pixels('receiver'),writes=storage.writes;
+  let copies=0;u.win.navigator={clipboard:{writeText:async()=>{copies++;}}};
+  u.click('pixel-ai-generate');
+  const r=JSON.parse(u.els.get('pixel-ai-text').value);
+  assert.equal(r.producer,'browser-session');assert.equal(r.input.preset,'cat');assert.equal(r.input.mode,'slow-replay');
+  assert.deepEqual(r.actions,[{action:'read',value:1}]);
+  assert.equal(r.result.evidence.sentBits,51);assert.equal(r.result.evidence.prefix,'0');assert.equal(r.result.evidence.focus.index,35);
+  const api=await import('../learning-tool.mjs');assert.equal(api.replayLearningReceipt(r).matches,true);
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),mail);assert.equal(storage.writes,writes);assert.equal(copies,0);
+  u.click('delivery-bit');assert.equal(u.els.get('pixel-ai-text').value,'');assert.equal(u.els.get('pixel-ai-record').hidden,true);
+ }finally{u.restore();}
+});
+test('pixel export pauses animation and records its observed cursor as a jump, never as invented manual reads',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('pixel-ai-generate'));u.click('send');u.advance(0);u.advance(1000);
+  const stale=[...u.frames.values()][0];u.click('pixel-ai-generate');
+  const r=JSON.parse(u.els.get('pixel-ai-text').value);assert.equal(u.frames.size,0);
+  assert.deepEqual(r.actions,[{action:'seek',value:72}]);assert.equal(r.result.evidence.sentBits,72);
+  stale(99999);assert.equal(u.els.get('pixel-ai-text').value,JSON.stringify(r));
+  u.hide();assert.equal(u.els.get('pixel-ai-text').value,'');
+ }finally{u.restore();}
+});
+test('pixel export uses the frozen old parcel after drawing changes and refuses custom art without substituting a preset',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('pixel-ai-generate'));u.click('send');u.click('preset-noise');u.click('delivery-replay');u.click('pixel-ai-generate');
+  assert.equal(JSON.parse(u.els.get('pixel-ai-text').value).input.preset,'cat');
+  u.click('preset-blank');u.key('2');u.key(' ');u.click('send');u.click('delivery-replay');
+  const drawing=u.pixels('editor'),mail=u.pixels('receiver'),writes=storage.writes;
+  assert.equal(u.els.get('pixel-ai-generate').disabled,true);u.click('pixel-ai-generate');
+  assert.equal(u.els.get('pixel-ai-text').value,'');assert.match(u.els.get('pixel-ai-note').textContent,/自定义/);
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),mail);assert.equal(storage.writes,writes);
+ }finally{u.restore();}
+});
+test('denied pixel clipboard preserves manual copy while delayed clipboard feedback cannot revive a stale record',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('pixel-ai-generate'));u.click('send');u.click('delivery-replay');u.click('pixel-ai-generate');
+  const text=u.els.get('pixel-ai-text').value;
+  u.win.navigator={clipboard:{writeText:async()=>{throw Error('denied');}}};u.click('pixel-ai-copy');await new Promise(done=>setImmediate(done));
+  assert.equal(u.els.get('pixel-ai-text').value,text);assert.match(u.els.get('pixel-ai-status').textContent,/手动/);
+  let resolve;u.win.navigator={clipboard:{writeText:()=>new Promise(done=>{resolve=done;})}};u.click('pixel-ai-copy');
+  u.click('delivery-bit');resolve();await new Promise(done=>setImmediate(done));
+  assert.equal(u.els.get('pixel-ai-text').value,'');assert.doesNotMatch(u.els.get('pixel-ai-status').textContent,/已复制/);
  }finally{u.restore();}
 });
 test('restoring an unchanged delivered draft restores actual wire bits without sending again',async()=>{

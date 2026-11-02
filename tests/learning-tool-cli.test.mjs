@@ -23,3 +23,71 @@ test('CLI replay never trusts an edited score',()=>{
  const run=call('run',JSON.stringify({actions:[{action:'train'}]}));run.json.data.result.evidence.guide.steps=999;
  const replay=call('replay',JSON.stringify(run.json.data));assert.equal(replay.status,1);assert.match(replay.json.error,/mismatch/i);
 });
+test('CLI discovery exposes a pixel decoder without removing the existing learning route',()=>{
+ const list=call('list');assert.equal(list.status,0);assert.equal(list.json.data.experiments.length,10);
+ assert.ok(list.json.data.runnables.some(tool=>tool.id==='learning-route'));
+ assert.ok(list.json.data.runnables.some(tool=>tool.id==='pixel-decode'));
+ const detail=call('describe','',['pixel-decode']);assert.equal(detail.status,0);
+ assert.equal(detail.json.data.engineVersion,'pixel-decode-v1');
+});
+test('CLI slow replay reads the real next cat pixel only after all three code bits arrive',()=>{
+ for(const [count,sentBits,decodedCount,prefix] of [[1,51,35,'0'],[2,52,35,'01'],[3,53,36,'011']]){
+  const run=call('run',JSON.stringify({experimentId:'pixel-decode',preset:'cat',mode:'slow-replay',actions:Array.from({length:count},()=>({action:'read',value:1}))}));
+  assert.equal(run.status,0,run.json.error);const receipt=run.json.data,evidence=receipt.result.evidence;
+  assert.equal(receipt.experimentId,'pixel-decode');assert.equal(receipt.engineVersion,'pixel-decode-v1');
+  assert.equal(receipt.numericFormat,'integer-bits');assert.equal(receipt.producer,'agent');
+  assert.equal(evidence.sentBits,sentBits);assert.equal(evidence.decodedCount,decodedCount);assert.equal(evidence.prefix,prefix);
+  assert.equal(evidence.pixels[35],count===3?1:null);assert.equal(receipt.result.packetComplete,false);
+  assert.equal(receipt.result.mastery,'not-assessed');
+  const replay=call('replay',JSON.stringify(receipt));assert.equal(replay.status,0,replay.json.error);
+  assert.equal(replay.json.data.matches,true);assert.equal(replay.json.data.authenticatesUser,false);
+ }
+});
+test('CLI accepts only the four fixed postcards and completes their actual packets',()=>{
+ for(const preset of ['cat','heart','noise','blank']){
+  const run=call('run',JSON.stringify({experimentId:'pixel-decode',preset,actions:[{action:'read',value:528}]}));
+  assert.equal(run.status,0,run.json.error);const receipt=run.json.data,evidence=receipt.result.evidence;
+  assert.equal(evidence.decodedCount,256);assert.equal(evidence.pixels.length,256);
+  assert.equal(receipt.result.packetComplete,true);assert.equal(receipt.result.allPixelsDecoded,true);
+  assert.equal(evidence.sentBits,evidence.totalBits);assert.equal(evidence.phase,'complete');
+  if(preset==='noise')assert.equal(evidence.packetBytes,66,'the uniform-frequency picture is larger than the 64-byte raw image');
+  if(preset==='blank'){assert.equal(evidence.treeBits,3);assert.equal(evidence.totalBits,264);}
+ }
+});
+test('CLI preserves the distinction between all decoded pixels and a complete padded packet',()=>{
+ const run=call('run',JSON.stringify({experimentId:'pixel-decode',preset:'cat',actions:[{action:'seek',value:428}]}));
+ assert.equal(run.status,0,run.json.error);const receipt=run.json.data,evidence=receipt.result.evidence;
+ assert.equal(evidence.treeBits,15);assert.equal(evidence.payloadEnd,428);assert.equal(evidence.totalBits,432);
+ assert.equal(evidence.paddingBits,4);assert.equal(evidence.decodedCount,256);assert.equal(evidence.phase,'padding');
+ assert.equal(receipt.result.allPixelsDecoded,true);assert.equal(receipt.result.packetComplete,false);
+});
+test('CLI pixel requests reject unknown selectors, executable payloads and invalid cursor actions',()=>{
+ const valid={experimentId:'pixel-decode',preset:'cat',actions:[]};
+ const invalid=[
+  {...valid,preset:'custom'},{...valid,mode:'remote'},{...valid,pixels:Array(256).fill(0)},
+  {...valid,packet:[128]},{...valid,url:'https://example.org'},{...valid,producer:'browser-session'},
+  {...valid,actions:[{action:'read',value:0}]},{...valid,actions:[{action:'read',value:529}]},
+  {...valid,actions:[{action:'read',value:'1'}]},{...valid,actions:[{action:'read',value:1.5}]},
+  {...valid,actions:[{action:'seek',value:-1}]},{...valid,actions:[{action:'seek',value:529}]},
+  {...valid,actions:[{action:'seek',value:null}]},{...valid,actions:[{action:'reset',value:0}]},
+  {...valid,actions:[{action:'eval',value:'process.exit()'}]},{...valid,actions:[{action:'read',value:1,state:{}}]},
+  {...valid,actions:Array.from({length:601},()=>({action:'read',value:1}))}
+ ];
+ for(const request of invalid){const response=call('run',JSON.stringify(request));assert.equal(response.status,1);assert.equal(response.json.ok,false);assert.ok(response.json.error);assert.equal(response.stderr,'');}
+});
+test('CLI replays a maximum-length compact pixel receipt within its unchanged 64 KiB input limit',()=>{
+ const run=call('run',JSON.stringify({experimentId:'pixel-decode',preset:'noise',actions:Array.from({length:600},()=>({action:'read',value:1}))}));
+ assert.equal(run.status,0,run.json.error);const receipt=run.json.data;
+ assert.equal(receipt.steps.length,600);assert.ok(receipt.steps.every(step=>Array.isArray(step)&&step.length>=3&&step.length<=4));
+ assert.ok(receipt.stepFormat,'compact step tuples must have an explicit schema');
+ const input=JSON.stringify(receipt);assert.ok(Buffer.byteLength(input)<=65536,'an accepted run must fit back through replay');
+ const replay=call('replay',input);assert.equal(replay.status,0,replay.json.error);assert.equal(replay.json.data.matches,true);
+});
+test('CLI pixel replay detects edited playhead, visible pixels, action history and step status',()=>{
+ const run=call('run',JSON.stringify({experimentId:'pixel-decode',preset:'cat',mode:'slow-replay',actions:[{action:'read',value:1}]}));
+ assert.equal(run.status,0,run.json.error);
+ for(const mutate of [receipt=>receipt.result.evidence.sentBits=52,receipt=>receipt.result.evidence.pixels[35]=1,receipt=>receipt.actions[0].value=2,receipt=>receipt.steps[0][0]='rejected',receipt=>receipt.engineVersion='pixel-decode-v2',receipt=>receipt.privateDraft='not allowed']){
+  const changed=structuredClone(run.json.data);mutate(changed);const replay=call('replay',JSON.stringify(changed));
+  assert.equal(replay.status,1);assert.equal(replay.json.ok,false);assert.ok(replay.json.error);
+ }
+});

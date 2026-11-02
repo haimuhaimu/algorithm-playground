@@ -5,7 +5,7 @@
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pixel.css"><link rel="stylesheet" href="./pixel-recipient.css?v=recipient-1">
  <link rel="stylesheet" href="./pixel-code.css?v=code-1">
- <script type="module" src="./pixel.mjs?v=delivery-1"></script><title>算法游乐场 · 像素邮局</title>
+ <script type="module" src="./pixel.mjs?v=pixel-ai-1"></script><title>算法游乐场 · 像素邮局</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head><body>
@@ -29,7 +29,7 @@
     <div class="size-comparison"><div><span>原始像素</span><strong>64<small>B</small></strong></div><span class="size-arrow" aria-hidden="true">→</span><div><span>打包后</span><strong id="packed-size">—</strong><small class="unit">B</small></div></div>
     <p id="saving" class="saving"></p>
     <button id="send" class="send-button">打包寄出 <span aria-hidden="true">↗</span></button><p class="local-note">只在本页模拟寄送，没有网络上传</p>
-    <div class="delivery-entry"><span>这一格，凭哪几位出现？</span><button id="delivery-replay" type="button" disabled>逐位拆这封信 ↗</button></div>
+    <div class="delivery-entry" id="pixel-delivery-entry"><span>这一格，凭哪几位出现？</span><button id="delivery-replay" type="button" disabled>逐位拆这封信 ↗</button></div>
     <section id="delivery-panel" class="delivery-panel" aria-labelledby="delivery-title" hidden>
      <div class="delivery-heading"><h3 id="delivery-title" tabindex="-1">暗号收齐，这一格才出现。</h3><span id="delivery-count">0 bit</span></div>
      <div class="delivery-progress" aria-hidden="true"><i id="delivery-track"></i></div>
@@ -41,6 +41,7 @@
      <p id="delivery-explanation" class="delivery-explanation" aria-live="off"></p>
      <div class="delivery-controls"><button id="delivery-toggle" type="button">暂停</button><button id="delivery-bit" type="button">读下一位 <span aria-hidden="true">+1 bit</span></button></div>
      <p id="delivery-skipped" class="delivery-note"></p>
+     <details class="pixel-ai"><summary>让我的 AI 重放这封信</summary><p id="pixel-ai-note">先寄一封内置图案，再生成记录。</p><button id="pixel-ai-generate" type="button" disabled>暂停并生成当前解码记录</button><div id="pixel-ai-record" hidden><label for="pixel-ai-text">可重放 JSON · 仅这封内置图案</label><textarea id="pixel-ai-text" rows="5" readonly spellcheck="false" aria-describedby="pixel-ai-status"></textarea><button id="pixel-ai-copy" type="button">复制记录，交给我的 AI</button></div><p id="pixel-ai-status" role="status"></p><p>先用本地工具 replay 重新计算，再解释这些位为什么能还原这一格。不会自动发送，不会自动标记“学会”。<a href="./AI_USAGE.md" target="_blank" rel="noopener">查看 AI 接口说明 ↗</a></p></details>
     </section>
     <div class="receiving-desk">
      <div class="received-postcard"><canvas id="receiver" width="512" height="512" aria-label="从二进制包解码还原的明信片"></canvas><span class="postcard-address" aria-hidden="true">TO: THE OTHER SIDE</span></div>
