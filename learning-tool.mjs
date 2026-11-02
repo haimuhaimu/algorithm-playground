@@ -1,4 +1,6 @@
 import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs';
+import {describePixelDecode,runPixelDecode,replayPixelReceipt} from './pixel-tool.mjs?v=pixel-ai-1';
+export {runPixelDecode};
 
 const BASE='https://haimuhaimu.github.io/algorithm-playground/';
 const OS='https://haimuhaimu.github.io/genai-learning-os/';
@@ -87,9 +89,10 @@ function wireEvidence(value){
  return value;
 }
 export function listLearningTools(){
- return clone({schemaVersion:1,experiments:EXPERIMENTS,runnables:[{id:'learning-route',title:'AI 怎么从例子里学会？',transport:'local-cli-or-library',url:BASE+'learn.html#route-task'}]});
+ return clone({schemaVersion:1,experiments:EXPERIMENTS,runnables:[{id:'learning-route',title:'AI 怎么从例子里学会？',transport:'local-cli-or-library',url:BASE+'learn.html#route-task'},{id:'pixel-decode',title:'像素邮局：真实解码轨迹',transport:'local-cli-or-library',url:BASE+'pixel.html#pixel-delivery-entry'}]});
 }
 export function describeLearningTool(id){
+ if(id==='pixel-decode')return describePixelDecode();
  if(id!=='learning-route'){
   const experiment=EXPERIMENTS.find(e=>e.id===id);if(!experiment)throw Error('Unknown learning tool');return clone(experiment);
  }
@@ -115,9 +118,20 @@ export function runLearningRoute(actions,options={}){
   boundaries:clone(BOUNDARIES),genai:clone(GENAI)};
 }
 export function replayLearningReceipt(receipt){
+ if(receipt?.experimentId==='pixel-decode')return replayPixelReceipt(receipt);
  keys(receipt,['format','schemaVersion','experimentId','engineVersion','numericFormat','producer','fixture','actions','steps','result','boundaries','genai'],'receipt');
  if(receipt.format!=='algorithm-playground/learning-run'||receipt.schemaVersion!==1||receipt.experimentId!=='learning-route'||receipt.engineVersion!=='learning-route-v1')throw Error('Unsupported receipt version');
  const actual=runLearningRoute(receipt.actions,{producer:receipt.producer});
  if(canonical(actual)!==canonical(receipt))throw Error('Receipt mismatch: recomputed actions and evidence differ');
  return {matches:true,authenticatesUser:false,receipt:actual};
+}
+export function runLearningTool(request,options={}){
+ record(request,'run request');
+ const id=request.experimentId??'learning-route';
+ if(id==='pixel-decode'){
+  keys(request,['experimentId','preset','mode','actions'],'run request');
+  const {experimentId,...input}=request;return runPixelDecode(input,options);
+ }
+ if(id!=='learning-route')throw Error('Unknown learning tool');
+ keys(request,['experimentId','actions'],'run request');return runLearningRoute(request.actions,options);
 }

@@ -2,6 +2,7 @@ import { encode, decode, preset, stroke, rearrangement } from './pixel-core.mjs?
 import { setupRecipient } from './pixel-recipient-ui.mjs?v=recipient-1';
 import { setupCodeLesson } from './pixel-code-ui.mjs?v=code-1';
 import { createDelivery, deliveryAt } from './pixel-delivery.mjs?v=delivery-1';
+import { setupPixelToolUI } from './pixel-tool-ui.mjs?v=pixel-ai-1';
 import {DRAFT_KEYS,readDraft,writeDraft,clearDraft,validatePixelDraft,draftMessage} from './local-drafts.mjs';
 
 const $ = id => document.getElementById(id);
@@ -12,7 +13,7 @@ const motion = matchMedia('(prefers-reduced-motion: reduce)');
 let pixels = preset('cat'), color = 1, cursor = { x: 0, y: 0 }, focused = false;
 let gesture = null, history = [], received = null, job = null, frame = 0;
 let reorder = null, recipient = null, codeLesson = null;
-let lastParcel = null, deliveryView = null;
+let lastParcel = null, deliveryView = null, pixelToolExport = null;
 const deliveryContext = $('delivery-preview').getContext('2d');
 const equal = (a, b) => a.length === b.length && a.every((value, i) => value === b[i]);
 const available = () => context && receivedContext && !document.hidden && !$('guide').open;
@@ -79,6 +80,7 @@ function render() {
   $('challenge').textContent = size <= 48 ? `轻装达成 · ${size} B / 48 B。还能画点什么？` : `小挑战：把一张喜欢的画装进 48 B。还差 ${size - 48} B。`;
   receipt();
   if (deliveryView) renderDelivery(deliveryView);
+  pixelToolExport?.refresh();
   renderIdleWire(packet);
   renderReorder();
   recipient?.refresh();
@@ -227,6 +229,7 @@ function renderDelivery(current) {
   const output = $('delivery-explanation');
   output.setAttribute('aria-live', current.paused ? 'polite' : 'off');
   if (output.textContent !== explanation) output.textContent = explanation;
+  pixelToolExport?.refresh();
   // The existing detailed wire follows this same playhead, including on replay.
   if (!job && !current.replay) return;
   $('wire-count').textContent = `${state.sent} / ${bits.length} bit`;
@@ -266,7 +269,7 @@ function openDelivery(parcel,replay=false) {
   const trace = createDelivery(parcel.encoded.packet,256);
   // Skip only a clearly labelled prefix when replaying, to reach a multi-bit color.
   const sample = trace.entries.find(entry=>entry.color!==trace.pixels[0] && entry.code.length>1) ?? trace.entries[0];
-  const current = {parcel,trace,replay,sample,sent:replay?sample.startBit:0,paused:true,epoch:0};
+  const current = {parcel,trace,replay,sample,sent:replay?sample.startBit:0,paused:true,epoch:0,aiActions:[],aiSent:replay?sample.startBit:0};
   deliveryView = current;
   job = current;
   $('delivery-codebook').innerHTML = names.map((name,i)=>`<div><i class="color-${i}" aria-hidden="true"></i><span>${name}</span><code>${trace.entries.find(entry=>entry.color===i)?.code??'未使用'}</code></div>`).join('');
@@ -292,7 +295,9 @@ $('delivery-toggle').addEventListener('click',()=>{
 $('delivery-bit').addEventListener('click',()=>{
   if (!available() || !job) return;
   const current=job;current.paused=true;current.epoch++;cancelAnimationFrame(frame);frame=0;
-  current.sent=Math.min(current.trace.bits.length,current.sent+1);renderDelivery(current);
+  if(current.sent!==current.aiSent)current.aiActions.push({action:'seek',value:current.sent});
+  current.aiActions.push({action:'read',value:1});
+  current.sent=Math.min(current.trace.bits.length,current.sent+1);current.aiSent=current.sent;renderDelivery(current);
   if(current.sent===current.trace.bits.length)finishDelivery(current);
 });
 $('delivery-replay').addEventListener('click',()=>{
@@ -320,6 +325,9 @@ $('draft-status').textContent=draftMessage(draft.status);
 for(const name of ['cat','heart','noise','blank'])$('preset-'+name).setAttribute('aria-pressed',equal(pixels,preset(name)));
 recipient = setupRecipient({ getPixels: () => pixels, available, cancelStroke });
 codeLesson = setupCodeLesson({ document, getPixels: () => pixels, available, cancelStroke });
+pixelToolExport=setupPixelToolUI({document,window,getView:()=>deliveryView,available,pause:()=>{
+ if(job){job.paused=true;job.epoch++;cancelAnimationFrame(frame);frame=0;renderDelivery(job);}
+}});
 draw(receivedContext, received?.pixels); render();
 if (!context || !receivedContext) {
   $('status').textContent = '此浏览器无法打开 Canvas 画布，请换用支持 Canvas 的浏览器。';

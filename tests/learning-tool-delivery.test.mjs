@@ -17,6 +17,14 @@ test('built public contract is discoverable and its delivered library runs the a
   assert.ok(files.includes('learning-tool.mjs'));
   const api=await import(pathToFileURL(join(out,'learning-tool.mjs')));
   const r=api.runLearningRoute([{action:'train'}]);assert.equal(r.result.evidence.guide.steps,120);assert.equal(r.result.workflowComplete,false);
+  assert.equal(m.runnables.find(entry=>entry.id==='pixel-decode').transport,'local-cli-or-library');
+  const pixel=api.runLearningTool({experimentId:'pixel-decode',preset:'cat',mode:'slow-replay',actions:[{action:'read',value:1},{action:'read',value:2}]});
+  assert.equal(pixel.result.evidence.sentBits,53);assert.equal(pixel.result.evidence.decodedCount,36);
+  assert.equal(api.replayLearningReceipt(pixel).matches,true);
+  for(const file of ['pixel-tool.mjs','pixel-tool-ui.mjs']){
+   assert.ok(files.includes(file));
+   const response=await fetch(base+'/'+file);assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/javascript/);
+  }
  }finally{await new Promise(done=>server.close(done));await rm(out,{recursive:true,force:true});}
 });
 test('discovered browser entries resolve to anchors in the independently built release',async()=>{
