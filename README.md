@@ -8,6 +8,8 @@
 
 [直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
 
+新增独立小课「分布观察台」：让正态、指数和帕累托三台机器各抽一些随机数，先多抽一点，再用同一批数把红线从 4 挪到 16，看看还剩多少大数字。保留前后次数、原来的图形和图外读数，最后想一想“没抽到，是不是就不可能”；对数正态可以在结束后选看。全部在浏览器里计算，不上传、不新增保存记录；已知模型的类别与这次抽到的结果分开解释，不凭一张图给现实数据定性。[试玩分布观察台 →](https://haimuhaimu.github.io/algorithm-playground/distributions.html)
+
 Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, a blind-box mining game about exploration vs exploitation, a pixel postcard editor with real lossless Huffman encoding, a tiny learned world-model flight lab, and an evolving AI art studio about local edits, reusable workflows, and improvement methods. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
