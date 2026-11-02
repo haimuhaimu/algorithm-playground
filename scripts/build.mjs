@@ -23,6 +23,7 @@ FILES.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');
 FILES.push('sand-lesson.mjs','sand-lesson-ui.mjs');
 FILES.push('mining-shared-evidence.mjs','mining-shared-ui.mjs');
 FILES.push('mining-bayes.mjs','mining-bayes-ui.mjs','mining-bayes.css');
+FILES.push('distributions.html','distributions.css','distributions.mjs','distributions-core.mjs');
 FILES.push('world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
 FILES.push('world-model-planning.mjs');
 FILES.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');

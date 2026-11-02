@@ -42,6 +42,7 @@ files.push('pixel-tool.mjs','pixel-tool-ui.mjs');
 files.push('sand-lesson.mjs','sand-lesson-ui.mjs');
 files.push('mining-shared-evidence.mjs','mining-shared-ui.mjs');
 files.push('mining-bayes.mjs','mining-bayes-ui.mjs','mining-bayes.css');
+files.push('distributions.html','distributions.css','distributions.mjs','distributions-core.mjs');
 files.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');
 files.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');
 files.push('evolution-birth.mjs','local-drafts.mjs','world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
