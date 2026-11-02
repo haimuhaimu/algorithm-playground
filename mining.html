@@ -3,8 +3,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="30 次探测，5 颗未知星球。继续挖刚才赚到的，还是去试没挖过的？亲手体验多臂老虎机的探索与利用。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=feedback-20261029">
- <script type="module" src="./mining.mjs?v=feedback-20261029"></script><title>算法游乐场 · 盲盒探矿</title>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=bayes-1"><link rel="stylesheet" href="./mining-bayes.css?v=bayes-1">
+ <script type="module" src="./mining.mjs?v=bayes-1"></script><title>算法游乐场 · 盲盒探矿</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head><body>
@@ -13,6 +13,33 @@
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./recommendation.html">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html" aria-current="page">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="mining-main">
   <section class="mining-intro"><div><p class="eyebrow">07 / EXPLORE OR EXPLOIT</p><h1>下一趟，<span>还去那里吗？</span></h1><p>30 次探测，5 颗未知星球。是再挖一次，还是换个地方碰碰运气？</p></div><div class="round-tag"><span id="round-mode">首次探索</span><small id="seed-label"></small></div></section>
+  <div class="bayes-entry"><div><p class="eyebrow">新线索 / BAYESIAN UPDATE</p><h2>六成命中，就一样靠谱吗？</h2><p>两份日志，一条新反馈。看判断怎样改变，不先背公式。</p></div><button id="bayes-start" type="button" aria-expanded="false" aria-controls="bayes-lesson">看一次贝叶斯更新 ↗</button></div>
+  <section class="bayes-lesson" id="bayes-lesson" aria-labelledby="bayes-title" hidden>
+   <header class="bayes-heading"><div><p class="eyebrow">小课 / BELIEF IS NOT CERTAINTY</p><h2 id="bayes-title" tabindex="-1">同样六成命中，<br>谁的证据更扎实？</h2></div><button id="bayes-close" type="button">收起，保留这次判断</button></header>
+   <p class="bayes-lead">样本命中率都写着 60%。但你对真实产矿概率的把握，也应该一样吗？</p>
+   <div class="bayes-logs"><article class="bayes-little"><span>A · 少样本日志</span><strong>3 <small>矿 / 5 次</small></strong><b>样本命中率 60%</b><div aria-label="3次有矿，2次空手">◆ ◆ ◆ · ·</div></article><article class="bayes-many"><span>B · 多样本日志</span><strong>18 <small>矿 / 30 次</small></strong><b>样本命中率 60%</b><div aria-label="18次有矿，12次空手">◆ × 18 <i>· × 12</i></div></article></div>
+   <p class="bayes-model-note">固定教学对照，不是本局成绩。两边都使用同一个弱先验；这里单独假设真实成功率可在 0–100% 之间，且一段观察内不变。</p>
+   <fieldset class="bayes-choices"><legend>01 · 哪份日志，对成功率的判断更集中？</legend><button id="bayes-guess-little" type="button" aria-pressed="false">A · 3/5 更有把握</button><button id="bayes-guess-many" type="button" aria-pressed="false">B · 18/30 更有把握</button><button id="bayes-guess-same" type="button" aria-pressed="false">都是 60%，一样</button></fieldset>
+   <button id="bayes-reveal" class="bayes-primary" type="button" disabled>画出两份判断 →</button>
+   <section id="bayes-comparison" hidden aria-labelledby="bayes-comparison-title">
+    <h3 id="bayes-comparison-title" tabindex="-1">比例一样，不确定性不一样。</h3><p id="bayes-guess-feedback" class="bayes-feedback" role="status"></p>
+    <div class="bayes-plot-box"><p class="bayes-axis-label">对未知成功率的相对支持（概率密度）</p><div id="bayes-chart-overview" class="bayes-chart" role="img" aria-label="两份日志的后验概率密度，同一横轴与纵轴"></div><div class="bayes-axis"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div><p class="bayes-axis-caption">横轴：真实产矿概率可能是多少？不是下一趟的矿石数量。</p><div class="bayes-legend"><span class="bayes-little">━ A · 3/5</span><span class="bayes-many">━ B · 18/30</span><span>阴影：各自的 90% 可信区间</span></div></div>
+    <div class="bayes-readouts"><article class="bayes-little"><span>A · 下一次命中预测</span><strong id="bayes-mean-little"></strong><p id="bayes-interval-little"></p></article><article class="bayes-many"><span>B · 下一次命中预测</span><strong id="bayes-mean-many"></strong><p id="bayes-interval-many"></p></article></div>
+    <p class="bayes-caption">为什么不是两个 60%？下次预测由同一个 Beta(1,1) 先验与已有观察共同算出；数据越少，先验相对影响越大。更集中不代表真实成功率一定更高。</p>
+    <fieldset class="bayes-choices"><legend>02 · 两边各再挖空一次，谁的预测会下降更多？</legend><button id="bayes-change-little" type="button" aria-pressed="false">A · 少样本日志</button><button id="bayes-change-many" type="button" aria-pressed="false">B · 多样本日志</button><button id="bayes-change-same" type="button" aria-pressed="false">都是一次，降得一样</button></fieldset>
+    <button id="bayes-update" class="bayes-primary" type="button" disabled>加入同样的一次空手反馈 →</button>
+    <section id="bayes-updated" hidden aria-labelledby="bayes-updated-title">
+     <h3 id="bayes-updated-title" tabindex="-1">新证据要和旧证据一起看。</h3><p id="bayes-update-feedback" class="bayes-feedback" role="status"></p>
+     <div class="bayes-after-grid"><article class="bayes-little"><h4>A · 3/5 → 3/6</h4><strong id="bayes-change-summary-little"></strong><div id="bayes-after-chart-little" class="bayes-chart" role="img" aria-label="少样本日志更新前后曲线"></div><div class="bayes-axis"><span>0%</span><span>50%</span><span>100%</span></div><p id="bayes-after-interval-little"></p></article><article class="bayes-many"><h4>B · 18/30 → 18/31</h4><strong id="bayes-change-summary-many"></strong><div id="bayes-after-chart-many" class="bayes-chart" role="img" aria-label="多样本日志更新前后曲线"></div><div class="bayes-axis"><span>0%</span><span>50%</span><span>100%</span></div><p id="bayes-after-interval-many"></p></article></div>
+     <p class="bayes-caption">虚线＝更新前，实线＝更新后。所有图都固定横轴 0–100%、密度纵轴 0–6，没有用缩放制造“大变化”。这两条空手反馈是明示的教学条件，不重抽，也不消耗自由探索次数。</p>
+     <fieldset class="bayes-choices bayes-transfer"><legend>03 · 换两份新日志：0/1 与 0/10。能断言两颗星球永远没矿吗？</legend><button id="bayes-answer-never" type="button">能，命中率都是 0%</button><button id="bayes-answer-evidence" type="button">不能；0/10 更支持低概率，但不是证明为零</button><button id="bayes-answer-guarantee" type="button">样本更多，下一趟就一定挖得到</button></fieldset>
+     <p id="bayes-answer-feedback" class="bayes-feedback" role="status"></p><div id="bayes-transfer-results" class="bayes-transfer-results" hidden></div>
+     <section id="bayes-ending" class="bayes-ending" hidden aria-labelledby="bayes-ending-title"><p class="eyebrow">本次对照已完成 / NOT A MASTERY CERTIFICATE</p><h3 id="bayes-ending-title" tabindex="-1">这趟，你带走了什么？</h3><p id="bayes-ending-evidence"></p><ol><li>同样的样本比例，不代表同样的证据强度。</li><li>新反馈与原来的相信、旧观察共同决定下一步判断。</li><li>曲线是模型里的不确定性，不是“真相已被保证”。</li></ol><a href="https://haimuhaimu.github.io/genai-learning-os/?page=strategy-case&case=bayes-rollout" target="_blank" rel="noopener">回到 GenAI OS：把贝叶斯判断用于放量决策 ↗</a></section>
+    </section>
+   </section>
+   <details class="bayes-math"><summary>先验、证据和后验，具体怎样算？</summary><p>共同先验 p∼Beta(1,1)，表示本课起初对 0–100% 的成功率采用均匀分布；这是建模选择，不是真实多挖了两次。观察 s 次有矿、f 次空手后，后验为 Beta(1+s,1+f)，下次命中预测为 (1+s)/(2+s+f)。</p><p>区间是由 Beta 分布累积分布函数反算的 90% 等尾可信区间；它依赖本课固定成功率、条件独立及先验假设，不是现实命中保证。原自由游戏仍用固定五种候选概率与原 UCB1 规则，这里不声称在它的排列先验上做推断，也不评估你的掌握程度。</p><p>纯本地计算，无新保存、上传、学习进度或外部 AI 调用。<a href="https://www.stat.cmu.edu/~larry/=sml/Bayes.pdf" target="_blank" rel="noopener">贝叶斯推断教材 ↗</a></p></details>
+   <div class="bayes-footer"><button id="bayes-reset" type="button">清空判断，重新比较</button><a href="#planet-0">回到原来的 30 趟探索 ↓</a></div>
+  </section>
   <section class="shared-lab" id="shared-lab" aria-labelledby="shared-title">
    <div class="shared-heading"><div><p class="eyebrow">一趟小挑战 / SAME CLUES, DIFFERENT CHOICES</p><h2 id="shared-title" tabindex="-1">同一份线索，你会怎么选？</h2></div><a href="#planet-0" id="shared-more">直接玩 30 趟自由探索 ↓</a></div>
    <p class="shared-intro">接手一份已有 <b>20 次探测</b>的航海日志。第 21 趟，你想去哪里？<br>你和算法拿到完全相同的线索，都不知道下一趟有没有矿。</p>

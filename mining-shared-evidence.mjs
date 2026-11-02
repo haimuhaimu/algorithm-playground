@@ -1,4 +1,4 @@
-import {createWorld,createRecord,pull,chooseDecision} from './mining-core.mjs?v=feedback-20261029';
+import {createWorld,createRecord,pull,chooseDecision} from './mining-core.mjs?v=bayes-1';
 
 // Curated reproducible teaching case, not the player's current mission.
 const SEED=265;
