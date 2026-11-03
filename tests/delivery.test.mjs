@@ -32,8 +32,9 @@ files.push('neural-gradient.mjs','neural-gradient-ui.mjs');
 files.push('neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs','neural-residual.css');
 files.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-generalization-view.mjs','neural-generalization.css');
 files.push('space-theme.css');
-files.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css');
+files.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css','learning-route-trials.mjs');
 files.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
+files.push('genai-handoff.mjs');
 files.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 files.push('pixel-recipient.mjs','pixel-recipient-ui.mjs','pixel-recipient.css');
 files.push('pixel-code.mjs','pixel-code-ui.mjs','pixel-code.css');
@@ -65,6 +66,30 @@ test('server serves only runtime assets with correct types, headers and methods'
   const head=await fetch(base+'/style.css',{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'');
   assert.equal((await fetch(base+'/index.html',{method:'POST'})).status,405);
   for(const path of ['/package.json','/docs/spec.md','/.git/config','/%2e%2e%2fpackage.json','/%252e%252e/package.json','/%zz'])assert.equal((await fetch(base+path)).status,404,path);
+ }finally{await new Promise(resolve=>server.close(resolve));}
+});
+test('paired preview can read only public teaching modules from exact owned or loopback origins',async()=>{
+ const server=createAppServer(root);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const base=`http://127.0.0.1:${server.address().port}`;
+  for(const origin of ['https://haimuhaimu.github.io','http://127.0.0.1:3102','http://localhost:1024']){
+   const response=await fetch(base+'/learning-route-trials.mjs',{headers:{Origin:origin}});
+   assert.equal(response.status,200);assert.equal(response.headers.get('access-control-allow-origin'),origin);
+   assert.equal(response.headers.get('vary'),'Origin');assert.equal(response.headers.get('access-control-allow-credentials'),null);
+   assert.match(response.headers.get('content-security-policy'),/connect-src 'none'/);
+  }
+  for(const origin of ['null','https://evil.example','https://haimuhaimu.github.io.evil.example','https://user@haimuhaimu.github.io','https://haimuhaimu.github.io/','http://127.0.0.1:80','http://localhost:3102/path','http://127.0.0.1:003102']){
+   const response=await fetch(base+'/learning-tool.mjs',{headers:{Origin:origin}});
+   assert.equal(response.status,200);assert.equal(response.headers.get('access-control-allow-origin'),null,origin);assert.equal(response.headers.get('vary'),'Origin');
+  }
+  for(const path of ['/learn.html','/learning-route.css','/package.json','/not-allowed.mjs']){
+   const response=await fetch(base+path,{headers:{Origin:'http://127.0.0.1:3102'}});
+   assert.equal(response.headers.get('access-control-allow-origin'),null,path);
+  }
+  const head=await fetch(base+'/learning-route-trials.mjs',{method:'HEAD',headers:{Origin:'http://127.0.0.1:3102'}});
+  assert.equal(head.headers.get('access-control-allow-origin'),'http://127.0.0.1:3102');assert.equal(await head.text(),'');
+  const post=await fetch(base+'/learning-route-trials.mjs',{method:'POST',headers:{Origin:'http://127.0.0.1:3102'}});
+  assert.equal(post.status,405);assert.equal(post.headers.get('access-control-allow-origin'),null);
  }finally{await new Promise(resolve=>server.close(resolve));}
 });
 test('build ships all ten experiments and all runtime files with byte-for-byte source parity',async()=>{

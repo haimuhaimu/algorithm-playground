@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 const source=new URL('../learn.html',import.meta.url),html=existsSync(source)?readFileSync(source,'utf8'):'';
 const api=await import('../learning-route-ui.mjs').catch(()=>({}));
-function setup({noCanvas=false,width=1280,height=720}={}){
+function setup({noCanvas=false,width=1280,height=720,location}={}){
  assert.equal(typeof api.mountLearningRoute,'function','real focused route controller must exist');
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
  class El extends EventTarget{constructor(){super();this.hidden=false;this.disabled=false;this.attributes={};this.dataset={};this.value='';this.width=800;this.height=480;this.textContent='';}
   setAttribute(k,v){this.attributes[k]=String(v);}click(){if(!this.disabled)this.dispatchEvent(new Event('click'));}focus(){this.focused=true;}scrollIntoView(){this.scrolled=true;}
   getContext(){return noCanvas?null:new Proxy({},{get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>(o[k]=v,true)});}}
  const nodes=new Map(ids.map(id=>[id,new El()])),doc=Object.assign(new EventTarget(),{hidden:false,documentElement:{dataset:{}},getElementById:id=>{assert.ok(nodes.has(id),'missing actual page control '+id);return nodes.get(id);}});
- const media=Object.assign(new EventTarget(),{matches:false}),win={innerWidth:width,innerHeight:height,matchMedia:()=>media};Object.defineProperty(win,'localStorage',{get(){throw Error('route must not access drafts or storage');}});
+ const media=Object.assign(new EventTarget(),{matches:false}),win={innerWidth:width,innerHeight:height,matchMedia:()=>media,location};Object.defineProperty(win,'localStorage',{get(){throw Error('route must not access drafts or storage');}});
  const c=api.mountLearningRoute({document:doc,window:win});return {c,e:id=>nodes.get(id),doc,win};
 }
 function first(r){r.e('route-main').click();r.e('route-main').click();r.e('route-guess-square').click();r.e('route-explain-good').click();r.e('route-continue').click();}
@@ -30,6 +30,26 @@ test('retry and back retain real work; new rate only applies from restored basel
  const r=setup();first(r);r.e('route-rate').value='.6';r.e('route-rate').dispatchEvent(new Event('change'));r.e('route-predict-rule').click();r.e('route-main').click();
  assert.equal(r.c.snapshot().gradient.model.epoch,1);r.e('route-retry').click();assert.deepEqual(r.c.snapshot().gradient.model.weights,[1,-1,0]);assert.equal(r.e('route-main').disabled,true);
  r.e('route-back').click();assert.equal(r.c.snapshot().guide.model.epoch,120);assert.equal(r.c.snapshot().stage,'classify');
+});
+test('gradient retry keeps actual prior results visible while the current attempt returns to a common baseline',()=>{
+ const r=setup();first(r);assert.ok(r.e('route-trials'),'trial comparison is an actual route surface');
+ assert.equal(r.e('route-trials').hidden,true);
+ r.e('route-rate').value='.03';r.e('route-rate').dispatchEvent(new Event('change'));r.e('route-predict-points').click();r.e('route-main').click();
+ assert.equal(r.e('route-trials').hidden,false);assert.match(r.e('route-trial-current').textContent,/0\.03.*0\.666.*0\.662/);
+ const retained=r.e('route-trial-current').textContent;r.e('route-retry').click();
+ assert.equal(r.e('route-trial-current').textContent,retained);assert.match(r.e('route-trial-status').textContent,/起点.*保留|保留.*起点/);
+ r.e('route-rate').value='.6';r.e('route-rate').dispatchEvent(new Event('change'));r.e('route-predict-rule').click();r.e('route-main').click();
+ assert.match(r.e('route-trial-previous').textContent,/0\.03.*0\.666.*0\.662/);assert.match(r.e('route-trial-current').textContent,/0\.60.*0\.666.*0\.595/);
+ assert.match(r.e('route-trial-status').textContent,/同一.*起点|起点.*相同/);
+ r.e('route-back').click();assert.equal(r.e('route-trials').hidden,true);r.e('route-continue').click();assert.equal(r.e('route-trials').hidden,false);
+ r.e('route-reset').click();assert.equal(r.e('route-trials').hidden,true);first(r);assert.equal(r.e('route-trials').hidden,true);
+});
+test('trial explanation follows the actual rate order instead of always claiming the latest step improved more',()=>{
+ const r=setup();first(r);
+ for(const rate of ['.6','.03']){if(r.c.snapshot().gradient.model.epoch)r.e('route-retry').click();r.e('route-rate').value=rate;r.e('route-rate').dispatchEvent(new Event('change'));r.e('route-predict-rule').click();r.e('route-main').click();}
+ assert.match(r.e('route-trial-status').textContent,/这次.*下降更少/);
+ r.e('route-retry').click();r.e('route-rate').value='.6';r.e('route-rate').dispatchEvent(new Event('change'));r.e('route-predict-rule').click();r.e('route-main').click();
+ assert.match(r.e('route-trial-status').textContent,/这次.*下降更多/);
 });
 test('hidden document and unavailable Canvas cannot create completion, and links remain available',()=>{
  const r=setup();r.doc.hidden=true;r.e('route-main').click();assert.equal(r.c.snapshot().guide.model.epoch,0);r.doc.hidden=false;r.e('route-main').click();assert.equal(r.c.snapshot().guide.model.epoch,120);
@@ -88,4 +108,30 @@ test('denied or missing clipboard access preserves the generated text for manual
  r.e('route-export-copy').click();await new Promise(done=>setImmediate(done));assert.equal(r.e('route-export-text').value,text);assert.match(r.e('route-export-status').textContent,/手动/);
  r.win.navigator={};r.e('route-export-copy').click();await new Promise(done=>setImmediate(done));assert.equal(r.e('route-export-text').value,text);assert.match(r.e('route-export-status').textContent,/手动/);
  let copied=null;r.win.navigator={clipboard:{writeText:async value=>{copied=value;}}};r.e('route-export-copy').click();await new Promise(done=>setImmediate(done));assert.equal(copied,text);assert.match(r.e('route-export-status').textContent,/已复制/);
+});
+test('GenAI return is explicit, summary-only and carries actual wrong guesses without first generating an AI export',()=>{
+ const launch=new URL('http://127.0.0.1:3103/learn.html');launch.searchParams.set('genaiReturn','http://127.0.0.1:3102/');launch.searchParams.set('genaiJourney','model-learning');launch.searchParams.set('genaiRequest','journey_test_20261103');
+ let assigned=null;const location={href:launch.href,assign:value=>{assigned=value;}},r=setup({location});
+ assert.ok(r.e('route-genai-return'),'dedicated return section must exist');assert.equal(r.e('route-genai-return').hidden,true);
+ r.e('route-genai-send').click();assert.equal(assigned,null);
+ first(r);second(r);r.e('route-main').click();r.e('route-guess-all').click();r.e('route-explain-good').click();r.e('route-continue').click();
+ assert.equal(r.e('route-genai-return').hidden,false);assert.equal(r.e('route-export-text').value,'');
+ assert.equal(r.e('route-genai-title').focused,true,'finishing an imported path makes the return action the visible next step');
+ assert.equal(r.e('route-genai-return').scrolled,true);
+ const before=r.c.snapshot();r.e('route-genai-send').click();assert.ok(assigned,'real result can return without using the optional AI clipboard control');
+ const destination=new URL(assigned),envelope=JSON.parse(Buffer.from(destination.hash.slice('#playground='.length),'base64url').toString('utf8'));
+ assert.equal(destination.origin,'http://127.0.0.1:3102');assert.equal(destination.search,'?page=routes&section=journey');
+ assert.equal(envelope.receipt.producer,'browser-session');assert.equal(envelope.receipt.result.evidence.stepGuess,'points');assert.equal(envelope.receipt.result.evidence.test.guess,'all');assert.equal(envelope.receipt.result.evidence.test.test.correct,13);
+ assert.deepEqual(r.c.snapshot(),before,'returning cannot mutate the current learning result');assert.equal(r.e('route-export-text').value,'','optional export stays untouched');
+ r.e('route-back').click();assert.equal(r.e('route-genai-return').hidden,true);
+});
+test('unsafe or changed return context cannot send data, and navigation failures leave the result and existing export intact',()=>{
+ const bad=setup({location:{href:'http://127.0.0.1:3103/learn.html?genaiReturn=https%3A%2F%2Fexample.com&genaiRequest=journey_test_20261103&genaiJourney=model-learning'}});
+ first(bad);second(bad);bad.e('route-main').click();bad.e('route-guess-all').click();bad.e('route-explain-good').click();bad.e('route-continue').click();assert.equal(bad.e('route-genai-return').hidden,true);
+ const href='http://127.0.0.1:3103/learn.html?genaiReturn=http%3A%2F%2F127.0.0.1%3A3102%2F&genaiRequest=journey_test_20261103&genaiJourney=model-learning';
+ let sends=0;const location={href,assign:()=>{sends++;throw Error('navigation unavailable');}},r=setup({location});
+ first(r);second(r);r.e('route-main').click();r.e('route-guess-all').click();r.e('route-explain-good').click();r.e('route-continue').click();r.e('route-export-generate').click();
+ const before=r.c.snapshot(),record=r.e('route-export-text').value;r.e('route-genai-send').click();assert.equal(sends,1);assert.deepEqual(r.c.snapshot(),before);assert.equal(r.e('route-export-text').value,record);assert.match(r.e('route-genai-status').textContent,/保留|仍/);
+ location.href=href.replace('journey_test_20261103','new_request_20261103');r.e('route-genai-send').click();assert.equal(sends,1,'context replacement during this session must not redirect an old journal');
+ const normal=setup();assert.equal(normal.e('route-genai-return').hidden,true);normal.e('route-genai-send').click();
 });
