@@ -63,9 +63,20 @@ TYPES['recommendation.html']='text/html; charset=utf-8';
 TYPES['home.css']='text/css; charset=utf-8';
 TYPES['learn.html']='text/html; charset=utf-8';TYPES['learning-route.css']='text/css; charset=utf-8';
 TYPES['learning-tool.mjs']='text/javascript; charset=utf-8';TYPES['learning-tool-manifest.json']='application/json; charset=utf-8';TYPES['AI_USAGE.md']='text/plain; charset=utf-8';
-for(const name of ['learning-route.mjs','learning-route-ui.mjs'])TYPES[name]='text/javascript; charset=utf-8';
+TYPES['genai-handoff.mjs']='text/javascript; charset=utf-8';
+for(const name of ['learning-route.mjs','learning-route-ui.mjs','learning-route-trials.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['home.mjs','home-core.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg'])TYPES[name]='image/jpeg';
+function teachingModuleOrigin(raw){
+ if(typeof raw!=='string')return null;
+ try{
+  const url=new URL(raw);
+  if(url.origin!==raw||url.username||url.password)return null;
+  const owned=raw==='https://haimuhaimu.github.io';
+  const local=url.protocol==='http:'&&['127.0.0.1','localhost'].includes(url.hostname)&&Number(url.port)>=1024;
+  return owned||local?raw:null;
+ }catch{return null;}
+}
 export function createAppServer(root=ROOT){
  const canonicalRoot=realpath(root);
  return createServer(async(req,res)=>{
@@ -80,6 +91,11 @@ export function createAppServer(root=ROOT){
    const dir=await canonicalRoot,target=await realpath(join(dir,file));
    if(dirname(target)!==dir)throw Error('Outside root');
    const bytes=await readFile(target);
+   if(file.endsWith('.mjs')){
+    res.setHeader('Vary','Origin');
+    const origin=teachingModuleOrigin(req.headers.origin);
+    if(origin)res.setHeader('Access-Control-Allow-Origin',origin);
+   }
    res.writeHead(200,{'Content-Type':TYPES[file],'Content-Length':bytes.length});res.end(req.method==='HEAD'?undefined:bytes);
   }catch{res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end(req.method==='HEAD'?undefined:'Not found');}
  });

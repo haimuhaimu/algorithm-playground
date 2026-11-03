@@ -1,7 +1,9 @@
-import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=learning-tool-v1';
+import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=model-coach-v1';
 import {paintGuide} from './neural-guide-view.mjs';
 import {paintGeneralization} from './neural-generalization-view.mjs';
 import {runLearningRoute} from './learning-tool.mjs?v=learning-tool-v1';
+import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=genai-journey-v1';
+import {inspectLearningRouteTrials} from './learning-route-trials.mjs?v=model-coach-v1';
 const shape=n=>n?'方':'圆';
 function markExample(canvas,p,dark){
  if(!p)return;
@@ -12,11 +14,21 @@ function markExample(canvas,p,dark){
 
 export function mountLearningRoute({document,window}){
  const $=id=>document.getElementById(id),set=(id,t)=>{$(id).textContent=t;},show=(id,value)=>{$(id).hidden=!value;};
- const s=createLearningRoute(),canvas=$('route-map'),supported=!!canvas.getContext('2d');let before=false,explicitTheme=false,journal=[],exportGeneration=0;
+ const s=createLearningRoute(),canvas=$('route-map'),supported=!!canvas.getContext('2d');let before=false,explicitTheme=false,journal=[],exportGeneration=0,trials=[],trialLimit=false;
+ const handoff=readGenaiHandoffContext(window.location);
  const media=window.matchMedia('(prefers-color-scheme: dark)');
  function render(){
   const e=learningRouteEvidence(s),stage=s.stage,summary=stage==='summary';
   show('route-task',!summary);show('route-summary',summary);show('route-export',summary);show('route-back',e.index>0);show('route-continue',!summary);
+  show('route-genai-return',summary&&!!handoff);
+  show('route-trials',stage==='gradient'&&trials.length>0);
+  if(stage==='gradient'&&trials.length){
+   const describe=t=>`第 ${t.ordinal} 次 · 步长 ${t.rate.toFixed(2)}：练习误差 ${t.lossBefore.toFixed(3)} → ${t.lossAfter.toFixed(3)}。你先猜：${t.guess==='points'?'点会移动':'分界线会变'}。`;
+   const previous=trials.at(-2),current=trials.at(-1);show('route-trial-previous',!!previous);
+   const comparison=previous?(current.lossAfter<previous.lossAfter?'这次练习误差下降更多':current.lossAfter>previous.lossAfter?'这次练习误差下降更少':'两次练习误差相同'):'';
+   set('route-trial-previous',previous?describe(previous):'');set('route-trial-current',describe(current));
+   set('route-trial-status',trialLimit?'操作已超过可重放记录上限，下面只保留此前已核对的尝试；当前画布仍可玩。重走整条路线可建立一份新的完整记录。':!s.gradient.model.epoch?'现在已退回共同起点。上次结果仍保留，选另一个步长、先猜，再走一步。':previous?`这里保留的是最近两次真实尝试，都从同一起点出发。${previous.rate===current.rate?'这次步长也相同，所以结果可以复现。':`两轮只改变模型步长，${comparison}。不能只凭这组练习，就选定以后所有题的步长。`}`:'第一轮结果已保留。点“退回同一起点”，换个步长再试，才有两轮可以公平比较。');
+  }
   for(let i=0;i<3;i++){$('route-progress-'+i).setAttribute('aria-current',e.index===i?'step':'false');$('route-progress-'+i).dataset.complete=String(e.completed[i]);}
   $('route-continue').disabled=!e.canAdvance||!supported;
   set('route-continue',e.canAdvance?(stage==='classify'?'继续：亲手改一步 →':stage==='gradient'?'继续：拿新题检验 →':'看看这次的学习记录 →'):'完成这一站，再继续');
@@ -101,16 +113,32 @@ export function mountLearningRoute({document,window}){
  }
  function move(action,value){
   if(document.hidden||!supported)return;
-  const old=s.stage;actLearningRoute(s,action,value);
-  if(action==='reset')journal=[];else journal.push(value===undefined?{action}:{action,value});
+  const old=s.stage,oldGradientSteps=s.gradient.model.epoch;actLearningRoute(s,action,value);
+  if(action==='reset'){journal=[];trials=[];trialLimit=false;}else journal.push(value===undefined?{action}:{action,value});
+  if(action==='step'&&old==='gradient'&&oldGradientSteps===0&&s.gradient.model.epoch===1){
+   try{trials=inspectLearningRouteTrials(runLearningRoute(journal,{producer:'browser-session'}));trialLimit=false;}
+   catch{trialLimit=true;}
+  }
   clearExport();if(action!=='inspect')before=false;render();
   if(old!==s.stage||['train','probe','step','retry','reset'].includes(action)||(action==='guess'&&s.stage!=='gradient')){
    const observation=['train','step','retry'].includes(action),narrow=window.innerWidth<=760||window.innerHeight<=450;
-   const target=$(s.stage==='summary'?'route-summary-title':observation?narrow?'route-metric':'route-map-label':'route-title');target.focus({preventScroll:true});
-   $(s.stage==='summary'?'route-summary':observation?narrow?'route-metric':'route-observation':'route-task').scrollIntoView({block:'start',behavior:'instant'});
+   const target=$(s.stage==='summary'?handoff?'route-genai-title':'route-summary-title':observation?narrow?'route-metric':'route-map-label':'route-title');target.focus({preventScroll:true});
+   $(s.stage==='summary'?handoff?'route-genai-return':'route-summary':observation?narrow?'route-metric':'route-observation':'route-task').scrollIntoView({block:'start',behavior:'instant'});
   }
  }
- function clearExport(){exportGeneration++;$('route-export-text').value='';show('route-export-record',false);set('route-export-status','');}
+ function clearExport(){exportGeneration++;$('route-export-text').value='';show('route-export-record',false);set('route-export-status','');set('route-genai-status','');}
+ $('route-genai-send').addEventListener('click',()=>{
+  if(document.hidden||!supported||s.stage!=='summary'||!handoff)return;
+  try{
+   const current=readGenaiHandoffContext(window.location);
+   if(!current||current.requestId!==handoff.requestId||current.returnURL!==handoff.returnURL)throw Error('Return context changed');
+   const receipt=runLearningRoute(journal,{producer:'browser-session'});
+   const url=createGenaiReturnUrl(handoff,receipt);
+   window.location.assign(url);
+  }catch{
+   set('route-genai-status','暂时无法带回，当前结果仍保留。可以先生成下方实验记录，回到 GenAI OS 手动粘贴；没有自动发送或改写草稿。');
+  }
+ });
  $('route-export-generate').addEventListener('click',()=>{
   if(document.hidden||!supported||s.stage!=='summary')return;
   clearExport();

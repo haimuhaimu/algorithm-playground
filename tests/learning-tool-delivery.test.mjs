@@ -21,7 +21,7 @@ test('built public contract is discoverable and its delivered library runs the a
   const pixel=api.runLearningTool({experimentId:'pixel-decode',preset:'cat',mode:'slow-replay',actions:[{action:'read',value:1},{action:'read',value:2}]});
   assert.equal(pixel.result.evidence.sentBits,53);assert.equal(pixel.result.evidence.decodedCount,36);
   assert.equal(api.replayLearningReceipt(pixel).matches,true);
-  for(const file of ['pixel-tool.mjs','pixel-tool-ui.mjs']){
+  for(const file of ['pixel-tool.mjs','pixel-tool-ui.mjs','learning-route-trials.mjs']){
    assert.ok(files.includes(file));
    const response=await fetch(base+'/'+file);assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/javascript/);
   }
