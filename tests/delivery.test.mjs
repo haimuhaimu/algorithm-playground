@@ -34,7 +34,7 @@ files.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-ge
 files.push('space-theme.css');
 files.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css','learning-route-trials.mjs');
 files.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
-files.push('genai-handoff.mjs');
+files.push('genai-handoff.mjs','bayes-tool.mjs');
 files.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 files.push('pixel-recipient.mjs','pixel-recipient-ui.mjs','pixel-recipient.css');
 files.push('pixel-code.mjs','pixel-code-ui.mjs','pixel-code.css');

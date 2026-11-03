@@ -17,7 +17,7 @@ FILES.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-ge
 FILES.push('space-theme.css');
 FILES.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css','learning-route-trials.mjs');
 FILES.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
-FILES.push('genai-handoff.mjs');
+FILES.push('genai-handoff.mjs','bayes-tool.mjs');
 FILES.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 FILES.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');
 FILES.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');

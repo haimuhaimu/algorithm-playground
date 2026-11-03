@@ -3,8 +3,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="30 次探测，5 颗未知星球。继续挖刚才赚到的，还是去试没挖过的？亲手体验多臂老虎机的探索与利用。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=bayes-1"><link rel="stylesheet" href="./mining-bayes.css?v=bayes-1">
- <script type="module" src="./mining.mjs?v=bayes-1"></script><title>算法游乐场 · 盲盒探矿</title>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=bayes-journey-v1"><link rel="stylesheet" href="./mining-bayes.css?v=bayes-journey-v1">
+ <script type="module" src="./mining.mjs?v=bayes-journey-v1"></script><title>算法游乐场 · 盲盒探矿</title>
  <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head><body>
@@ -35,6 +35,8 @@
      <fieldset class="bayes-choices bayes-transfer"><legend>03 · 换两份新日志：0/1 与 0/10。能断言两颗星球永远没矿吗？</legend><button id="bayes-answer-never" type="button">能，命中率都是 0%</button><button id="bayes-answer-evidence" type="button">不能；0/10 更支持低概率，但不是证明为零</button><button id="bayes-answer-guarantee" type="button">样本更多，下一趟就一定挖得到</button></fieldset>
      <p id="bayes-answer-feedback" class="bayes-feedback" role="status"></p><div id="bayes-transfer-results" class="bayes-transfer-results" hidden></div>
      <section id="bayes-ending" class="bayes-ending" hidden aria-labelledby="bayes-ending-title"><p class="eyebrow">本次对照已完成 / NOT A MASTERY CERTIFICATE</p><h3 id="bayes-ending-title" tabindex="-1">这趟，你带走了什么？</h3><p id="bayes-ending-evidence"></p><ol><li>同样的样本比例，不代表同样的证据强度。</li><li>新反馈与原来的相信、旧观察共同决定下一步判断。</li><li>曲线是模型里的不确定性，不是“真相已被保证”。</li></ol><a href="https://haimuhaimu.github.io/genai-learning-os/?page=strategy-case&case=bayes-rollout" target="_blank" rel="noopener">回到 GenAI OS：把贝叶斯判断用于放量决策 ↗</a></section>
+     <section id="bayes-genai-return" class="bayes-ending" hidden aria-labelledby="bayes-genai-title"><h3 id="bayes-genai-title" tabindex="-1">把这次判断，带回学习路线</h3><p>带回的只是本课选择与计算。回到 GenAI OS 后还需核对、由你确认保存，再复盘；不会自动给能力加分。</p><button id="bayes-genai-send" class="bayes-primary" type="button">带回 GenAI OS 复盘 →</button><p id="bayes-genai-status" class="bayes-feedback" role="status"></p></section>
+     <section id="bayes-export" class="bayes-ending" hidden aria-labelledby="bayes-export-title"><h3 id="bayes-export-title">留下这轮真实记录</h3><p>只导出固定小课，不读取原探索、草稿或个人资料。可以自己保留，也可以主动交给自己的 AI 陪练。</p><button id="bayes-export-generate" type="button">生成本次实验记录 JSON</button><p id="bayes-export-status" class="bayes-feedback" role="status"></p><button id="bayes-new-record" type="button" hidden>开始新记录（清空本轮小课）</button><div id="bayes-export-record" hidden><label for="bayes-export-text">本次贝叶斯实验记录（可手动全选复制）</label><textarea id="bayes-export-text" class="bayes-transfer-results" readonly rows="8" cols="20" spellcheck="false"></textarea><button id="bayes-export-copy" type="button">复制实验记录</button></div></section>
     </section>
    </section>
    <details class="bayes-math"><summary>先验、证据和后验，具体怎样算？</summary><p>共同先验 p∼Beta(1,1)，表示本课起初对 0–100% 的成功率采用均匀分布；这是建模选择，不是真实多挖了两次。观察 s 次有矿、f 次空手后，后验为 Beta(1+s,1+f)，下次命中预测为 (1+s)/(2+s+f)。</p><p>区间是由 Beta 分布累积分布函数反算的 90% 等尾可信区间；它依赖本课固定成功率、条件独立及先验假设，不是现实命中保证。原自由游戏仍用固定五种候选概率与原 UCB1 规则，这里不声称在它的排列先验上做推断，也不评估你的掌握程度。</p><p>纯本地计算，无新保存、上传、学习进度或外部 AI 调用。<a href="https://www.stat.cmu.edu/~larry/=sml/Bayes.pdf" target="_blank" rel="noopener">贝叶斯推断教材 ↗</a></p></details>
