@@ -1,5 +1,6 @@
 import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs';
 import {describePixelDecode,runPixelDecode,replayPixelReceipt} from './pixel-tool.mjs?v=pixel-ai-1';
+import {describeBayesTool,runBayesTool,replayBayesReceipt} from './bayes-tool.mjs?v=bayes-journey-v1';
 export {runPixelDecode};
 
 const BASE='https://haimuhaimu.github.io/algorithm-playground/';
@@ -89,9 +90,10 @@ function wireEvidence(value){
  return value;
 }
 export function listLearningTools(){
- return clone({schemaVersion:1,experiments:EXPERIMENTS,runnables:[{id:'learning-route',title:'AI 怎么从例子里学会？',transport:'local-cli-or-library',url:BASE+'learn.html#route-task'},{id:'pixel-decode',title:'像素邮局：真实解码轨迹',transport:'local-cli-or-library',url:BASE+'pixel.html#pixel-delivery-entry'}]});
+ return clone({schemaVersion:1,experiments:EXPERIMENTS,runnables:[{id:'learning-route',title:'AI 怎么从例子里学会？',transport:'local-cli-or-library',url:BASE+'learn.html#route-task'},{id:'pixel-decode',title:'像素邮局：真实解码轨迹',transport:'local-cli-or-library',url:BASE+'pixel.html#pixel-delivery-entry'},{id:'bayes-update',title:'同样一条线索，判断怎样更新？',transport:'local-cli-or-library',url:BASE+'mining.html#bayes-lesson'}]});
 }
 export function describeLearningTool(id){
+ if(id==='bayes-update')return describeBayesTool();
  if(id==='pixel-decode')return describePixelDecode();
  if(id!=='learning-route'){
   const experiment=EXPERIMENTS.find(e=>e.id===id);if(!experiment)throw Error('Unknown learning tool');return clone(experiment);
@@ -118,6 +120,7 @@ export function runLearningRoute(actions,options={}){
   boundaries:clone(BOUNDARIES),genai:clone(GENAI)};
 }
 export function replayLearningReceipt(receipt){
+ if(receipt?.experimentId==='bayes-update')return replayBayesReceipt(receipt);
  if(receipt?.experimentId==='pixel-decode')return replayPixelReceipt(receipt);
  keys(receipt,['format','schemaVersion','experimentId','engineVersion','numericFormat','producer','fixture','actions','steps','result','boundaries','genai'],'receipt');
  if(receipt.format!=='algorithm-playground/learning-run'||receipt.schemaVersion!==1||receipt.experimentId!=='learning-route'||receipt.engineVersion!=='learning-route-v1')throw Error('Unsupported receipt version');
@@ -128,6 +131,7 @@ export function replayLearningReceipt(receipt){
 export function runLearningTool(request,options={}){
  record(request,'run request');
  const id=request.experimentId??'learning-route';
+ if(id==='bayes-update'){keys(request,['experimentId','actions'],'run request');return runBayesTool(request.actions,options);}
  if(id==='pixel-decode'){
   keys(request,['experimentId','preset','mode','actions'],'run request');
   const {experimentId,...input}=request;return runPixelDecode(input,options);

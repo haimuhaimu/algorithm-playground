@@ -12,7 +12,7 @@ test('mining entry assets and lesson module graph share a release key',async()=>
  for(const file of ['mining.mjs','mining-shared-ui.mjs','mining-shared-evidence.mjs','mining-bayes-ui.mjs','mining-bayes.mjs']){
   const code=await readFile(new URL(file,root),'utf8');
   const imports=[...code.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(m=>new URL(m[1],root));
-  assert.equal(imports.length,file==='mining.mjs'?3:file==='mining-bayes.mjs'?0:1,file);urls.push(...imports);
+  assert.equal(imports.length,['mining.mjs','mining-bayes-ui.mjs'].includes(file)?3:file==='mining-bayes.mjs'?0:1,file);urls.push(...imports);
  }
  const version=entries[0].searchParams.get('v');
  assert.ok(version,'new mining HTML must not reuse the previous unversioned browser cache');

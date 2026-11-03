@@ -1,4 +1,6 @@
-import {createBayesLesson,actBayesLesson,bayesLessonEvidence} from './mining-bayes.mjs?v=bayes-1';
+import {createBayesLesson,actBayesLesson,bayesLessonEvidence} from './mining-bayes.mjs?v=bayes-journey-v1';
+import {runBayesTool} from './bayes-tool.mjs?v=bayes-journey-v1';
+import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=bayes-journey-v1';
 
 const percent=value=>(value*100).toFixed(1)+'%';
 const interval=belief=>`真实成功率的 90% 可信区间：${percent(belief.interval[0])}–${percent(belief.interval[1])}`;
@@ -17,7 +19,8 @@ function chart(series){
 
 export function initBayesLesson({onEnter=()=>{}}={}){
  const doc=document,win=window,$=id=>doc.getElementById(id);
- let state=createBayesLesson(),opened=false;
+ let state=createBayesLesson(),opened=false,journal=[],exportGeneration=0;
+ const candidateHandoff=readGenaiHandoffContext(win.location),handoff=candidateHandoff?.journeyId==='bayes-learning'?candidateHandoff:null;
  const available=()=>opened&&!doc.hidden&&!$('guide').open;
  const focus=id=>{$(id).focus({preventScroll:true});$(id).scrollIntoView({block:'start',behavior:'instant'});};
  function render(){
@@ -25,6 +28,8 @@ export function initBayesLesson({onEnter=()=>{}}={}){
   $('bayes-lesson').hidden=!opened;$('bayes-start').setAttribute('aria-expanded',String(opened));
   $('bayes-comparison').hidden=!compared;$('bayes-updated').hidden=!e.after;
   $('bayes-transfer-results').hidden=!e.transfer;$('bayes-ending').hidden=!e.ending;
+  $('bayes-genai-return').hidden=!e.ending||!handoff;
+  $('bayes-export').hidden=!e.ending;$('bayes-export-generate').disabled=!e.ending;
   for(const value of ['little','many','same']){
    const guess=$('bayes-guess-'+value),change=$('bayes-change-'+value);
    guess.setAttribute('aria-pressed',String(e.guess===value));guess.disabled=compared;
@@ -56,12 +61,31 @@ export function initBayesLesson({onEnter=()=>{}}={}){
  function open(){if(doc.hidden||$('guide').open)return;onEnter();opened=true;render();focus('bayes-title');}
  function act(action,heading){
   if(!available())return;
+  journal.push(action.value===undefined?{action:action.type}:{action:action.type,value:action.value});
+  clearExport();
   const before=state.phase;state=actBayesLesson(state,action);render();
   if(heading&&state.phase!==before)focus(heading);
  }
+ function clearExport(){exportGeneration++;$('bayes-export-text').value='';$('bayes-export-record').hidden=true;$('bayes-export-status').textContent='';$('bayes-genai-status').textContent='';$('bayes-new-record').hidden=journal.length<=256;}
+ $('bayes-export-generate').addEventListener('click',()=>{
+  if(!available()||state.phase!=='done')return;
+  clearExport();try{$('bayes-export-text').value=JSON.stringify(runBayesTool(journal,{producer:'browser-session'}),null,2);$('bayes-export-record').hidden=false;$('bayes-export-status').textContent='记录已生成，只在本页。包含本课的真实选择与纠错，不含自由探索或草稿。主动分享后才会离开这里；完成不代表掌握。';}
+  catch{$('bayes-export-status').textContent='这轮操作超出记录上限，暂未导出。当前结果仍保留，没有截断记录。可用下方“开始新记录”明确清空本轮小课后重试；不影响自由探索或其他草稿。';}
+ });
+ $('bayes-export-copy').addEventListener('click',async()=>{
+  if(!available()||state.phase!=='done')return;const text=$('bayes-export-text').value,generation=exportGeneration;if(!text)return;
+  try{if(!win.navigator?.clipboard?.writeText)throw Error('Clipboard unavailable');await win.navigator.clipboard.writeText(text);if(generation===exportGeneration)$('bayes-export-status').textContent='已复制。请主动交给自己的 AI，让它先重放核对，再根据本轮证据陪练；不要把猜对当成掌握。';}
+  catch{if(generation!==exportGeneration)return;$('bayes-export-text').focus();$('bayes-export-text').select?.();$('bayes-export-status').textContent='浏览器未允许复制，记录仍保留。请在下方文本框手动全选、复制；没有自动发送。';}
+ });
+ $('bayes-genai-send').addEventListener('click',()=>{
+  if(!available()||state.phase!=='done'||!handoff)return;
+  try{const current=readGenaiHandoffContext(win.location);if(!current||current.journeyId!==handoff.journeyId||current.requestId!==handoff.requestId||current.returnURL!==handoff.returnURL)throw Error('Return context changed');win.location.assign(createGenaiReturnUrl(handoff,runBayesTool(journal,{producer:'browser-session'})));}
+  catch{$('bayes-genai-status').textContent='暂时无法带回，当前结果仍保留。可生成下方实验记录，再回到 GenAI OS 手动粘贴；没有自动发送或改写草稿。';}
+ });
  $('bayes-start').addEventListener('click',open);
+ $('bayes-new-record').addEventListener('click',()=>{if(!available()||journal.length<=256)return;state=createBayesLesson();journal=[];clearExport();render();focus('bayes-title');});
  $('bayes-close').addEventListener('click',()=>{if(!available())return;opened=false;render();$('bayes-start').focus();});
- $('bayes-reset').addEventListener('click',()=>{if(!available())return;state=createBayesLesson();render();focus('bayes-title');});
+ $('bayes-reset').addEventListener('click',()=>{if(!available())return;act({type:'reset'});focus('bayes-title');});
  for(const value of ['little','many','same']){
   $('bayes-guess-'+value).addEventListener('click',()=>act({type:'guess',value}));
   $('bayes-change-'+value).addEventListener('click',()=>act({type:'change-guess',value}));
@@ -70,5 +94,5 @@ export function initBayesLesson({onEnter=()=>{}}={}){
  $('bayes-update').addEventListener('click',()=>act({type:'update'},'bayes-updated-title'));
  for(const value of ['never','evidence','guarantee'])$('bayes-answer-'+value).addEventListener('click',()=>act({type:'answer',value},'bayes-ending-title'));
  win.addEventListener('hashchange',()=>{if(win.location?.hash==='#bayes-lesson')open();});
- render();if(win.location?.hash==='#bayes-lesson')open();
+ clearExport();render();if(handoff||win.location?.hash==='#bayes-lesson')open();
 }

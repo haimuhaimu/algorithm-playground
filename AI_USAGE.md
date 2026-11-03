@@ -1,15 +1,15 @@
 # Algorithm Playground：给 AI 的实验工具（本地首版）
 
-这个工具让有本地执行能力的 AI 助手，使用与网页相同的引擎运行、解释和重放学习路线与像素解码。它不是聊天机器人，也不是学习认证。
+这个工具让有本地执行能力的 AI 助手，使用与网页相同的引擎运行、解释和重放学习路线、像素解码与贝叶斯小课。它不是聊天机器人，也不是学习认证。
 
 ## 能做什么
 
 - `list`：发现十个网页实验，并区分其中可编程运行的能力。
-- `describe learning-route` / `describe pixel-decode`：读取各自的固定条件、可用动作与边界。
+- `describe learning-route` / `describe pixel-decode` / `describe bayes-update`：读取各自的固定条件、可用动作与边界。
 - `run`：从固定起点重放动作，返回真实计算、每步接受/拒绝状态及下一步可用动作。
 - `replay`：重新计算一份实验记录，检查它是否与当前版本引擎一致。
 
-**当前可编程执行的是 `learning-route` 与 `pixel-decode`。** 前者是现有涂鸦实验的三站学习路线，后者是像素邮局现有字节解码与逐位回放的适配器；没有新增第十一个实验，也没有把十个网页玩法都包装成执行接口。
+**当前可编程执行的是 `learning-route`、`pixel-decode` 与 `bayes-update`。** 分别对应现有涂鸦三站学习路线、像素邮局字节解码与逐位回放、盲盒探矿中的固定贝叶斯小课；没有因此新增实验，也没有把所有网页玩法都包装成执行接口。
 
 ## 在有权使用的本地项目中运行
 
@@ -23,9 +23,17 @@ printf '%s' '{"actions":[{"action":"train"}]}' | node scripts/learning-tool.mjs 
 node scripts/learning-tool.mjs replay < my-learning-receipt.json
 ```
 
-成功时 stdout 是一个 `{ "ok": true, "data": ... }` JSON 对象。`replay` 的输入是 `data` 里的收据本体，不含外层 `ok/data`；网页生成的 JSON 已是收据本体。失败时退出码为 1，stdout 返回 `{ "ok": false, "error": ... }`，不打印内部栈。stdin（包括 replay 收据）最多 64 KiB；学习路线每次最多 256 个动作，像素解码最多 600 个动作。这些是计算资源约束，不是安全或学习成功门槛。manifest 保留原来的单数 `runnable` 和路线 `maxActions` 字段；新的 `runnables` 分别列出两个工具的版本与上限。
+成功时 stdout 是一个 `{ "ok": true, "data": ... }` JSON 对象。`replay` 的输入是 `data` 里的收据本体，不含外层 `ok/data`；网页生成的 JSON 已是收据本体。失败时退出码为 1，stdout 返回 `{ "ok": false, "error": ... }`，不打印内部栈。stdin（包括 replay 收据）最多 64 KiB；学习路线与贝叶斯小课每次最多 256 个动作，像素解码最多 600 个动作。这些是计算资源约束，不是安全或学习成功门槛。manifest 保留原来的单数 `runnable` 和路线 `maxActions` 字段；`runnables` 分别列出三个工具的版本与上限。
 
-原有学习路线的 `run` 请求保持 `{ "actions": [{ "action": "...", "value": ... }] }`，默认仍运行 `learning-route`；`runLearningRoute` 和路线收据格式不变。没有取值的动作省略 `value`。使用返回的 `result.availableActions` 继续构造路线动作；不合阶段的已知动作会记录为 `rejected`，无变化的有效动作会记录为 `no-op`。两种工具都不接受任意代码、URL、文件路径、模型对象或私有浏览器数据。
+原有学习路线的 `run` 请求保持 `{ "actions": [{ "action": "...", "value": ... }] }`，默认仍运行 `learning-route`；`runLearningRoute` 和路线收据格式不变。没有取值的动作省略 `value`。使用返回的 `result.availableActions` 继续构造路线动作；不合阶段的已知动作会记录为 `rejected`，无变化的有效动作会记录为 `no-op`。三种工具都不接受任意代码、URL、文件路径、模型对象或私有浏览器数据。
+
+## 贝叶斯小课：先猜，再加入一条新线索
+
+入口是 `mining.html#bayes-lesson`，不是 30 趟自由探索的日志。`runLearningTool({experimentId:'bayes-update',actions:[]},{producer:'agent'})` 返回当前可用动作；继续把所选动作加入同一个数组重放。动作包括 `guess`、`reveal`、`change-guess`、`update`、`answer`、`reset`，取值和阶段以 `describeLearningTool('bayes-update')` 与 `result.availableActions` 为准，不替学习者选择答案。
+
+`bayes-update-v1` 共用固定 Beta(1,1) 先验、3/5 与 18/30 两份日志，并明示各加入一次空手反馈。记录保留真实初猜、纠错尝试和 reset；`result.evidence` 的前后 counts、alpha/beta、均值和 90% 可信区间由现有小课核心重新计算，不含仅用于画图的 curve。未揭晓的 belief、after、transfer 仍为 null。样本比例不是后验均值；后验均值不是已知真实成功率；区间依赖先验和模型条件，不是保证。
+
+`replayLearningReceipt(receipt)` 对整份记录重算并比较，返回 `{matches:true,authenticatesUser:false,receipt}`。它不认证操作者，不能把 AI 代跑、流程完成或改到正确选项当作本人掌握。网页导出、返回 GenAI OS 与交给外部 AI 都需要显式操作，不读取自由探索、草稿或浏览器存储。
 
 上面的单次 `train` 只完成第一站的训练，不等于整条路线完成。AI 应把真实结果交给学习者判断，而不是自动替用户选择所有正确答案后宣告学会。
 

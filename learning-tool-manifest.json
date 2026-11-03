@@ -3,11 +3,12 @@
   "schemaVersion": 1,
   "engineVersion": "learning-route-v1",
   "numericFormat": "decimal-12-significant-digits",
-  "description": "Reproducible fixed-fixture learning-route and pixel-decode experiments. Completion is not mastery.",
+  "description": "Reproducible fixed-fixture learning-route, pixel-decode and bayes-update experiments. Completion is not mastery.",
   "runnable": {"id": "learning-route", "transport": "local-cli-or-library", "engine": "./learning-tool.mjs", "cli": "scripts/learning-tool.mjs"},
   "runnables": [
     {"id": "learning-route", "transport": "local-cli-or-library", "engine": "./learning-tool.mjs", "cli": "scripts/learning-tool.mjs", "engineVersion": "learning-route-v1", "numericFormat": "decimal-12-significant-digits", "maxActions": 256},
-    {"id": "pixel-decode", "transport": "local-cli-or-library", "engine": "./learning-tool.mjs", "cli": "scripts/learning-tool.mjs", "engineVersion": "pixel-decode-v1", "numericFormat": "integer-bits", "maxActions": 600}
+    {"id": "pixel-decode", "transport": "local-cli-or-library", "engine": "./learning-tool.mjs", "cli": "scripts/learning-tool.mjs", "engineVersion": "pixel-decode-v1", "numericFormat": "integer-bits", "maxActions": 600},
+    {"id": "bayes-update", "transport": "local-cli-or-library", "engine": "./learning-tool.mjs", "cli": "scripts/learning-tool.mjs", "engineVersion": "bayes-update-v1", "numericFormat": "decimal-12-significant-digits", "maxActions": 256}
   ],
   "discovery": "Run the local CLI list/describe operations for the experiment catalog, action schema and GenAI concept links.",
   "operations": ["list", "describe", "run", "replay"],
