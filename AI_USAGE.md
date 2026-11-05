@@ -23,7 +23,7 @@ printf '%s' '{"actions":[{"action":"train"}]}' | node scripts/learning-tool.mjs 
 node scripts/learning-tool.mjs replay < my-learning-receipt.json
 ```
 
-成功时 stdout 是一个 `{ "ok": true, "data": ... }` JSON 对象。`replay` 的输入是 `data` 里的收据本体，不含外层 `ok/data`；网页生成的 JSON 已是收据本体。失败时退出码为 1，stdout 返回 `{ "ok": false, "error": ... }`，不打印内部栈。stdin（包括 replay 收据）最多 64 KiB；学习路线与贝叶斯小课每次最多 256 个动作，像素解码最多 600 个动作，Agent 实战首关最多 9 个动作、第二关最多 8 个动作。这些是计算资源约束，不是安全或学习成功门槛。manifest 保留原来的单数 `runnable` 和路线 `maxActions` 字段；`runnables` 分别列出各工具的版本与上限。
+成功时 stdout 是一个 `{ "ok": true, "data": ... }` JSON 对象。`replay` 的输入是 `data` 里的收据本体，不含外层 `ok/data`；网页生成的 JSON 已是收据本体。失败时退出码为 1，stdout 返回 `{ "ok": false, "error": ... }`，不打印内部栈。stdin（包括 replay 收据）最多 64 KiB；学习路线与贝叶斯小课每次最多 256 个动作，像素解码最多 600 个动作，Agent 三关分别最多 9、8、18 个动作。这些是计算资源约束，不是安全或学习成功门槛。manifest 保留原来的单数 `runnable` 和路线 `maxActions` 字段；`runnables` 分别列出各工具的版本与上限。
 
 原有学习路线的 `run` 请求保持 `{ "actions": [{ "action": "...", "value": ... }] }`，默认仍运行 `learning-route`；`runLearningRoute` 和路线收据格式不变。没有取值的动作省略 `value`。使用返回的 `result.availableActions` 继续构造路线动作；在模型学习路线里，不合阶段的已知动作会记录为 `rejected`，无变化的有效动作会记录为 `no-op`。这些工具都不接受任意代码、URL、文件路径、模型对象或私有浏览器数据。
 
@@ -112,6 +112,12 @@ printf '%s' '{"experimentId":"agent-reroute","actions":[{"action":"advance"},{"a
 ```
 
 案例的字幕、时序和回执均为固定模拟，不采集麦克风、不调用外部模型。`replay` 重算操作和对应证据，不认证身份。从 GenAI OS 发起可直接带回，也可导出 JSON 后手动导入。完整的网页实操记录需先重放核对，再由学习者明确确认保存；不自动修改其他学习记录。
+
+## Agent 实战第三关：只留三帧，你会留下哪一帧？
+
+`agent-frames.html#mission` 与 CLI 使用同一个 `agent-frames-v1` 引擎。按 `advance` 推进固定片段，首轮按固定间隔留 3 帧。用 `start-manual` 从同一开头再来，抵达想保留的当前帧时执行一次 `pin`，只替换中间一帧；第一帧和最后一帧保持不变。以 `result.availableActions` 为准，不能跳到未来、事后补选或重复留帧。
+
+`node scripts/learning-tool.mjs describe agent-frames` 查看约束。记录列出每轮实际送入的帧编号、门牌证据和固定规则给出的结论；`replay` 会从动作重算两轮，而不是接受手填结论。没有拍到门牌只表示证据不足，不表示禁止卸货。案例只用固定画面和字幕，不拍摄、不录音、不运行视觉识别或真实放行。
 
 ## 与 GenAI Learning OS 的分工
 

@@ -20,6 +20,7 @@ FILES.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
 FILES.push('genai-handoff.mjs','bayes-tool.mjs');
 FILES.push('agent-mission.html','agent-mission.css','agent-mission.mjs','agent-tool.mjs');
 FILES.push('agent-reroute.html','agent-reroute.css','agent-reroute-ui.mjs','agent-reroute-tool.mjs');
+FILES.push('agent-frames.html','agent-frames.css','agent-frames-ui.mjs','agent-frames-tool.mjs');
 FILES.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 FILES.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');
 FILES.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');

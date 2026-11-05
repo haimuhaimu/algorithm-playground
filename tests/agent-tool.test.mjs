@@ -14,7 +14,7 @@ const contextURL=(target='http://127.0.0.1:3130/')=>{
 
 test('Agent mission is discoverable, without displacing the original tools',()=>{
  const catalog=listLearningTools();
- assert.deepEqual(catalog.runnables.map(tool=>tool.id),['learning-route','pixel-decode','bayes-update','agent-tool-loop','agent-reroute']);
+ assert.deepEqual(catalog.runnables.map(tool=>tool.id),['learning-route','pixel-decode','bayes-update','agent-tool-loop','agent-reroute','agent-frames']);
  assert.equal(catalog.experiments.length,10);
  assert.match(describeLearningTool(id).url,/agent-mission\.html#mission$/);
 });
