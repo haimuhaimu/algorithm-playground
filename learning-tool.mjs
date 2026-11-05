@@ -1,6 +1,8 @@
 import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs';
 import {describePixelDecode,runPixelDecode,replayPixelReceipt} from './pixel-tool.mjs?v=pixel-ai-1';
 import {describeBayesTool,runBayesTool,replayBayesReceipt} from './bayes-tool.mjs?v=bayes-journey-v1';
+import {describeAgentTool,runAgentToolLoop,replayAgentToolReceipt} from './agent-tool.mjs?v=agent-tool-loop-v1';
+import {describeAgentReroute,runAgentReroute,replayAgentRerouteReceipt} from './agent-reroute-tool.mjs?v=agent-reroute-v1';
 export {runPixelDecode};
 
 const BASE='https://haimuhaimu.github.io/algorithm-playground/';
@@ -90,9 +92,12 @@ function wireEvidence(value){
  return value;
 }
 export function listLearningTools(){
- return clone({schemaVersion:1,experiments:EXPERIMENTS,runnables:[{id:'learning-route',title:'AI 怎么从例子里学会？',transport:'local-cli-or-library',url:BASE+'learn.html#route-task'},{id:'pixel-decode',title:'像素邮局：真实解码轨迹',transport:'local-cli-or-library',url:BASE+'pixel.html#pixel-delivery-entry'},{id:'bayes-update',title:'同样一条线索，判断怎样更新？',transport:'local-cli-or-library',url:BASE+'mining.html#bayes-lesson'}]});
+ const reroute=describeAgentReroute();
+ return clone({schemaVersion:1,experiments:EXPERIMENTS,runnables:[{id:'learning-route',title:'AI 怎么从例子里学会？',transport:'local-cli-or-library',url:BASE+'learn.html#route-task'},{id:'pixel-decode',title:'像素邮局：真实解码轨迹',transport:'local-cli-or-library',url:BASE+'pixel.html#pixel-delivery-entry'},{id:'bayes-update',title:'同样一条线索，判断怎样更新？',transport:'local-cli-or-library',url:BASE+'mining.html#bayes-lesson'},{id:'agent-tool-loop',title:'显示成功，补给真的到了吗？',transport:'local-cli-or-library',url:BASE+'agent-mission.html#mission'},{id:reroute.id,title:reroute.title,transport:reroute.execution,url:reroute.url}]});
 }
 export function describeLearningTool(id){
+ if(id==='agent-reroute')return describeAgentReroute();
+ if(id==='agent-tool-loop')return describeAgentTool();
  if(id==='bayes-update')return describeBayesTool();
  if(id==='pixel-decode')return describePixelDecode();
  if(id!=='learning-route'){
@@ -120,6 +125,8 @@ export function runLearningRoute(actions,options={}){
   boundaries:clone(BOUNDARIES),genai:clone(GENAI)};
 }
 export function replayLearningReceipt(receipt){
+ if(receipt?.experimentId==='agent-reroute')return replayAgentRerouteReceipt(receipt);
+ if(receipt?.experimentId==='agent-tool-loop')return replayAgentToolReceipt(receipt);
  if(receipt?.experimentId==='bayes-update')return replayBayesReceipt(receipt);
  if(receipt?.experimentId==='pixel-decode')return replayPixelReceipt(receipt);
  keys(receipt,['format','schemaVersion','experimentId','engineVersion','numericFormat','producer','fixture','actions','steps','result','boundaries','genai'],'receipt');
@@ -131,6 +138,8 @@ export function replayLearningReceipt(receipt){
 export function runLearningTool(request,options={}){
  record(request,'run request');
  const id=request.experimentId??'learning-route';
+ if(id==='agent-reroute'){keys(request,['experimentId','actions'],'run request');return runAgentReroute(request.actions,options);}
+ if(id==='agent-tool-loop'){keys(request,['experimentId','actions'],'run request');return runAgentToolLoop(request.actions,options);}
  if(id==='bayes-update'){keys(request,['experimentId','actions'],'run request');return runBayesTool(request.actions,options);}
  if(id==='pixel-decode'){
   keys(request,['experimentId','preset','mode','actions'],'run request');

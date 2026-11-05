@@ -6,9 +6,9 @@ const sequence=(rate=.15)=>[
  {action:'rate',value:rate},{action:'guess',value:'points'},{action:'step'},{action:'explain',value:'parameters'},{action:'next'},
  {action:'train'},{action:'guess',value:'all'},{action:'point',value:4},{action:'explain',value:'unseen'},{action:'next'}
 ];
-test('tool discovery distinguishes ten web experiments from three executable adapters',()=>{
+test('tool discovery distinguishes ten web experiments from the executable lessons',()=>{
  assert.equal(typeof api.listLearningTools,'function','an executable discovery adapter is required');
- const tools=api.listLearningTools();assert.equal(tools.experiments.length,10);assert.equal(tools.runnables.length,3);
+ const tools=api.listLearningTools();assert.equal(tools.experiments.length,10);assert.deepEqual(tools.runnables.map(tool=>tool.id),['learning-route','pixel-decode','bayes-update','agent-tool-loop','agent-reroute']);
  assert.equal(tools.runnables[0].id,'learning-route');assert.equal(tools.runnables[0].transport,'local-cli-or-library');
  const detail=api.describeLearningTool('learning-route');assert.equal(detail.id,'learning-route');
  assert.ok(detail.genai.some(l=>l.url==='https://haimuhaimu.github.io/genai-learning-os/?page=foundation&node=gradient-descent'));

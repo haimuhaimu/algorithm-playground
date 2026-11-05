@@ -40,3 +40,29 @@ test('discovered browser entries resolve to anchors in the independently built r
   }
  }finally{await rm(out,{recursive:true,force:true});}
 });
+
+test('Agent mission can be loaded and replayed from the built, allowlisted files',async()=>{
+ const out=await mkdtemp(join(tmpdir(),'agent-mission-delivery-')),server=createAppServer(out);
+ try{
+  await build(undefined,out);
+  await new Promise((done,fail)=>{server.once('error',fail);server.listen(0,'127.0.0.1',done);});
+  const base='http://127.0.0.1:'+server.address().port,origin='http://127.0.0.1:3130';
+  const manifest=await (await fetch(base+'/learning-tool-manifest.json')).json();
+  assert.equal(manifest.runnables.find(x=>x.id==='agent-tool-loop')?.engineVersion,'agent-tool-loop-v1');
+  assert.equal(manifest.runnables.find(x=>x.id==='agent-reroute')?.engineVersion,'agent-reroute-v1');
+  for(const [name,type] of [['agent-mission.html','text/html'],['agent-mission.css','text/css'],['agent-mission.mjs','text/javascript'],['agent-tool.mjs','text/javascript'],['agent-reroute.html','text/html'],['agent-reroute.css','text/css'],['agent-reroute-ui.mjs','text/javascript'],['agent-reroute-tool.mjs','text/javascript']]){
+   const response=await fetch(base+'/'+name,{headers:{Origin:origin}});
+   assert.equal(response.status,200,name);assert.ok(response.headers.get('content-type')?.startsWith(type),name);
+   if(name.endsWith('.mjs'))assert.equal(response.headers.get('access-control-allow-origin'),origin);
+  }
+  const api=await import(pathToFileURL(join(out,'learning-tool.mjs')));
+  const receipt=api.runLearningTool({experimentId:'agent-tool-loop',actions:['stop','restart','retry','check'].map(action=>({action}))});
+  assert.deepEqual(receipt.result.evidence.trials.map(t=>t.outcome),['stopped','verified']);
+  assert.equal(api.replayLearningReceipt(receipt).matches,true);
+  const reroute=api.runLearningTool({experimentId:'agent-reroute',actions:['advance','advance','reroute','advance','verify-new'].map(action=>({action}))});
+  assert.equal(reroute.result.evidence.newReceipt.orderId,'SUP-08');
+  assert.equal(api.replayLearningReceipt(reroute).matches,true);
+  const foreign=await fetch(base+'/agent-tool.mjs',{headers:{Origin:'https://example.org'}});
+  assert.equal(foreign.headers.get('access-control-allow-origin'),null);
+ }finally{await new Promise(done=>server.close(done));await rm(out,{recursive:true,force:true});}
+});
