@@ -65,6 +65,10 @@ TYPES['learn.html']='text/html; charset=utf-8';TYPES['learning-route.css']='text
 TYPES['learning-tool.mjs']='text/javascript; charset=utf-8';TYPES['learning-tool-manifest.json']='application/json; charset=utf-8';TYPES['AI_USAGE.md']='text/plain; charset=utf-8';
 TYPES['genai-handoff.mjs']='text/javascript; charset=utf-8';
 TYPES['bayes-tool.mjs']='text/javascript; charset=utf-8';
+TYPES['agent-mission.html']='text/html; charset=utf-8';TYPES['agent-mission.css']='text/css; charset=utf-8';
+for(const name of ['agent-mission.mjs','agent-tool.mjs'])TYPES[name]='text/javascript; charset=utf-8';
+TYPES['agent-reroute.html']='text/html; charset=utf-8';TYPES['agent-reroute.css']='text/css; charset=utf-8';
+for(const name of ['agent-reroute-ui.mjs','agent-reroute-tool.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['learning-route.mjs','learning-route-ui.mjs','learning-route-trials.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['home.mjs','home-core.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg'])TYPES[name]='image/jpeg';

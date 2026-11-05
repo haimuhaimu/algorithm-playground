@@ -23,9 +23,9 @@ printf '%s' '{"actions":[{"action":"train"}]}' | node scripts/learning-tool.mjs 
 node scripts/learning-tool.mjs replay < my-learning-receipt.json
 ```
 
-成功时 stdout 是一个 `{ "ok": true, "data": ... }` JSON 对象。`replay` 的输入是 `data` 里的收据本体，不含外层 `ok/data`；网页生成的 JSON 已是收据本体。失败时退出码为 1，stdout 返回 `{ "ok": false, "error": ... }`，不打印内部栈。stdin（包括 replay 收据）最多 64 KiB；学习路线与贝叶斯小课每次最多 256 个动作，像素解码最多 600 个动作。这些是计算资源约束，不是安全或学习成功门槛。manifest 保留原来的单数 `runnable` 和路线 `maxActions` 字段；`runnables` 分别列出三个工具的版本与上限。
+成功时 stdout 是一个 `{ "ok": true, "data": ... }` JSON 对象。`replay` 的输入是 `data` 里的收据本体，不含外层 `ok/data`；网页生成的 JSON 已是收据本体。失败时退出码为 1，stdout 返回 `{ "ok": false, "error": ... }`，不打印内部栈。stdin（包括 replay 收据）最多 64 KiB；学习路线与贝叶斯小课每次最多 256 个动作，像素解码最多 600 个动作，Agent 实战首关最多 9 个动作、第二关最多 8 个动作。这些是计算资源约束，不是安全或学习成功门槛。manifest 保留原来的单数 `runnable` 和路线 `maxActions` 字段；`runnables` 分别列出各工具的版本与上限。
 
-原有学习路线的 `run` 请求保持 `{ "actions": [{ "action": "...", "value": ... }] }`，默认仍运行 `learning-route`；`runLearningRoute` 和路线收据格式不变。没有取值的动作省略 `value`。使用返回的 `result.availableActions` 继续构造路线动作；不合阶段的已知动作会记录为 `rejected`，无变化的有效动作会记录为 `no-op`。三种工具都不接受任意代码、URL、文件路径、模型对象或私有浏览器数据。
+原有学习路线的 `run` 请求保持 `{ "actions": [{ "action": "...", "value": ... }] }`，默认仍运行 `learning-route`；`runLearningRoute` 和路线收据格式不变。没有取值的动作省略 `value`。使用返回的 `result.availableActions` 继续构造路线动作；在模型学习路线里，不合阶段的已知动作会记录为 `rejected`，无变化的有效动作会记录为 `no-op`。这些工具都不接受任意代码、URL、文件路径、模型对象或私有浏览器数据。
 
 ## 贝叶斯小课：先猜，再加入一条新线索
 
@@ -90,6 +90,28 @@ AI 收到记录后应：
 三站模型独立。第二站步长可以为 0.03、0.15 或 0.6；第三站重新以 0.15 学 120 步，固定 16 个新位置不参与训练。不能把新题成绩归因于上一站改了步长。
 
 学习路线记录中的计算读数以 12 位有效十进制数字序列化（`numericFormat` 明示），避免不同 JavaScript 运行时的末位浮点差异；原始模型、分类判定和画布不经此舍入。这个精度是交换格式的约定，不是模型可靠性门槛。像素记录使用整数位位置，不使用该浮点格式。核验仍逐字段精确比较已序列化记录，不放宽为可随意改分数的误差范围。
+
+## Agent 实战：显示成功，补给真的到了吗？
+
+`agent-mission.html#mission` 和 CLI 共用 `agent-tool-loop-v1`。每轮从同一张已受理、尚未核验签收的工单开始，最多三次工具调用。动作是 `check`（查签收）、`retry`（启用备用线）、`stop`（停止）与 `restart`（首轮结束后同条件再试）。每次从 `result.availableActions` 选择合法动作；越界或阶段错误会拒绝。重试已受理不算签收；两轮结束也不意味着任务成功。
+
+```sh
+node scripts/learning-tool.mjs describe agent-tool-loop
+printf '%s' '{"experimentId":"agent-tool-loop","actions":[{"action":"stop"},{"action":"restart"},{"action":"check"},{"action":"retry"},{"action":"check"}]}' | node scripts/learning-tool.mjs run
+```
+
+记录包含两轮实际操作、每步观察和最后的签收证据。将返回的 `data` 交给 `replay` 重算核对；它不会执行真实物流、调用模型或认证身份。网页可显式带回 Agent 路线，也可手动导出；外部 AI 的记录只用于对照，不能记成个人实操。
+
+## Agent 实战第二关：新指令来了，旧任务还该继续吗？
+
+`agent-reroute.html#mission` 与 CLI 使用同一个 `agent-reroute-v1` 引擎。依次推进半句字幕和完整改口，再从 `result.availableActions` 选改派或保留旧单。晚到的 `SUP-07` 签收只属于旧单；只有查到 `SUP-08` 的对应签收，才算确认新目标。也可以带着错误结论或未核验的结局复盘；不要把流程结束当作送达。
+
+```sh
+node scripts/learning-tool.mjs describe agent-reroute
+printf '%s' '{"experimentId":"agent-reroute","actions":[{"action":"advance"},{"action":"advance"},{"action":"reroute"},{"action":"advance"},{"action":"verify-new"}]}' | node scripts/learning-tool.mjs run
+```
+
+案例的字幕、时序和回执均为固定模拟，不采集麦克风、不调用外部模型。`replay` 重算操作和对应证据，不认证身份。从 GenAI OS 发起可直接带回，也可导出 JSON 后手动导入。完整的网页实操记录需先重放核对，再由学习者明确确认保存；不自动修改其他学习记录。
 
 ## 与 GenAI Learning OS 的分工
 

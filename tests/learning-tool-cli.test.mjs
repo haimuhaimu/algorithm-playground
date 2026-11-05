@@ -6,6 +6,19 @@ function call(command,input='',extra=[]){
  const r=spawnSync(process.execPath,[cli.pathname,command,...extra],{input,encoding:'utf8',timeout:5000,maxBuffer:200000});
  assert.equal(r.error,undefined);assert.ok(r.stdout.trim(),'the CLI must emit a structured JSON response');return {...r,json:JSON.parse(r.stdout)};
 }
+test('CLI discovers and replays the second Agent mission without rewriting a wrong choice',()=>{
+ const describe=call('describe','',['agent-reroute']);
+ assert.equal(describe.status,0,describe.json.error);
+ assert.equal(describe.json.data.engineVersion,'agent-reroute-v1');
+ const run=call('run',JSON.stringify({experimentId:'agent-reroute',actions:['advance','advance','reroute','advance','accept-old'].map(action=>({action}))}));
+ assert.equal(run.status,0,run.json.error);
+ assert.equal(run.json.data.result.evidence.outcome,'misattributed');
+ assert.equal(run.json.data.result.evidence.newReceipt,null);
+ const replay=call('replay',JSON.stringify(run.json.data));
+ assert.equal(replay.status,0,replay.json.error);
+ assert.equal(replay.json.data.authenticatesUser,false);
+ assert.deepEqual(replay.json.data.receipt,run.json.data);
+});
 test('a fresh external process can discover, describe and actually run the same core without a browser',()=>{
  const list=call('list');assert.equal(list.status,0);assert.equal(list.json.data.experiments.length,10);
  const detail=call('describe','',['learning-route']);assert.equal(detail.status,0);assert.equal(detail.json.data.fixture.trainingExamples,6);
@@ -22,6 +35,15 @@ test('CLI malformed, excessive, unsupported and unexpected inputs fail in struct
 test('CLI replay never trusts an edited score',()=>{
  const run=call('run',JSON.stringify({actions:[{action:'train'}]}));run.json.data.result.evidence.guide.steps=999;
  const replay=call('replay',JSON.stringify(run.json.data));assert.equal(replay.status,1);assert.match(replay.json.error,/mismatch/i);
+});
+test('CLI runs the same Agent mission without assigning personal practice',()=>{
+ const run=call('run',JSON.stringify({experimentId:'agent-tool-loop',actions:['stop','restart','retry','check'].map(action=>({action}))}));
+ assert.equal(run.status,0);
+ const receipt=run.json.data;
+ assert.equal(receipt.producer,'agent');assert.equal(receipt.result.workflowComplete,true);
+ assert.deepEqual(receipt.result.evidence.trials.map(t=>t.outcome),['stopped','verified']);
+ const replay=call('replay',JSON.stringify(receipt));
+ assert.equal(replay.status,0);assert.equal(replay.json.data.authenticatesUser,false);
 });
 test('CLI discovery exposes a pixel decoder without removing the existing learning route',()=>{
  const list=call('list');assert.equal(list.status,0);assert.equal(list.json.data.experiments.length,10);
