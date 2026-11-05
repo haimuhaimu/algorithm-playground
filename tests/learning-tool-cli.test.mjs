@@ -6,6 +6,21 @@ function call(command,input='',extra=[]){
  const r=spawnSync(process.execPath,[cli.pathname,command,...extra],{input,encoding:'utf8',timeout:5000,maxBuffer:200000});
  assert.equal(r.error,undefined);assert.ok(r.stdout.trim(),'the CLI must emit a structured JSON response');return {...r,json:JSON.parse(r.stdout)};
 }
+test('CLI returns actual selections for both Agent frame budgets and can replay them',()=>{
+ const description=call('describe','',['agent-frames']);
+ assert.equal(description.status,0,description.json.error);
+ assert.equal(description.json.data.fixture.budget,3);
+ const advance=n=>Array(n).fill('advance');
+ const actions=[...advance(8),'start-manual',...advance(5),'pin',...advance(3)].map(action=>({action}));
+ const run=call('run',JSON.stringify({experimentId:'agent-frames',actions}));
+ assert.equal(run.status,0,run.json.error);
+ assert.deepEqual(run.json.data.result.evidence.fixed.frameIds,[0,4,8]);
+ assert.deepEqual(run.json.data.result.evidence.manual.frameIds,[0,5,8]);
+ assert.equal(run.json.data.result.evidence.manual.signFrame,5);
+ const replay=call('replay',JSON.stringify(run.json.data));
+ assert.equal(replay.status,0,replay.json.error);
+ assert.deepEqual(replay.json.data,{matches:true,authenticatesUser:false,receipt:run.json.data});
+});
 test('CLI discovers and replays the second Agent mission without rewriting a wrong choice',()=>{
  const describe=call('describe','',['agent-reroute']);
  assert.equal(describe.status,0,describe.json.error);

@@ -50,7 +50,8 @@ test('Agent mission can be loaded and replayed from the built, allowlisted files
   const manifest=await (await fetch(base+'/learning-tool-manifest.json')).json();
   assert.equal(manifest.runnables.find(x=>x.id==='agent-tool-loop')?.engineVersion,'agent-tool-loop-v1');
   assert.equal(manifest.runnables.find(x=>x.id==='agent-reroute')?.engineVersion,'agent-reroute-v1');
-  for(const [name,type] of [['agent-mission.html','text/html'],['agent-mission.css','text/css'],['agent-mission.mjs','text/javascript'],['agent-tool.mjs','text/javascript'],['agent-reroute.html','text/html'],['agent-reroute.css','text/css'],['agent-reroute-ui.mjs','text/javascript'],['agent-reroute-tool.mjs','text/javascript']]){
+  assert.equal(manifest.runnables.find(x=>x.id==='agent-frames')?.engineVersion,'agent-frames-v1');
+  for(const [name,type] of [['agent-mission.html','text/html'],['agent-mission.css','text/css'],['agent-mission.mjs','text/javascript'],['agent-tool.mjs','text/javascript'],['agent-reroute.html','text/html'],['agent-reroute.css','text/css'],['agent-reroute-ui.mjs','text/javascript'],['agent-reroute-tool.mjs','text/javascript'],['agent-frames.html','text/html'],['agent-frames.css','text/css'],['agent-frames-ui.mjs','text/javascript'],['agent-frames-tool.mjs','text/javascript']]){
    const response=await fetch(base+'/'+name,{headers:{Origin:origin}});
    assert.equal(response.status,200,name);assert.ok(response.headers.get('content-type')?.startsWith(type),name);
    if(name.endsWith('.mjs'))assert.equal(response.headers.get('access-control-allow-origin'),origin);

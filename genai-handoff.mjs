@@ -1,4 +1,4 @@
-import {replayLearningReceipt} from './learning-tool.mjs?v=agent-reroute-v1';
+import {replayLearningReceipt} from './learning-tool.mjs?v=agent-frames-v1';
 
 const JOURNEY='model-learning';
 const BAYES='bayes-learning';
@@ -6,7 +6,8 @@ const ROUTES={
  [JOURNEY]:{section:'journey',experiment:'learning-route',engine:'learning-route-v1',stage:'summary'},
  [BAYES]:{section:'bayes-journey',experiment:'bayes-update',engine:'bayes-update-v1',stage:'done'},
  'agent-learning':{section:'agent-journey',experiment:'agent-tool-loop',engine:'agent-tool-loop-v1',stage:'done'},
- 'agent-reroute':{section:'agent-reroute-journey',experiment:'agent-reroute',engine:'agent-reroute-v1',stage:'done'}
+ 'agent-reroute':{section:'agent-reroute-journey',experiment:'agent-reroute',engine:'agent-reroute-v1',stage:'done'},
+ 'agent-frames':{section:'agent-frames-journey',experiment:'agent-frames',engine:'agent-frames-v1',stage:'done'}
 };
 const FORMAT='genai-learning-os/playground-handoff';
 const MAX_BYTES=65536;
