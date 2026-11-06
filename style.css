@@ -28,3 +28,28 @@
 .local-draft p{margin:0;max-width:38em}
 .local-draft button{flex-shrink:0;min-height:44px;font-size:11px;text-decoration:underline;text-underline-offset:4px;padding:8px 2px}
 @media(max-width:760px){.local-draft{gap:10px;font-size:10px}.local-draft button{font-size:10px;max-width:90px}}
+
+/* Recommendation illustrations keep their topic colors and leave rank/badges on top. */
+.post-card > .cover[data-studio-cover] > .recommendation-post-art{
+ position:absolute;
+ inset-block-start:50%;
+ inset-inline-end:14px;
+ transform:translateY(-50%);
+ object-fit:contain;
+ image-rendering:pixelated;
+ pointer-events:none;
+}
+.post-card > .cover[data-studio-cover="portrait"] > .recommendation-post-art{
+ inline-size:clamp(0px,calc(100% - 74px),112px);
+}
+.post-card > .cover[data-studio-cover="portrait"]::before,
+.post-card > .cover[data-studio-cover="portrait"]::after,
+.post-card > .cover[data-studio-cover="portrait"] .cover-glyph{display:none}
+.post-card > .cover[data-studio-cover="topic"] > .recommendation-post-art{
+ inline-size:min(54%,118px);
+ block-size:74%;
+}
+.post-card > .cover[data-studio-cover="topic"] .cover-glyph{
+ left:24%;
+ font-size:clamp(32px,4vw,50px);
+}

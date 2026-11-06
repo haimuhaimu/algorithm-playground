@@ -1,5 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+
+test('a single cat tap resets only the nearby firefly, then the existing coupling moves its neighbor',async()=>{
+ const {createCatBeatScene,runCatBeat}=await import('../firefly-beat.mjs');
+ const scene=createCatBeatScene(),original=structuredClone(scene);
+ const {quiet,tapped,afterTap}=runCatBeat(scene);
+ const degrees=world=>world.points.map(({phase})=>Number((phase*180/Math.PI).toFixed(2)));
+ assert.deepEqual(scene,original,'a comparison must not consume its starting state');
+ assert.deepEqual(degrees(scene.world),[60,60,60]);
+ assert.deepEqual(degrees(afterTap),[0,60,60],'only A receives the one-off input');
+ assert.equal(afterTap.seed,scene.world.seed);
+ assert.deepEqual(degrees(quiet),[116.25,116.25,116.25]);
+ assert.deepEqual(degrees(tapped),[76.57,95.93,116.25]);
+ assert.ok(Math.abs(quiet.time-.5)<1e-10);
+ assert.equal(tapped.time,quiet.time);
+ assert.deepEqual(tapped.settings,quiet.settings);
+ assert.deepEqual(runCatBeat(scene),{quiet,tapped,afterTap});
+});
 import {access} from 'node:fs/promises';
 async function api(){
  const url=new URL('../firefly-beat.mjs',import.meta.url);

@@ -1,4 +1,4 @@
-import {createSharedCase,compareSharedChoice,resolveSharedChoice,compareObservedFeedback} from './mining-shared-evidence.mjs?v=bayes-journey-v1';
+import {createSharedCase,compareSharedChoice,resolveSharedChoice,compareObservedFeedback} from './mining-shared-evidence.mjs?v=station-cat-v1';
 
 const NAMES=['苔原','珊瑚','琥珀','雾蓝','月白'];
 const percent=value=>(value*100).toFixed(value*100%1?1:0)+'%';

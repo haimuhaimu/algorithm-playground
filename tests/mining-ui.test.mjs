@@ -2,6 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 let serial=0;
+test('the free-flight dock and moving player craft share the same three occupied seats',async()=>{
+ const html=await readFile(new URL('../mining.html',import.meta.url),'utf8');
+ const dock=html.match(/<div\b[^>]*\bid="launchpad"[^>]*>([\s\S]*?)<\/div>/)?.[1];
+ const flight=html.match(/<div\b[^>]*\bid="probe"[^>]*>([\s\S]*?)<\/div>/)?.[1];
+ const replay=html.match(/<div\b[^>]*\bid="sim-probe"[^>]*>([\s\S]*?)<\/div>/)?.[1];
+ const cockpit=dock?.match(/<g\b[^>]*\bid="mining-crew-ship"[^>]*>([\s\S]*?)<\/defs>/)?.[1];
+ assert.ok(cockpit,'the stationary dock must show a crewed ship without requiring an animation');
+ const crew=[...cockpit.matchAll(/<image\b[^>]*\bhref="\.\/studio-(heim|bobby|chouchou)-portrait\.png"/g)].map(([,id])=>id);
+ assert.deepEqual(crew.sort(),['bobby','chouchou','heim']);
+ assert.match(dock,/<use\b[^>]*\bhref="#mining-crew-ship"/,'the dock must render the ship with the three seats');
+ assert.match(flight,/<use\b[^>]*\bhref="#mining-crew-ship"/,'the player sends the same crewed ship into flight');
+ assert.doesNotMatch(replay,/mining-crew-ship|studio-(?:heim|bobby|chouchou)/,'the algorithm replay stays unmanned');
+});
+test('free exploration can be opened directly and links back to the existing fixed lesson',async()=>{
+ const html=await readFile(new URL('../mining.html',import.meta.url),'utf8');
+ const mission=html.match(/<section\b[^>]*\bid="mining-flight"[^>]*>([\s\S]*?)<\/section>/)?.[1];
+ assert.ok(mission?.includes('id="planet-0"'),'the direct link must land at the playable starfield');
+ assert.match(mission,/<a\b[^>]*\bhref="#shared-title"/);
+});
 test('Bayesian entry keeps the old game and waits for a prediction before showing uncertainty',async()=>{
  const u=await boot({reduced:true});try{
   assert.ok(u.els.has('bayes-start'),'a scoped Bayesian lesson needs an explicit entry');

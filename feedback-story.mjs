@@ -1,4 +1,4 @@
-import {feedback,rankPosts,scorePost,probability,metrics} from './core.mjs?v=seat-carryover-20261029';
+import {feedback,rankPosts,scorePost,probability,metrics} from './core.mjs?v=recommendation-studio-v2';
 
 function freeze(value){
  if(value&&typeof value==='object'){

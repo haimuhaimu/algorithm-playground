@@ -73,9 +73,24 @@ test('zero-diversity lessons explain unchanged scores rather than teaching a non
 test('second seat keeps the previous cat beside food before guessing, without revealing the result early',async()=>{
  const {e}=await setup();e['seat-start'].click();e['seat-guess-0'].click();e['seat-next'].click();
  assert.match(e['seat-guess-0'].innerHTML,/给老猫做了一段小楼梯/);
- assert.match(e['seat-guess-1'].innerHTML,/这碗面让我想再来一碗/);
+ assert.match(e['seat-guess-1'].innerHTML,/嘿姆盯上了那碗面/);
+ assert.match(e['seat-guess-1'].innerHTML,/src="\.\/studio-heim-idle\.png"/);
  assert.equal(e['seat-guess-2'].hidden,true);assert.equal(e['seat-carryover'].hidden,true);
  assert.match(e['seat-carry-note'].textContent,/上一席/);assert.equal(e['seat-evidence'].hidden,true);
+});
+test('the same illustrated food post appears in the guess, revealed seat and both carryover states',async()=>{
+ const {e}=await setup();
+ e['seat-start'].click();e['seat-guess-0'].click();e['seat-next'].click();
+ const title=/嘿姆盯上了那碗面/,art=/src="\.\/studio-heim-idle\.png"/;
+ assert.match(e['seat-guess-1'].innerHTML,title);assert.match(e['seat-guess-1'].innerHTML,art);
+ e['seat-guess-1'].click();
+ assert.match(e['seat-result-title'].textContent,title);
+ for(const id of ['seat-row','seat-carry-cards','seat-all']){
+  assert.match(e[id].innerHTML,title);assert.match(e[id].innerHTML,art);
+ }
+ e['seat-occupancy-before'].click();
+ assert.match(e['seat-carry-cards'].innerHTML,title);assert.match(e['seat-carry-cards'].innerHTML,art);
+ assert.match(e['seat-carry-reason'].textContent,title);
 });
 test('occupied-seat toggle changes only the isolated pair scores, never actual seats guesses or app inputs',async()=>{
  const {e,inputs}=await setup(),original=structuredClone(inputs);

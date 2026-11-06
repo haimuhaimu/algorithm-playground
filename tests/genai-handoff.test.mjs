@@ -14,8 +14,9 @@ const sequence=[
  {action:'rate',value:.03},{action:'guess',value:'points'},{action:'step'},{action:'explain',value:'parameters'},{action:'next'},
  {action:'train'},{action:'guess',value:'all'},{action:'explain',value:'unseen'},{action:'next'}
 ];
-function locationFor(target='https://haimuhaimu.github.io/genai-learning-os/?page=foundation&private=drop#old'){
- const url=new URL('http://127.0.0.1:3103/learn.html');
+const publishedPage='https://haimuhaimu.github.io/algorithm-playground/learn.html';
+function locationFor(target='https://haimuhaimu.github.io/genai-learning-os/?page=foundation&private=drop#old',source='http://127.0.0.1:3103/learn.html'){
+ const url=new URL(source);
  url.searchParams.set('genaiReturn',target);url.searchParams.set('genaiRequest',requestId);url.searchParams.set('genaiJourney','model-learning');
  return url;
 }
@@ -35,10 +36,31 @@ test('unsafe, partial, duplicate or foreign contexts never create a return desti
  }
  assert.equal(api.readGenaiHandoffContext(undefined),null);assert.equal(api.readGenaiHandoffContext({href:'not a URL'}),null);
 });
+test('public or non-loopback Playground pages cannot accept a loopback return',()=>{
+ for(const source of [publishedPage,'https://example.com/learn.html','http://192.168.0.2:3103/learn.html']){
+  for(const target of ['http://localhost:65535/','http://127.0.0.1:3102/']){
+   assert.equal(api.readGenaiHandoffContext(locationFor(target,source)),null,source+' → '+target);
+  }
+ }
+});
+test('the encoder independently rejects a previously accepted loopback return from a public page',()=>{
+ const target='http://localhost:65535/',local=locationFor(target);
+ const context=api.readGenaiHandoffContext(local),receipt=runLearningRoute(sequence,{producer:'browser-session'});
+ const validReturn=new URL(api.createGenaiReturnUrl(context,receipt,local));
+ assert.equal(validReturn.origin,'http://localhost:65535');
+ assert.throws(()=>api.createGenaiReturnUrl(context,receipt,locationFor(target,publishedPage)),/context|destination|target/i);
+ assert.throws(()=>api.createGenaiReturnUrl(context,receipt),/context|destination|target/i);
+});
+test('the encoder rejects an official return if the live request no longer matches',()=>{
+ const source=locationFor(undefined,publishedPage),context=api.readGenaiHandoffContext(source);
+ const receipt=runLearningRoute(sequence,{producer:'browser-session'});
+ source.searchParams.set('genaiRequest','different_request_20261105');
+ assert.throws(()=>api.createGenaiReturnUrl(context,receipt,source),/context|request/i);
+});
 test('explicit return contains the unchanged real receipt as UTF-8 in the fragment, never the request query',()=>{
  assert.equal(typeof api.createGenaiReturnUrl,'function','receipt return encoder is required');
  const receipt=runLearningRoute(sequence,{producer:'browser-session'}),before=structuredClone(receipt);
- const context=api.readGenaiHandoffContext(locationFor()),destination=new URL(api.createGenaiReturnUrl(context,receipt));
+ const source=locationFor(undefined,publishedPage),context=api.readGenaiHandoffContext(source),destination=new URL(api.createGenaiReturnUrl(context,receipt,source));
  assert.equal(destination.origin+destination.pathname+destination.search,'https://haimuhaimu.github.io/genai-learning-os/?page=routes&section=journey');
  assert.equal(destination.searchParams.has('receipt'),false);assert.match(destination.hash,/^#playground=[A-Za-z0-9_-]+$/);
  const bytes=Buffer.from(destination.hash.slice('#playground='.length),'base64url');assert.ok(bytes.length<=65536);
@@ -51,15 +73,15 @@ test('explicit return contains the unchanged real receipt as UTF-8 in the fragme
 });
 test('unsupported, incomplete, changed, oversized receipts and forged targets are not returned',()=>{
  assert.equal(typeof api.createGenaiReturnUrl,'function');
- const context=api.readGenaiHandoffContext(locationFor()),receipt=runLearningRoute(sequence,{producer:'browser-session'});
- assert.throws(()=>api.createGenaiReturnUrl(context,runLearningRoute([])),/complete|finished/i);
- assert.throws(()=>api.createGenaiReturnUrl(context,{...receipt,experimentId:'pixel-decode'}),/unsupported|version|experiment/i);
+ const source=locationFor(),context=api.readGenaiHandoffContext(source),receipt=runLearningRoute(sequence,{producer:'browser-session'});
+ assert.throws(()=>api.createGenaiReturnUrl(context,runLearningRoute([]),source),/complete|finished/i);
+ assert.throws(()=>api.createGenaiReturnUrl(context,{...receipt,experimentId:'pixel-decode'},source),/unsupported|version|experiment/i);
  const changed=structuredClone(receipt);changed.result.evidence.test.test.correct=16;
- assert.throws(()=>api.createGenaiReturnUrl(context,changed),/mismatch|receipt/i);
- assert.throws(()=>api.createGenaiReturnUrl(context,{...receipt,privateNote:'x'.repeat(65536)}),/size|limit|large/i);
- assert.throws(()=>api.createGenaiReturnUrl({...context,returnURL:'https://example.com/'},receipt),/context|destination|target/i);
- assert.throws(()=>api.createGenaiReturnUrl({...context,requestId:'stale'},receipt),/context|request/i);
- assert.throws(()=>api.createGenaiReturnUrl({...context,requestId:[requestId]},receipt),/context|request/i,'a coerced request id is not a valid wire nonce');
+ assert.throws(()=>api.createGenaiReturnUrl(context,changed,source),/mismatch|receipt/i);
+ assert.throws(()=>api.createGenaiReturnUrl(context,{...receipt,privateNote:'x'.repeat(65536)},source),/size|limit|large/i);
+ assert.throws(()=>api.createGenaiReturnUrl({...context,returnURL:'https://example.com/'},receipt,source),/context|destination|target/i);
+ assert.throws(()=>api.createGenaiReturnUrl({...context,requestId:'stale'},receipt,source),/context|request/i);
+ assert.throws(()=>api.createGenaiReturnUrl({...context,requestId:[requestId]},receipt,source),/context|request/i,'a coerced request id is not a valid wire nonce');
 });
 test('built handoff module is delivered as JavaScript without broadening the static server CSP',async()=>{
  const out=await mkdtemp(join(tmpdir(),'genai-handoff-')),server=createAppServer(out);

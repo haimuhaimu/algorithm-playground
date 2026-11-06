@@ -1,5 +1,5 @@
 import {runAgentReroute} from './agent-reroute-tool.mjs?v=agent-reroute-v1';
-import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=agent-reroute-v1';
+import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=handoff-trust-v1';
 
 const SOURCE={producer:'browser-session'};
 const CONTROLS={advance:'advance',dispatch:'reroute','keep-old':'keep-old','verify-new':'verify-new','accept-old':'accept-old',stop:'stop'};
@@ -36,8 +36,8 @@ export function mountAgentReroute({document,window}){
  const set=(name,text)=>{if(e(name).textContent!==text)e(name).textContent=text;};
  const show=(name,visible)=>{e(name).hidden=!visible;};
  const focus=name=>e(name).focus({preventScroll:true});
- const handoff=readGenaiHandoffContext(window.location);
- const canReturn=handoff?.journeyId==='agent-reroute';
+ const handoff=readGenaiHandoffContext(window.location,'agent-reroute');
+ const canReturn=!!handoff;
  let run=runAgentReroute([],SOURCE),replayAt=null;
  if(canReturn)e('os-fallback').href=handoff.returnURL;
 
@@ -121,9 +121,7 @@ export function mountAgentReroute({document,window}){
  e('return').addEventListener('click',()=>{
   if(!onCompleted()||!canReturn)return;
   try{
-   const current=readGenaiHandoffContext(window.location);
-   if(!current||current.journeyId!==handoff.journeyId||current.requestId!==handoff.requestId||current.returnURL!==handoff.returnURL)throw Error('Return context changed');
-   window.location.assign(createGenaiReturnUrl(handoff,run));
+   window.location.assign(createGenaiReturnUrl(handoff,run,window.location));
   }catch{
    show('os-fallback',true);
    set('share-status','暂时无法带回。记录仍在，可生成 JSON 后手动导入。');

@@ -15,3 +15,10 @@
 @supports ((background-clip:text) or (-webkit-background-clip:text)){.hero-copy h1{background-image:linear-gradient(100deg,var(--home-title-start) 0%,var(--home-title-middle) 48%,var(--home-title-end) 100%);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent}}
 @media(prefers-contrast:more),print{.hero-copy h1{background-image:none;color:var(--home-ink);-webkit-text-fill-color:var(--home-ink)}}
 @media(forced-colors:active){.hero-copy h1{background-image:none;color:CanvasText;-webkit-text-fill-color:CanvasText}.primary-link{border:1px solid ButtonText}.pixel-mark i,.demo-dot{background:CanvasText}.experiment-entry{border:1px solid CanvasText}.hero-stage{border:1px solid CanvasText}}
+.neural-picture{display:grid;grid-template: minmax(0,1fr) / repeat(2,minmax(0,1fr));gap:3px;align-items:stretch}
+.neural-picture>span{min-width:0;min-height:0;overflow:hidden}
+.neural-picture img{object-position:left center}
+.home-postcards{display:flex;align-items:center;justify-content:center;gap:6%;width:100%;padding:12px}
+.home-postcards canvas{display:block;width:34%;max-width:100px;aspect-ratio:1;box-sizing:border-box;border:5px solid #fff;border-radius:3px;box-shadow:0 5px 12px #30352a32;image-rendering:pixelated;transform:rotate(-6deg)}
+.home-postcards canvas+canvas{transform:rotate(6deg) translateY(5%)}
+.pixel-picture:has(.home-postcards:not([hidden])){background:#e9eee4}

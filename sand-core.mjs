@@ -87,10 +87,10 @@ export function paintStroke(world,from,to,material,radius=2){
 }
 
 export function createWorld(scene='splitter'){
- if(!['splitter','hourglass','empty'].includes(scene))throw Error('Unknown scene');
+ if(!['splitter','hourglass','empty','cat-bowl'].includes(scene))throw Error('Unknown scene');
  const world={width:WIDTH,height:HEIGHT,cells:new Uint8Array(WIDTH*HEIGHT),tick:0};
  const set=(x,y,material)=>{world.cells[y*WIDTH+x]=material;};
- const line=(x1,y1,x2,y2)=>{world.cells=paintStroke(world,{x:x1,y:y1},{x:x2,y:y2},WALL,0).cells;};
+ const line=(x1,y1,x2,y2,radius=0)=>{world.cells=paintStroke(world,{x:x1,y:y1},{x:x2,y:y2},WALL,radius).cells;};
  if(scene==='splitter'){
   // A roof splits a central pour into two open catch basins.
   line(36,15,19,31);line(36,15,53,31);
@@ -102,6 +102,10 @@ export function createWorld(scene='splitter'){
   line(14,4,14,12);line(14,12,33,25);line(38,25,57,12);line(57,12,57,4);
   line(33,27,14,40);line(38,27,57,40);line(14,40,14,45);line(57,40,57,45);line(14,45,57,45);
   for(let y=5;y<12;y++)for(let x=16;x<56;x++)set(x,y,SAND);
+ }else if(scene==='cat-bowl'){
+  // An open bowl made of ordinary walls; erasing it affects the same water rules.
+  line(14,24,14,34,1);line(14,34,22,42,1);line(22,42,49,42,1);line(49,42,57,34,1);line(57,34,57,24,1);
+  for(let y=34;y<=40;y++)for(let x=26;x<=45;x++)set(x,y,WATER);
  }
  return world;
 }

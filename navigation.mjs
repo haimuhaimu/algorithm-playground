@@ -1,3 +1,4 @@
+
 /** A non-modal directory: real links still work if JavaScript is unavailable. */
 export function initNavigation(nav, media) {
  const button=nav.querySelector('.experiment-toggle');
@@ -23,6 +24,8 @@ export function initNavigation(nav, media) {
  media.addEventListener('change',()=>{open=false;render();});
  render();
 }
+
+
 if(typeof document!=='undefined'){
  for(const nav of document.querySelectorAll('.experiment-nav')){
   initNavigation(nav,matchMedia('(max-width: 760px)'));

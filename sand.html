@@ -4,10 +4,10 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="倒一把沙，放一点水，亲手改变它们的去向。一个可编辑、可单步观察的元胞自动机实验。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./sand.css?v=material-1">
- <script type="module" src="./sand.mjs?v=material-1"></script><title>算法游乐场 · 落沙实验室</title>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./sand.css?v=material-1&amp;scene=cat-bowl-v1">
+ <script type="module" src="./sand.mjs?v=material-1&amp;scene=cat-bowl-v1"></script><title>算法游乐场 · 落沙实验室</title>
  <script type="module" src="./sand-lesson-ui.mjs?v=material-1"></script>
- <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head>
 <body>
@@ -47,7 +47,7 @@
      <button data-material="0" aria-pressed="false"><i class="swatch erase"></i><strong>橡皮</strong><small>开个口</small><kbd>4</kbd></button>
     </div></div>
     <label class="brush-control" for="brush">笔刷大小 <output id="brush-size">中</output><input id="brush" type="range" min="0" max="4" value="2" aria-valuetext="中，半径 2 格"></label>
-    <div class="scene-group"><h2><span>02</span> 换个小世界</h2><div class="scene-buttons" role="group" aria-label="场景"><button data-scene="splitter" aria-pressed="true">分流器</button><button data-scene="hourglass" aria-pressed="false">沙漏</button><button data-scene="empty" aria-pressed="false">空白</button></div></div>
+    <div class="scene-group"><h2><span>02</span> 换个小世界</h2><div class="scene-buttons" role="group" aria-label="场景"><button data-scene="splitter" aria-pressed="true">分流器</button><button data-scene="hourglass" aria-pressed="false">沙漏</button><button data-scene="empty" aria-pressed="false">空白</button><button class="cat-bowl-scene" data-scene="cat-bowl" aria-pressed="false"><img src="./studio-chouchou-portrait.png" alt="" width="22" height="22" draggable="false">臭臭的水碗</button></div></div>
    </aside>
    <div class="sand-stage">
     <div class="stage-top"><span><i class="live-dot"></i> YOUR LITTLE WORLD</span><span id="tick-count">第 0 拍</span></div>

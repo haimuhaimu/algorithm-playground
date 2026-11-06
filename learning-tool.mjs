@@ -1,5 +1,5 @@
 import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs';
-import {describePixelDecode,runPixelDecode,replayPixelReceipt} from './pixel-tool.mjs?v=pixel-ai-1';
+import {describePixelDecode,runPixelDecode,replayPixelReceipt} from './pixel-tool.mjs?v=studio-postcards-v2';
 import {describeBayesTool,runBayesTool,replayBayesReceipt} from './bayes-tool.mjs?v=bayes-journey-v1';
 import {describeAgentTool,runAgentToolLoop,replayAgentToolReceipt} from './agent-tool.mjs?v=agent-tool-loop-v1';
 import {describeAgentReroute,runAgentReroute,replayAgentRerouteReceipt} from './agent-reroute-tool.mjs?v=agent-reroute-v1';

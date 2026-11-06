@@ -5,7 +5,8 @@
  <meta name="description" content="十个可以亲手玩的算法实验。从一粒沙到一个会学习的模型，把看不见的规则，变成看得见的变化。陈全的算法游乐场。">
  <meta name="color-scheme" content="light dark">
  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 8h20v20H8zM36 8h20v20H36zM8 36h20v20H8zM36 36h20v20H36z' fill='%23c22973'/%3E%3C/svg%3E">
- <link rel="stylesheet" href="./home.css?v=learning-tool-v1"><script type="module" src="./home.mjs"></script>
+ <link rel="stylesheet" href="./home.css?v=cat-lesson-preview-v1"><script type="module" src="./home.mjs?v=playground-pass-v1"></script>
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><link rel="stylesheet" href="./cat-album.css?v=cats-in-scenes-v1"><script type="module" src="./cat-album.mjs"></script>
  <title>算法游乐场 · 算法，玩着就懂了</title>
 </head>
 <body id="top">
@@ -17,31 +18,68 @@
  <main>
   <section class="showcase-hero" aria-labelledby="home-title">
    <div class="hero-copy"><p class="pixel-label">ALGORITHM PLAYGROUND</p><h1 id="home-title">算法，<br class="small-break">玩着就懂了。</h1><p class="hero-description">从一粒沙到一个会学习的模型，<br>把看不见的规则，变成看得见的变化。</p><a class="primary-link" href="#experiments">探索十个实验 <span aria-hidden="true">↓</span></a></div>
-   <figure class="hero-object" id="hero-object">
-    <div class="hero-stage"><img class="hero-fallback" src="./home-preview-pathfinding.jpg" width="523" height="385" alt="寻路实验的像素地图：起点和目标之间分布着障碍。" id="hero-fallback"><canvas id="hero-canvas" width="1200" height="570" role="img" aria-label="A* 寻路的立体像素演示：从起点探索空格，绕过白色障碍，再显示通往目标的粉色路径。" hidden>当前浏览器无法显示动态画布，可以直接进入下方实验。</canvas></div>
-    <figcaption><span><b class="demo-dot" aria-hidden="true"></b>A* 寻路演示<span class="hero-caption-detail"> · 真实算法，自动循环演示</span></span><button id="hero-motion" type="button" aria-pressed="false" hidden><span aria-hidden="true">Ⅱ</span> 暂停动画</button></figcaption>
-   </figure>
-   <a class="hero-experiment" href="./pathfinding.html#arena">这条路，换你来找 <span aria-hidden="true">↗</span></a>
+   <div class="hero-companion">
+    <figure class="hero-object" id="hero-object">
+     <div class="hero-stage"><img class="hero-fallback" src="./home-preview-pathfinding.jpg" width="523" height="385" alt="寻路实验的像素地图：起点和目标之间分布着障碍。" id="hero-fallback"><canvas id="hero-canvas" width="1200" height="570" role="img" aria-label="三猫跑图。A* 先找出粉色路线，嘿姆、波比、臭臭再依次沿着这条路线跑到终点。" hidden>当前浏览器无法显示动态画布，可以直接进入下方实验。</canvas></div>
+     <figcaption><span><b class="demo-dot" aria-hidden="true"></b>A* 寻路演示<span id="hero-cat-stage"> · 找到路，三猫再出发</span></span><button id="hero-motion" type="button" aria-pressed="false" hidden><span aria-hidden="true">Ⅱ</span> 暂停动画</button></figcaption>
+    </figure>
+    <a class="hero-experiment" href="./pathfinding.html#cat-route-lab">改一格，给三猫找近路 <span aria-hidden="true">↗</span></a>
+    <a class="cat-album-entry" href="./cat-comic-substitute.jpg" id="cat-album-entry">
+     <span class="cat-album-print" aria-hidden="true"><span class="cat-album-crop"><img src="./cat-album-cover.jpg" width="224" height="280" alt="" decoding="async"></span></span>
+     <span class="cat-album-entry-copy"><strong>三猫小相册</strong><small>玩累了，翻一篇漫画</small></span>
+     <span class="cat-album-entry-arrow" aria-hidden="true">›</span>
+    </a>
+   </div>
   </section>
-  <section class="home-learning-route" id="learning-routes" aria-labelledby="learning-route-title"><div class="learning-route-copy"><p>不知道从哪里开始？</p><h2 id="learning-route-title">AI 怎么从<br>例子里学会？</h2><p>先看一条线学会分组，再亲手改一步，<br>最后拿没见过的新题检验。</p><a id="learning-route-entry" class="primary-link" href="./learn.html">走这条学习路线 <span aria-hidden="true">→</span></a><p><a id="home-agent-mission-entry" href="./agent-mission.html#mission">Agent 实战首关：补给真的到了吗？ <span aria-hidden="true">↗</span></a></p></div><figure class="learning-route-visual"><img src="./home-preview-neural.jpg" width="608" height="378" alt="涂鸦训练场实际计算的分类区域与样本点" loading="lazy"><figcaption><span>看见规则</span><span>亲手改变</span><span>换题检验</span></figcaption></figure></section>
+  <dialog class="cat-album-dialog" id="cat-album" aria-labelledby="cat-album-title">
+   <div class="cat-album-sheet">
+    <header class="cat-album-header">
+     <div><h2 id="cat-album-title">三猫小剧场</h2><p>玩累了，翻一篇漫画。</p></div>
+     <button id="cat-album-close" class="cat-album-close" type="button" autofocus>合上 <span aria-hidden="true">×</span></button>
+    </header>
+    <div class="cat-album-nav" aria-label="翻看漫画">
+     <button id="cat-album-prev" type="button">上一篇</button>
+     <span id="cat-album-count"></span>
+     <button id="cat-album-next" type="button">下一篇</button>
+    </div>
+    <div class="cat-album-scroll" id="cat-album-scroll" tabindex="0" role="region" aria-label="漫画图文">
+     <figure class="cat-album-episode">
+      <figcaption><h3 id="cat-album-episode-title" aria-live="polite"></h3><p id="cat-album-caption"></p></figcaption>
+      <img id="cat-album-page" alt="" decoding="async">
+      <p id="cat-album-error" role="status" hidden>这张漫画没加载出来，可以翻到另一篇再看看。</p>
+     </figure>
+    </div>
+   </div>
+  </dialog>
+  <section class="home-learning-route" id="learning-routes" aria-labelledby="learning-route-title"><div class="learning-route-copy"><p>不知道从哪里开始？</p><h2 id="learning-route-title">AI 怎么从<br>例子里学会？</h2><p>先看一条线学会分组，再亲手改一步，<br>最后拿没见过的新题检验。</p><a id="learning-route-entry" class="primary-link" href="./learn.html">走这条学习路线 <span aria-hidden="true">→</span></a><p><a id="home-agent-mission-entry" href="./agent-mission.html#mission">Agent 实战首关：补给真的到了吗？ <span aria-hidden="true">↗</span></a></p><p><a id="home-distributions-entry" href="./distributions.html#observation-title">分布观察台：极端值有多常见？ <span aria-hidden="true">↗</span></a></p></div><figure class="learning-route-visual"><img src="./home-preview-neural.jpg" width="608" height="378" alt="涂鸦训练场实际计算的分类区域与样本点" loading="lazy"><figcaption><span>看见规则</span><span>亲手改变</span><span>换题检验</span></figcaption></figure></section>
   <section class="experiment-showcase" id="experiments" aria-labelledby="experiments-title">
    <div class="section-intro"><p class="pixel-label">PICK YOUR CURIOSITY</p><h2 id="experiments-title">先动手。<br>再问为什么。</h2><p>十个实验，不需要先读完一本教科书。<br>选一个感兴趣的，改变它，看看会发生什么。</p></div>
    <div class="featured-experiments">
     <a class="experiment-entry featured-entry sand-entry" href="./sand.html#grain-lab"><div class="entry-copy"><span class="entry-topic">细胞自动机</span><h3>落沙实验室</h3><p>从一粒沙的选择，<br>看见一个小世界。</p><span class="entry-action">去玩沙 <span aria-hidden="true">↗</span></span></div><div class="entry-picture sand-picture"><img src="./home-preview-sand.jpg" width="868" height="500" alt="落沙实验室的实际默认画面" loading="lazy"></div></a>
-    <a class="experiment-entry featured-entry neural-entry" href="./neural.html#first-lesson"><div class="entry-copy"><span class="entry-topic">分类与梯度下降</span><h3>涂鸦训练场</h3><p>先看一条线学会分组，<br>再拆开它怎样改变。</p><span class="entry-action">教它一次 <span aria-hidden="true">↗</span></span></div><div class="entry-picture neural-picture"><img src="./home-preview-neural.jpg" width="608" height="378" alt="涂鸦训练场自由绘画与模型分界的实际画面" loading="lazy"></div></a>
+    <a class="experiment-entry featured-entry neural-entry" href="./neural.html#cat-lesson"><div class="entry-copy"><span class="entry-topic">分类与梯度下降</span><h3>涂鸦训练场</h3><p>分出波比和臭臭，<br>试试多一个线索会怎样。</p><span class="entry-action">给猫卡贴标签 <span aria-hidden="true">↗</span></span></div><div class="entry-picture neural-picture"><span><img src="./neural-cat-07.jpg" width="320" height="320" alt="波比：短毛、大尖耳" loading="lazy" decoding="async"></span><span><img src="./neural-cat-08.jpg" width="320" height="320" alt="臭臭：白鼻梁、蓬松的白胸口" loading="lazy" decoding="async"></span></div></a>
    </div>
    <div class="experiment-grid">
-    <a class="experiment-entry recommendation-entry" href="./recommendation.html#feed-section"><div class="entry-picture recommendation-picture"><img src="./home-preview-recommendation.jpg" width="610" height="500" alt="推荐系统的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">推荐与排序</span><h3>推荐系统</h3><p>给首页排一次座位，看见谁被选中。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
-    <a class="experiment-entry pathfinding-entry" href="./pathfinding.html#arena"><div class="entry-picture pathfinding-picture"><img src="./home-preview-pathfinding.jpg" width="523" height="385" alt="寻路竞技场的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">BFS / A*</span><h3>寻路竞技场</h3><p>改一格障碍，猜猜下一步怎么走。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
-    <a class="experiment-entry firefly-entry" href="./firefly.html#comparison-title"><div class="entry-picture firefly-picture"><img src="./home-preview-firefly.jpg" width="858" height="500" alt="萤火虫合奏的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">耦合振子</span><h3>萤火虫合奏</h3><p>让两群互相听见，一起闪亮。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry recommendation-entry" href="./recommendation.html#seat-lesson"><div class="entry-picture recommendation-picture"><img src="./home-preview-recommendation.jpg" width="610" height="500" alt="推荐系统的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">推荐与排序</span><h3>推荐系统</h3><p>给首页排一次座位，看见谁被选中。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry pathfinding-entry" href="./pathfinding.html#path-lab"><div class="entry-picture pathfinding-picture"><img src="./home-preview-pathfinding.jpg" width="523" height="385" alt="寻路竞技场的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">BFS / A*</span><h3>寻路竞技场</h3><p>改一格障碍，猜猜下一步怎么走。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry firefly-entry" href="./firefly.html#listening-lesson"><div class="entry-picture firefly-picture"><img src="./home-preview-firefly.jpg" width="858" height="500" alt="萤火虫合奏的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">耦合振子</span><h3>萤火虫合奏</h3><p>让两群互相听见，一起闪亮。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
     <a class="experiment-entry evolution-entry" href="./evolution.html#roadblock-lab"><div class="entry-picture evolution-picture"><img src="./home-preview-evolution.jpg" width="862" height="460" alt="遗传赛车的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">遗传算法</span><h3>遗传赛车</h3><p>旧冠军遇上新路障，后代能赢吗？</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
-    <a class="experiment-entry mining-entry" href="./mining.html#shared-title"><div class="entry-picture mining-picture"><img src="./home-preview-mining.jpg" width="1150" height="377" alt="盲盒探矿的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">探索与利用</span><h3>盲盒探矿</h3><p>同一份线索，你会飞向哪颗星球？</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
-    <a class="experiment-entry pixel-entry" href="./pixel.html#editor"><div class="entry-picture pixel-picture"><img src="./home-preview-pixel.jpg" width="398" height="398" alt="像素邮局的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">编码与压缩</span><h3>像素邮局</h3><p>把一张画寄成暗号，再亲手还原。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry mining-entry" href="./mining.html#mining-flight"><div class="entry-picture mining-picture"><img src="./home-preview-mining.jpg" width="1150" height="377" alt="盲盒探矿的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">探索与利用</span><h3>盲盒探矿</h3><p>三猫已经登船。下一趟，你想飞哪颗星球？</p><span class="entry-action">选星球出发 <span aria-hidden="true">↗</span></span></div></a>
+    <a class="experiment-entry pixel-entry" href="./pixel.html#editor"><div class="entry-picture pixel-picture"><img src="./home-preview-pixel.jpg" width="398" height="398" alt="" loading="lazy"><div class="home-postcards" hidden aria-hidden="true"><canvas data-postcard="heim" width="16" height="16"></canvas><canvas data-postcard="bobby" width="16" height="16"></canvas></div></div><div class="entry-copy"><span class="entry-topic">编码与压缩</span><h3>像素邮局</h3><p>选一张三猫明信片，寄成暗号，再一格不差地还原。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
     <a class="experiment-entry world-model-entry" href="./world-model.html#flight-guide"><div class="entry-picture world-model-picture"><img src="./home-preview-world-model.jpg" width="794" height="340" alt="脑内预演室的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">世界模型</span><h3>脑内预演室</h3><p>飞过一次，再看它学到了什么。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
     <a class="experiment-entry rsi-entry" href="./rsi.html#workshop"><div class="entry-picture rsi-picture"><img src="./home-preview-rsi.jpg" width="270" height="310" alt="AI 创作室的实际默认画面" loading="lazy"></div><div class="entry-copy"><span class="entry-topic">自我改进的简化模拟</span><h3>AI 创作室</h3><p>修好一张图，再改变下一次的做法。</p><span class="entry-action">进入实验 <span aria-hidden="true">↗</span></span></div></a>
    </div>
   </section>
-  <section class="home-about" id="about" aria-labelledby="about-title"><p class="pixel-label">LEARNING BY MAKING</p><h2 id="about-title">我怎样学算法，<br>你也来试试。</h2><p>我是陈全。我学分类时，先看点和分界，再理解规则怎样改变。<br>算法游乐场把这个过程做成实验；GenAI Learning OS 把概念和学习路径串起来。</p><p class="honest-note">先从一条线学会分组，再拆开一次梯度更新，最后回到 GenAI OS 读公式。全部实验使用简化模型或合成数据，不代表完整前沿模型能力，也没有把“玩过”当成“掌握”。</p><a href="./neural.html#first-lesson">走一遍这条学习路线 <span aria-hidden="true">↗</span></a></section>
+  <section class="home-about" id="about" aria-labelledby="about-title">
+   <p class="pixel-label">LEARNING BY MAKING</p><h2 id="about-title">我怎样学算法，<br>你也来试试。</h2><p>我是陈全。我学分类时，先看点和分界，再理解规则怎样改变。<br>算法游乐场把这个过程做成实验；GenAI Learning OS 把概念和学习路径串起来。</p><p class="honest-note">先从一条线学会分组，再拆开一次梯度更新，最后回到 GenAI OS 读公式。全部实验使用简化模型或合成数据，不代表完整前沿模型能力，也没有把“玩过”当成“掌握”。</p><a href="./learn.html">走一遍这条学习路线 <span aria-hidden="true">↗</span></a>
+   <div class="cat-cast">
+    <h3>认识三猫</h3>
+    <ul class="cat-cast-list">
+     <li><img src="./studio-heim-portrait.png" width="80" height="80" alt="" loading="lazy" decoding="async"><span><strong>嘿姆</strong>｜贪心队长</span></li>
+     <li><img src="./studio-bobby-portrait.png" width="80" height="80" alt="" loading="lazy" decoding="async"><span><strong>波比</strong>｜回归探员</span></li>
+     <li><img src="./studio-chouchou-portrait.png" width="80" height="80" alt="" loading="lazy" decoding="async"><span><strong>臭臭</strong>｜递归参谋</span></li>
+    </ul>
+   </div>
+  </section>
  </main>
  <footer class="home-footer"><a class="home-brand" href="#top"><span class="pixel-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>算法游乐场</span></a><span>MADE BY CHEN QUAN</span><a href="#experiments">全部十个实验 ↑</a></footer>
  <noscript><p class="no-script">动态演示需要 JavaScript。上方十个入口仍可打开；各个互动实验需要启用 JavaScript。旧推荐系统链接可直接前往 <a href="./recommendation.html">推荐系统</a>。</p></noscript>

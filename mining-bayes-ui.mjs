@@ -1,6 +1,6 @@
-import {createBayesLesson,actBayesLesson,bayesLessonEvidence} from './mining-bayes.mjs?v=bayes-journey-v1';
-import {runBayesTool} from './bayes-tool.mjs?v=bayes-journey-v1';
-import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=bayes-journey-v1';
+import {createBayesLesson,actBayesLesson,bayesLessonEvidence} from './mining-bayes.mjs?v=station-cat-v1';
+import {runBayesTool} from './bayes-tool.mjs?v=station-cat-v1';
+import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=station-cat-v1';
 
 const percent=value=>(value*100).toFixed(1)+'%';
 const interval=belief=>`真实成功率的 90% 可信区间：${percent(belief.interval[0])}–${percent(belief.interval[1])}`;
@@ -20,7 +20,7 @@ function chart(series){
 export function initBayesLesson({onEnter=()=>{}}={}){
  const doc=document,win=window,$=id=>doc.getElementById(id);
  let state=createBayesLesson(),opened=false,journal=[],exportGeneration=0;
- const candidateHandoff=readGenaiHandoffContext(win.location),handoff=candidateHandoff?.journeyId==='bayes-learning'?candidateHandoff:null;
+ const handoff=readGenaiHandoffContext(win.location,'bayes-learning');
  const available=()=>opened&&!doc.hidden&&!$('guide').open;
  const focus=id=>{$(id).focus({preventScroll:true});$(id).scrollIntoView({block:'start',behavior:'instant'});};
  function render(){
@@ -79,7 +79,7 @@ export function initBayesLesson({onEnter=()=>{}}={}){
  });
  $('bayes-genai-send').addEventListener('click',()=>{
   if(!available()||state.phase!=='done'||!handoff)return;
-  try{const current=readGenaiHandoffContext(win.location);if(!current||current.journeyId!==handoff.journeyId||current.requestId!==handoff.requestId||current.returnURL!==handoff.returnURL)throw Error('Return context changed');win.location.assign(createGenaiReturnUrl(handoff,runBayesTool(journal,{producer:'browser-session'})));}
+  try{win.location.assign(createGenaiReturnUrl(handoff,runBayesTool(journal,{producer:'browser-session'}),win.location));}
   catch{$('bayes-genai-status').textContent='暂时无法带回，当前结果仍保留。可生成下方实验记录，再回到 GenAI OS 手动粘贴；没有自动发送或改写草稿。';}
  });
  $('bayes-start').addEventListener('click',open);

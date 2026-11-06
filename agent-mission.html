@@ -4,8 +4,9 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="算法游乐场 Agent 实战首关：对照两轮操作，分清工具回执和任务完成。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./home.css?v=home-learning-v2"><link rel="stylesheet" href="./agent-mission.css?v=agent-tool-loop-v1">
- <script type="module" src="./agent-mission.mjs?v=agent-tool-loop-v1"></script>
+ <link rel="stylesheet" href="./home.css?v=home-learning-v2"><link rel="stylesheet" href="./agent-mission.css?v=signing-desk-v1">
+ <script type="module" src="./agent-mission.mjs?v=handoff-trust-v1"></script>
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <title>显示成功，补给真的到了吗？ · 算法游乐场</title>
 </head>
 <body>
@@ -51,10 +52,15 @@
      <path class="scene-station" d="M470 85V43l23-12 28 14v42l-27 13z"/>
      <path class="scene-station-side" d="M494 100V58l27-13v42z"/>
      <path class="scene-station-top" d="M470 43l23-12 28 14-27 13z"/>
-     <path class="scene-station-window" d="M477 56l11 6v13l-11-6z"/>
+     <g class="scene-signing-desk">
+      <path class="scene-station-top" d="M437 31l12-8h47l-9 8z"/>
+      <rect class="scene-station-window" x="437" y="31" width="50" height="53"/>
+      <image href="./studio-bobby-portrait.png" x="439" y="33" width="46" height="46"/>
+      <path class="scene-desk-counter" d="M435 77h54v7h-54z"/>
+     </g>
      <g class="scene-confirmed"><use href="#supply-box" x="421" y="77"/><path d="M511 74l8 8 15-16" class="scene-check"/></g>
     </svg>
-    <figcaption><span>07 号站 · 签收台</span><strong id="mission-scene-caption">等待签收证据</strong></figcaption>
+    <figcaption><span>07 号站 · 波比的签收台</span><strong id="mission-scene-caption">等待签收证据</strong></figcaption>
    </figure>
    <section class="mission-console" aria-labelledby="mission-current">
     <header class="mission-console-head"><h2 id="mission-current" tabindex="-1">第 1 轮</h2><p>剩余工具机会 <strong id="mission-budget">3 / 3</strong></p></header>

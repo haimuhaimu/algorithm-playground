@@ -1,5 +1,5 @@
-import {TAU,createSwarm,stepSwarm,coherence,configureSwarm,perturbSwarm,measureGroups,createListening,advanceListening,chooseListening,listeningOutcome,answerListening} from './firefly-core.mjs?v=one-beat-1';
-import {mountBeatLesson} from './firefly-beat-ui.mjs?v=one-beat-1';
+import {TAU,createSwarm,stepSwarm,coherence,configureSwarm,perturbSwarm,measureGroups,createListening,advanceListening,chooseListening,listeningOutcome,answerListening} from './firefly-core.mjs?v=cat-beat-v1';
+import {mountBeatLesson} from './firefly-beat-ui.mjs?v=cat-beat-v1&entry=bobby-tap';
 
 const $=id=>document.getElementById(id),field=$('fireflies'),ctx=field.getContext('2d');
 const clock=$('phase-clock').getContext('2d'),chart=$('history').getContext('2d');

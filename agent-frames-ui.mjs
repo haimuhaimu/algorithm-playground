@@ -1,5 +1,5 @@
 import {AGENT_FRAME_CLIP, runAgentFrames} from './agent-frames-tool.mjs?v=agent-frames-v1';
-import {createGenaiReturnUrl, readGenaiHandoffContext} from './genai-handoff.mjs?v=agent-frames-v1';
+import {createGenaiReturnUrl, readGenaiHandoffContext} from './genai-handoff.mjs?v=handoff-trust-v1';
 
 const SOURCE = {producer: 'browser-session'};
 const SCENE = {
@@ -66,8 +66,8 @@ export function mountAgentFrames({document, window}) {
  const set = (name, text) => { if (e(name).textContent !== text) e(name).textContent = text; };
  const show = (name, visible) => { e(name).hidden = !visible; };
  const focus = name => e(name).focus({preventScroll: false});
- const handoff = readGenaiHandoffContext(window.location);
- const canReturn = handoff?.journeyId === 'agent-frames';
+ const handoff = readGenaiHandoffContext(window.location, 'agent-frames');
+ const canReturn = Boolean(handoff);
  let run = runAgentFrames([], SOURCE), baseline = null, playing = false, timeout = null, generation = 0;
  let inspected = null, comparison = null, retryNotice = false;
 
@@ -234,9 +234,7 @@ export function mountAgentFrames({document, window}) {
  e('return').addEventListener('click', () => {
   if (!completed() || !canReturn) return;
   try {
-   const current = readGenaiHandoffContext(window.location);
-   if (current?.requestId !== handoff.requestId || current.returnURL !== handoff.returnURL || current.journeyId !== handoff.journeyId) throw Error('Return context changed');
-   window.location.assign(createGenaiReturnUrl(handoff, run));
+   window.location.assign(createGenaiReturnUrl(handoff, run, window.location));
   } catch {
    show('os-fallback', true);
    set('share-status', '暂时无法自动带回。可以生成 JSON，再手动导入。');

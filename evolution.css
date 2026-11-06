@@ -76,3 +76,9 @@
 @media(max-width:760px){.race-lessons{gap:4px}.adapt-entry{margin-top:0}.adapt-lab{padding:18px 14px;margin-top:0}.adapt-header{display:block}.adapt-header h2{font-size:22px}.adapt-header button{width:100%;margin-top:16px}.adapt-cards{grid-template-columns:minmax(0,1fr);gap:12px}.adapt-card{padding:14px}.adapt-card canvas{max-height:240px}.adapt-card h3{font-size:16px}.adapt-checkpoint{display:block}.adapt-checkpoint span{display:block;margin-top:4px}.adapt-card>p:last-child,.adapt-legend,.adapt-boundary{font-size:11px}.adapt-explanation p{font-size:13px}.adapt-actions{gap:6px 14px}.adapt-actions button{width:100%}.adapt-actions>span{width:100%}}
 @media(max-height:520px) and (min-width:761px){.adapt-lab{padding:18px}.adapt-header h2{font-size:21px}.adapt-cards{gap:8px}.adapt-card{padding:10px}.adapt-card h3{font-size:13px}.adapt-card strong{font-size:13px}}
 @media(max-width:760px) and (min-height:521px){.birth-header{position:sticky;top:-16px;z-index:3;background:var(--paper);padding:8px 0}.birth-header h2{font-size:18px}.birth-workbench{display:grid;grid-template-columns:minmax(0,1fr);gap:0}.birth-visual,.birth-detail-controls{display:contents}#birth-scene{position:sticky;top:58px;z-index:2;background:var(--paper)}.birth-story{margin-top:18px;grid-column:auto;grid-row:auto}}
+
+.race-timeline{align-items:center}
+.race-timekeeper{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.race-timekeeper img{width:26px;height:26px;border-radius:4px}
+.race-timekeeper #race-clock{padding-inline-start:7px;border-inline-start:1px solid var(--line);color:var(--ink);font-variant-numeric:tabular-nums}
+@media(max-width:420px){.race-timekeeper{gap:5px}.race-timekeeper img{width:22px;height:22px}.race-timekeeper #race-clock{padding-inline-start:5px}}

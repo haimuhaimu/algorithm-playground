@@ -3,9 +3,9 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="30 次探测，5 颗未知星球。继续挖刚才赚到的，还是去试没挖过的？亲手体验多臂老虎机的探索与利用。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=bayes-journey-v1"><link rel="stylesheet" href="./mining-bayes.css?v=bayes-journey-v1">
- <script type="module" src="./mining.mjs?v=bayes-journey-v1"></script><title>算法游乐场 · 盲盒探矿</title>
- <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=station-cat-v1&amp;art=crew-flight-v1"><link rel="stylesheet" href="./mining-bayes.css?v=station-cat-v1">
+ <script type="module" src="./mining.mjs?v=station-cat-v1"></script><title>算法游乐场 · 盲盒探矿</title>
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head><body>
  <a class="skip-link" href="#shared-title">跳到同线索挑战</a>
@@ -91,7 +91,7 @@
    </section>
    <p class="shared-caption">固定案例 · 星域 265 · 原始记录可复现。实测比例不等于真实产矿概率；本挑战独立于下面的自由探索，不计入它的次数和成绩。</p>
   </section>
-  <section class="mission" aria-label="盲盒探矿游戏">
+  <section class="mission" id="mining-flight" aria-label="盲盒探矿游戏">
    <div class="mission-bar"><div class="mission-count"><span>剩余探测</span><strong id="remaining">30</strong><small>/ 30</small></div><div class="mineral-count"><span class="ore-icon" aria-hidden="true"></span><span>已获矿石</span><strong id="minerals">0</strong></div><span class="board-hint">点一颗星球，派出探测器</span></div>
    <div class="starfield" id="starfield">
     <div class="orbit orbit-one" aria-hidden="true"></div><div class="orbit orbit-two" aria-hidden="true"></div><div class="orbit orbit-three" aria-hidden="true"></div>
@@ -103,11 +103,35 @@
      <button class="planet planet-3" id="planet-3" aria-describedby="sample-3 truth-3"><span class="planet-body" aria-hidden="true"><i></i></span><span class="planet-name"><kbd>4</kbd>雾蓝</span><span class="planet-sample" id="sample-3">未探测</span><span class="planet-truth" id="truth-3">产量未知</span></button>
      <button class="planet planet-4" id="planet-4" aria-describedby="sample-4 truth-4"><span class="planet-body" aria-hidden="true"><i></i></span><span class="planet-name"><kbd>5</kbd>月白</span><span class="planet-sample" id="sample-4">未探测</span><span class="planet-truth" id="truth-4">产量未知</span></button>
     </div>
-    <div class="launchpad" id="launchpad" aria-hidden="true"><span>⌁</span><small>探测站</small></div>
-    <div class="probe" id="probe" hidden aria-hidden="true"><svg viewBox="0 0 32 44" width="28" height="38"><path d="M16 2 Q3 14 8 30 L24 30 Q29 14 16 2Z" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.8"/><circle cx="16" cy="16" r="4" fill="var(--accent)" stroke="var(--ink)" stroke-width="1.5"/><path d="M8 23 L3 33 L10 31 M24 23 L29 33 L22 31" fill="var(--ink)"/><path d="M12 33 L16 42 L20 33" fill="var(--accent)" stroke="var(--ink)" stroke-width="1.5"/></svg></div>
+    <div class="launchpad" id="launchpad">
+     <span class="crew-cradle">
+      <svg class="crew-dock" viewBox="0 0 148 48" width="148" height="48" role="img" aria-label="嘿姆、波比和臭臭坐在探矿飞船里">
+       <defs>
+        <g id="mining-crew-ship" stroke-linejoin="round">
+         <path d="M34 13H22L12 4h16l14 9m-8 22H22l-10 9h16l14-9M24 18H9v12h15" fill="var(--accent)" stroke="var(--ink)" stroke-width="1.5"/>
+         <path d="M17 15h10V9h91v3h10v4h9v4h7v8h-7v4h-9v4h-10v3H27v-6H17Z" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.6"/>
+         <path d="M18 25h20m82 0h23M27 35h91" fill="none" stroke="var(--good)" stroke-width="2"/>
+         <path d="M37 12h84v23H37z" fill="#282a32"/>
+         <image href="./studio-bobby-portrait.png" x="38" y="12" width="22" height="22"/>
+         <image href="./studio-chouchou-portrait.png" x="68" y="12" width="22" height="22"/>
+         <image href="./studio-heim-portrait.png" x="98" y="12" width="22" height="22"/>
+         <path d="M37 12h84v23H37zM63 12v23m30-23v23" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+         <path d="M128 20h7" stroke="var(--good)" stroke-width="2"/>
+        </g>
+       </defs>
+       <path d="M33 45h82m-69-4v4m54-4v4" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
+       <use class="docked-crew-ship" href="#mining-crew-ship"/>
+      </svg>
+     </span>
+     <small>探测站</small>
+    </div>
+    <div class="probe" id="probe" hidden aria-hidden="true">
+     <svg viewBox="0 0 48 148" width="20" height="62"><use href="#mining-crew-ship" transform="translate(0 148) rotate(-90)"/></svg>
+    </div>
    </div>
    <div class="mission-feedback"><span class="status-dot" aria-hidden="true"></span><p id="status" role="status">这里没有地图。第一趟，凭直觉选就好。</p><a id="view-results" class="view-results" href="#results-title" hidden>看看算法的选择 ↓</a></div>
    <div class="flight-history"><div><span>你的航行记录</span><small>◆ 有收获 · · 空手归</small></div><ol id="history" aria-label="已完成的探测记录"></ol></div>
+   <a class="mining-lesson-return" href="#shared-title">回到同线索挑战 ↑</a>
   </section>
   <div class="mission-actions" id="mission-actions"><p>每趟消耗 1 次机会。先用 Tab 聚焦这里的星球，再按 <kbd>1</kbd>–<kbd>5</kbd> 也能出发。<br><span>不是越漂亮越富矿，星球外观与产量无关。</span></p><div><button id="replay">重玩这局</button><button id="new" class="new-region">换片星域 ↗</button></div></div>
   <section class="mining-results" id="results" hidden aria-labelledby="results-title">

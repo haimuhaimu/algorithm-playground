@@ -1,10 +1,12 @@
-import {encode,preset} from './pixel-core.mjs?v=recipient-1';
+import {encode,preset,EDITOR_POSTCARD_PRESETS} from './pixel-core.mjs?v=studio-postcards-v2';
 import {createDelivery,deliveryAt} from './pixel-delivery.mjs?v=delivery-1';
 
-const PRESETS=['cat','heart','noise','blank'];
+const LEGACY_PRESETS=['chouchou','cat'];
+const PRESETS=[...EDITOR_POSTCARD_PRESETS,...LEGACY_PRESETS];
 const MODES=['delivery','slow-replay'];
 const GENAI=[{concept:'熵与信息量',url:'https://haimuhaimu.github.io/genai-learning-os/?page=strategy-case&case=entropy-kl-tradeoff'}];
-const BOUNDARIES=[
+// Earlier receipts include these exact strings in their replay contract.
+const HISTORICAL_BOUNDARIES=[
  '只运行四个固定内置图案，不读取或导出自由画纸、草稿、浏览器存储。',
  'seek 是明确的快进/回退位置，不证明中间的位被逐位阅读；slow-replay 的初始前缀也被快进。',
  '这是正常字节解析器的同一轨迹，不是 PNG/JPEG 文件大小或网络传输、算法性能基准。',
@@ -12,6 +14,19 @@ const BOUNDARIES=[
  '完成、猜测和掌握不同；producer 只标记渠道，不认证身份，不导入 GenAI OS 进度。',
  '记录仅在主动生成时产生；没有自动上传或复制。交给外部 AI 后，记录离开本页。'
 ];
+const CHOUCHOU_BOUNDARIES=[
+ '只运行编辑器的四个固定图案，以及为兼容旧收据保留的旧版小猫。不读取或导出自由画纸、草稿、浏览器存储。',
+ ...HISTORICAL_BOUNDARIES.slice(1)
+];
+const STUDIO_V1_BOUNDARIES=[
+ '只运行编辑器的五个固定图案，以及为兼容旧收据保留的两张旧版猫图。不读取或导出自由画纸、草稿、浏览器存储。',
+ ...HISTORICAL_BOUNDARIES.slice(1)
+];
+const CURRENT_BOUNDARIES=[
+ '只运行编辑器的六个固定图案，以及为兼容旧收据保留的两张旧版猫图。不读取或导出自由画纸、草稿、浏览器存储。',
+ ...HISTORICAL_BOUNDARIES.slice(1)
+];
+const BOUNDARIES_BY_PRESET={heim:STUDIO_V1_BOUNDARIES,bobby:STUDIO_V1_BOUNDARIES,chouchou:CHOUCHOU_BOUNDARIES,'chouchou-studio':CURRENT_BOUNDARIES};
 const clone=x=>structuredClone(x);
 function keys(value,allowed,name){
  if(!value||typeof value!=='object'||Array.isArray(value)||![Object.prototype,null].includes(Object.getPrototypeOf(value)))throw Error('Invalid '+name);
@@ -30,8 +45,9 @@ export function describePixelDecode(){
  return clone({id:'pixel-decode',title:'像素邮局：真实解码轨迹',engineVersion:'pixel-decode-v1',numericFormat:'integer-bits',
   url:'https://haimuhaimu.github.io/algorithm-playground/pixel.html#pixel-delivery-entry',execution:'local-cli-or-library',operations:['list','describe','run','replay'],maxActions:600,inputLimitBytes:65536,
   input:{preset:PRESETS,mode:MODES,defaultMode:'delivery',actions:{read:{value:'integer 1..528; capped at remaining bits'},seek:{value:'integer 0..528; rejected if beyond this packet'},reset:{value:'omit'}}},
+  presetGroups:{editor:EDITOR_POSTCARD_PRESETS,legacy:LEGACY_PRESETS},
   steps:{format:['status','sentBits','decodedCount','reason?'],statuses:['applied','no-op','rejected']},
-  boundaries:BOUNDARIES,genai:GENAI,identity:'channel-only; not authenticated',mastery:'not-assessed'});
+  boundaries:CURRENT_BOUNDARIES,genai:GENAI,identity:'channel-only; not authenticated',mastery:'not-assessed'});
 }
 export function runPixelDecode(request,options={}){
  keys(request,['preset','mode','actions'],'pixel request');keys(options,['producer'],'options');
@@ -72,7 +88,7 @@ export function runPixelDecode(request,options={}){
     decodedEntries:trace.entries.slice(0,state.decoded).map(e=>({...e})),packetBytes:encoded.packet.length,totalBits:trace.bits.length,
     treeBits:trace.treeBits,payloadEnd:trace.payloadEnd,payloadBits:encoded.payloadBits,paddingBits:encoded.paddingBits,codes:[...encoded.codes]},
    availableActions:[{action:'read',min:1,max:528},{action:'seek',min:0,max:trace.bits.length},{action:'reset'}]},
-  boundaries:clone(BOUNDARIES),genai:clone(GENAI)};
+  boundaries:clone(BOUNDARIES_BY_PRESET[name]??HISTORICAL_BOUNDARIES),genai:clone(GENAI)};
  if(new TextEncoder().encode(JSON.stringify(receipt)).length>65536)throw Error('Receipt exceeds 64 KiB replay limit');
  return receipt;
 }

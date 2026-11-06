@@ -7,11 +7,14 @@
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./neural.css">
  <link rel="stylesheet" href="./neural-lesson.css"><script type="module" src="./neural-lesson-ui.mjs?v=neural-learning-20261026"></script>
  <script type="module" src="./neural.mjs?v=neural-learning-20261026"></script><title>算法游乐场 · 涂鸦训练场</title>
- <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./neural-guide.css"><script type="module" src="./neural-guide-ui.mjs"></script>
  <script type="module" src="./neural-gradient-ui.mjs"></script>
  <link rel="stylesheet" href="./neural-residual.css"><script type="module" src="./neural-residual-ui.mjs"></script>
  <link rel="stylesheet" href="./neural-generalization.css"><script type="module" src="./neural-generalization-ui.mjs"></script>
+ <link rel="stylesheet" href="./neural-cat-lesson.css"><script type="module" src="./neural-cat-lesson-ui.mjs"></script>
+ <script type="module" src="./neural-cat-coach-ui.mjs"></script>
+ <script type="module" src="./neural-cat-quick-ui.mjs"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head>
 <body>
@@ -39,6 +42,234 @@
    <details class="guide-math"><summary>想知道算法怎样改线？展开看（可跳过）</summary><p id="guide-math"></p></details>
    <footer class="guide-footer"><p>这轮学的是按位置分组，不是识别图案。自由涂鸦和神经网络保留在下面。</p><button id="guide-open-free" type="button">进入自由涂鸦 · 草稿保留 ↓</button></footer>
   </section>
+  <details class="neural-guide" id="cat-lesson" aria-labelledby="cat-lesson-title">
+   <summary><span><strong id="cat-lesson-title">分出波比和臭臭</strong><small>三猫工作室 · 模型叫错了名字，你来教它</small></span><span class="cat-disclosure" aria-hidden="true"></span></summary>
+   <p id="cat-unavailable">这道猫咪小题需要 JavaScript。上面的原入门题和下面的自由涂鸦入口不变。</p>
+   <div id="cat-quick" hidden>
+    <div class="cat-quick-bar">
+     <p id="cat-quick-step">1 / 2 · 教它一次</p>
+     <button id="cat-quick-reset" type="button" hidden>重来</button>
+    </div>
+    <section id="cat-quick-teach" aria-labelledby="cat-quick-teach-title">
+     <div class="cat-quick-teach-grid">
+      <figure class="cat-quick-card"><img id="cat-quick-image-03" width="320" height="320" alt="一只蓝眼猫伏在织垫上，有白鼻梁和蓬松白胸口。" loading="lazy"><figcaption>三猫工作室原画</figcaption></figure>
+      <div class="cat-quick-task">
+       <h2 id="cat-quick-teach-title" tabindex="-1">这张猫卡，你会贴谁？</h2>
+       <p class="cat-quick-before">模型原先判成<strong id="cat-quick-before"></strong>。</p>
+       <div class="cat-quick-actions" role="group" aria-label="给这张练习卡贴标签">
+        <button id="cat-quick-tag-chouchou" type="button" aria-pressed="false">贴臭臭</button><button id="cat-quick-tag-bobby" type="button" aria-pressed="false">贴波比</button>
+       </div>
+       <p class="cat-quick-muted">臭臭有蓬松的白胸口，波比是短毛、大耳朵。</p>
+       <p class="cat-quick-muted">原画供你认猫。模型只看手填的演示特征，不会直接识别照片。</p>
+      </div>
+     </div>
+     <p id="cat-quick-feedback" class="cat-quick-feedback" hidden></p>
+     <button id="cat-quick-next" class="guide-primary cat-quick-next" type="button" hidden>拿两张新卡考它</button>
+    </section>
+    <section id="cat-quick-test" aria-labelledby="cat-quick-test-title" hidden>
+     <h2 id="cat-quick-test-title" tabindex="-1">考两张没见过的卡</h2>
+     <p id="cat-quick-test-hint" class="cat-quick-muted cat-quick-test-hint"></p>
+     <button id="cat-quick-clue-toggle" type="button" aria-pressed="false">+ 加上蓬松度</button>
+     <div class="cat-quick-pair">
+      <figure class="cat-quick-card"><img id="cat-quick-image-07" width="320" height="320" alt="一只短毛猫伸出前爪，竖着两只大尖耳。" loading="lazy"><figcaption><strong>这是波比</strong><span id="cat-quick-input-07" class="cat-quick-chip"></span><span id="cat-quick-fluff-07" class="cat-quick-chip cat-quick-added" hidden></span><span id="cat-quick-call-07" class="cat-quick-call"></span></figcaption></figure>
+      <figure class="cat-quick-card"><img id="cat-quick-image-08" width="320" height="320" alt="一只蓝眼猫侧身站着，有蓬松的白毛和深色尾巴。" loading="lazy"><figcaption><strong>这是臭臭</strong><span id="cat-quick-input-08" class="cat-quick-chip"></span><span id="cat-quick-fluff-08" class="cat-quick-chip cat-quick-added" hidden></span><span id="cat-quick-call-08" class="cat-quick-call"></span></figcaption></figure>
+     </div>
+     <p id="cat-quick-note" class="cat-quick-feedback"></p>
+     <button id="cat-quick-back" type="button">返回贴标签</button>
+    </section>
+    <p class="cat-quick-muted"><a href="#first-lesson">玩原来的圆方分类</a> · <a href="#field">去自由涂鸦</a></p>
+    <p class="cat-quick-muted cat-quick-data">你看图，模型只看手填分数。18 张练习卡里，你只贴这一张。</p>
+    <p id="cat-quick-status" class="sr-only" role="status" aria-atomic="true"></p>
+   </div>
+   <details id="cat-coach-details" class="cat-coach-practice">
+    <summary>进阶：重做完整实验，看分界图</summary>
+   <section id="cat-coach" aria-labelledby="cat-coach-title" hidden>
+    <div class="cat-coach-act">
+     <header class="cat-coach-head"><p class="cat-coach-kicker">第一回 · 教它认一只猫</p><button id="cat-coach-reset" type="button">重来</button></header>
+     <div class="cat-coach-lead">
+      <figure class="cat-coach-art"><img id="cat-coach-first-image" width="320" height="320" alt="一只猫趴在织垫上，露出两只白爪，蓝眼睛之间有一道白鼻梁。" loading="lazy"><figcaption>三猫工作室原画</figcaption></figure>
+      <div class="cat-coach-choice">
+       <h2 id="cat-coach-title">它叫错名字了。</h2>
+       <p class="cat-coach-quote">模型原先说：「<strong id="cat-coach-before"></strong>」</p>
+       <p class="cat-coach-muted">波比耳朵大、毛短；臭臭有白鼻梁和蓬松白胸口。</p>
+       <div class="cat-coach-actions" role="group" aria-label="给这张猫卡贴名字">
+        <button id="cat-coach-label-chouchou" type="button" aria-pressed="false">贴「臭臭」</button><button id="cat-coach-label-bobby" type="button" aria-pressed="false">贴「波比」</button>
+       </div>
+       <p class="cat-coach-muted">其他卡已贴好，这张由你教。你看原画，模型只看手填的脸颊和耳尖分数。</p>
+      </div>
+     </div>
+     <p id="cat-coach-status" class="sr-only" role="status"></p>
+     <div class="cat-coach-first-result" id="cat-coach-first-result" hidden>
+      <strong id="cat-coach-first-outcome"></strong>
+      <p id="cat-coach-first-note"></p>
+     </div>
+     <p id="cat-coach-try-other" class="cat-coach-muted cat-coach-after" hidden>想看贴反会怎样？换一个标签，其他卡和训练起点不变。</p>
+     <div id="cat-coach-tag-comparison" class="cat-coach-tag-comparison" aria-label="同一起点，两种贴法" hidden>
+      <p id="cat-coach-tag-chouchou"></p><p id="cat-coach-tag-bobby"></p>
+     </div>
+     <section id="cat-coach-population" aria-labelledby="cat-coach-population-title" hidden>
+      <header class="cat-coach-population-head">
+       <div><h3 id="cat-coach-population-title">把整群猫放到图上</h3><p class="cat-coach-muted">一张原画卡就是一个点。贴标签不会挪动它，训练会改分界线。</p></div>
+       <div class="cat-coach-actions cat-coach-sizes" role="group" aria-label="选择参与训练的样本数量">
+        <button id="cat-coach-size-6" type="button" aria-pressed="false">6 张卡</button><button id="cat-coach-size-18" type="button" aria-pressed="true">18 张卡</button>
+       </div>
+      </header>
+      <div class="cat-coach-population-layout">
+       <figure class="cat-map cat-coach-map">
+        <svg id="cat-coach-population-plot" viewBox="0 0 408 253" role="img" aria-label="横轴是脸颊圆润度，纵轴是耳尖突出度。圆点贴波比，方块贴臭臭。虚线是训练前分界，实线是训练后分界。" xmlns="http://www.w3.org/2000/svg">
+         <rect class="cat-grid-paper" x="48" y="14" width="336" height="200" rx="6"></rect>
+         <polygon class="cat-plot-region cat-plot-bobby" id="cat-coach-region-bobby"></polygon>
+         <polygon class="cat-plot-region cat-plot-chouchou" id="cat-coach-region-chouchou"></polygon>
+         <path class="cat-grid-lines" d="M48 14V214H384 M48 114H384 M216 14V214" fill="none"></path>
+         <g class="cat-axis-text"><text x="48" y="229" text-anchor="middle">0</text><text x="216" y="229" text-anchor="middle">5</text><text x="384" y="229" text-anchor="middle">10</text><text x="36" y="218" text-anchor="end">0</text><text x="36" y="118" text-anchor="end">5</text><text x="36" y="18" text-anchor="end">10</text><text x="216" y="247" text-anchor="middle">脸颊圆润度</text><text x="-113" y="13" text-anchor="middle" transform="rotate(-90)">耳尖突出度</text></g>
+         <line class="cat-plot-before" id="cat-coach-boundary-before"></line>
+         <line class="cat-plot-after" id="cat-coach-boundary-after"></line>
+         <g id="cat-coach-population-points"></g>
+        </svg>
+        <figcaption class="cat-coach-map-key"><span><i class="cat-key-dot" aria-hidden="true"></i>贴波比</span><span><i class="cat-key-square" aria-hidden="true"></i>贴臭臭</span><span>虚线：原来 · 实线：学完</span><span>实圈：你贴的卡</span><span id="cat-coach-mismatch-key" hidden>虚圈：判得和标签不同</span></figcaption>
+       </figure>
+       <div class="cat-coach-population-info">
+        <p id="cat-coach-population-score"></p>
+        <p class="cat-coach-muted">图上只看脸颊和耳尖。切换卡数时，从同一个起点训练 120 步，你贴的标签不变。</p>
+        <label class="cat-coach-picker" for="cat-coach-sample">查看图中的训练卡<select id="cat-coach-sample"></select></label>
+        <div class="cat-coach-sample-preview">
+         <img id="cat-coach-sample-image" width="76" height="76" alt="" loading="lazy">
+         <div><strong id="cat-coach-sample-name"></strong><p id="cat-coach-sample-features"></p><p id="cat-coach-sample-reading"></p></div>
+        </div>
+       </div>
+      </div>
+     </section>
+     <button id="cat-coach-next" class="guide-primary cat-coach-after" type="button" hidden>拿两张新卡考它 ↓</button>
+    </div>
+    <section class="cat-coach-act" id="cat-coach-pair" aria-labelledby="cat-coach-pair-title" hidden>
+     <p class="cat-coach-kicker">第二回 · 换个办法试试</p>
+     <h3 id="cat-coach-pair-title" tabindex="-1">两只猫，怎么叫成一个了？</h3>
+     <p class="cat-coach-muted">这两张没参加训练。你看的是画，它一开始只读到两个手填分数。</p>
+     <div class="cat-coach-pair-cards">
+      <figure class="cat-coach-art"><img id="cat-coach-pair-image-07" width="320" height="320" alt="一只短毛猫伏低伸出前爪，大尖耳竖着，四只爪都是深灰色。" loading="lazy"><figcaption><strong id="cat-coach-pair-truth-07"></strong><span id="cat-coach-pair-call-07"></span></figcaption></figure>
+      <figure class="cat-coach-art"><img id="cat-coach-pair-image-08" width="320" height="320" alt="一只猫侧身往左看，身体是蓬松白毛，身后立着深色大尾巴。" loading="lazy"><figcaption><strong id="cat-coach-pair-truth-08"></strong><span id="cat-coach-pair-call-08"></span></figcaption></figure>
+     </div>
+     <p id="cat-coach-pair-input" class="cat-coach-input"></p>
+     <p class="cat-coach-question">你想怎么让它分开这两只？</p>
+     <div class="cat-coach-actions cat-coach-experiments" role="group" aria-label="选一种办法改进分类">
+      <button id="cat-coach-more" type="button" aria-pressed="false">再练一轮</button><button id="cat-coach-fluff" type="button" aria-pressed="false">加上蓬松度</button>
+     </div>
+     <div class="cat-coach-results">
+      <article id="cat-coach-more-result" class="cat-coach-result" aria-labelledby="cat-coach-more-title" hidden>
+       <p class="cat-coach-kicker" id="cat-coach-more-title">再练一轮</p>
+       <div><strong id="cat-coach-more-outcome"></strong><p id="cat-coach-more-note"></p></div>
+      </article>
+      <article id="cat-coach-fluff-result" class="cat-coach-result" aria-labelledby="cat-coach-fluff-title" hidden>
+       <p class="cat-coach-kicker" id="cat-coach-fluff-title">加上蓬松度</p>
+       <div><strong id="cat-coach-fluff-outcome"></strong><p id="cat-coach-fluff-note"></p></div>
+      </article>
+     </div>
+     <details id="cat-coach-evidence" class="cat-coach-evidence" hidden>
+      <summary>查看每次训练的条件和结果</summary>
+      <p id="cat-coach-first-evidence"></p><p id="cat-coach-more-evidence" hidden></p><p id="cat-coach-fluff-evidence" hidden></p>
+     </details>
+     <section id="cat-coach-transfer" class="cat-coach-transfer" aria-labelledby="cat-coach-transfer-title" hidden>
+      <h4 id="cat-coach-transfer-title">要是三项分数都一样呢？</h4>
+      <div class="cat-coach-actions" role="group" aria-label="猜猜这回模型会怎么分">
+       <button id="cat-coach-transfer-same" type="button" aria-pressed="false">还是分不开</button><button id="cat-coach-transfer-more" type="button" aria-pressed="false">练久了就能分开</button>
+      </div>
+      <p id="cat-coach-transfer-feedback" role="status"></p>
+     </section>
+    </section>
+    <footer class="cat-lesson-footer"><p>这里只用手填分数学分组，不是让模型认照片。</p><a id="cat-coach-free" href="#field">去自由涂鸦 ↓</a></footer>
+   </section>
+   </details>
+   <details id="cat-practice" class="cat-coach-practice">
+    <summary>自由练习：自己给六张卡贴标签</summary>
+   <div class="cat-lesson-content" id="cat-lesson-content" hidden>
+    <section class="cat-lesson-step" aria-labelledby="cat-tag-title">
+     <header class="cat-step-heading"><span>01 / 03</span><h2 id="cat-tag-title">先由你认猫</h2><button id="cat-reset" type="button">重来这道题</button></header>
+     <p>看三猫工作室的原画，给 6 张卡贴上名字。模型不看画，只看每张卡手工设定的两个演示分数。</p>
+     <p class="cat-identify-hint"><strong>认猫线索：</strong>波比大耳、短毛；臭臭有白鼻梁、蓬松的白胸口。</p>
+     <div class="cat-label-station">
+      <figure class="cat-active-card">
+       <img id="cat-image" width="300" height="300" alt="" loading="lazy" decoding="async">
+       <figcaption id="cat-image-caption"></figcaption>
+      </figure>
+      <div class="cat-label-controls">
+       <p class="cat-label-count" id="cat-label-count"></p>
+       <dl class="cat-features"><div><dt>脸颊圆润度</dt><dd id="cat-cheeks"></dd></div><div><dt>耳尖突出度</dt><dd id="cat-ears"></dd></div></dl>
+       <div class="cat-label-actions" role="group" aria-label="给这张原画贴标签">
+        <button id="cat-label-bobby" type="button" data-cat-label="bobby" aria-pressed="false"><i aria-hidden="true"></i> 波比</button>
+        <button id="cat-label-chouchou" type="button" data-cat-label="chouchou" aria-pressed="false"><i aria-hidden="true"></i> 臭臭</button>
+       </div>
+       <div class="cat-sample-nav" role="group" aria-label="选择训练卡，可改之前贴的标签">
+        <button id="cat-sample-01" type="button" aria-pressed="true">01</button><button id="cat-sample-02" type="button" aria-pressed="false">02</button><button id="cat-sample-03" type="button" aria-pressed="false">03</button><button id="cat-sample-04" type="button" aria-pressed="false">04</button><button id="cat-sample-05" type="button" aria-pressed="false">05</button><button id="cat-sample-06" type="button" aria-pressed="false">06</button>
+       </div>
+       <p id="cat-status" class="cat-hint" role="status"></p>
+      </div>
+     </div>
+    </section>
+    <section class="cat-lesson-step" id="cat-train-stage" aria-labelledby="cat-train-title" hidden>
+     <header class="cat-step-heading"><span>02 / 03</span><h2 id="cat-train-title" tabindex="-1">教它改分界</h2></header>
+     <div class="cat-train-station">
+      <figure class="cat-map">
+       <figcaption>同一组卡、同一张图</figcaption>
+       <svg id="cat-plot" viewBox="0 0 360 258" role="img" aria-label="横轴是脸颊圆润度，纵轴是耳尖突出度。图中的训练卡位置不随训练移动。" aria-describedby="cat-map-notes" xmlns="http://www.w3.org/2000/svg">
+        <rect class="cat-grid-paper" x="43" y="13" width="303" height="199" rx="6"></rect>
+        <polygon class="cat-plot-region cat-plot-bobby" id="cat-plot-bobby"></polygon><polygon class="cat-plot-region cat-plot-chouchou" id="cat-plot-chouchou"></polygon>
+        <path class="cat-grid-lines" d="M43 13V212H346 M43 112.5H346 M194.5 13V212" fill="none"></path>
+        <g class="cat-axis-text"><text x="43" y="229" text-anchor="middle">0</text><text x="194.5" y="229" text-anchor="middle">5</text><text x="346" y="229" text-anchor="middle">10</text><text x="34" y="216" text-anchor="end">0</text><text x="34" y="116" text-anchor="end">5</text><text x="34" y="18" text-anchor="end">10</text><text x="194.5" y="250" text-anchor="middle">脸颊圆润度</text><text x="-111" y="13" text-anchor="middle" transform="rotate(-90)">耳尖突出度</text></g>
+        <line class="cat-plot-before" id="cat-plot-before"></line><line class="cat-plot-after" id="cat-plot-after"></line>
+        <g id="cat-plot-points"></g>
+        <g id="cat-plot-test" visibility="hidden"><circle r="9"></circle><text x="12" y="-10">07 / 08</text></g>
+       </svg>
+       <p class="cat-map-key"><span><i class="cat-key-dot" aria-hidden="true"></i> 你贴的波比</span><span><i class="cat-key-square" aria-hidden="true"></i> 你贴的臭臭</span><span>虚线：原来 · 实线：学完</span></p>
+       <p id="cat-map-notes" class="cat-hint"></p>
+      </figure>
+      <div class="cat-train-controls">
+       <div class="cat-compare">
+        <img id="cat-compare-image" width="78" height="78" alt="" loading="lazy" decoding="async">
+        <div><h3 id="cat-compare-title"></h3><p id="cat-compare-features" class="cat-hint"></p><p id="cat-compare-reading" aria-live="polite"></p></div>
+       </div>
+       <div class="cat-sample-nav cat-compare-nav" role="group" aria-label="在分界图上换一张卡对照">
+        <button id="cat-compare-01" type="button" aria-pressed="false">01</button><button id="cat-compare-02" type="button" aria-pressed="false">02</button><button id="cat-compare-03" type="button" aria-pressed="false">03</button><button id="cat-compare-04" type="button" aria-pressed="false">04</button><button id="cat-compare-05" type="button" aria-pressed="false">05</button><button id="cat-compare-06" type="button" aria-pressed="false">06</button>
+       </div>
+       <div id="cat-train-predict">
+        <p id="cat-train-prompt">先猜：按你贴的标签训练，会有卡被改判吗？</p>
+        <div class="cat-answer-actions" role="group" aria-labelledby="cat-train-prompt">
+         <button id="cat-train-guess-moves" type="button" aria-pressed="false">会有卡被改判</button><button id="cat-train-guess-stays" type="button" aria-pressed="false">没有卡被改判</button>
+        </div>
+        <button id="cat-train" class="guide-primary" type="button" disabled>用我的标签训练</button>
+       </div>
+       <div id="cat-results" hidden>
+        <h3 id="cat-score" tabindex="-1"></h3>
+        <p id="cat-change-summary"></p>
+        <p id="cat-loss" class="cat-hint"></p>
+        <p id="cat-mislabels" class="cat-hint"></p>
+        <details class="cat-evidence">
+         <summary>逐张对照：标签、原画身份、模型分法</summary>
+         <ul id="cat-training-rows"></ul>
+        </details>
+       </div>
+      </div>
+     </div>
+    </section>
+    <section class="cat-lesson-step" id="cat-test-stage" aria-labelledby="cat-test-title" hidden>
+     <header class="cat-step-heading"><span>03 / 03</span><h2 id="cat-test-title">拿两张新卡考它</h2></header>
+     <p id="cat-test-prompt">这两张原画没参加训练。只给模型同样的两个分数，你猜它会给出相同还是不同的答案？</p>
+     <div class="cat-test-cards">
+      <figure><img id="cat-test-image-07" width="300" height="300" alt="" loading="lazy" decoding="async"><figcaption id="cat-test-caption-07"></figcaption></figure>
+      <figure><img id="cat-test-image-08" width="300" height="300" alt="" loading="lazy" decoding="async"><figcaption id="cat-test-caption-08"></figcaption></figure>
+     </div>
+     <div class="cat-answer-actions" role="group" aria-labelledby="cat-test-prompt">
+      <button id="cat-test-guess-same" type="button" aria-pressed="false">同一个答案</button><button id="cat-test-guess-different" type="button" aria-pressed="false">两个不同答案</button>
+     </div>
+     <div id="cat-reveal" class="cat-reveal" hidden>
+      <h3 id="cat-test-feedback" tabindex="-1"></h3>
+      <ul><li id="cat-test-result-07"></li><li id="cat-test-result-08"></li></ul>
+      <details id="cat-takeaway"><summary>点和线，究竟哪个动了？为什么这两张分不开？</summary><p>训练调整的是分界的参数，卡片没挪。两张不同的原画如果变成同样的两个数，模型就只能给同一个答案。要分开它们，得补充模型能用的线索，再拿新卡检验。</p></details>
+     </div>
+    </section>
+    <footer class="cat-lesson-footer"><p>这道小题单独运行，不改自由涂鸦、草稿或学习记录。</p><a id="cat-free" href="#field">去自由涂鸦 ↓</a></footer>
+   </div>
+   </details>
+  </details>
   <section class="neural-guide gradient-lesson" id="gradient-lesson" aria-labelledby="gradient-title" hidden>
    <header class="gradient-heading"><p>接着刚才那条线</p><h2 id="gradient-title" tabindex="-1">线为什么这样挪？</h2><p>把刚才的 120 步拆开。这次由你控制，一步一步看。</p></header>
    <div class="gradient-layout">

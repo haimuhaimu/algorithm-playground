@@ -1,4 +1,4 @@
-import {TAU,stepSwarm,configureSwarm} from './firefly-core.mjs?v=one-beat-1';
+import {TAU,stepSwarm,configureSwarm,perturbSwarm} from './firefly-core.mjs?v=cat-beat-v1';
 
 const copy=world=>({...world,settings:{...world.settings},points:world.points.map(p=>({...p}))});
 const scenarios=new Set(['ahead','behind','out']),guesses=new Set(['faster','slower','same']);
@@ -39,4 +39,22 @@ export function runBeat(state){
 export function retryBeat(state){
  const records={...state.records};delete records[state.scenario];
  return {...createBeatLesson(state.scenario),records};
+}
+
+export function createCatBeatScene(){
+ return {point:{x:.13,y:.5},radius:.30,world:{
+  points:[.24,.40,.78].map(x=>({x,y:.5,phase:TAU/6,offset:0})),
+  settings:{coupling:2.4,radius:.30,spread:0},time:0,seed:42,preset:'chorus',
+ }};
+}
+
+export function runCatBeat({world,point,radius}){
+ // The deterministic alignment changes phases once; it does not consume randomness here.
+ const afterTap={...perturbSwarm(copy(world),point,'align',radius),seed:world.seed};
+ let tapped=afterTap,quiet=copy(world);
+ for(let i=0;i<30;i++){
+  tapped=stepSwarm(tapped,1/60);
+  quiet=stepSwarm(quiet,1/60);
+ }
+ return {afterTap,tapped,quiet};
 }

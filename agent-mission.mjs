@@ -1,5 +1,5 @@
 import {runAgentToolLoop} from './agent-tool.mjs?v=agent-tool-loop-v1';
-import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=agent-tool-loop-v1';
+import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=handoff-trust-v1';
 
 const SOURCE={producer:'browser-session'};
 const RECEIPT={unknown:'未核验','not-delivered':'未签收',delivered:'已签收'};
@@ -27,8 +27,8 @@ export function mountAgentMission({document,window}){
  const set=(name,text)=>{el(name).textContent=text;};
  const show=(name,visible)=>{el(name).hidden=!visible;};
  const legal=action=>receipt.result.availableActions.some(entry=>entry.action===action);
- const handoff=readGenaiHandoffContext(window.location);
- const canReturn=handoff?.journeyId==='agent-learning';
+ const handoff=readGenaiHandoffContext(window.location,'agent-learning');
+ const canReturn=!!handoff;
  const page=new URL(window.location.href);
  const isPublished=page.origin==='https://haimuhaimu.github.io'&&page.pathname==='/algorithm-playground/agent-mission.html';
  if(canReturn)el('os-fallback').href=handoff.returnURL;
@@ -78,9 +78,7 @@ export function mountAgentMission({document,window}){
  el('return').addEventListener('click',()=>{
   if(document.hidden||!receipt.result.workflowComplete||!canReturn)return;
   try{
-   const current=readGenaiHandoffContext(window.location);
-   if(!current||current.journeyId!==handoff.journeyId||current.requestId!==handoff.requestId||current.returnURL!==handoff.returnURL)throw Error('Return context changed');
-   window.location.assign(createGenaiReturnUrl(handoff,receipt));
+   window.location.assign(createGenaiReturnUrl(handoff,receipt,window.location));
   }catch{
    show('os-fallback',true);
    set('share-status','暂时无法带回。两轮记录仍保留，可生成 JSON 后回 GenAI OS 手动导入。');
