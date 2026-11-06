@@ -50,3 +50,51 @@ test('paint strokes connect endpoints, preserve input and reject invalid cells',
  assert.equal(c.stroke(p,{x:0,y:15},{x:15,y:15},1).slice(240).filter(x=>x===1).length,16);
  assert.throws(()=>c.stroke(p,{x:-1,y:0},{x:0,y:0},1));assert.throws(()=>c.stroke(p,{x:0,y:0},{x:0,y:0},4));
 });
+
+test('each coral edit saves two payload bits but only the fourth saves a packet byte', () => {
+  const expected = [
+    // payload, tree, padding, bytes
+    [400, 15, 1, 52],
+    [398, 15, 3, 52],
+    [396, 15, 5, 52],
+    [394, 15, 7, 52],
+    [392, 15, 1, 51],
+  ];
+  assert.equal(c.POSTAGE_BYTE_STEPS, expected.length - 1);
+  for (const [step, costs] of expected.entries()) {
+    const { pixels, encoded } = c.postageByteTrial(step);
+    const { packet, payloadBits, treeBits, paddingBits } = encoded;
+    assert.deepEqual([payloadBits, treeBits, paddingBits, packet.length], costs, `step ${step}`);
+    assert.deepEqual(c.decode(packet, 256), pixels);
+  }
+});
+
+test('the postage trial recolors only the fixed cheek pixels and isolates every attempt', () => {
+  const original = c.preset('chouchou-studio');
+  const cheek = [99, 114, 115, 131];
+  assert.deepEqual(cheek.map(index => original[index]), [3, 3, 3, 3]);
+  for (let step = 0; step <= cheek.length; step++) {
+    const { pixels, changed } = c.postageByteTrial(step);
+    const edited = cheek.slice(0, step);
+    assert.deepEqual(changed, edited);
+    assert.deepEqual(pixels, original.map((color, index) => edited.includes(index) ? 0 : color));
+  }
+
+  const attempt = c.postageByteTrial(4);
+  attempt.pixels[0] = 2;
+  attempt.changed[0] = 0;
+  attempt.encoded.packet.fill(0);
+  const fresh = c.postageByteTrial(4);
+  assert.equal(fresh.changed[0], 99);
+  assert.equal(fresh.pixels[0], 0);
+  assert.deepEqual(c.decode(fresh.encoded.packet, 256), fresh.pixels);
+  assert.deepEqual(c.postageByteTrial(), c.postageByteTrial(0));
+  assert.deepEqual(c.postageByteTrial().pixels, original);
+  assert.deepEqual(c.preset('chouchou-studio'), original);
+});
+
+test('the postage trial rejects edit counts outside its integer step range', () => {
+  for (const step of [-1, 0.5, 5, NaN, Infinity, '2', null, true]) {
+    assert.throws(() => c.postageByteTrial(step), RangeError);
+  }
+});

@@ -5,8 +5,9 @@
  <meta name="description" content="算法游乐场 Agent 第三关：在 08 号站的 9 帧画面里，只能留 3 帧。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./home.css?v=agent-frames-v1">
- <link rel="stylesheet" href="./agent-frames.css?v=agent-frames-v1">
- <script type="module" src="./agent-frames-ui.mjs?v=agent-frames-v1"></script>
+ <link rel="stylesheet" href="./agent-frames.css?v=monitor-desk-v1">
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
+ <script type="module" src="./agent-frames-ui.mjs?v=handoff-trust-v1"></script>
  <title>只留三帧，你会留下哪一帧？ · 算法游乐场</title>
 </head>
 <body>
@@ -23,7 +24,7 @@
   </header>
   <div class="frames-workbench" id="frames-workbench">
    <figure class="frames-monitor">
-    <div class="frames-monitor-head"><span class="frames-mono">CAM 08</span><span id="frames-position">第 0 帧 / 共 9 帧</span></div>
+    <div class="frames-monitor-head"><span class="frames-monitor-desk"><span class="frames-mono">CAM 08</span><span>嘿姆监看台</span></span><span id="frames-position">第 0 帧 / 共 9 帧</span><img class="frames-monitor-cat" src="./studio-heim-idle.png" width="360" height="184" alt="" aria-hidden="true" decoding="async"></div>
     <div id="frames-scene" class="frames-scene" role="img" aria-label="08 号站远景"></div>
     <p id="frames-announcement" class="frames-sr" role="status"></p>
     <figcaption class="frames-transcript"><span>现场字幕</span><p id="frames-caption" aria-live="polite"></p></figcaption>

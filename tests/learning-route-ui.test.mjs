@@ -125,6 +125,20 @@ test('GenAI return is explicit, summary-only and carries actual wrong guesses wi
  assert.deepEqual(r.c.snapshot(),before,'returning cannot mutate the current learning result');assert.equal(r.e('route-export-text').value,'','optional export stays untouched');
  r.e('route-back').click();assert.equal(r.e('route-genai-return').hidden,true);
 });
+test('an Agent journey does not display or enable the model route return',()=>{
+ const url=new URL('https://haimuhaimu.github.io/algorithm-playground/learn.html');
+ url.searchParams.set('genaiReturn','https://haimuhaimu.github.io/genai-learning-os/');
+ url.searchParams.set('genaiJourney','agent-learning');url.searchParams.set('genaiRequest','journey_test_20261103');
+ let sends=0;const r=setup({location:{href:url.href,assign:()=>{sends++;}}});
+ first(r);second(r);r.e('route-main').click();r.e('route-guess-all').click();r.e('route-explain-good').click();r.e('route-continue').click();
+ assert.equal(r.c.snapshot().stage,'summary');
+ assert.equal(r.e('route-genai-return').hidden,true);
+ assert.equal(r.e('route-summary-title').focused,true);
+ r.e('route-genai-send').click();
+ assert.equal(sends,0);assert.equal(r.e('route-genai-status').textContent,'');
+ r.e('route-export-generate').click();
+ assert.equal(JSON.parse(r.e('route-export-text').value).result.workflowComplete,true);
+});
 test('unsafe or changed return context cannot send data, and navigation failures leave the result and existing export intact',()=>{
  const bad=setup({location:{href:'http://127.0.0.1:3103/learn.html?genaiReturn=https%3A%2F%2Fexample.com&genaiRequest=journey_test_20261103&genaiJourney=model-learning'}});
  first(bad);second(bad);bad.e('route-main').click();bad.e('route-guess-all').click();bad.e('route-explain-good').click();bad.e('route-continue').click();assert.equal(bad.e('route-genai-return').hidden,true);

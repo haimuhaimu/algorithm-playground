@@ -86,12 +86,12 @@ test('third-level return carries both actual rounds only after a complete compar
  link.search=new URLSearchParams({genaiJourney:id,genaiRequest:'frame-session-123456789',genaiReturn:'http://localhost:3156/?page=wrong#other'}).toString();
  const context=readGenaiHandoffContext(link.href);
  assert.deepEqual(context,{journeyId:id,requestId:'frame-session-123456789',returnURL:'http://localhost:3156/?page=routes&section=agent-frames-journey'});
- assert.throws(()=>createGenaiReturnUrl(context,run(...start)));
+ assert.throws(()=>createGenaiReturnUrl(context,run(...start),link));
  const receipt=choose(3);
- const result=new URL(createGenaiReturnUrl(context,receipt));
+ const result=new URL(createGenaiReturnUrl(context,receipt,link));
  assert.equal(result.search,'?page=routes&section=agent-frames-journey');
  const payload=JSON.parse(Buffer.from(result.hash.slice(12),'base64url').toString('utf8'));
  assert.deepEqual(payload.receipt,receipt);
  assert.equal(payload.journeyId,id);
- assert.throws(()=>createGenaiReturnUrl(context,{...receipt,experimentId:'agent-reroute'}));
+ assert.throws(()=>createGenaiReturnUrl(context,{...receipt,experimentId:'agent-reroute'},link));
 });

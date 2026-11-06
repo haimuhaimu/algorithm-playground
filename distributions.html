@@ -2,13 +2,14 @@
 <html lang="zh-CN"><head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
  <meta name="description" content="让三台机器各抽一些数，看看谁更容易冒出大数字。亲手认识正态、长尾和重尾。"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./space-theme.css"><link rel="stylesheet" href="./distributions.css?v=plain-3">
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./space-theme.css"><link rel="stylesheet" href="./distributions.css?v=studio-operators-v1">
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <script type="module" src="./distributions.mjs?v=plain-3"></script><title>分布观察台 · 算法游乐场</title>
 </head><body>
  <a class="skip-link" href="#observation-title">跳到观察台</a>
  <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><a class="back-link" href="./">全部实验 ↗</a><button class="quiet-button" id="about" type="button">怎么玩 ↗</button><button class="theme-button" id="theme" type="button" aria-label="切换深色模式">◐</button></div></header>
  <main class="distribution-main" id="distribution-app">
-  <section class="distribution-intro"><p class="pixel-label">DISTRIBUTION OBSERVATORY</p><h1>大数字，<span>到底多难碰到？</span></h1><p class="distribution-lead">让三台机器各抽一些随机数。<br class="mobile-break">你来看看，谁更容易冒出特别大的数。</p><p class="distribution-lead">红线先放在 4：抽到比 4 大的数，就记一次。</p></section>
+  <section class="distribution-intro"><p class="pixel-label">DISTRIBUTION OBSERVATORY</p><h1>大数字，<span>到底多难碰到？</span></h1><p class="distribution-lead">三猫各守一台抽数机。<br class="mobile-break">你来看看，哪台更容易冒出特别大的数。</p><p class="distribution-lead">红线先放在 4：抽到比 4 大的数，就记一次。</p></section>
   <section class="observation" aria-labelledby="observation-title">
    <div class="workbench-top"><h2 id="observation-title">分布观察台</h2><button id="reset-sample" class="text-button" type="button">从头重玩 ↻</button></div>
    <ol class="lesson-progress" aria-label="怎么玩"><li id="step-1" aria-current="step"><span>1</span>多抽一些</li><li id="step-2"><span>2</span>挪一下线</li><li id="step-3"><span>3</span>想一想</li></ol>
@@ -21,18 +22,21 @@
    <div class="distribution-grid">
     <article class="machine machine-normal" id="machine-normal">
      <header><div><h3 id="model-normal">正态</h3><p id="class-normal">大多挤在中间</p></div><div class="machine-tail"><strong id="tail-normal"></strong><small id="rate-normal"></small></div></header>
+     <div class="machine-operator"><img src="./studio-heim-portrait.png" width="26" height="26" alt="" loading="lazy">嘿姆值班</div>
      <div id="comparison-normal" class="count-comparison" hidden><span><span id="previous-label-normal">最初 30 次</span> <b id="previous-normal"></b></span><span aria-hidden="true">→</span><span><span id="current-label-normal">现在 3,030 次</span> <b id="current-normal"></b></span></div>
      <div id="chart-normal" class="distribution-chart" role="img" aria-label="正态真实样本直方图"></div><div class="chart-axis"><span>−4</span><span>0</span><span>+4</span><span>+8</span><span>+12</span><span>+16</span></div><p id="overflow-normal" class="overflow-note"></p>
      <details class="machine-details"><summary>还有哪些数？</summary><p id="before-normal"></p><p id="probability-normal"></p><p>最大的数 <b id="max-normal"></b> · 平均值 <b id="mean-normal"></b></p><p>最近六次：<span id="latest-normal"></span></p></details>
     </article>
     <article class="machine machine-exponential" id="machine-exponential">
      <header><div><h3 id="model-exponential">指数</h3><p id="class-exponential">往右拖着一条尾巴</p></div><div class="machine-tail"><strong id="tail-exponential"></strong><small id="rate-exponential"></small></div></header>
+     <div class="machine-operator"><img src="./studio-bobby-portrait.png" width="26" height="26" alt="" loading="lazy">波比值班</div>
      <div id="comparison-exponential" class="count-comparison" hidden><span><span id="previous-label-exponential">最初 30 次</span> <b id="previous-exponential"></b></span><span aria-hidden="true">→</span><span><span id="current-label-exponential">现在 3,030 次</span> <b id="current-exponential"></b></span></div>
      <div id="chart-exponential" class="distribution-chart" role="img" aria-label="指数真实样本直方图"></div><div class="chart-axis"><span>−4</span><span>0</span><span>+4</span><span>+8</span><span>+12</span><span>+16</span></div><p id="overflow-exponential" class="overflow-note"></p>
      <details class="machine-details"><summary>还有哪些数？</summary><p id="before-exponential"></p><p id="probability-exponential"></p><p>最大的数 <b id="max-exponential"></b> · 平均值 <b id="mean-exponential"></b></p><p>最近六次：<span id="latest-exponential"></span></p></details>
     </article>
     <article class="machine machine-pareto" id="machine-pareto">
      <header><div><h3 id="model-pareto">帕累托</h3><p id="class-pareto">大数没那么罕见</p></div><div class="machine-tail"><strong id="tail-pareto"></strong><small id="rate-pareto"></small></div></header>
+     <div class="machine-operator"><img src="./studio-chouchou-portrait.png" width="26" height="26" alt="" loading="lazy">臭臭值班</div>
      <div id="comparison-pareto" class="count-comparison" hidden><span><span id="previous-label-pareto">最初 30 次</span> <b id="previous-pareto"></b></span><span aria-hidden="true">→</span><span><span id="current-label-pareto">现在 3,030 次</span> <b id="current-pareto"></b></span></div>
      <div id="chart-pareto" class="distribution-chart" role="img" aria-label="帕累托真实样本直方图"></div><div class="chart-axis"><span>−4</span><span>0</span><span>+4</span><span>+8</span><span>+12</span><span>+16</span></div><p id="overflow-pareto" class="overflow-note"></p>
      <details class="machine-details"><summary>还有哪些数？</summary><p id="before-pareto"></p><p id="probability-pareto"></p><p>最大的数 <b id="max-pareto"></b> · 平均值 <b id="mean-pareto"></b></p><p>最近六次：<span id="latest-pareto"></span></p></details>

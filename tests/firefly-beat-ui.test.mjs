@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,access} from 'node:fs/promises';
-async function boot({reduced=false}={}){
+async function boot({reduced=false,hash='#listening-lesson'}={}){
  const html=await readFile(new URL('../firefly.html',import.meta.url),'utf8');
  assert.match(html,/id="beat-open"/,'the microscope needs a real user entry point');
  const file=new URL('../firefly-beat-ui.mjs',import.meta.url);assert.ok(await access(file).then(()=>true,()=>false));
@@ -14,6 +14,7 @@ async function boot({reduced=false}={}){
  const els=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([,id])=>[id,new Element()]));
  doc=Object.assign(new EventTarget(),{hidden:false,getElementById:id=>els.get(id)});
  const frames=new Map(),media=Object.assign(new EventTarget(),{matches:reduced}),win=new EventTarget();
+ win.location={hash};
  const globals={window:win,requestAnimationFrame:fn=>{frames.set(++seq,fn);return seq;},cancelAnimationFrame:id=>frames.delete(id),matchMedia:()=>media};
  const old=new Map(Object.keys(globals).map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
  for(const[k,v]of Object.entries(globals))Object.defineProperty(globalThis,k,{value:v,writable:true,configurable:true});
@@ -26,6 +27,48 @@ async function boot({reduced=false}={}){
   visible(value){doc.hidden=!value;doc.dispatchEvent(new Event('visibilitychange'));},
   reduce(value){media.matches=value;media.dispatchEvent(Object.assign(new Event('change'),{matches:value}));}};
 }
+test('the listening heading offers one optional native link to the cat beat',async()=>{
+ const html=await readFile(new URL('../firefly.html',import.meta.url),'utf8');
+ const links=[...html.matchAll(/<a\b[^>]*href="#cat-beat"[^>]*>/g)];
+ assert.equal(links.length,1);
+ const heading=html.match(/<div class="listening-heading">[\s\S]*?<\/div>/)?.[0]??'';
+ assert.ok(heading.includes(links[0][0]));
+});
+test('the explicit cat-beat fragment opens both disclosures and scrolls without running a comparison',async()=>{
+ const u=await boot({hash:'#cat-beat'});try{
+  const e=id=>u.els.get(id);
+  assert.equal(e('beat-body').hidden,false);
+  assert.equal(e('beat-open').getAttribute('aria-expanded'),'true');
+  assert.equal(e('cat-beat').open,true);
+  assert.equal(u.doc.scrollTarget,e('cat-beat'));
+  assert.equal(e('cat-beat-result').hidden,true);
+  assert.equal(e('beat-result').hidden,true);
+  assert.equal(u.frames.size,0);
+  assert.equal(u.pauses(),1);
+ }finally{u.restore();}
+});
+test('following the cat-beat fragment opens it without altering existing microscope evidence',async()=>{
+ const u=await boot();try{
+  const e=id=>u.els.get(id);
+  u.click('beat-open');u.click('beat-faster');u.click('beat-run');
+  const numbers=e('beat-numbers').textContent;
+  u.win.location.hash='#cat-beat';
+  u.win.dispatchEvent(new Event('hashchange'));
+  assert.equal(e('cat-beat').open,true);
+  assert.equal(u.doc.scrollTarget,e('cat-beat'));
+  assert.equal(e('beat-numbers').textContent,numbers);
+  assert.equal(e('cat-beat-result').hidden,true);
+  e('cat-beat').open=false;
+  u.click('cat-beat-link'); // A same-fragment link does not fire another hashchange.
+  assert.equal(e('cat-beat').open,true);
+  assert.equal(u.doc.scrollTarget,e('cat-beat'));
+  assert.equal(e('beat-numbers').textContent,numbers);
+  const priorPauses=u.pauses();
+  u.click('cat-beat-link'); // The main pool can have been resumed while these disclosures stayed open.
+  assert.equal(u.pauses(),priorPauses+1,'returning to the cat observation pauses the main pool again');
+  assert.equal(e('beat-numbers').textContent,numbers);
+ }finally{u.restore();}
+});
 test('explicit start and guess gate real simulation; sealed before/after evidence explains a wrong prediction',async()=>{
  const u=await boot();try{
   const e=id=>u.els.get(id);assert.equal(e('beat-body').hidden,true);assert.equal(u.frames.size,0);assert.equal(u.pauses(),0);
@@ -68,5 +111,29 @@ test('reduced motion retains static evidence and manual frame access, and prefer
   assert.equal(e('beat-replay').hidden,true);assert.equal(e('beat-scrub').disabled,false);u.scrub(12);assert.equal(Number(e('beat-scrub').value),12);
   u.reduce(false);assert.equal(e('beat-replay').hidden,false);u.click('beat-replay');assert.equal(u.frames.size,1);
   u.reduce(true);assert.equal(u.frames.size,0);assert.equal(e('beat-replay').hidden,true);assert.equal(e('beat-result').hidden,false);
+ }finally{u.restore();}
+});
+test('cat tap is optional, compares real outcomes without changing the main-world or microscope controls',async()=>{
+ const u=await boot({reduced:true});try{
+  const e=id=>u.els.get(id);
+  u.click('beat-open');u.click('beat-faster');u.click('beat-run');
+  const oldEvidence=e('beat-numbers').textContent,oldPauses=u.pauses();
+  assert.ok(e('cat-beat-try'),'the optional experiment needs a native action in the delivered HTML');
+  assert.equal(e('cat-beat-result').hidden,true);
+  u.click('cat-beat-try');
+  assert.equal(e('cat-beat-result').hidden,false);
+  assert.match(e('cat-beat-rows').innerHTML,/76\.6°/);
+  assert.match(e('cat-beat-rows').innerHTML,/95\.9°/);
+  assert.match(e('cat-beat-rows').innerHTML,/116\.3°/,'the exact 116.25° control rounds up to one decimal');
+  assert.match(e('cat-beat-rows').innerHTML,/没变化/);
+  const catEvidence=e('cat-beat-rows').innerHTML;
+  u.click('cat-beat-try');assert.equal(e('cat-beat-rows').innerHTML,catEvidence,'the next click starts from the same state');
+  assert.equal(u.frames.size,0);
+  u.click('cat-beat-reset');
+  assert.equal(e('cat-beat-result').hidden,true);
+  assert.equal(e('cat-beat-rows').innerHTML,'');
+  assert.equal(u.doc.activeElement,e('cat-beat-try'));
+  assert.equal(e('beat-numbers').textContent,oldEvidence);
+  assert.equal(u.pauses(),oldPauses,'the local comparison must not control the main world');
  }finally{u.restore();}
 });

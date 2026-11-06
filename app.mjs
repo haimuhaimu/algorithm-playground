@@ -1,8 +1,9 @@
-import {POSTS,TOPICS,PRESETS,INITIAL_PROFILE} from './data.mjs?v=seat-carryover-20261029';
-import {rankPosts,metrics,feedback,challenge,probability,experiment} from './core.mjs?v=seat-carryover-20261029';
-import {captureFeedback} from './feedback-story.mjs?v=seat-carryover-20261029';
-import {mountFeedbackStory} from './feedback-story-ui.mjs?v=seat-carryover-20261029';
-import {mountSeatLesson} from './seat-lesson-ui.mjs?v=seat-carryover-20261029';
+import {POSTS,TOPICS,PRESETS,INITIAL_PROFILE} from './data.mjs?v=recommendation-studio-v2';
+import {rankPosts,metrics,feedback,challenge,experiment} from './core.mjs?v=recommendation-studio-v2';
+import {captureFeedback} from './feedback-story.mjs?v=recommendation-studio-v2';
+import {mountFeedbackStory} from './feedback-story-ui.mjs?v=recommendation-studio-v2';
+import {mountSeatLesson} from './seat-lesson-ui.mjs?v=recommendation-studio-v2';
+import {renderRecommendationCard} from './recommendation-cards.mjs?v=recommendation-studio-v2';
 
 const $=id=>document.getElementById(id);
 const feedbackStory=mountFeedbackStory({document});
@@ -17,20 +18,10 @@ const pct=x=>(x*100).toFixed(1);
 const announce=text=>{$('announcement').textContent=text;};
 function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,2600);}
 
-function card(post,index){
- const topic=TOPICS[post.topic];
- return `<article class="post-card" data-id="${post.id}" aria-label="第 ${index+1} 位：${post.title}">
-  <div class="cover" style="--topic:${topic.color}" data-art="${post.art%4}" aria-hidden="true"><span class="rank">0${index+1}</span>${post.isNew?'<span class="new-badge">新作者</span>':''}<span class="cover-glyph">${topic.glyph}</span><span class="cover-label">${topic.english}</span></div>
-  <div class="post-body"><h3 title="${post.title}">${post.title}</h3><div class="creator"><span>${post.creator}${post.isNew?' · 新作者':''}</span><span>${post.readTime}″</span></div>
-  <div class="card-actions"><button class="feedback-button" data-feedback="1" data-post="${post.id}" aria-label="喜欢：${post.title}"><span aria-hidden="true">♡</span>喜欢</button><button class="feedback-button" data-feedback="-1" data-post="${post.id}" aria-label="少一点：${post.title}"><span aria-hidden="true">−</span>少一点</button></div>
-  <details class="why"><summary>为什么推荐它？</summary><div class="score-parts"><div><span>点击分</span><b>${post.parts.click.toFixed(3)}</b></div><div><span>多样性分</span><b>${post.parts.diversity.toFixed(3)}</b></div><div><span>新人分</span><b>${post.parts.newcomer.toFixed(3)}</b></div><div><span>选中时总分</span><b>${post.score.toFixed(3)}</b></div><p>预测点击 ${pct(probability(post,profile))}%。多样性分按轮到此席位时，已选主题数计算。</p></div></details></div>
- </article>`;
-}
-
 function render(){
  const feed=rankPosts(POSTS,weights,profile),m=metrics(feed,profile),goal=challenge(m);
  const opened=new Set([...document.querySelectorAll('.why[open]')].map(el=>el.closest('.post-card').dataset.id));
- $('feed').innerHTML=feed.map(card).join('');
+ $('feed').innerHTML=feed.map((post,i)=>renderRecommendationCard(post,i,profile)).join('');
  for(const article of $('feed').children) if(opened.has(article.dataset.id)) article.querySelector('details').open=true;
  $('strategy-name').textContent=strategy(weights);
  for(const key of keyOrder){$(key).value=weights[key];$(key).style.setProperty('--progress',`${weights[key]}%`);$(`${key}-value`).value=weights[key];}

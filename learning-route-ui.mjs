@@ -1,9 +1,9 @@
-import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=model-coach-v1';
+import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=handoff-trust-v1';
 import {paintGuide} from './neural-guide-view.mjs';
 import {paintGeneralization} from './neural-generalization-view.mjs';
 import {runLearningRoute} from './learning-tool.mjs?v=learning-tool-v1';
-import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=genai-journey-v1';
-import {inspectLearningRouteTrials} from './learning-route-trials.mjs?v=model-coach-v1';
+import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=handoff-trust-v1';
+import {inspectLearningRouteTrials} from './learning-route-trials.mjs?v=handoff-trust-v1';
 const shape=n=>n?'方':'圆';
 function markExample(canvas,p,dark){
  if(!p)return;
@@ -15,7 +15,7 @@ function markExample(canvas,p,dark){
 export function mountLearningRoute({document,window}){
  const $=id=>document.getElementById(id),set=(id,t)=>{$(id).textContent=t;},show=(id,value)=>{$(id).hidden=!value;};
  const s=createLearningRoute(),canvas=$('route-map'),supported=!!canvas.getContext('2d');let before=false,explicitTheme=false,journal=[],exportGeneration=0,trials=[],trialLimit=false;
- const handoff=readGenaiHandoffContext(window.location);
+ const handoff=readGenaiHandoffContext(window.location,'model-learning');
  const media=window.matchMedia('(prefers-color-scheme: dark)');
  function render(){
   const e=learningRouteEvidence(s),stage=s.stage,summary=stage==='summary';
@@ -130,10 +130,8 @@ export function mountLearningRoute({document,window}){
  $('route-genai-send').addEventListener('click',()=>{
   if(document.hidden||!supported||s.stage!=='summary'||!handoff)return;
   try{
-   const current=readGenaiHandoffContext(window.location);
-   if(!current||current.requestId!==handoff.requestId||current.returnURL!==handoff.returnURL)throw Error('Return context changed');
    const receipt=runLearningRoute(journal,{producer:'browser-session'});
-   const url=createGenaiReturnUrl(handoff,receipt);
+   const url=createGenaiReturnUrl(handoff,receipt,window.location);
    window.location.assign(url);
   }catch{
    set('route-genai-status','暂时无法带回，当前结果仍保留。可以先生成下方实验记录，回到 GenAI OS 手动粘贴；没有自动发送或改写草稿。');

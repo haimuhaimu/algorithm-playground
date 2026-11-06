@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+test('Heim sits inside the one real ship and is introduced outside the trajectory plot',async()=>{
+ const html=await readFile(new URL('../world-model.html',import.meta.url),'utf8');
+ const ship=html.match(/<g\b[^>]*\bid="ship"[^>]*>([\s\S]*?)<\/g>/)?.[1];
+ const plot=html.match(/<svg\b[^>]*\bid="scene"[^>]*>[\s\S]*?<\/svg>/)?.[0];
+ assert.match(ship,/<image\b[^>]*href="\.\/studio-heim-portrait\.png"/);
+ assert.equal((plot.match(/studio-heim-portrait/g)||[]).length,1,'only the real ship gets an occupant');
+ assert.match(html.replace(plot,''),/嘿姆[^<]*试飞/,'crew introduction must not be painted on top of evidence');
+});
 let serial=0;
 async function boot({reduced=false}={}){
  const html=await readFile(new URL('../world-model.html',import.meta.url),'utf8');

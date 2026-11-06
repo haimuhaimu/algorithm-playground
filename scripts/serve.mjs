@@ -6,6 +6,8 @@ import {fileURLToPath} from 'node:url';
 const ROOT=fileURLToPath(new URL('../',import.meta.url));
 const TYPES={'navigation.css':'text/css; charset=utf-8','navigation.mjs':'text/javascript; charset=utf-8','index.html':'text/html; charset=utf-8','style.css':'text/css; charset=utf-8','app.mjs':'text/javascript; charset=utf-8','core.mjs':'text/javascript; charset=utf-8','data.mjs':'text/javascript; charset=utf-8'};
 Object.assign(TYPES,{'pathfinding.html':'text/html; charset=utf-8','pathfinding.css':'text/css; charset=utf-8','pathfinding.mjs':'text/javascript; charset=utf-8','pathfinding-core.mjs':'text/javascript; charset=utf-8'});
+for(const name of ['pathfinding-cats.mjs','pathfinding-cats-ui.mjs'])TYPES[name]='text/javascript; charset=utf-8';
+TYPES['pathfinding-cats.css']='text/css; charset=utf-8';
 Object.assign(TYPES,{'sand.html':'text/html; charset=utf-8','sand.css':'text/css; charset=utf-8','sand.mjs':'text/javascript; charset=utf-8','sand-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'firefly.html':'text/html; charset=utf-8','firefly.css':'text/css; charset=utf-8','firefly.mjs':'text/javascript; charset=utf-8','firefly-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'firefly-beat.mjs':'text/javascript; charset=utf-8','firefly-beat-ui.mjs':'text/javascript; charset=utf-8','firefly-beat.css':'text/css; charset=utf-8'});
@@ -27,6 +29,10 @@ TYPES['neural-lesson.css']='text/css; charset=utf-8';
 TYPES['neural-step.mjs']='text/javascript; charset=utf-8';
 TYPES['neural-step-view.mjs']='text/javascript; charset=utf-8';
 for(const name of ['neural-guide.mjs','neural-guide-ui.mjs','neural-guide-view.mjs'])TYPES[name]='text/javascript; charset=utf-8';
+for(const name of ['neural-cat-lesson.mjs','neural-cat-lesson-ui.mjs'])TYPES[name]='text/javascript; charset=utf-8';
+for(const name of ['neural-cat-coach.mjs','neural-cat-coach-ui.mjs','neural-cat-quick-ui.mjs'])TYPES[name]='text/javascript; charset=utf-8';
+TYPES['neural-cat-lesson.css']='text/css; charset=utf-8';
+for(let card=1;card<=20;card++)TYPES['neural-cat-'+String(card).padStart(2,'0')+'.jpg']='image/jpeg';
 for(const name of ['neural-gradient.mjs','neural-gradient-ui.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 TYPES['neural-residual.css']='text/css; charset=utf-8';
@@ -42,6 +48,7 @@ TYPES['feedback-story.css']='text/css; charset=utf-8';
 TYPES['seat-lesson.mjs']='text/javascript; charset=utf-8';
 TYPES['seat-lesson-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['seat-lesson.css']='text/css; charset=utf-8';
+TYPES['recommendation-cards.mjs']='text/javascript; charset=utf-8';
 TYPES['sand-lesson.mjs']='text/javascript; charset=utf-8';
 TYPES['sand-lesson-ui.mjs']='text/javascript; charset=utf-8';
 TYPES['mining-shared-evidence.mjs']='text/javascript; charset=utf-8';
@@ -74,6 +81,15 @@ for(const name of ['agent-frames-ui.mjs','agent-frames-tool.mjs'])TYPES[name]='t
 for(const name of ['learning-route.mjs','learning-route-ui.mjs','learning-route-trials.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['home.mjs','home-core.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg'])TYPES[name]='image/jpeg';
+TYPES['cat-album.css']='text/css; charset=utf-8';
+TYPES['cat-album.mjs']='text/javascript; charset=utf-8';
+for(const name of ['cat-album-cover.jpg','cat-comic-substitute.jpg','cat-comic-boss.jpg','cat-comic-warmth.jpg'])TYPES[name]='image/jpeg';
+TYPES['studio-cat-assets.mjs']='text/javascript; charset=utf-8';
+for(const name of [
+ 'studio-heim-portrait.png','studio-heim-idle.png','studio-heim-run.png',
+ 'studio-bobby-portrait.png','studio-bobby-idle.png','studio-bobby-run.png',
+ 'studio-chouchou-portrait.png','studio-chouchou-idle.png','studio-chouchou-run.png',
+])TYPES[name]='image/png';
 function teachingModuleOrigin(raw){
  if(typeof raw!=='string')return null;
  try{

@@ -80,13 +80,21 @@ test('CLI slow replay reads the real next cat pixel only after all three code bi
   assert.equal(replay.json.data.matches,true);assert.equal(replay.json.data.authenticatesUser,false);
  }
 });
-test('CLI accepts only the four fixed postcards and completes their actual packets',()=>{
- for(const preset of ['cat','heart','noise','blank']){
+test('CLI completes actual packets for current postcards and the two legacy cats',()=>{
+ for(const preset of ['heim','bobby','chouchou-studio','heart','noise','blank','chouchou','cat']){
   const run=call('run',JSON.stringify({experimentId:'pixel-decode',preset,actions:[{action:'read',value:528}]}));
   assert.equal(run.status,0,run.json.error);const receipt=run.json.data,evidence=receipt.result.evidence;
   assert.equal(evidence.decodedCount,256);assert.equal(evidence.pixels.length,256);
   assert.equal(receipt.result.packetComplete,true);assert.equal(receipt.result.allPixelsDecoded,true);
   assert.equal(evidence.sentBits,evidence.totalBits);assert.equal(evidence.phase,'complete');
+  assert.equal(receipt.fixture.id,'pixel-'+preset+'-v1');
+  if(['heim','bobby','chouchou-studio'].includes(preset)){
+   const replay=call('replay',JSON.stringify(receipt));
+   assert.equal(replay.status,0,replay.json.error);
+   assert.equal(replay.json.data.matches,true);
+  }
+  if(preset==='chouchou'){assert.equal(receipt.fixture.id,'pixel-chouchou-v1');assert.equal(evidence.packetBytes,49);}
+  if(preset==='chouchou-studio')assert.equal(evidence.packetBytes,52);
   if(preset==='noise')assert.equal(evidence.packetBytes,66,'the uniform-frequency picture is larger than the 64-byte raw image');
   if(preset==='blank'){assert.equal(evidence.treeBits,3);assert.equal(evidence.totalBits,264);}
  }

@@ -108,3 +108,18 @@ test('scenes are fresh, valid and empty starts empty',()=>{
  assert.ok(countMaterials(createWorld('hourglass')).sand>100);
  assert.throws(()=>createWorld('unknown'),/scene/i);
 });
+
+test('the optional cat bowl contains its water until the player erases its floor',()=>{
+ const fill=w=>w.cells.findIndex((cell,i)=>cell===WATER&&Math.floor(i/w.width)>42);
+ const step=(w,n)=>{for(let i=0;i<n;i++)w=stepWorld(w);return w;};
+ const bowl=createWorld('cat-bowl');
+ const initial=countMaterials(bowl);
+ assert.ok(initial.water>0&&initial.wall>0&&initial.sand===0);
+ assert.equal(bowl.cells[24*bowl.width+36],EMPTY,'the top of the bowl is open');
+ assert.deepEqual(createWorld(),createWorld('splitter'),'the original default remains unchanged');
+ const settled=step(bowl,120);
+ assert.equal(fill(settled),-1,'the walls should contain the original water');
+ assert.deepEqual(countMaterials(settled),initial);
+ const opened=paintStroke(settled,{x:35,y:42},{x:37,y:42},EMPTY,2);
+ assert.ok(fill(step(opened,120))>=0,'the real simulation drains through an erased section');
+});

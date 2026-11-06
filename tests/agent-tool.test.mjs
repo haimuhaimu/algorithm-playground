@@ -79,13 +79,13 @@ test('replay rejects forged world state, extra fields and incompatible versions'
  }
 });
 test('Agent return keeps route and request binding, rejects unfinished or mismatched runs',()=>{
- const context=readGenaiHandoffContext(contextURL('http://127.0.0.1:3130/?page=bad#old'));
+ const source=contextURL('http://127.0.0.1:3130/?page=bad#old'),context=readGenaiHandoffContext(source);
  assert.deepEqual(context,{journeyId:'agent-learning',requestId:'agent-test-request-1234',returnURL:'http://127.0.0.1:3130/?page=routes&section=agent-journey'});
  assert.equal(readGenaiHandoffContext(contextURL('https://example.com/')),null);
- assert.throws(()=>createGenaiReturnUrl(context,run(['stop'])));
- assert.throws(()=>createGenaiReturnUrl(context,runLearningTool({experimentId:'learning-route',actions:[]})));
+ assert.throws(()=>createGenaiReturnUrl(context,run(['stop']),source));
+ assert.throws(()=>createGenaiReturnUrl(context,runLearningTool({experimentId:'learning-route',actions:[]}),source));
  const receipt=run(['stop','restart','retry','check']);
- const back=new URL(createGenaiReturnUrl(context,receipt));
+ const back=new URL(createGenaiReturnUrl(context,receipt,source));
  const encoded=back.hash.split('=')[1];
  assert.deepEqual(JSON.parse(Buffer.from(encoded,'base64url').toString('utf8')),{format:'genai-learning-os/playground-handoff',schemaVersion:1,journeyId:'agent-learning',requestId:context.requestId,receipt});
 });

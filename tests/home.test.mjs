@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createShowcaseScene,showcaseFrame,legacyRecommendationTarget,createHeroClock} from '../home-core.mjs';
+import {createShowcaseScene,showcaseFrame,legacyRecommendationTarget,createHeroClock,showcaseCats} from '../home-core.mjs';
 import {search} from '../pathfinding-core.mjs';
 import {readFile} from 'node:fs/promises';
 
@@ -19,6 +19,44 @@ test('hero replays the existing A* search and its real shortest route, without c
  }
  assert.deepEqual(scene.map,before);
  assert.deepEqual(showcaseFrame(scene,scene.duration),first);
+});
+test('the three cats wait for A*, follow consecutive solved cells, then reach the goal',()=>{
+ const scene=createShowcaseScene(),route=search(scene.map,'astar').path;
+ const start=scene.delay+scene.trace.visited.length*scene.interval;
+ const before=showcaseCats(scene,start-1);
+ assert.equal(before.phase,'searching');
+ assert.deepEqual(before.cats.map(cat=>[cat.id,cat.from,cat.to]),[
+  ['heim',76,76],['bobby',76,76],['chouchou',76,76],
+ ]);
+ let separated=false;
+ const moved=new Set();
+ for(let elapsed=start;elapsed<scene.duration;elapsed+=17){
+  const shot=showcaseCats(scene,elapsed);
+  const positions=shot.cats.map(({id,from,to,progress})=>{
+   const index=route.indexOf(from);
+   assert.ok(index>=0 && (to===from || to===route[index+1]),id);
+   assert.ok(progress>=0 && progress<=1,id);
+   if(to!==from)moved.add(id);
+   return index+progress;
+  });
+  assert.ok(positions[0]>=positions[1] && positions[1]>=positions[2]);
+  separated ||= positions[0]>positions[1] && positions[1]>positions[2];
+ }
+ assert.equal(moved.size,3);
+ assert.ok(separated,'cats must run in a line, not all occupy the same cell');
+ const end=showcaseCats(scene,scene.duration-1);
+ assert.equal(end.phase,'arrived');
+ assert.deepEqual(end.cats.map(({from,to})=>[from,to]),[[88,88],[88,88],[88,88]]);
+ assert.deepEqual(showcaseCats(scene,scene.duration),showcaseCats(scene,0));
+});
+test('a failed search never launches the cats',()=>{
+ const scene=createShowcaseScene();
+ const map={...scene.map,walls:[...new Set([...scene.map.walls,61,75,77,91])]};
+ const trace=search(map,'astar');
+ assert.equal(trace.found,false);
+ const noRoute=showcaseCats({...scene,map,trace},scene.duration-1);
+ assert.equal(noRoute.phase,'blocked');
+ assert.ok(noRoute.cats.every(cat=>cat.from===map.start && cat.to===map.start));
 });
 test('legacy recommendation bookmarks preserve query and hash without taking over showcase anchors',()=>{
  for(const hash of ['#feed-section','#seat-lesson','#feedback-story','#controls-title','#feed'])assert.equal(legacyRecommendationTarget(hash,'?v=old'),`./recommendation.html?v=old${hash}`);

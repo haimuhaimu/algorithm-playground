@@ -46,9 +46,9 @@ const receipt = runLearningRoute([{action:'train'}], {producer:'agent'});
 
 ## 像素邮局：真实字节解码
 
-像素适配器只接受四个已有固定预设：`cat`、`heart`、`noise`、`blank`。它调用网页的同一套编码器、字节解析器和逐位交付计算，不根据百分比猜像素，也不读取自由画纸、草稿或 localStorage。不接受自定义像素、任意字节包或上传文件。
+像素适配器接受编辑器的六个固定预设：嘿姆 `heim`、波比 `bobby`、臭臭 `chouchou-studio`、`heart`、`noise`、`blank`。旧版 `chouchou` 和 `cat` 也保留，原有样例编号与收据仍可重放。它调用网页的同一套编码器、字节解析器和逐位交付计算，不根据百分比猜像素，也不读取自由画纸、草稿或 localStorage。不接受自定义像素、任意字节包或上传文件。
 
-下面从小猫回放中明确快进到的一格开始，再读取三位：
+下面用保留的旧版小猫验证重放兼容性：从明确快进到的一格开始，再读取三位。也可以把 `preset` 改成 `heim`、`bobby` 或 `chouchou-studio`；新版臭臭的样例编号为 `pixel-chouchou-studio-v1`，与旧版 `pixel-chouchou-v1` 不同。
 
 ```sh
 printf '%s' '{"experimentId":"pixel-decode","preset":"cat","mode":"slow-replay","actions":[{"action":"read","value":1},{"action":"read","value":1},{"action":"read","value":1}]}' | node scripts/learning-tool.mjs run
@@ -65,13 +65,13 @@ const pixelReceipt = runLearningTool({
 const verified = replayLearningReceipt(pixelReceipt);
 ```
 
-`mode` 省略时为 `delivery`，从第 0 位开始；`slow-replay` 与网页一样，明确跳到一个待解码像素的起点。小猫从第 50 位开始，三次读取后的游标是 51、52、53，当前暗号是 `0`、`01`、`011`，已还原格数是 35、35、36。前两位没有提前揭开第 36 格。
+`mode` 省略时为 `delivery`，从第 0 位开始；`slow-replay` 与网页一样，明确跳到一个待解码像素的起点。上例的旧版小猫从第 50 位开始，三次读取后的游标是 51、52、53，当前暗号是 `0`、`01`、`011`，已还原格数是 35、35、36。前两位没有提前揭开第 36 格。
 
 允许的像素动作是 `read`（`value` 为 1–528 的整数）、`seek`（0–528 的整数）和没有 `value` 的 `reset`。`read` 最多读取实际剩余位数；`seek` 超过该预设邮包末尾会记录为 `rejected`，游标不变；`reset` 回到所选模式的起点。`seek` 和 `slow-replay` 的快进不等于逐位点击历史，也不说明学习者亲自读过跳过的部分。
 
 像素收据的 `engineVersion` 为 `pixel-decode-v1`，`numericFormat` 为 `integer-bits`；`stepFormat` 明示紧凑步骤元组 `[status, sentBits, decodedCount, optionalReason]`。`result.evidence` 给出当前游标、完整暗号才出现的像素、实际编码树／载荷／补零开销，以及真实字节解析条目。逐字段重放核验会拒绝篡改的动作、游标、像素和步骤状态；不是相信收据自报的结果。
 
-必须区分 `result.allPixelsDecoded` 与 `result.packetComplete`：小猫第 428 位时 256 格已还原，还需收到最后 4 位补零，到第 432 位邮包才完整。它不是证明现实网络已送达。杂色预设是 66 B，大于原始四颜色像素的 64 B；无损不等于任何图都更小，动画速度也不代表算法性能。
+必须区分 `result.allPixelsDecoded` 与 `result.packetComplete`：旧版小猫第 428 位时 256 格已还原，还需收到最后 4 位补零，到第 432 位邮包才完整。它不是证明现实网络已送达。杂色预设是 66 B，大于原始四颜色像素的 64 B；无损不等于任何图都更小，动画速度也不代表算法性能。
 
 网页的像素回放提供显式“生成记录”。生成时暂停在真实游标，只导出已知固定预设的封存邮包与本轮记录，不拿编辑后的新画纸替代旧信，也不把定位或自动播放当成逐位手动操作。自定义画纸仍可正常玩、寄送和保留草稿，但本首版不导出其内容。生成不会自动复制或上传；主动复制给外部 AI 后，记录才离开本页。收据仍不认证身份、不评估掌握程度、不写入 GenAI OS 进度。
 

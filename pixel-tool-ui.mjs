@@ -1,4 +1,4 @@
-import {runPixelDecode,pixelPresetForSnapshot} from './pixel-tool.mjs?v=pixel-ai-1';
+import {runPixelDecode,pixelPresetForSnapshot} from './pixel-tool.mjs?v=studio-postcards-v2';
 
 export function setupPixelToolUI({document,window,getView,pause,available}){
  const $=id=>document.getElementById(id);let generation=0,lastView,lastSent;

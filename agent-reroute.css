@@ -54,6 +54,8 @@
 .reroute-console h2[data-outcome=verified] { color: var(--mission-green); }
 .reroute-transcript { display: grid; gap: 3px; margin-top: 11px; border-left: 3px solid var(--home-accent); padding: 6px 11px; background: var(--home-bg); }
 .reroute-transcript-label, .reroute-evidence dt { color: var(--home-muted); font-size: 12px; line-height: 1.4; }
+.reroute-transcript-label { display: flex; align-items: center; gap: 7px; }
+.reroute-transcript-label img { display: block; width: 24px; height: 24px; object-fit: cover; border-radius: 5px; }
 .reroute-transcript p { font-size: 16px; font-weight: 680; line-height: 1.4; }
 .reroute-evidence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 12px 0 10px; }
 .reroute-evidence > div { min-width: 0; border: 1px solid var(--home-line); border-radius: 8px; padding: 7px 9px; }

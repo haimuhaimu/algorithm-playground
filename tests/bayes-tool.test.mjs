@@ -40,7 +40,7 @@ test('Bayes handoff requires its own journey and a complete replayable record',(
  const request='bayes_request_12345678',base='https://haimuhaimu.github.io/genai-learning-os/';
  const source='https://haimuhaimu.github.io/algorithm-playground/mining.html?'+new URLSearchParams({genaiReturn:base,genaiRequest:request,genaiJourney:'bayes-learning'});
  const context=readGenaiHandoffContext(source);assert.ok(context);assert.equal(context.returnURL,base+'?page=routes&section=bayes-journey');
- const url=createGenaiReturnUrl(context,run(actions,'browser-session'));assert.ok(url.startsWith(base+'?page=routes&section=bayes-journey#playground='));
+ const url=createGenaiReturnUrl(context,run(actions,'browser-session'),source);assert.ok(url.startsWith(base+'?page=routes&section=bayes-journey#playground='));
  const payload=JSON.parse(Buffer.from(url.split('#playground=')[1],'base64url').toString());assert.equal(payload.journeyId,'bayes-learning');assert.equal(payload.receipt.experimentId,'bayes-update');
- assert.throws(()=>createGenaiReturnUrl(context,run([])));assert.throws(()=>createGenaiReturnUrl({...context,journeyId:'model-learning'},run()));
+ assert.throws(()=>createGenaiReturnUrl(context,run([]),source));assert.throws(()=>createGenaiReturnUrl({...context,journeyId:'model-learning'},run(),source));
 });

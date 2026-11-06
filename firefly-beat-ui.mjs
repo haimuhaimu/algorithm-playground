@@ -1,4 +1,4 @@
-import {createBeatLesson,selectBeatCase,guessBeat,runBeat,retryBeat} from './firefly-beat.mjs?v=one-beat-1';
+import {createBeatLesson,selectBeatCase,guessBeat,runBeat,retryBeat,createCatBeatScene,runCatBeat} from './firefly-beat.mjs?v=cat-beat-v1';
 
 const names={faster:'加快追上',slower:'放慢等一等',same:'照自己的节拍走'};
 const contexts={ahead:'三只邻居此刻领先 ¼ 圈。它们和金色这只的天生步速完全相同。',behind:'三只邻居此刻落后 ¼ 圈。它们和金色这只的天生步速完全相同。',out:'邻居仍领先 ¼ 圈，但距离在听见范围外。这只还会追上去吗？'};
@@ -9,6 +9,38 @@ function dial(world,solo=null){
  const ticks=Array.from({length:12},(_,i)=>{const a=i*Math.PI/6;return `<line x1="${110+Math.sin(a)*73}" y1="${106-Math.cos(a)*73}" x2="${110+Math.sin(a)*79}" y2="${106-Math.cos(a)*79}"/>`;}).join('');
  return `<svg viewBox="0 0 220 214" role="img" aria-label="金色这只 ${angle(p.phase)}，三只邻居 ${angle(q.phase)}${solo?'，独自走会在 '+angle(solo.points[0].phase):''}"><circle class="beat-ring" cx="110" cy="106" r="79"/><g class="beat-ticks">${ticks}</g><text x="110" y="15" text-anchor="middle">亮起 · 0°</text><text x="110" y="207" text-anchor="middle">一圈 = 一个明暗周期 ↻</text>${solo?hand(solo.points[0].phase,70,'beat-solo'):''}${hand(q.phase,52,'beat-neighbor')}${hand(p.phase,70,'beat-actual')}<circle class="beat-pin" cx="110" cy="106" r="5"/></svg>`;
 }
+
+function mountCatBeat($){
+ const action=$('cat-beat-try');if(!action)return;
+ const scene=createCatBeatScene(),letters=['A','B','C'];
+ const x=position=>25+position*360;
+ const center=x(scene.point.x),reach=scene.radius*360/1.6;
+ const changed=(a,b)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)))>1e-9;
+ const shownPhase=rad=>(Math.round((degree(rad)+1e-9)*10)/10).toFixed(1)+'°';
+ const result=$('cat-beat-result'),rows=$('cat-beat-rows'),status=$('cat-beat-status');
+ function drawMap(direct=[],indirect=[]){
+  const points=scene.world.points;
+  const influence=indirect[1]?`<path class="cat-beat-relay" d="M${x(points[0].x)} 28H${x(points[1].x)}"/>`:'';
+  $('cat-beat-map').innerHTML=`<svg viewBox="0 0 325 64" role="img" aria-label="波比和 A 在虚线框内，B 在框外，C 离另外两只都远。" focusable="false"><rect class="cat-beat-range" x="${center-reach}" y="8" width="${reach*2}" height="40" rx="8"/>${influence}<path class="cat-beat-source" d="M${center} 21l7 7-7 7-7-7Z"/>${points.map((p,i)=>`<circle class="cat-beat-marker${direct[i]?' heard':''}" cx="${x(p.x)}" cy="28" r="9"/><text x="${x(p.x)}" y="63">${letters[i]}</text>`).join('')}</svg>`;
+ }
+ result.hidden=true;drawMap();
+ action.addEventListener('click',()=>{
+  const {afterTap,tapped,quiet}=runCatBeat(scene);
+  const direct=afterTap.points.map((p,i)=>changed(p.phase,scene.world.points[i].phase));
+  const indirect=tapped.points.map((p,i)=>!direct[i]&&changed(p.phase,quiet.points[i].phase));
+  drawMap(direct,indirect);
+  rows.innerHTML=tapped.points.map((p,i)=>{
+   const effect=direct[i]?'直接听见':indirect[i]?'被邻居带动':'没变化';
+   return `<tr><th scope="row">${letters[i]} <span>${effect}</span></th><td>${shownPhase(quiet.points[i].phase)}</td><td>${shownPhase(p.phase)}</td></tr>`;
+  }).join('');
+  result.hidden=false;status.textContent='刚拍完：只有 A 的节拍被拨回亮起的位置。';
+ });
+ $('cat-beat-reset').addEventListener('click',()=>{
+  result.hidden=true;rows.innerHTML='';drawMap();action.focus();
+  status.textContent='回到同一起点，可以再拍一次。';
+ });
+}
+
 export function mountBeatLesson({document=globalThis.document,onStart=()=>{}}={}){
  const $=id=>document.getElementById(id);if(!$('beat-panel'))return;
  let state=createBeatLesson(),opened=false,index=0,raf=null,token=0,origin=null,startIndex=0;
@@ -45,6 +77,20 @@ export function mountBeatLesson({document=globalThis.document,onStart=()=>{}}={}
   renderFrames();
  }
  function prepare(){stop();onStart();}
+ function openCatBeat(){
+  const cat=$('cat-beat');if(!cat)return;
+  prepare();opened=true;cat.open=true;render();
+  $('cat-beat-summary')?.focus({preventScroll:true});
+  cat.scrollIntoView?.({block:'start',behavior:'instant'});
+ }
+ function routeCatBeat(){if(window.location?.hash==='#cat-beat')openCatBeat();}
+ window.addEventListener('hashchange',routeCatBeat);
+ $('cat-beat-link')?.addEventListener('click',event=>{
+  // A repeat click on the current fragment does not dispatch hashchange.
+  if(window.location?.hash==='#cat-beat'&&!event.defaultPrevented&&!event.altKey&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey){
+   event.preventDefault();openCatBeat();
+  }
+ });
  $('beat-open').addEventListener('click',()=>{prepare();opened=!opened;render();if(opened)$('beat-body').scrollIntoView?.({block:'start',behavior:'instant'});});
  for(const scenario of ['ahead','behind','out'])$('beat-'+scenario).addEventListener('click',()=>{prepare();state=selectBeatCase(state,scenario);index=state.comparison?30:0;render();});
  for(const guess of ['faster','slower','same'])$('beat-'+guess).addEventListener('click',()=>{if(state.comparison)return;prepare();state=guessBeat(state,guess);render();});
@@ -63,5 +109,7 @@ export function mountBeatLesson({document=globalThis.document,onStart=()=>{}}={}
  window.addEventListener('pagehide',()=>{stop();renderFrames();});
  document.addEventListener('firefly-world-action',()=>{if(raf!==null){stop();renderFrames();}});
  motion.addEventListener('change',e=>{reduced=e.matches;if(reduced)stop();render();});
+ mountCatBeat($);
  render();
+ routeCatBeat();
 }

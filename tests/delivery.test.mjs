@@ -26,8 +26,17 @@ test('decorative mining orbits are clipped without a programmatically scrollable
 });
 const files=['app.mjs','core.mjs','data.mjs','evolution-core.mjs','evolution.css','evolution.html','evolution.mjs','firefly-core.mjs','firefly.css','firefly.html','firefly.mjs','index.html','mining-core.mjs','mining.css','mining.html','mining.mjs','navigation.css','navigation.mjs','neural-core.mjs','neural.css','neural.html','neural.mjs','pathfinding-core.mjs','pathfinding.css','pathfinding.html','pathfinding.mjs','pixel-core.mjs','pixel.css','pixel.html','pixel.mjs','sand-core.mjs','sand.css','sand.html','sand.mjs','style.css'];
 files.push('neural-lesson.mjs','neural-lesson-ui.mjs','neural-lesson.css');
+files.push('pathfinding-cats.mjs','pathfinding-cats-ui.mjs','pathfinding-cats.css');
 files.push('neural-step.mjs','neural-step-view.mjs');
 files.push('neural-guide.mjs','neural-guide-ui.mjs','neural-guide-view.mjs','neural-guide.css');
+files.push('neural-cat-lesson.mjs','neural-cat-lesson-ui.mjs','neural-cat-lesson.css',
+ 'neural-cat-01.jpg','neural-cat-02.jpg','neural-cat-03.jpg','neural-cat-04.jpg',
+ 'neural-cat-05.jpg','neural-cat-06.jpg','neural-cat-07.jpg','neural-cat-08.jpg');
+files.push('neural-cat-coach.mjs','neural-cat-coach-ui.mjs');
+files.push('neural-cat-quick-ui.mjs');
+files.push('neural-cat-09.jpg','neural-cat-10.jpg','neural-cat-11.jpg','neural-cat-12.jpg',
+ 'neural-cat-13.jpg','neural-cat-14.jpg','neural-cat-15.jpg','neural-cat-16.jpg',
+ 'neural-cat-17.jpg','neural-cat-18.jpg','neural-cat-19.jpg','neural-cat-20.jpg');
 files.push('neural-gradient.mjs','neural-gradient-ui.mjs');
 files.push('neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs','neural-residual.css');
 files.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-generalization-view.mjs','neural-generalization.css');
@@ -49,10 +58,17 @@ files.push('mining-bayes.mjs','mining-bayes-ui.mjs','mining-bayes.css');
 files.push('distributions.html','distributions.css','distributions.mjs','distributions-core.mjs');
 files.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');
 files.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');
+files.push('recommendation-cards.mjs');
 files.push('evolution-birth.mjs','local-drafts.mjs','world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
 files.push('world-model-planning.mjs');
 files.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');
-files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');files.sort();
+files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');
+files.push('cat-album.css','cat-album.mjs','cat-album-cover.jpg','cat-comic-substitute.jpg','cat-comic-boss.jpg','cat-comic-warmth.jpg');
+files.push('studio-cat-assets.mjs',
+ 'studio-heim-portrait.png','studio-heim-idle.png','studio-heim-run.png',
+ 'studio-bobby-portrait.png','studio-bobby-idle.png','studio-bobby-run.png',
+ 'studio-chouchou-portrait.png','studio-chouchou-idle.png','studio-chouchou-run.png');
+files.sort();
 test('server serves only runtime assets with correct types, headers and methods',async()=>{
  const server=createAppServer(root);
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));

@@ -52,6 +52,7 @@
 .scene-station-side { fill: #843867; }
 .scene-station-top { fill: #ffc4e3; }
 .scene-station-window { fill: #382538; }
+.scene-desk-counter { fill: #843867; stroke: #ffc4e3; stroke-width: 1.5; }
 .scene-confirmed { visibility: hidden; }
 .mission-scene[data-receipt=delivered] .scene-confirmed { visibility: visible; }
 .scene-check { fill: none; stroke: var(--mission-green); stroke-width: 7; }
