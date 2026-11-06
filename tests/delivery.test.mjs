@@ -64,6 +64,15 @@ files.push('world-model-planning.mjs');
 files.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');
 files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');
 files.push('cat-album.css','cat-album.mjs','cat-album-cover.jpg','cat-comic-substitute.jpg','cat-comic-boss.jpg','cat-comic-warmth.jpg');
+files.push('cat-album-episodes.mjs',
+ 'cat-comic-standby-sound.jpg','cat-comic-third-exit.jpg','cat-comic-blanket-move.jpg',
+ 'cat-comic-window-audience.jpg','cat-comic-open-is-enough.jpg','cat-comic-dont-throw.jpg',
+ 'cat-comic-expression-check.jpg','cat-comic-grooming-service.jpg','cat-comic-squeeze-in.jpg',
+ 'cat-comic-models-ready.jpg','cat-comic-same-destination.jpg','cat-comic-tail-please.jpg',
+ 'cat-comic-on-time.jpg','cat-comic-all-innocent.jpg','cat-comic-got-it.jpg',
+ 'cat-comic-air-burial.jpg','cat-comic-photo-retake.jpg','cat-comic-bedroom-edition.jpg',
+ 'cat-comic-evening-show.jpg','cat-comic-last-bite.jpg','cat-comic-new-bed.jpg',
+);
 files.push('studio-cat-assets.mjs',
  'studio-heim-portrait.png','studio-heim-idle.png','studio-heim-run.png',
  'studio-bobby-portrait.png','studio-bobby-idle.png','studio-bobby-run.png',

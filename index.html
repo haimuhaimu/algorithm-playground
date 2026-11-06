@@ -6,7 +6,7 @@
  <meta name="color-scheme" content="light dark">
  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 8h20v20H8zM36 8h20v20H36zM8 36h20v20H8zM36 36h20v20H36z' fill='%23c22973'/%3E%3C/svg%3E">
  <link rel="stylesheet" href="./home.css?v=cat-lesson-preview-v1"><script type="module" src="./home.mjs?v=playground-pass-v1"></script>
- <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><link rel="stylesheet" href="./cat-album.css?v=cats-in-scenes-v1"><script type="module" src="./cat-album.mjs"></script>
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><link rel="stylesheet" href="./cat-album.css?v=collection"><script type="module" src="./cat-album.mjs?v=collection"></script>
  <title>算法游乐场 · 算法，玩着就懂了</title>
 </head>
 <body id="top">
@@ -24,7 +24,7 @@
      <figcaption><span><b class="demo-dot" aria-hidden="true"></b>A* 寻路演示<span id="hero-cat-stage"> · 找到路，三猫再出发</span></span><button id="hero-motion" type="button" aria-pressed="false" hidden><span aria-hidden="true">Ⅱ</span> 暂停动画</button></figcaption>
     </figure>
     <a class="hero-experiment" href="./pathfinding.html#cat-route-lab">改一格，给三猫找近路 <span aria-hidden="true">↗</span></a>
-    <a class="cat-album-entry" href="./cat-comic-substitute.jpg" id="cat-album-entry">
+    <a class="cat-album-entry" href="./cat-comic-standby-sound.jpg" id="cat-album-entry">
      <span class="cat-album-print" aria-hidden="true"><span class="cat-album-crop"><img src="./cat-album-cover.jpg" width="224" height="280" alt="" decoding="async"></span></span>
      <span class="cat-album-entry-copy"><strong>三猫小相册</strong><small>玩累了，翻一篇漫画</small></span>
      <span class="cat-album-entry-arrow" aria-hidden="true">›</span>
@@ -39,12 +39,12 @@
     </header>
     <div class="cat-album-nav" aria-label="翻看漫画">
      <button id="cat-album-prev" type="button">上一篇</button>
-     <span id="cat-album-count"></span>
+     <select id="cat-album-picker" aria-label="选篇"></select>
      <button id="cat-album-next" type="button">下一篇</button>
     </div>
     <div class="cat-album-scroll" id="cat-album-scroll" tabindex="0" role="region" aria-label="漫画图文">
      <figure class="cat-album-episode">
-      <figcaption><h3 id="cat-album-episode-title" aria-live="polite"></h3><p id="cat-album-caption"></p></figcaption>
+      <figcaption><div class="cat-album-episode-heading"><h3 id="cat-album-episode-title" aria-live="polite"></h3><span id="cat-album-count"></span></div><p id="cat-album-caption"></p></figcaption>
       <img id="cat-album-page" alt="" decoding="async">
       <p id="cat-album-error" role="status" hidden>这张漫画没加载出来，可以翻到另一篇再看看。</p>
      </figure>
