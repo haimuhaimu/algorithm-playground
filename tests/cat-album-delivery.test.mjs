@@ -17,7 +17,7 @@ test('the built homepage has an optional album beside the still-working experime
     await build(undefined, out);
     const home = await readFile(join(out, 'index.html'), 'utf8');
     assert.match(home, /href="\.\/pathfinding\.html#path-lab"/);
-    assert.match(home, /href="\.\/cat-comic-substitute\.jpg"[^>]*id="cat-album-entry"/);
+    assert.match(home, /href="\.\/cat-comic-standby-sound\.jpg"[^>]*id="cat-album-entry"/);
     assert.match(home, /<dialog[^>]+aria-labelledby="cat-album-title"/);
     for (const asset of assets) assert.ok((await readFile(join(out, asset))).length > 0, asset);
   } finally {

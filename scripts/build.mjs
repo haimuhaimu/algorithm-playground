@@ -1,6 +1,7 @@
 import {mkdir,readdir,readFile,writeFile,lstat,realpath} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {episodes} from '../cat-album-episodes.mjs';
 const ROOT=fileURLToPath(new URL('../',import.meta.url));
 const FILES=['navigation.css','navigation.mjs','index.html','style.css','app.mjs','core.mjs','data.mjs','pathfinding.html','pathfinding.css','pathfinding.mjs','pathfinding-core.mjs','sand.html','sand.css','sand.mjs','sand-core.mjs','firefly.html','firefly.css','firefly.mjs','firefly-core.mjs','evolution.html','evolution.css','evolution.mjs','evolution-core.mjs','neural.html','neural.css','neural.mjs','neural-core.mjs','mining.html','mining.css','mining.mjs','mining-core.mjs','pixel.html','pixel.css','pixel.mjs','pixel-core.mjs'];
 FILES.push('local-drafts.mjs','evolution-birth.mjs');
@@ -43,7 +44,7 @@ FILES.push('world-model-planning.mjs');
 FILES.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');
 FILES.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');
 FILES.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');
-FILES.push('cat-album.css','cat-album.mjs','cat-album-cover.jpg','cat-comic-substitute.jpg','cat-comic-boss.jpg','cat-comic-warmth.jpg');
+FILES.push('cat-album.css','cat-album.mjs','cat-album-episodes.mjs','cat-album-cover.jpg',...episodes.map(episode=>episode.file));
 FILES.push('studio-cat-assets.mjs',
  'studio-heim-portrait.png','studio-heim-idle.png','studio-heim-run.png',
  'studio-bobby-portrait.png','studio-bobby-idle.png','studio-bobby-run.png',

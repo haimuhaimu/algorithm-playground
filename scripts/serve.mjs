@@ -2,6 +2,7 @@ import {createServer} from 'node:http';
 import {readFile,realpath} from 'node:fs/promises';
 import {dirname,join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {episodes} from '../cat-album-episodes.mjs';
 
 const ROOT=fileURLToPath(new URL('../',import.meta.url));
 const TYPES={'navigation.css':'text/css; charset=utf-8','navigation.mjs':'text/javascript; charset=utf-8','index.html':'text/html; charset=utf-8','style.css':'text/css; charset=utf-8','app.mjs':'text/javascript; charset=utf-8','core.mjs':'text/javascript; charset=utf-8','data.mjs':'text/javascript; charset=utf-8'};
@@ -82,8 +83,8 @@ for(const name of ['learning-route.mjs','learning-route-ui.mjs','learning-route-
 for(const name of ['home.mjs','home-core.mjs'])TYPES[name]='text/javascript; charset=utf-8';
 for(const name of ['home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg'])TYPES[name]='image/jpeg';
 TYPES['cat-album.css']='text/css; charset=utf-8';
-TYPES['cat-album.mjs']='text/javascript; charset=utf-8';
-for(const name of ['cat-album-cover.jpg','cat-comic-substitute.jpg','cat-comic-boss.jpg','cat-comic-warmth.jpg'])TYPES[name]='image/jpeg';
+for(const name of ['cat-album.mjs','cat-album-episodes.mjs'])TYPES[name]='text/javascript; charset=utf-8';
+for(const name of ['cat-album-cover.jpg',...episodes.map(episode=>episode.file)])TYPES[name]='image/jpeg';
 TYPES['studio-cat-assets.mjs']='text/javascript; charset=utf-8';
 for(const name of [
  'studio-heim-portrait.png','studio-heim-idle.png','studio-heim-run.png',
