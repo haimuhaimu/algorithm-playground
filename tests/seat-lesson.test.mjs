@@ -66,3 +66,41 @@ test('empty and one-card lessons terminate without nonexistent rounds',()=>{
  const single=lesson.chooseSeat(lesson.createSeatLesson([posts[0]],{},profile),'a');assert.equal(single.complete,true);
  assert.equal(lesson.diversityCounterfactual(single).firstChangedSlot,null);
 });
+test('carryover keeps the previous same-topic runner-up beside the real next winner with count-only scores',()=>{
+ assert.equal(typeof lesson.carryoverComparison,'function');assert.equal(typeof lesson.seatGuessOptions,'function');
+ const first=start();assert.equal(lesson.carryoverComparison(first),null);
+ const s=lesson.nextSeat(lesson.chooseSeat(first,'b')),c=lesson.carryoverComparison(s);
+ assert.equal(c.justSeated.id,'a');assert.equal(c.carried.before.id,'b');assert.equal(c.carried.after.id,'b');
+ assert.equal(c.rival.after.id,'c');assert.equal(c.beforeCount,0);assert.equal(c.afterCount,1);
+ close(c.carried.before.score,.824);close(c.carried.after.score,.574);close(c.rival.before.score,.7176);close(c.rival.after.score,.7176);
+ close(c.carried.before.parts.click,.324);close(c.carried.after.parts.click,.324);
+ assert.equal(c.beforeWinnerId,'b');assert.equal(c.afterWinnerId,'c');
+ assert.deepEqual(lesson.seatGuessOptions(s).map(p=>p.id),['b','c']);assert.equal(s.guess,null);assert.equal(s.revealed,false);
+});
+test('balanced real example carries the cat card into the food seat without changing taste or rules',()=>{
+ assert.equal(typeof lesson.carryoverComparison,'function');
+ const first=lesson.createSeatLesson(POSTS,PRESETS.balanced.weights,INITIAL_PROFILE);
+ const s=lesson.nextSeat(lesson.chooseSeat(first,'0-0')),snapshot=structuredClone(s),c=lesson.carryoverComparison(s);
+ assert.equal(c.carried.after.id,'0-4');assert.equal(c.rival.after.id,'1-0');
+ close(c.carried.before.score,1.1293);close(c.carried.after.score,.9168);close(c.rival.after.score,1.06364);
+ assert.deepEqual(s,snapshot);assert.deepEqual(s.weights,{click:80,diversity:85,newcomer:15});assert.equal(s.profile.cat,1);
+});
+test('zero diversity and score ties retain their real ordering and never invent a rank reversal',()=>{
+ assert.equal(typeof lesson.carryoverComparison,'function');
+ for(const w of [{click:40,diversity:0,newcomer:0},{click:0,diversity:0,newcomer:0}]){
+  const first=lesson.createSeatLesson(posts,w,profile,3),s=lesson.nextSeat(lesson.chooseSeat(first,'a')),c=lesson.carryoverComparison(s);
+  assert.equal(c.beforeWinnerId,'b');assert.equal(c.afterWinnerId,'b');
+  assert.equal(c.carried.before.score,c.carried.after.score);assert.equal(c.carried.after.parts.diversity,0);
+ }
+});
+test('carryover falls back for empty exhausted or same-topic-only pools and cannot reintroduce seated cards',()=>{
+ assert.equal(typeof lesson.carryoverComparison,'function');assert.equal(typeof lesson.seatGuessOptions,'function');
+ for(const pool of [[],[posts[0]],[posts[0],posts[1]],[posts[0],posts[2]]]){
+  let s=lesson.createSeatLesson(pool,weights,profile,3);
+  if(pool.length)s=lesson.nextSeat(lesson.chooseSeat(s,pool[0].id));
+  assert.equal(lesson.carryoverComparison(s),null);
+  assert.ok(lesson.seatGuessOptions(s).every(p=>!s.trace.feed.slice(0,s.index).some(seated=>seated.id===p.id)));
+ }
+ const first=lesson.createSeatLesson([...posts,posts[0]],weights,profile,3),s=lesson.nextSeat(lesson.chooseSeat(first,'a'));
+ assert.deepEqual(lesson.seatGuessOptions(s).map(p=>p.id),['b','c']);
+});

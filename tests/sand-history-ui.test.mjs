@@ -17,7 +17,7 @@ async function boot({reduced=true}={}){
  const els=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([,id])=>[id,new Element()]));
  els.get('brush').value='2';els.get('speed').value='40';
  const materials=[1,2,3,0].map(v=>Object.assign(new Element(),{dataset:{material:String(v)}}));
- const scenes=['splitter','hourglass','empty'].map(v=>Object.assign(new Element(),{dataset:{scene:v}})),stage=new Element();
+ const scenes=[...new Set([...html.matchAll(/data-scene="([^"]+)"/g)].map(([,name])=>name))].map(v=>Object.assign(new Element(),{dataset:{scene:v}})),stage=new Element();
  doc=Object.assign(new EventTarget(),{hidden:false,documentElement:new Element(),getElementById:id=>els.get(id),querySelector:()=>stage,querySelectorAll:s=>s==='[data-material]'?materials:scenes});
  const frames=new Map(),win=new EventTarget();let seq=0;
  const globals={document:doc,window:win,matchMedia:q=>Object.assign(new EventTarget(),{matches:reduced&&q.includes('reduced-motion')}),requestAnimationFrame:fn=>{frames.set(++seq,fn);return seq;},cancelAnimationFrame:id=>frames.delete(id)};
@@ -131,5 +131,46 @@ test('visible history describes both destination ticks before the user chooses u
   assert.match(u.els.get('history-summary').textContent,/筑墙.*第 0 拍/,'the visible undo destination must not hide only in an accessible name');
   u.click('history-undo');assert.match(u.els.get('history-summary').textContent,/恢复.*筑墙.*第 3 拍/);
   u.click('history-redo');assert.match(u.els.get('history-summary').textContent,/筑墙.*第 0 拍/);
+ }finally{u.restore();}
+});
+
+test('the current cat bowl scene keeps its identity, complete evolved world and named reset/switch history',async()=>{
+ const u=await boot();try{
+  u.scene('cat-bowl');
+  assert.match(u.els.get('history-summary').textContent,/切换臭臭的水碗/);
+  assert.equal(u.selected('cat-bowl'),'true');
+  assert.match(u.els.get('scene-tip').textContent,/臭臭的碗里有水/);
+  const fullBowl=u.pixels(),water=u.count('water'),wall=u.count('wall');
+  u.material(0);u.brush(0);u.stamp(36,42);
+  for(let i=0;i<9;i++)u.click('step');
+  const altered=u.pixels();
+  assert.notDeepEqual(altered,fullBowl);assert.equal(u.count('water'),water);assert.equal(u.count('wall'),wall-1);
+  u.click('reset');
+  assert.match(u.els.get('history-summary').textContent,/重置臭臭的水碗/);
+  u.click('history-undo');
+  assert.deepEqual(u.pixels(),altered);assert.equal(u.els.get('tick-count').textContent,'第 9 拍');
+  assert.equal(u.selected('cat-bowl'),'true');assert.equal(u.stage.dataset.paused,'true');assert.equal(u.frames.size,0);
+  u.click('history-redo');assert.deepEqual(u.pixels(),fullBowl);assert.equal(u.els.get('tick-count').textContent,'第 0 拍');
+  u.click('history-undo');u.scene('empty');u.click('history-undo');
+  assert.deepEqual(u.pixels(),altered);assert.equal(u.selected('cat-bowl'),'true');
+  assert.match(u.els.get('scene-tip').textContent,/臭臭的碗里有水/);
+  u.click('history-redo');assert.equal(u.selected('empty'),'true');assert.equal(u.count('water'),0);
+ }finally{u.restore();}
+});
+
+test('entering the observation lesson closes held paint and leaves a stable undo/redo checkpoint',async()=>{
+ const u=await boot({reduced:false});try{
+  u.scene('empty');u.material(2);u.brush(0);
+  u.pointer('pointerdown',8,10);u.tick(1000);u.tick(1100);
+  const water=u.count('water'),beforePause=u.pixels(),stale=[...u.frames.values()];
+  u.doc.dispatchEvent(new Event('sand-lesson-start'));
+  assert.equal(u.stage.dataset.paused,'true');assert.equal(u.frames.size,0);
+  stale.forEach(fn=>fn(20000));u.pointer('pointerup',20,10);
+  assert.deepEqual(u.pixels(),beforePause);
+  u.click('history-undo');assert.equal(u.count('water'),0);
+  u.click('history-redo');assert.equal(u.count('water'),water);assert.deepEqual(u.pixels(),beforePause);
+  u.key('ArrowRight');u.key('Enter');
+  u.doc.dispatchEvent(new Event('sand-lesson-start'));u.key('Enter',{repeat:true});
+  const fixed=u.pixels();u.tick(40000);assert.deepEqual(u.pixels(),fixed);
  }finally{u.restore();}
 });

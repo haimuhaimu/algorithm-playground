@@ -15,7 +15,7 @@ test('near-canvas brush hint follows material, radius, keyboard and pause withou
  }
  const els=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([,id])=>[id,new Element()]));
  const materials=[1,2,3,0].map(material=>Object.assign(new Element(),{dataset:{material:String(material)}}));
- const scenes=['splitter','hourglass','empty'].map(scene=>Object.assign(new Element(),{dataset:{scene}}));
+ const scenes=[...html.matchAll(/\bdata-scene="([^"]+)"/g)].map(([,scene])=>Object.assign(new Element(),{dataset:{scene}}));
  const stage=new Element();
  const doc=Object.assign(new EventTarget(),{hidden:false,documentElement:new Element(),getElementById:id=>els.get(id),querySelector:()=>stage,querySelectorAll:s=>s==='[data-material]'?materials:scenes});
  const globals={document:doc,window:new EventTarget(),matchMedia:q=>Object.assign(new EventTarget(),{matches:q.includes('reduced-motion')}),requestAnimationFrame:()=>1,cancelAnimationFrame:()=>{}};
@@ -37,5 +37,14 @@ test('near-canvas brush hint follows material, radius, keyboard and pause withou
   const announcements=els.get('brush-preview').textUpdates;
   els.get('step').dispatchEvent(new Event('click'));els.get('step').dispatchEvent(new Event('click'));
   assert.equal(els.get('brush-preview').textUpdates,announcements,'simulation redraws must not repeat the live brush announcement');
+  const catBowl=scenes.find(button=>button.dataset.scene==='cat-bowl');
+  assert.ok(catBowl,'the bowl must be selectable in the real free-canvas toolbar');
+  assert.equal(catBowl.attributes.get('aria-pressed'),'false');
+  catBowl.dispatchEvent(new Event('click'));
+  assert.equal(catBowl.attributes.get('aria-pressed'),'true');
+  assert.ok(Number(els.get('water-count').textContent)>0);
+  assert.match(els.get('scene-tip').textContent,/碗/);
+  scenes.find(button=>button.dataset.scene==='splitter').dispatchEvent(new Event('click'));
+  assert.deepEqual(counts(),before,'the original scene remains restorable');
  }finally{for(const[k,d]of old)if(d)Object.defineProperty(globalThis,k,d);else delete globalThis[k];}
 });

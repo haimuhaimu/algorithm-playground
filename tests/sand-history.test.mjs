@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {access} from 'node:fs/promises';
-import {createWorld,paintStroke,stepWorld,WALL} from '../sand-core.mjs';
+import {createWorld,paintStroke,stepWorld,WALL,SAND,WATER} from '../sand-core.mjs';
 async function api(){
  const file=new URL('../sand-history.mjs',import.meta.url);
  assert.ok(await access(file).then(()=>true,()=>false),'reversible edits need a snapshot history module');
@@ -44,4 +44,27 @@ test('bounded history drops only oldest edits and returns snapshots without shar
  assert.equal(undoChange(b.history,b.state),null);
  assert.equal(redoChange(b.history,b.state).history.past.length,1);
  const copy=snapshot(state.scene,state.world);state.world.cells[4*72+2]=0;assert.equal(copy.world.cells[4*72+2],3);
+});
+
+test('mixed sand and water continue identically after full-state undo and redo at odd/even ticks',async()=>{
+ const {createHistory,snapshot,recordChange,undoChange,redoChange}=await api();
+ for(const scene of ['splitter','hourglass','empty','cat-bowl'])for(const ticks of [7,8]){
+  let original=createWorld(scene);
+  original=paintStroke(original,{x:30,y:5},{x:32,y:5},SAND,0);
+  original=paintStroke(original,{x:14,y:10},{x:18,y:10},WATER,0);
+  for(let i=0;i<ticks;i++)original=stepWorld(original);
+  const before=snapshot(scene,original);
+  let changed=paintStroke(original,{x:10,y:28},{x:55,y:28},WALL,0);
+  const h=recordChange(createHistory(),before,snapshot(scene,changed),'筑墙');
+  for(let i=0;i<13;i++)changed=stepWorld(changed);
+  const evolved=snapshot(scene,changed),u=undoChange(h,evolved),r=redoChange(u.history,u.state);
+  assert.deepEqual(u.state,before);assert.deepEqual(r.state,evolved);
+  let fromUndo=u.state.world,fromRedo=r.state.world;
+  for(let i=0;i<40;i++){
+   original=stepWorld(original);fromUndo=stepWorld(fromUndo);
+   changed=stepWorld(changed);fromRedo=stepWorld(fromRedo);
+   assert.deepEqual(fromUndo,original,scene+' undo continuation '+i);
+   assert.deepEqual(fromRedo,changed,scene+' redo continuation '+i);
+  }
+ }
 });

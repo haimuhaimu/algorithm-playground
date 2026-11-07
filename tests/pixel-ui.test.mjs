@@ -2,7 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { memoryStorage } from './storage-helper.mjs';
+import { DRAFT_KEYS } from '../local-drafts.mjs';
+import { preset } from '../pixel-core.mjs';
 let serial = 0;
+test('allocating codes preserves editor, draft writes, last receipt and existing recipient/reorder exercises',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('code-start'),'code allocation must be integrated in the actual postcard page');
+  u.click('send');const drawing=u.pixels('editor'),received=u.pixels('receiver'),writes=storage.writes;
+  u.click('code-start');
+  for(const i of [0,3])u.click('code-group-'+i);u.click('code-merge');
+  u.click('code-undo');u.click('code-retry');
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),received);
+  assert.equal(storage.writes,writes);assert.equal(u.frames.size,0);
+  u.click('recipient-start');assert.equal(u.els.get('recipient-lesson').hidden,false);
+  u.click('reorder-start');assert.equal(u.els.get('reorder-lesson').hidden,false);
+ }finally{u.restore();}
+});
 test('recipient reads actual bits and restores eight cells without editing or saving the postcard',async()=>{
  const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
   assert.ok(u.els.has('recipient-start'),'recipient entry exists');
@@ -84,14 +99,296 @@ async function boot({ reduced = false, missingCanvas = false, storage = memorySt
   Object.assign(globalThis, globals);
   try { await import(new URL('../pixel.mjs?t=' + ++serial, import.meta.url)); } catch (e) { restore(); throw e; }
   const fire = (el, type, props = {}) => el.dispatchEvent(Object.assign(new Event(type, { cancelable: true }), props));
-  return { els, doc, frames, media, restore, fire, click: id => fire(els.get(id), 'click'),
+  return { els, doc, win:globals.window, frames, media, restore, fire, click: id => fire(els.get(id), 'click'),
+    advance(t) { const q = [...frames.values()]; frames.clear(); for (const fn of q) fn(t); },
     pointer(type, x, y, id = 1) { fire(els.get('editor'), type, { clientX: x, clientY: y, pointerId: id, button: 0 }); },
     key(key, props = {}) { fire(els.get('editor'), 'keydown', { key, ...props }); },
-    finish() { for (const t of [0, 2000]) { const q = [...frames.values()]; frames.clear(); for (const fn of q) fn(t); } },
+    finish() { for (const t of [0, 20000]) { const q = [...frames.values()]; frames.clear(); for (const fn of q) fn(t); } },
     hide() { doc.hidden = true; fire(doc, 'visibilitychange'); },
     pixels: id => [...els.get(id).ctx.pixels.values()],
   };
 }
+const palette=['#f3eedc','#30352a','#bdd754','#e79d88'];
+function legacyStorage(received=null,name='cat'){
+ const storage=memoryStorage();
+ storage.records.set(DRAFT_KEYS.pixel,JSON.stringify({version:1,value:{pixels:preset(name),color:1,history:[],received}}));
+ return storage;
+}
+
+test('Heim is the editable default and both studio postcards send and replay as distinct pixels',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('preset-heim')&&u.els.has('preset-bobby'));
+  assert.equal(u.els.get('preset-heim').getAttribute('aria-pressed'),'true');
+  assert.deepEqual(u.pixels('editor'),preset('heim').map(p=>palette[p]));
+  assert.notDeepEqual(preset('heim'),preset('bobby'));
+  for(const name of ['bobby','heim']){
+   u.click('preset-'+name);
+   const art=preset(name).map(p=>palette[p]);
+   assert.deepEqual(u.pixels('editor'),art);
+   u.click('send');assert.deepEqual(u.pixels('receiver'),art);
+   assert.match(u.els.get('receipt').textContent,/256 \/ 256/);
+   u.click('delivery-replay');u.click('pixel-ai-generate');
+   const receipt=JSON.parse(u.els.get('pixel-ai-text').value);
+   assert.equal(receipt.fixture.id,'pixel-'+name+'-v1');
+   assert.equal((await import('../learning-tool.mjs')).replayLearningReceipt(receipt).matches,true);
+  }
+ }finally{u.restore();}
+});
+
+test('a previous Chouchou draft and received postcard stay intact; selecting Bobby remains undoable',async()=>{
+ const storage=legacyStorage(preset('chouchou'),'chouchou'),saved=storage.records.get(DRAFT_KEYS.pixel),u=await boot({storage,reduced:true});try{
+  const old=preset('chouchou').map(p=>palette[p]);
+  assert.deepEqual(u.pixels('editor'),old);
+  assert.deepEqual(u.pixels('receiver'),old);
+  assert.equal(storage.records.get(DRAFT_KEYS.pixel),saved);
+  assert.equal(u.els.get('preset-heim').getAttribute('aria-pressed'),'false');
+  assert.equal(u.els.get('preset-bobby').getAttribute('aria-pressed'),'false');
+  u.click('preset-bobby');assert.deepEqual(u.pixels('editor'),preset('bobby').map(p=>palette[p]));
+  assert.deepEqual(u.pixels('receiver'),old);
+  u.click('undo');assert.deepEqual(u.pixels('editor'),old);
+ }finally{u.restore();}
+});
+
+test('new Chouchou can be selected, undone, sent and replayed without replacing the archived drawing',async()=>{
+ const storage=legacyStorage(preset('chouchou'),'chouchou'),u=await boot({storage,reduced:true});try{
+  const old=u.pixels('editor'),oldReceipt=u.pixels('receiver');
+  assert.ok(u.els.has('preset-chouchou-studio'),'new art is an editor action');
+  u.click('preset-chouchou-studio');
+  const art=u.pixels('editor');
+  assert.equal(art.length,256);
+  assert.notDeepEqual(art,old);assert.notDeepEqual(art,preset('bobby').map(p=>palette[p]));
+  assert.deepEqual(u.pixels('receiver'),oldReceipt,'changing the paper must not deliver it');
+  u.click('undo');assert.deepEqual(u.pixels('editor'),old);
+  u.click('preset-chouchou-studio');u.click('send');
+  assert.deepEqual(u.pixels('receiver'),art);assert.match(u.els.get('receipt').textContent,/256 \/ 256/);
+  u.click('delivery-replay');u.click('pixel-ai-generate');
+  const record=JSON.parse(u.els.get('pixel-ai-text').value);
+  assert.equal(record.fixture.id,'pixel-chouchou-studio-v1');
+  assert.equal((await import('../learning-tool.mjs')).replayLearningReceipt(record).matches,true);
+ }finally{u.restore();}
+});
+
+test('three-cat postage seals the first guess, shows computed evidence and preserves the drawing and mail',async()=>{
+ const storage=legacyStorage(preset('bobby'),'heart'),u=await boot({storage,reduced:true});try{
+  const before=storage.records.get(DRAFT_KEYS.pixel),drawing=u.pixels('editor'),e=id=>u.els.get(id);
+  assert.ok(u.els.has('cat-postage'),'comparison belongs to the actual editor page');
+  assert.ok(e('cat-guess-chouchou-studio'),'the real page lets you guess before revealing');
+  assert.equal(e('cat-postage-evidence').hidden,true);
+  assert.equal(e('cat-postage-chouchou-studio-badge').hidden,true);
+  assert.equal(e('cat-postage-result').textContent,'');
+  assert.equal(u.pixels('cat-guess-chouchou-studio-art').length,256);
+  u.click('cat-guess-chouchou-studio');
+  assert.equal(e('cat-postage-evidence').hidden,false);
+  assert.equal(e('cat-postage-chouchou-studio-badge').hidden,false);
+  assert.match(e('cat-postage-result').textContent,/臭臭.*52 B.*波比.*47 B/);
+  assert.match(e('cat-postage-why').textContent,/43.*18.*3 位/);
+  assert.equal(e('cat-postage-bobby-bits').textContent,'361 + 15 + 0 = 376 位');
+  assert.equal(e('cat-postage-chouchou-studio-bits').textContent,'400 + 15 + 1 = 416 位');
+  const first=e('cat-postage-result').textContent;
+  u.click('cat-guess-bobby');assert.equal(e('cat-postage-result').textContent,first);
+  u.click('cat-postage-retry');
+  assert.equal(e('cat-postage-evidence').hidden,true);
+  assert.equal(u.doc.activeElement,e('cat-guess-chouchou-studio'));
+  u.click('cat-guess-bobby');assert.match(e('cat-postage-result').textContent,/猜中.*波比.*47 B/);
+  assert.equal(u.els.get('cat-postage-heim-size').textContent,'50 B');
+  assert.equal(u.els.get('cat-postage-bobby-size').textContent,'47 B');
+  assert.equal(u.els.get('cat-postage-chouchou-studio-size').textContent,'52 B');
+  assert.deepEqual([0,1,2,3].map(i=>u.els.get('cat-postage-chouchou-studio-'+i).textContent),[157,54,2,43]);
+  assert.equal(storage.records.get(DRAFT_KEYS.pixel),before);
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),preset('bobby').map(p=>palette[p]));
+ }finally{u.restore();}
+});
+
+test('an optional postage guess neither interrupts an in-flight parcel nor requires Canvas',async()=>{
+ const u=await boot();try{
+  u.click('send');assert.equal(u.frames.size,1);
+  assert.match(u.els.get('receipt').textContent,/寄送中/);
+  u.click('cat-guess-heim');
+  assert.equal(u.frames.size,1);assert.match(u.els.get('receipt').textContent,/寄送中/);
+  u.finish();assert.match(u.els.get('receipt').textContent,/256 \/ 256/);
+ }finally{u.restore();}
+ const fallback=await boot({missingCanvas:true});try{
+  assert.equal(fallback.els.get('send').disabled,true);
+  fallback.click('cat-guess-bobby');
+  assert.match(fallback.els.get('cat-postage-result').textContent,/猜中.*47 B/);
+ }finally{fallback.restore();}
+});
+
+test('the byte experiment changes only its copy and crosses the real byte threshold on the fourth edit',async()=>{
+ const storage=legacyStorage(preset('bobby'),'heart'),u=await boot({storage});try{
+  const e=id=>u.els.get(id),summary=id=>e('cat-byte-'+id).textContent;
+  const before=storage.records.get(DRAFT_KEYS.pixel),drawing=u.pixels('editor'),received=u.pixels('receiver');
+  assert.ok(e('cat-byte-next'),'the actual quiz includes the next experiment');
+  u.click('send');assert.equal(u.frames.size,1);
+  u.click('cat-guess-chouchou-studio');
+  const art=u.pixels('cat-byte-preview');
+  assert.equal(art.length,256);
+  assert.equal(summary('payload'),'400 位');assert.equal(summary('bytes'),'52 B');
+  for(const [i,payload,pad,bytes] of [[1,398,3,52],[2,396,5,52],[3,394,7,52],[4,392,1,51]]){
+   u.click('cat-byte-next');
+   assert.equal(summary('payload'),payload+' 位');
+   assert.equal(summary('padding'),pad+' 位');
+   assert.equal(summary('bytes'),bytes+' B');
+   assert.match(summary('last'),new RegExp('第 '+bytes+' 个字节'));
+   assert.equal((e('cat-byte-bits').innerHTML.match(/class="is-padding"/g)??[]).length,pad);
+   assert.equal(u.pixels('cat-byte-preview').filter((color,j)=>color!==art[j]).length,i);
+   assert.equal(u.frames.size,1,'the isolated experiment does not touch delivery');
+  }
+  assert.equal(e('cat-byte-next').getAttribute('aria-disabled'),'true');
+  assert.match(summary('status'),/52 B.*51 B/);
+  u.click('cat-byte-next');assert.equal(summary('bytes'),'51 B');
+  u.click('cat-byte-reset');assert.equal(summary('bytes'),'52 B');
+  assert.deepEqual(u.pixels('cat-byte-preview'),art);
+  assert.equal(u.doc.activeElement,e('cat-byte-next'));
+  u.click('cat-byte-next');u.click('cat-postage-retry');u.click('cat-guess-bobby');
+  assert.equal(summary('payload'),'400 位','resetting the quiz starts a fresh isolated experiment');
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),received);
+  assert.equal(storage.records.get(DRAFT_KEYS.pixel),before);
+  u.finish();assert.match(e('receipt').textContent,/256 \/ 256/);
+ }finally{u.restore();}
+});
+
+test('delivery never reveals the legacy cat green cells before their actual code bits arrive',async()=>{
+ const u=await boot({storage:legacyStorage()});try{
+  u.click('send');u.advance(0);u.advance(5250);
+  assert.notEqual(u.pixels('receiver')[220],'#bdd754','bit 393 is required for this green pixel, not 378');
+  assert.equal(u.els.get('delivery-preview')?.dataset.decoded,'216');
+ }finally{u.restore();}
+});
+test('paused delivery reads one bit, guards queued frames, and resumes without catching up',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('delivery-toggle'),'pause control is in the real page');
+  u.click('send');u.advance(0);u.advance(100);const stale=[...u.frames.values()][0];
+  u.click('delivery-toggle');const count=u.els.get('delivery-count').textContent;
+  stale(9999);assert.equal(u.els.get('delivery-count').textContent,count);assert.equal(u.frames.size,0);
+  u.click('delivery-bit');assert.equal(u.frames.size,0);
+  assert.equal(parseInt(u.els.get('delivery-count').textContent),parseInt(count)+1);
+  u.click('delivery-toggle');u.advance(20000);assert.equal(parseInt(u.els.get('delivery-count').textContent),parseInt(count)+1);
+  stale(99999);assert.equal(parseInt(u.els.get('delivery-count').textContent),parseInt(count)+1);
+  u.advance(30000);assert.deepEqual(u.pixels('receiver'),u.pixels('editor'));
+ }finally{u.restore();}
+});
+test('slow replay uses the last fixed parcel without changing a drawing or successful mail',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('delivery-replay'));
+  u.click('send');const old=u.pixels('receiver');u.click('preset-heart');
+  const drawing=u.pixels('editor'),writes=storage.writes;
+  u.click('delivery-replay');assert.equal(u.frames.size,0);
+  assert.match(u.els.get('delivery-note').textContent,/旧|刚才|同一/);
+  for(let n=0;n<600;n++)u.click('delivery-bit');
+  assert.deepEqual(u.pixels('receiver'),old);assert.deepEqual(u.pixels('editor'),drawing);assert.equal(storage.writes,writes);
+ }finally{u.restore();}
+});
+test('slow replay starts on the next undecoded cell and visibly waits for its full three-bit code',async()=>{
+ const u=await boot({reduced:true,storage:legacyStorage()});try{
+  u.click('send');u.click('delivery-replay');
+  assert.ok(u.els.has('delivery-cell-result'),'the target pixel has a visible magnified result');
+  assert.equal(u.els.get('delivery-cell-result').dataset.ready,'false');
+  assert.match(u.els.get('delivery-cell').textContent,/3 行.*4 列/);
+  assert.equal(u.els.get('delivery-prefix').textContent,'—');
+  for(const [prefix,count] of [['0','35'],['01','35'],['011','36']]){
+   u.click('delivery-bit');assert.equal(u.els.get('delivery-prefix').textContent,prefix);
+   assert.equal(u.els.get('delivery-preview').dataset.decoded,count);
+  }
+  assert.match(u.els.get('delivery-explanation').textContent,/墨黑/);
+  assert.equal(u.els.get('delivery-cell-result').dataset.ready,'true');
+  assert.equal(u.els.get('delivery-cell-result').style.backgroundColor,'#30352a');
+ }finally{u.restore();}
+});
+test('completed old-parcel replay keeps the detailed wire on that same snapshot through rerenders',async()=>{
+ const u=await boot({reduced:true,storage:legacyStorage()});try{
+  u.click('send');u.click('preset-noise');u.click('delivery-replay');
+  for(let n=0;n<500;n++)u.click('delivery-bit');
+  const bits=u.els.get('wire-bits').textContent;
+  u.fire(u.els.get('editor'),'focus');
+  assert.equal(u.els.get('wire-count').textContent,'432 / 432 bit');
+  assert.equal(u.els.get('wire-bits').textContent,bits);
+  assert.match(u.els.get('wire-caption').textContent,/回放/);
+ }finally{u.restore();}
+});
+test('switching an in-flight parcel to replay does not claim it was delivered or leave a sending status',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  u.click('send');u.advance(0);u.click('delivery-toggle');u.click('delivery-replay');
+  assert.match(u.els.get('status').textContent,/回放/);
+  assert.match(u.els.get('receipt').textContent,/没有来信/);
+  assert.equal(u.frames.size,0);
+  for(let n=0;n<500;n++)u.click('delivery-bit');
+  assert.match(u.els.get('status').textContent,/回放完成/);
+  assert.match(u.els.get('receipt').textContent,/没有来信/);
+  assert.equal(storage.writes,0);
+ }finally{u.restore();}
+});
+test('all legacy cat pixels can be decoded before padding but successful mail and storage wait for the whole packet',async()=>{
+ const storage=legacyStorage(),u=await boot({storage});try{
+  u.click('send');u.advance(0);u.advance(5950);
+  assert.equal(u.els.get('delivery-preview').dataset.decoded,'256');
+  assert.match(u.els.get('delivery-explanation').textContent,/补零/);
+  assert.match(u.els.get('receipt').textContent,/寄送中/);assert.equal(storage.writes,0);
+  for(let n=0;n<3;n++)u.click('delivery-bit');assert.equal(storage.writes,0);
+  u.click('delivery-bit');assert.match(u.els.get('receipt').textContent,/256.*256/);
+  const writes=storage.writes;u.click('delivery-bit');assert.equal(storage.writes,writes);
+ }finally{u.restore();}
+});
+test('hiding a paused one-bit replay invalidates it without changing old mail or restarting on return',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  u.click('send');const received=u.pixels('receiver'),writes=storage.writes;
+  u.click('delivery-replay');u.click('delivery-bit');u.hide();
+  u.doc.hidden=false;u.click('delivery-bit');u.click('delivery-toggle');
+  assert.equal(u.frames.size,0);assert.equal(u.els.get('delivery-panel').hidden,true);
+  assert.deepEqual(u.pixels('receiver'),received);assert.equal(storage.writes,writes);
+ }finally{u.restore();}
+});
+test('pixel AI export is explicit, replayable, and keeps actual single-bit actions without changing drafts or mail',async()=>{
+ const storage=legacyStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('pixel-ai-generate'),'pixel replay needs an explicit export entry');
+  assert.equal(u.els.get('pixel-ai-text').value,'');
+  u.click('send');u.click('delivery-replay');u.click('delivery-bit');
+  const drawing=u.pixels('editor'),mail=u.pixels('receiver'),writes=storage.writes;
+  let copies=0;u.win.navigator={clipboard:{writeText:async()=>{copies++;}}};
+  u.click('pixel-ai-generate');
+  const r=JSON.parse(u.els.get('pixel-ai-text').value);
+  assert.equal(r.producer,'browser-session');assert.equal(r.input.preset,'cat');assert.equal(r.input.mode,'slow-replay');
+  assert.deepEqual(r.actions,[{action:'read',value:1}]);
+  assert.equal(r.result.evidence.sentBits,51);assert.equal(r.result.evidence.prefix,'0');assert.equal(r.result.evidence.focus.index,35);
+  const api=await import('../learning-tool.mjs');assert.equal(api.replayLearningReceipt(r).matches,true);
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),mail);assert.equal(storage.writes,writes);assert.equal(copies,0);
+  u.click('delivery-bit');assert.equal(u.els.get('pixel-ai-text').value,'');assert.equal(u.els.get('pixel-ai-record').hidden,true);
+ }finally{u.restore();}
+});
+test('pixel export pauses animation and records its observed cursor as a jump, never as invented manual reads',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('pixel-ai-generate'));u.click('send');u.advance(0);u.advance(1000);
+  const shownBits=parseInt(u.els.get('delivery-count').textContent,10);
+  assert.ok(shownBits>0);
+  const stale=[...u.frames.values()][0];u.click('pixel-ai-generate');
+  const r=JSON.parse(u.els.get('pixel-ai-text').value);assert.equal(u.frames.size,0);
+  assert.deepEqual(r.actions,[{action:'seek',value:shownBits}]);assert.equal(r.result.evidence.sentBits,shownBits);
+  stale(99999);assert.equal(u.els.get('pixel-ai-text').value,JSON.stringify(r));
+  u.hide();assert.equal(u.els.get('pixel-ai-text').value,'');
+ }finally{u.restore();}
+});
+test('pixel export uses the frozen old parcel after drawing changes and refuses custom art without substituting a preset',async()=>{
+ const storage=legacyStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('pixel-ai-generate'));u.click('send');u.click('preset-noise');u.click('delivery-replay');u.click('pixel-ai-generate');
+  assert.equal(JSON.parse(u.els.get('pixel-ai-text').value).input.preset,'cat');
+  u.click('preset-blank');u.key('2');u.key(' ');u.click('send');u.click('delivery-replay');
+  const drawing=u.pixels('editor'),mail=u.pixels('receiver'),writes=storage.writes;
+  assert.equal(u.els.get('pixel-ai-generate').disabled,true);u.click('pixel-ai-generate');
+  assert.equal(u.els.get('pixel-ai-text').value,'');assert.match(u.els.get('pixel-ai-note').textContent,/自定义/);
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),mail);assert.equal(storage.writes,writes);
+ }finally{u.restore();}
+});
+test('denied pixel clipboard preserves manual copy while delayed clipboard feedback cannot revive a stale record',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.els.has('pixel-ai-generate'));u.click('send');u.click('delivery-replay');u.click('pixel-ai-generate');
+  const text=u.els.get('pixel-ai-text').value;
+  u.win.navigator={clipboard:{writeText:async()=>{throw Error('denied');}}};u.click('pixel-ai-copy');await new Promise(done=>setImmediate(done));
+  assert.equal(u.els.get('pixel-ai-text').value,text);assert.match(u.els.get('pixel-ai-status').textContent,/手动/);
+  let resolve;u.win.navigator={clipboard:{writeText:()=>new Promise(done=>{resolve=done;})}};u.click('pixel-ai-copy');
+  u.click('delivery-bit');resolve();await new Promise(done=>setImmediate(done));
+  assert.equal(u.els.get('pixel-ai-text').value,'');assert.doesNotMatch(u.els.get('pixel-ai-status').textContent,/已复制/);
+ }finally{u.restore();}
+});
 test('restoring an unchanged delivered draft restores actual wire bits without sending again',async()=>{
  const storage=memoryStorage();let bits,count;
  const u=await boot({storage,reduced:true});try{
@@ -256,7 +553,7 @@ test('blur and lost capture discard drafts without changing history or the recei
 });
 
 test('rearrangement reveals real decoded evidence only after a prediction and never edits the postcard or draft',async()=>{
- const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+ const storage=legacyStorage(),u=await boot({storage,reduced:true});try{
   assert.ok(u.els.has('reorder-start'),'the experiment needs a user entry point');
   u.click('send');const original=u.pixels('editor'),receipt=u.els.get('receipt').textContent,records=[...storage.records];
   u.click('reorder-start');

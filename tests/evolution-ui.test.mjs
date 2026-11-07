@@ -5,6 +5,13 @@ import {readFile} from 'node:fs/promises';
 // Run the real model/controller, replacing only browser I/O. Pixel and touch
 // acceptance are checked separately in an actual browser.
 const html=await readFile(new URL('../evolution.html',import.meta.url),'utf8');
+test('the timekeeping desk places Bobby beside the actual clock and outside the race canvas',()=>{
+ const canvas=html.match(/<canvas\b[^>]*\bid="race"[^>]*>[\s\S]*?<\/canvas>/);
+ const clockDesk=html.match(/<div\b[^>]*\bclass="race-timeline"[^>]*>[\s\S]*?\bid="race-state"[^>]*>[^<]*<\/span>\s*<\/div>/);
+ assert.ok(clockDesk&&clockDesk[0].includes('id="race-clock"'));
+ assert.match(clockDesk[0],/<img\b[^>]*src="\.\/studio-bobby-portrait\.png"/);
+ assert.doesNotMatch(canvas[0],/studio-bobby|波比/);
+});
 let bootId=0;
 async function boot({hidden=false,reduced=false}={}){
  const frames=new Map();let id=0;

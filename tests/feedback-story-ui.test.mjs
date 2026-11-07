@@ -29,6 +29,18 @@ test('first feedback renders both six-card snapshots and keeps the action-specif
  assert.match(e['feedback-reason'].textContent,/0\.8468/);
  assert.match(e['feedback-after'].innerHTML,/新进入/);
 });
+test('an illustrated food post keeps its title, image and creator on both sides of feedback',async()=>{
+ const {story,elements:e}=await setup();
+ story.record(captureFeedback(POSTS,PRESETS.balanced.weights,INITIAL_PROFILE,'1-0',1));
+ assert.match(e['feedback-action'].textContent,/嘿姆盯上了那碗面/);
+ for(const side of ['before','after']){
+  const card=e['feedback-'+side].innerHTML.match(/<li[^>]*data-post="1-0"[\s\S]*?<\/li>/)?.[0];
+  assert.ok(card);
+  assert.match(card,/嘿姆盯上了那碗面/);
+  assert.match(card,/src="\.\/studio-heim-idle\.png"/);
+  assert.match(card,/三餐研究所/);
+ }
+});
 test('later taste or rule changes mark a pinned snapshot as history without rewriting it',async()=>{
  const {story,elements:e}=await setup(),r=evidence();story.record(r);
  const old=e['feedback-after'].innerHTML;

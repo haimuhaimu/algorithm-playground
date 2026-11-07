@@ -1,7 +1,7 @@
-import {TOPICS} from './data.mjs?v=seats-20261025';
-import {recordMatches} from './feedback-story.mjs?v=seats-20261025';
+import {TOPICS} from './data.mjs?v=recommendation-studio-v2';
+import {recordMatches} from './feedback-story.mjs?v=recommendation-studio-v2';
+import {escapeCardText as escape,recommendationTitle as title,recommendationArt as art} from './recommendation-cards.mjs?v=recommendation-studio-v2';
 
-const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const interest=value=>Math.round(value*100);
 function cards(record,side){
  return record[side].feed.map((post,i)=>{
@@ -10,8 +10,8 @@ function cards(record,side){
    ?change.afterRank===null?'离开首页':change.kind==='same'?`留在第 ${i+1}`:`移到第 ${change.afterRank}`
    :change.beforeRank===null?'新进入':change.kind==='same'?`仍在第 ${i+1}`:`第 ${change.beforeRank} → ${i+1}`;
   return `<li class="feedback-mini-card ${change.kind==='same'?'':'is-changed'} ${post.id===record.action.post.id?'is-selected':''}" data-post="${escape(post.id)}">
-   <span class="feedback-mini-art" style="--topic:${topic.color}" aria-hidden="true">${topic.glyph}</span>
-   <div><span class="feedback-mini-topic">${i+1} / ${topic.short}${post.id===record.action.post.id?' · 你点的这张':''}</span><h4>${escape(post.title)}</h4><span class="feedback-mini-creator">${escape(post.creator)}</span></div><span class="feedback-movement">${label}</span></li>`;
+   <span class="feedback-mini-art" style="--topic:${topic.color}" aria-hidden="true">${art(post)||topic.glyph}</span>
+   <div><span class="feedback-mini-topic">${i+1} / ${topic.short}${post.id===record.action.post.id?' · 你点的这张':''}</span><h4>${escape(title(post))}</h4><span class="feedback-mini-creator">${escape(post.creator)}</span></div><span class="feedback-movement">${label}</span></li>`;
  }).join('');
 }
 function cause(record){
@@ -31,7 +31,7 @@ function reason(record){
  }
  if(!d.tied&&scores[0]===scores[1])scores=[String(d.selected.score),String(d.alternative.score)];
  const comparison=d.tied?'两者同分，按固定内容编号决定顺序。':`前者得分更高，拿到这个席位。`;
- return `${place}反馈后争夺第 ${d.slot} 个席位时，《${d.selected.title}》得 ${scores[0]} 分，《${d.alternative.title}》得 ${scores[1]} 分。${comparison}`;
+ return `${place}反馈后争夺第 ${d.slot} 个席位时，《${title(d.selected)}》得 ${scores[0]} 分，《${title(d.alternative)}》得 ${scores[1]} 分。${comparison}`;
 }
 function summary(record){
  const entered=record.changes.filter(c=>c.kind==='entered').length,exited=record.changes.filter(c=>c.kind==='exited').length,moved=record.changes.filter(c=>['up','down'].includes(c.kind)).length;
@@ -72,7 +72,7 @@ export function mountFeedbackStory({document}){
    saved=record;armed=false;matches=true;number++;
    $('feedback-story-empty').hidden=true;$('feedback-story-content').hidden=false;
    const a=record.action,topic=TOPICS[a.post.topic].short;
-   $('feedback-action').textContent=`第 ${number} 次 · 你对《${a.post.title}》点了「${a.direction>0?'喜欢':'少一点'}」`;
+   $('feedback-action').textContent=`第 ${number} 次 · 你对《${title(a.post)}》点了「${a.direction>0?'喜欢':'少一点'}」`;
    $('feedback-interest').textContent=`${topic}兴趣 ${interest(record.before.profile[a.post.topic])} → ${interest(record.after.profile[a.post.topic])}`;
    $('feedback-fixed-rules').textContent=`规则没动：点击 ${record.weights.click} / 多样 ${record.weights.diversity} / 新人 ${record.weights.newcomer}`;
    $('feedback-cause').textContent=cause(record);$('feedback-reason').textContent=reason(record);$('feedback-summary').textContent=summary(record);

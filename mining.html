@@ -3,9 +3,9 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="30 次探测，5 颗未知星球。继续挖刚才赚到的，还是去试没挖过的？亲手体验多臂老虎机的探索与利用。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=shared-evidence-1">
- <script type="module" src="./mining.mjs?v=shared-evidence-1"></script><title>算法游乐场 · 盲盒探矿</title>
- <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=station-cat-v1&amp;art=crew-flight-v1"><link rel="stylesheet" href="./mining-bayes.css?v=station-cat-v1">
+ <script type="module" src="./mining.mjs?v=station-cat-v1"></script><title>算法游乐场 · 盲盒探矿</title>
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head><body>
  <a class="skip-link" href="#shared-title">跳到同线索挑战</a>
@@ -13,6 +13,35 @@
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./recommendation.html">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html" aria-current="page">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="mining-main">
   <section class="mining-intro"><div><p class="eyebrow">07 / EXPLORE OR EXPLOIT</p><h1>下一趟，<span>还去那里吗？</span></h1><p>30 次探测，5 颗未知星球。是再挖一次，还是换个地方碰碰运气？</p></div><div class="round-tag"><span id="round-mode">首次探索</span><small id="seed-label"></small></div></section>
+  <div class="bayes-entry"><div><p class="eyebrow">新线索 / BAYESIAN UPDATE</p><h2>六成命中，就一样靠谱吗？</h2><p>两份日志，一条新反馈。看判断怎样改变，不先背公式。</p></div><button id="bayes-start" type="button" aria-expanded="false" aria-controls="bayes-lesson">看一次贝叶斯更新 ↗</button></div>
+  <section class="bayes-lesson" id="bayes-lesson" aria-labelledby="bayes-title" hidden>
+   <header class="bayes-heading"><div><p class="eyebrow">小课 / BELIEF IS NOT CERTAINTY</p><h2 id="bayes-title" tabindex="-1">同样六成命中，<br>谁的证据更扎实？</h2></div><button id="bayes-close" type="button">收起，保留这次判断</button></header>
+   <p class="bayes-lead">样本命中率都写着 60%。但你对真实产矿概率的把握，也应该一样吗？</p>
+   <div class="bayes-logs"><article class="bayes-little"><span>A · 少样本日志</span><strong>3 <small>矿 / 5 次</small></strong><b>样本命中率 60%</b><div aria-label="3次有矿，2次空手">◆ ◆ ◆ · ·</div></article><article class="bayes-many"><span>B · 多样本日志</span><strong>18 <small>矿 / 30 次</small></strong><b>样本命中率 60%</b><div aria-label="18次有矿，12次空手">◆ × 18 <i>· × 12</i></div></article></div>
+   <p class="bayes-model-note">固定教学对照，不是本局成绩。两边都使用同一个弱先验；这里单独假设真实成功率可在 0–100% 之间，且一段观察内不变。</p>
+   <fieldset class="bayes-choices"><legend>01 · 哪份日志，对成功率的判断更集中？</legend><button id="bayes-guess-little" type="button" aria-pressed="false">A · 3/5 更有把握</button><button id="bayes-guess-many" type="button" aria-pressed="false">B · 18/30 更有把握</button><button id="bayes-guess-same" type="button" aria-pressed="false">都是 60%，一样</button></fieldset>
+   <button id="bayes-reveal" class="bayes-primary" type="button" disabled>画出两份判断 →</button>
+   <section id="bayes-comparison" hidden aria-labelledby="bayes-comparison-title">
+    <h3 id="bayes-comparison-title" tabindex="-1">比例一样，不确定性不一样。</h3><p id="bayes-guess-feedback" class="bayes-feedback" role="status"></p>
+    <div class="bayes-plot-box"><p class="bayes-axis-label">对未知成功率的相对支持（概率密度）</p><div id="bayes-chart-overview" class="bayes-chart" role="img" aria-label="两份日志的后验概率密度，同一横轴与纵轴"></div><div class="bayes-axis"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div><p class="bayes-axis-caption">横轴：真实产矿概率可能是多少？不是下一趟的矿石数量。</p><div class="bayes-legend"><span class="bayes-little">━ A · 3/5</span><span class="bayes-many">━ B · 18/30</span><span>阴影：各自的 90% 可信区间</span></div></div>
+    <div class="bayes-readouts"><article class="bayes-little"><span>A · 下一次命中预测</span><strong id="bayes-mean-little"></strong><p id="bayes-interval-little"></p></article><article class="bayes-many"><span>B · 下一次命中预测</span><strong id="bayes-mean-many"></strong><p id="bayes-interval-many"></p></article></div>
+    <p class="bayes-caption">为什么不是两个 60%？下次预测由同一个 Beta(1,1) 先验与已有观察共同算出；数据越少，先验相对影响越大。更集中不代表真实成功率一定更高。</p>
+    <fieldset class="bayes-choices"><legend>02 · 两边各再挖空一次，谁的预测会下降更多？</legend><button id="bayes-change-little" type="button" aria-pressed="false">A · 少样本日志</button><button id="bayes-change-many" type="button" aria-pressed="false">B · 多样本日志</button><button id="bayes-change-same" type="button" aria-pressed="false">都是一次，降得一样</button></fieldset>
+    <button id="bayes-update" class="bayes-primary" type="button" disabled>加入同样的一次空手反馈 →</button>
+    <section id="bayes-updated" hidden aria-labelledby="bayes-updated-title">
+     <h3 id="bayes-updated-title" tabindex="-1">新证据要和旧证据一起看。</h3><p id="bayes-update-feedback" class="bayes-feedback" role="status"></p>
+     <div class="bayes-after-grid"><article class="bayes-little"><h4>A · 3/5 → 3/6</h4><strong id="bayes-change-summary-little"></strong><div id="bayes-after-chart-little" class="bayes-chart" role="img" aria-label="少样本日志更新前后曲线"></div><div class="bayes-axis"><span>0%</span><span>50%</span><span>100%</span></div><p id="bayes-after-interval-little"></p></article><article class="bayes-many"><h4>B · 18/30 → 18/31</h4><strong id="bayes-change-summary-many"></strong><div id="bayes-after-chart-many" class="bayes-chart" role="img" aria-label="多样本日志更新前后曲线"></div><div class="bayes-axis"><span>0%</span><span>50%</span><span>100%</span></div><p id="bayes-after-interval-many"></p></article></div>
+     <p class="bayes-caption">虚线＝更新前，实线＝更新后。所有图都固定横轴 0–100%、密度纵轴 0–6，没有用缩放制造“大变化”。这两条空手反馈是明示的教学条件，不重抽，也不消耗自由探索次数。</p>
+     <fieldset class="bayes-choices bayes-transfer"><legend>03 · 换两份新日志：0/1 与 0/10。能断言两颗星球永远没矿吗？</legend><button id="bayes-answer-never" type="button">能，命中率都是 0%</button><button id="bayes-answer-evidence" type="button">不能；0/10 更支持低概率，但不是证明为零</button><button id="bayes-answer-guarantee" type="button">样本更多，下一趟就一定挖得到</button></fieldset>
+     <p id="bayes-answer-feedback" class="bayes-feedback" role="status"></p><div id="bayes-transfer-results" class="bayes-transfer-results" hidden></div>
+     <section id="bayes-ending" class="bayes-ending" hidden aria-labelledby="bayes-ending-title"><p class="eyebrow">本次对照已完成 / NOT A MASTERY CERTIFICATE</p><h3 id="bayes-ending-title" tabindex="-1">这趟，你带走了什么？</h3><p id="bayes-ending-evidence"></p><ol><li>同样的样本比例，不代表同样的证据强度。</li><li>新反馈与原来的相信、旧观察共同决定下一步判断。</li><li>曲线是模型里的不确定性，不是“真相已被保证”。</li></ol><a href="https://haimuhaimu.github.io/genai-learning-os/?page=strategy-case&case=bayes-rollout" target="_blank" rel="noopener">回到 GenAI OS：把贝叶斯判断用于放量决策 ↗</a></section>
+     <section id="bayes-genai-return" class="bayes-ending" hidden aria-labelledby="bayes-genai-title"><h3 id="bayes-genai-title" tabindex="-1">把这次判断，带回学习路线</h3><p>带回的只是本课选择与计算。回到 GenAI OS 后还需核对、由你确认保存，再复盘；不会自动给能力加分。</p><button id="bayes-genai-send" class="bayes-primary" type="button">带回 GenAI OS 复盘 →</button><p id="bayes-genai-status" class="bayes-feedback" role="status"></p></section>
+     <section id="bayes-export" class="bayes-ending" hidden aria-labelledby="bayes-export-title"><h3 id="bayes-export-title">留下这轮真实记录</h3><p>只导出固定小课，不读取原探索、草稿或个人资料。可以自己保留，也可以主动交给自己的 AI 陪练。</p><button id="bayes-export-generate" type="button">生成本次实验记录 JSON</button><p id="bayes-export-status" class="bayes-feedback" role="status"></p><button id="bayes-new-record" type="button" hidden>开始新记录（清空本轮小课）</button><div id="bayes-export-record" hidden><label for="bayes-export-text">本次贝叶斯实验记录（可手动全选复制）</label><textarea id="bayes-export-text" class="bayes-transfer-results" readonly rows="8" cols="20" spellcheck="false"></textarea><button id="bayes-export-copy" type="button">复制实验记录</button></div></section>
+    </section>
+   </section>
+   <details class="bayes-math"><summary>先验、证据和后验，具体怎样算？</summary><p>共同先验 p∼Beta(1,1)，表示本课起初对 0–100% 的成功率采用均匀分布；这是建模选择，不是真实多挖了两次。观察 s 次有矿、f 次空手后，后验为 Beta(1+s,1+f)，下次命中预测为 (1+s)/(2+s+f)。</p><p>区间是由 Beta 分布累积分布函数反算的 90% 等尾可信区间；它依赖本课固定成功率、条件独立及先验假设，不是现实命中保证。原自由游戏仍用固定五种候选概率与原 UCB1 规则，这里不声称在它的排列先验上做推断，也不评估你的掌握程度。</p><p>纯本地计算，无新保存、上传、学习进度或外部 AI 调用。<a href="https://www.stat.cmu.edu/~larry/=sml/Bayes.pdf" target="_blank" rel="noopener">贝叶斯推断教材 ↗</a></p></details>
+   <div class="bayes-footer"><button id="bayes-reset" type="button">清空判断，重新比较</button><a href="#planet-0">回到原来的 30 趟探索 ↓</a></div>
+  </section>
   <section class="shared-lab" id="shared-lab" aria-labelledby="shared-title">
    <div class="shared-heading"><div><p class="eyebrow">一趟小挑战 / SAME CLUES, DIFFERENT CHOICES</p><h2 id="shared-title" tabindex="-1">同一份线索，你会怎么选？</h2></div><a href="#planet-0" id="shared-more">直接玩 30 趟自由探索 ↓</a></div>
    <p class="shared-intro">接手一份已有 <b>20 次探测</b>的航海日志。第 21 趟，你想去哪里？<br>你和算法拿到完全相同的线索，都不知道下一趟有没有矿。</p>
@@ -39,6 +68,22 @@
    <section class="shared-result" id="shared-result" hidden aria-labelledby="shared-result-title">
     <p class="eyebrow">带回的不是答案，而是一条新线索</p><h3 id="shared-result-title" tabindex="-1">这一次，你学到了什么？</h3>
     <h4 id="shared-outcome"></h4><p id="shared-change"></p>
+    <section class="feedback-lab" id="feedback-lab" hidden aria-labelledby="feedback-title">
+     <p class="eyebrow">第 22 趟之前 / 同一条新反馈</p><h4 id="feedback-title" tabindex="-1">挖空一次，就该换星球吗？</h4>
+     <p id="feedback-observation"></p><p class="feedback-boundary">现在把你这趟带回的这一条反馈，同时交给两种算法。上方三条航行分支仍保留；这里不混用它们各自的收获，也不真的飞第 22 趟。</p>
+     <div class="feedback-guesses">
+      <fieldset><legend id="feedback-greedy-question"></legend><button id="feedback-greedy-stay" type="button" aria-pressed="false">我猜仍去原星球</button><button id="feedback-greedy-switch" type="button" aria-pressed="false">我猜会换星球</button></fieldset>
+      <fieldset><legend id="feedback-ucb-question"></legend><button id="feedback-ucb-stay" type="button" aria-pressed="false">我猜仍去原星球</button><button id="feedback-ucb-switch" type="button" aria-pressed="false">我猜会换星球</button></fieldset>
+     </div>
+     <button id="feedback-reveal" type="button" disabled>两边都猜一次，再揭晓 →</button>
+     <div id="feedback-evidence" hidden>
+      <h4 id="feedback-result-title" tabindex="-1">多一条反馈，第一名一定变吗？</h4><p id="feedback-verdict" role="status" aria-live="polite"></p>
+      <div class="feedback-policies" role="group" aria-label="用同一条反馈，看哪种算法"><button id="feedback-greedy" type="button" aria-pressed="true">守成派 · 只看均值</button><button id="feedback-ucb" type="button" aria-pressed="false">好奇派 · 均值＋探索</button></div>
+      <p id="feedback-cause"></p><div class="feedback-cards" id="feedback-cards"></div>
+      <details id="feedback-all"><summary>查看全部 5 颗星球的前后排名</summary><table><caption>同一份日志，只多你带回的 1 次观测。分数用于排序，不是产矿概率。</caption><thead><tr><th scope="col">星球</th><th scope="col">收到反馈前</th><th scope="col">收到反馈后</th></tr></thead><tbody id="feedback-ranking"></tbody></table><p>显示值经过舍入；排序比较完整精度，同分按星球的固定顺序。没有第一名变化，也不制造一次换星球。</p></details>
+      <p class="feedback-takeaway">新反馈先更新记录，再按同一规则重新计算分数、比较候选；分数和第一名都可能保持不变。只有重新排序后的第一名变了，才会改选。同分按星球固定顺序决定。这里没有看到下一趟的矿石，也没有消耗自由探索次数。</p>
+     </div>
+    </section>
     <p>这份特意选出的教学案例里，守成派空手、好奇派有矿。<b>不能由这一趟推断 UCB 总会赢。</b>选择的依据是出发前的线索；收获还受到运气影响。</p>
     <fieldset><legend>两种算法为什么选了不同的星球？</legend><button id="shared-answer-rules">同一份线索，对“还没摸清”的重视不同</button><button id="shared-answer-luck">好奇派提前知道哪里有矿</button></fieldset>
     <p id="shared-learning" role="status" aria-atomic="true"></p>
@@ -46,7 +91,7 @@
    </section>
    <p class="shared-caption">固定案例 · 星域 265 · 原始记录可复现。实测比例不等于真实产矿概率；本挑战独立于下面的自由探索，不计入它的次数和成绩。</p>
   </section>
-  <section class="mission" aria-label="盲盒探矿游戏">
+  <section class="mission" id="mining-flight" aria-label="盲盒探矿游戏">
    <div class="mission-bar"><div class="mission-count"><span>剩余探测</span><strong id="remaining">30</strong><small>/ 30</small></div><div class="mineral-count"><span class="ore-icon" aria-hidden="true"></span><span>已获矿石</span><strong id="minerals">0</strong></div><span class="board-hint">点一颗星球，派出探测器</span></div>
    <div class="starfield" id="starfield">
     <div class="orbit orbit-one" aria-hidden="true"></div><div class="orbit orbit-two" aria-hidden="true"></div><div class="orbit orbit-three" aria-hidden="true"></div>
@@ -58,11 +103,35 @@
      <button class="planet planet-3" id="planet-3" aria-describedby="sample-3 truth-3"><span class="planet-body" aria-hidden="true"><i></i></span><span class="planet-name"><kbd>4</kbd>雾蓝</span><span class="planet-sample" id="sample-3">未探测</span><span class="planet-truth" id="truth-3">产量未知</span></button>
      <button class="planet planet-4" id="planet-4" aria-describedby="sample-4 truth-4"><span class="planet-body" aria-hidden="true"><i></i></span><span class="planet-name"><kbd>5</kbd>月白</span><span class="planet-sample" id="sample-4">未探测</span><span class="planet-truth" id="truth-4">产量未知</span></button>
     </div>
-    <div class="launchpad" id="launchpad" aria-hidden="true"><span>⌁</span><small>探测站</small></div>
-    <div class="probe" id="probe" hidden aria-hidden="true"><svg viewBox="0 0 32 44" width="28" height="38"><path d="M16 2 Q3 14 8 30 L24 30 Q29 14 16 2Z" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.8"/><circle cx="16" cy="16" r="4" fill="var(--accent)" stroke="var(--ink)" stroke-width="1.5"/><path d="M8 23 L3 33 L10 31 M24 23 L29 33 L22 31" fill="var(--ink)"/><path d="M12 33 L16 42 L20 33" fill="var(--accent)" stroke="var(--ink)" stroke-width="1.5"/></svg></div>
+    <div class="launchpad" id="launchpad">
+     <span class="crew-cradle">
+      <svg class="crew-dock" viewBox="0 0 148 48" width="148" height="48" role="img" aria-label="嘿姆、波比和臭臭坐在探矿飞船里">
+       <defs>
+        <g id="mining-crew-ship" stroke-linejoin="round">
+         <path d="M34 13H22L12 4h16l14 9m-8 22H22l-10 9h16l14-9M24 18H9v12h15" fill="var(--accent)" stroke="var(--ink)" stroke-width="1.5"/>
+         <path d="M17 15h10V9h91v3h10v4h9v4h7v8h-7v4h-9v4h-10v3H27v-6H17Z" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.6"/>
+         <path d="M18 25h20m82 0h23M27 35h91" fill="none" stroke="var(--good)" stroke-width="2"/>
+         <path d="M37 12h84v23H37z" fill="#282a32"/>
+         <image href="./studio-bobby-portrait.png" x="38" y="12" width="22" height="22"/>
+         <image href="./studio-chouchou-portrait.png" x="68" y="12" width="22" height="22"/>
+         <image href="./studio-heim-portrait.png" x="98" y="12" width="22" height="22"/>
+         <path d="M37 12h84v23H37zM63 12v23m30-23v23" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+         <path d="M128 20h7" stroke="var(--good)" stroke-width="2"/>
+        </g>
+       </defs>
+       <path d="M33 45h82m-69-4v4m54-4v4" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
+       <use class="docked-crew-ship" href="#mining-crew-ship"/>
+      </svg>
+     </span>
+     <small>探测站</small>
+    </div>
+    <div class="probe" id="probe" hidden aria-hidden="true">
+     <svg viewBox="0 0 48 148" width="20" height="62"><use href="#mining-crew-ship" transform="translate(0 148) rotate(-90)"/></svg>
+    </div>
    </div>
    <div class="mission-feedback"><span class="status-dot" aria-hidden="true"></span><p id="status" role="status">这里没有地图。第一趟，凭直觉选就好。</p><a id="view-results" class="view-results" href="#results-title" hidden>看看算法的选择 ↓</a></div>
    <div class="flight-history"><div><span>你的航行记录</span><small>◆ 有收获 · · 空手归</small></div><ol id="history" aria-label="已完成的探测记录"></ol></div>
+   <a class="mining-lesson-return" href="#shared-title">回到同线索挑战 ↑</a>
   </section>
   <div class="mission-actions" id="mission-actions"><p>每趟消耗 1 次机会。先用 Tab 聚焦这里的星球，再按 <kbd>1</kbd>–<kbd>5</kbd> 也能出发。<br><span>不是越漂亮越富矿，星球外观与产量无关。</span></p><div><button id="replay">重玩这局</button><button id="new" class="new-region">换片星域 ↗</button></div></div>
   <section class="mining-results" id="results" hidden aria-labelledby="results-title">

@@ -3,8 +3,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="让飞船从试飞中学会预测，再在脑中挑选路线。改变风力，亲手发现世界模型何时会出错。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css"><link rel="stylesheet" href="./world-model.css?v=planning-1">
- <script type="module" src="./navigation.mjs"></script><script type="module" src="./world-model.mjs?v=planning-1"></script>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><link rel="stylesheet" href="./world-model.css?v=planning-1&amp;art=pilot-v1">
+ <script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script><script type="module" src="./world-model.mjs?v=planning-1"></script>
  <title>算法游乐场 · 脑内预演室</title>
  <link rel="stylesheet" href="./space-theme.css">
 </head><body>
@@ -15,12 +15,12 @@
   <section class="world-intro"><p class="eyebrow">09 / 脑内预演室</p><h1>教小飞船，<span>飞进圆环。</span></h1><p>先跟着试，再独立判断一次。最后，带走关于“世界模型”的三个发现。</p></section>
   <div class="world-layout">
    <section class="flight-deck" aria-labelledby="scene-heading">
-    <div class="deck-heading"><h2 id="scene-heading">目标：最后落在圆环里</h2><span class="wind-chip" id="wind-label"></span></div>
+    <div class="deck-heading"><div class="flight-deck-topic"><h2 id="scene-heading">目标：最后落在圆环里</h2><span class="flight-pilot"><img src="./studio-heim-portrait.png" alt="" width="26" height="26" draggable="false">嘿姆试飞</span></div><span class="wind-chip" id="wind-label"></span></div>
     <div class="scene-wrap" id="scene-wrap">
      <div class="scene-top"><span id="scene-label">下一趟预演 · 尚未试飞</span><span id="progress">0 / 60 拍</span></div>
      <svg class="world-scene" id="scene" viewBox="0 0 140 90" role="img" aria-labelledby="scene-title scene-desc">
       <title id="scene-title">飞船预测与真实轨迹</title><desc id="scene-desc">虚线是模型的预演，实线是实际试飞。目标在右侧圆环。</desc>
-      <defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="currentColor" stroke-width=".12"/></pattern></defs>
+      <defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="currentColor" stroke-width=".12"/></pattern><clipPath id="world-pilot-window"><circle r="1.05"/></clipPath></defs>
       <rect x="-300" y="-300" width="800" height="800" fill="url(#grid)" class="scene-grid"/>
       <g class="scene-decoration" aria-hidden="true"><circle cx="117" cy="18" r="7"/><ellipse cx="117" cy="18" rx="12" ry="2.5" transform="rotate(-25 117 18)"/><path d="M22 16h2m-1-1v2M63 76h2m-1-1v2M127 66h2m-1-1v2"/></g>
       <g class="launch-marker"><circle cx="12" cy="45" r="4"/><text x="12" y="55" text-anchor="middle">起点</text></g>
@@ -29,7 +29,7 @@
       <polyline id="learned-path" class="learned-path" points=""/>
       <circle id="prediction-end" class="prediction-end" r="1.6" cx="12" cy="45"/>
       <polyline id="actual-path" class="actual-path" points=""/>
-      <g id="ship" class="world-ship" transform="translate(12 45)"><path d="M3.7 0 -2.7 -2.5 -1.5 0 -2.7 2.5Z"/><circle cx="0" cy="0" r=".65"/></g>
+      <g id="ship" class="world-ship" transform="translate(12 45)"><path d="M3.7 0 -2.7 -2.5 -1.5 0 -2.7 2.5Z"/><image href="./studio-heim-portrait.png" x="-1.05" y="-1.05" width="2.1" height="2.1" clip-path="url(#world-pilot-window)"/><circle class="world-pilot-rim" r="1.05"/></g>
      </svg>
      <div class="scene-legend"><span><i class="dash-key"></i><span id="prediction-key">它以为的路线</span></span><span id="learned-key" hidden><i class="learned-key"></i>学习后预测</span><span><i class="solid-key"></i>真正飞过的路</span></div>
      <div id="learning-comparison" class="learning-comparison" hidden>

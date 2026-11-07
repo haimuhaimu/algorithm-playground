@@ -73,8 +73,9 @@
 .habitat-column{grid-area:habitat}
 .chorus-controls{grid-area:controls;min-width:0}
 .chorus-observation{grid-area:observations;min-width:0}
-.habitat-heading{align-items:center;gap:12px;padding:0 14px;min-height:44px}
+.habitat-heading{position:relative;align-items:center;gap:12px;padding:0 14px;min-height:44px}
 .habitat-heading #elapsed{font:11px ui-monospace,monospace;margin-left:auto}
+.habitat-cat{position:absolute;inset-inline-start:clamp(64px,31%,180px);inset-block-end:4px;width:clamp(25px,12%,34px);height:auto;transform:scaleX(-1);filter:drop-shadow(0 2px 2px #08110d);pointer-events:none}
 .phase-toggle{display:flex;gap:6px;align-items:center;min-height:44px;font-size:11px;cursor:pointer}
 .phase-toggle input{accent-color:#dce87a;width:15px;height:15px;margin:0}
 @media(max-width:760px){
@@ -90,6 +91,7 @@
  .habitat-heading{gap:8px;padding:0 10px}
  .habitat-heading #elapsed,.phase-toggle{font-size:10px}
 }
+@media(max-width:300px){.habitat-cat{display:none}}
 /* Short landscape: reserve room for 44px actions, without stretching the scene. */
 @media(orientation:landscape) and (max-height:520px) and (min-width:568px){
  .firefly-main{padding:0 18px}

@@ -1,4 +1,7 @@
 // A tiny, lossless four-color Huffman protocol. Palette and pixel count are shared.
+export const POSTCARD_COLORS = Object.freeze(['#f3eedc', '#30352a', '#bdd754', '#e79d88']);
+export const STUDIO_POSTCARD_NAMES = Object.freeze({heim:'嘿姆',bobby:'波比','chouchou-studio':'臭臭'});
+export const EDITOR_POSTCARD_PRESETS = Object.freeze([...Object.keys(STUDIO_POSTCARD_NAMES),'heart','noise','blank']);
 const validColor = n => Number.isInteger(n) && n >= 0 && n < 4;
 function checkPixels(pixels) {
   if (!Array.isArray(pixels) || !pixels.length || pixels.length > 4096 || !Array.from(pixels).every(validColor)) throw new TypeError('Expected 1–4096 four-color pixels');
@@ -89,6 +92,36 @@ export function preset(name) {
   if (name === 'blank') return Array(256).fill(0);
   if (name === 'noise') return Array.from({ length: 256 }, (_, i) => ((i * 73) ^ (i >> 2) ^ (i >> 5)) % 4);
   const drawings = {
+    // Distinct silhouettes in the unchanged paper/ink/moss/coral palette.
+    heim: [
+      '0000000000000000', '0000000010000000', '0000000111000000', '0010000131100000',
+      '0111001131111000', '0131111111111100', '0131111111111110', '0111111111111110',
+      '0111111121111110', '0121111221111110', '0112211111111110', '0111113111111110',
+      '0111111111111110', '0111111111111100', '0011101111111000', '0000000000000000',
+    ],
+    bobby: [
+      '0000000000000000', '0010000000001000', '0011000000011000', '0013100000131000',
+      '0013310001331000', '0013331013331000', '0001331113310000', '0001100000110000',
+      '0010110001101000', '0010210001201000', '0010111011101000', '0001003300010000',
+      '0000111111100000', '0000001000011100', '0000000111111100', '0000000000000000',
+    ],
+    // Hand-drawn in the shared four colors, after the studio portrait:
+    // uneven ears and eyes, pale nose blaze and a wide, shaggy chest.
+    'chouchou-studio': [
+      '0000000000000000', '0000010000000000', '0000131010100000', '0000133131310110',
+      '0001333303333131', '0013331303331310', '0013312103313100', '0133331000121310',
+      '0013000000013310', '0103000330003311', '0100000030000010', '0110000303000001',
+      '0100000000000110', '0011000000000100', '0000111111111000', '0000000000000000',
+    ],
+    // Keep the earlier studio postcard for pixel-chouchou-v1 receipt replay.
+    // The long-haired studio cat: contrasting ears and mask, pale blaze and a curled tail.
+    chouchou: [
+      '0000000000000000', '0001000000000000', '0013100000010000', '0013111111131000',
+      '0011111011111000', '0011210002111000', '0013310013311000', '0001100300110000',
+      '0001300000310000', '0010300000001000', '0010300000001100', '0010330000111310',
+      '0010003001113310', '0013313011331100', '0001111111111000', '0000000000000000',
+    ],
+    // Keep the previous image for pixel-cat-v1 receipt replay.
     cat: [
       '0000000000000000', '0000000000000000', '0001000000001000', '0001100000011000',
       '0001311111131000', '0001333333331000', '0001333333331000', '0001313333131000',
@@ -104,6 +137,20 @@ export function preset(name) {
   };
   if (!drawings[name]) throw new Error('Unknown postcard');
   return drawings[name].join('').split('').map(Number);
+}
+
+// Four coral pixels on the viewer-left cheek; each is replaced with paper.
+const POSTAGE_BYTE_CHEEK = [99, 114, 115, 131];
+export const POSTAGE_BYTE_STEPS = POSTAGE_BYTE_CHEEK.length;
+
+export function postageByteTrial(step = 0) {
+  if (!Number.isInteger(step) || step < 0 || step > POSTAGE_BYTE_STEPS) {
+    throw new RangeError('Invalid postage trial step');
+  }
+  const pixels = preset('chouchou-studio');
+  const changed = POSTAGE_BYTE_CHEEK.slice(0, step);
+  for (const index of changed) pixels[index] = 0;
+  return { pixels, encoded: encode(pixels), changed };
 }
 
 export function stroke(pixels, from, to, color) {

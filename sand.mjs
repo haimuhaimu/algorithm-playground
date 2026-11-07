@@ -1,12 +1,12 @@
-import {EMPTY,SAND,WATER,WALL,createWorld,stepWorld,paintStroke,countMaterials} from './sand-core.mjs?v=edit-history-1';
-import {createHistory,snapshot,recordChange,undoChange,redoChange,discardFuture} from './sand-history.mjs?v=edit-history-1';
+import {EMPTY,SAND,WATER,WALL,createWorld,stepWorld,paintStroke,countMaterials} from './sand-core.mjs?v=edit-history-2';
+import {createHistory,snapshot,recordChange,undoChange,redoChange,discardFuture} from './sand-history.mjs?v=edit-history-2';
 const $=id=>document.getElementById(id),canvas=$('sandbox'),ctx=canvas.getContext('2d');
 const names=['橡皮','沙子','水','墙'],sizes=['细','小','中','大','很大'];
-const tips={splitter:'往屋顶尖端倒水，再擦掉一小段斜坡。两边的去向会怎么变？',hourglass:'在沙漏的细口补一堵墙，让时间停住；再挖开它，让沙继续走。',empty:'造一只杯子，装点水，再撒一把沙。也可以在杯底开一道口。'};
+const tips={splitter:'往屋顶尖端倒水，再擦掉一小段斜坡。两边的去向会怎么变？',hourglass:'在沙漏的细口补一堵墙，让时间停住；再挖开它，让沙继续走。',empty:'造一只杯子，装点水，再撒一把沙。也可以在杯底开一道口。','cat-bowl':'臭臭的碗里有水。可以撒一把沙，也可以擦开碗底，看水往哪流。'};
 let scene='splitter',world=createWorld(scene),material=SAND,radius=2,stroke=null,cursor={x:36,y:5},showCursor=false;
 let playing=!matchMedia('(prefers-reduced-motion:reduce)').matches,raf=null,lastTick=performance.now(),lastPour=0;
 let history=createHistory(),pendingEdit=null,frameToken=0,activePaintKey=null;
-const sceneNames={splitter:'分流器',hourglass:'沙漏',empty:'空白'},editNames=['擦除','倒沙','倒水','筑墙'];
+const sceneNames={splitter:'分流器',hourglass:'沙漏',empty:'空白','cat-bowl':'臭臭的水碗'},editNames=['擦除','倒沙','倒水','筑墙'];
 const unit=canvas.width/world.width;
 const currentState=()=>snapshot(scene,world);
 function renderHistory(){

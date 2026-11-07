@@ -26,7 +26,7 @@ async function boot(){
  const tools=['wall','erase','start','goal'].map(tool=>Object.assign(new Element(),{dataset:{tool}}));
  let hitGrid=els.get('bfs-grid');
  const doc=Object.assign(new EventTarget(),{hidden:false,documentElement:new Element(),getElementById:id=>els.get(id),createElement:()=>new Element(),
-  querySelectorAll:s=>s==='[data-map]'?presets:s==='[data-tool]'?tools:[],elementFromPoint:(x,y)=>hitGrid.children[Math.floor(y/20)*15+Math.floor(x/20)]});
+  createElementNS:()=>new Element(),querySelectorAll:s=>s==='[data-map]'?presets:s==='[data-tool]'?tools:[],elementFromPoint:(x,y)=>hitGrid.children[Math.floor(y/20)*15+Math.floor(x/20)]});
  const timers=new Map();let nextTimer=0;
  const globals={document:doc,window:new EventTarget(),matchMedia:()=>Object.assign(new EventTarget(),{matches:false}),setTimeout:fn=>{timers.set(++nextTimer,fn);return nextTimer;},clearTimeout:id=>timers.delete(id)};
  const old=new Map(Object.keys(globals).map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
@@ -43,6 +43,31 @@ async function boot(){
   key(key,props={}){return fire(doc,'keydown',{key,target:els.get('bfs-grid').children[0],...props});},
   selected(){return presets.find(b=>b.getAttribute('aria-pressed')==='true')?.dataset.map;}};
 }
+
+test('the cat case keeps only one edit and never rewrites the original arena or its undo history',async()=>{
+ const u=await boot();try{
+  u.edit(0);u.click('finish');
+  const arena=u.map(),beforeStatus=u.els.get('bfs-distance').textContent;
+  assert.ok(u.els.has('cat-route-lab'),'the standalone experiment is on the actual pathfinding page');
+  const {mountCatRoutes}=await import('../pathfinding-cats-ui.mjs');mountCatRoutes(u.doc);
+  const get=id=>u.els.get(id),grid=get('cat-route-after'),cell=index=>grid.children[index];
+  assert.equal(cell(31).tabIndex,0,'the suggested wall is the initial keyboard entry');
+  assert.equal(cell(28).getAttribute('aria-disabled'),'true','Bobby’s start is protected');
+  u.fire(cell(31),'click');
+  assert.match(get('cat-route-winner').textContent,/波比.*7/);
+  assert.equal(cell(31).getAttribute('aria-pressed'),'true');
+  u.fire(cell(31),'keydown',{key:'ArrowUp'});assert.equal(u.doc.activeElement,cell(22));
+  u.click('cat-route-heim');assert.equal(get('cat-route-heim').getAttribute('aria-pressed'),'true');
+  assert.match(get('cat-route-winner').textContent,/波比.*7/,'changing the visible route is not an edit');
+  u.fire(cell(13),'click');assert.equal(cell(31).getAttribute('aria-pressed'),'false');
+  assert.match(get('cat-route-winner').textContent,/臭臭.*9/);
+  u.fire(cell(28),'click');assert.match(get('cat-route-winner').textContent,/臭臭.*9/);
+  u.click('cat-route-reset');assert.match(get('cat-route-winner').textContent,/嘿姆.*臭臭.*9/);
+  assert.equal(u.doc.activeElement,cell(31));
+  assert.deepEqual(u.map(),arena);assert.equal(get('bfs-distance').textContent,beforeStatus);
+  u.click('undo-map');assert.equal(u.map()[0],'空地');
+ }finally{u.restore();}
+});
 
 test('a complete wall stroke undoes and redoes as one edit on both maps',async()=>{
  const u=await boot();try{

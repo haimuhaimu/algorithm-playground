@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
+ <meta name="description" content="让三台机器各抽一些数，看看谁更容易冒出大数字。亲手认识正态、长尾和重尾。"><link rel="icon" href="data:,">
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./space-theme.css"><link rel="stylesheet" href="./distributions.css?v=studio-operators-v1">
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
+ <script type="module" src="./distributions.mjs?v=plain-3"></script><title>分布观察台 · 算法游乐场</title>
+</head><body>
+ <a class="skip-link" href="#observation-title">跳到观察台</a>
+ <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><a class="back-link" href="./">全部实验 ↗</a><button class="quiet-button" id="about" type="button">怎么玩 ↗</button><button class="theme-button" id="theme" type="button" aria-label="切换深色模式">◐</button></div></header>
+ <main class="distribution-main" id="distribution-app">
+  <section class="distribution-intro"><p class="pixel-label">DISTRIBUTION OBSERVATORY</p><h1>大数字，<span>到底多难碰到？</span></h1><p class="distribution-lead">三猫各守一台抽数机。<br class="mobile-break">你来看看，哪台更容易冒出特别大的数。</p><p class="distribution-lead">红线先放在 4：抽到比 4 大的数，就记一次。</p></section>
+  <section class="observation" aria-labelledby="observation-title">
+   <div class="workbench-top"><h2 id="observation-title">分布观察台</h2><button id="reset-sample" class="text-button" type="button">从头重玩 ↻</button></div>
+   <ol class="lesson-progress" aria-label="怎么玩"><li id="step-1" aria-current="step"><span>1</span>多抽一些</li><li id="step-2"><span>2</span>挪一下线</li><li id="step-3"><span>3</span>想一想</li></ol>
+   <div class="step-panel">
+    <div class="step-content"><p id="step-label" class="step-label"></p><h3 id="step-title" tabindex="-1"></h3><p id="step-copy"></p><p id="observation-result" class="observation-result" role="status" aria-live="polite"></p></div>
+    <button id="next-step" class="distribution-primary" type="button">每台再抽 3,000 次 →</button>
+    <fieldset id="answer-panel" class="answer-panel" hidden><legend>这次没抽到比 16 大的数，就能说“以后也不可能”吗？</legend><button id="answer-sample" type="button">不一定，只是这次没碰上</button><button id="answer-zero" type="button">对，没抽到就是不可能</button><p id="answer-feedback" role="status"></p></fieldset>
+   </div>
+   <div class="observation-meta"><p>每台已抽 <b id="sample-count">30</b> 次 <span id="threshold-note"></span></p><p id="scale-note"></p></div>
+   <div class="distribution-grid">
+    <article class="machine machine-normal" id="machine-normal">
+     <header><div><h3 id="model-normal">正态</h3><p id="class-normal">大多挤在中间</p></div><div class="machine-tail"><strong id="tail-normal"></strong><small id="rate-normal"></small></div></header>
+     <div class="machine-operator"><img src="./studio-heim-portrait.png" width="26" height="26" alt="" loading="lazy">嘿姆值班</div>
+     <div id="comparison-normal" class="count-comparison" hidden><span><span id="previous-label-normal">最初 30 次</span> <b id="previous-normal"></b></span><span aria-hidden="true">→</span><span><span id="current-label-normal">现在 3,030 次</span> <b id="current-normal"></b></span></div>
+     <div id="chart-normal" class="distribution-chart" role="img" aria-label="正态真实样本直方图"></div><div class="chart-axis"><span>−4</span><span>0</span><span>+4</span><span>+8</span><span>+12</span><span>+16</span></div><p id="overflow-normal" class="overflow-note"></p>
+     <details class="machine-details"><summary>还有哪些数？</summary><p id="before-normal"></p><p id="probability-normal"></p><p>最大的数 <b id="max-normal"></b> · 平均值 <b id="mean-normal"></b></p><p>最近六次：<span id="latest-normal"></span></p></details>
+    </article>
+    <article class="machine machine-exponential" id="machine-exponential">
+     <header><div><h3 id="model-exponential">指数</h3><p id="class-exponential">往右拖着一条尾巴</p></div><div class="machine-tail"><strong id="tail-exponential"></strong><small id="rate-exponential"></small></div></header>
+     <div class="machine-operator"><img src="./studio-bobby-portrait.png" width="26" height="26" alt="" loading="lazy">波比值班</div>
+     <div id="comparison-exponential" class="count-comparison" hidden><span><span id="previous-label-exponential">最初 30 次</span> <b id="previous-exponential"></b></span><span aria-hidden="true">→</span><span><span id="current-label-exponential">现在 3,030 次</span> <b id="current-exponential"></b></span></div>
+     <div id="chart-exponential" class="distribution-chart" role="img" aria-label="指数真实样本直方图"></div><div class="chart-axis"><span>−4</span><span>0</span><span>+4</span><span>+8</span><span>+12</span><span>+16</span></div><p id="overflow-exponential" class="overflow-note"></p>
+     <details class="machine-details"><summary>还有哪些数？</summary><p id="before-exponential"></p><p id="probability-exponential"></p><p>最大的数 <b id="max-exponential"></b> · 平均值 <b id="mean-exponential"></b></p><p>最近六次：<span id="latest-exponential"></span></p></details>
+    </article>
+    <article class="machine machine-pareto" id="machine-pareto">
+     <header><div><h3 id="model-pareto">帕累托</h3><p id="class-pareto">大数没那么罕见</p></div><div class="machine-tail"><strong id="tail-pareto"></strong><small id="rate-pareto"></small></div></header>
+     <div class="machine-operator"><img src="./studio-chouchou-portrait.png" width="26" height="26" alt="" loading="lazy">臭臭值班</div>
+     <div id="comparison-pareto" class="count-comparison" hidden><span><span id="previous-label-pareto">最初 30 次</span> <b id="previous-pareto"></b></span><span aria-hidden="true">→</span><span><span id="current-label-pareto">现在 3,030 次</span> <b id="current-pareto"></b></span></div>
+     <div id="chart-pareto" class="distribution-chart" role="img" aria-label="帕累托真实样本直方图"></div><div class="chart-axis"><span>−4</span><span>0</span><span>+4</span><span>+8</span><span>+12</span><span>+16</span></div><p id="overflow-pareto" class="overflow-note"></p>
+     <details class="machine-details"><summary>还有哪些数？</summary><p id="before-pareto"></p><p id="probability-pareto"></p><p>最大的数 <b id="max-pareto"></b> · 平均值 <b id="mean-pareto"></b></p><p>最近六次：<span id="latest-pareto"></span></p></details>
+    </article>
+   </div>
+   <p class="chart-reading">从左到右，数字越来越大，也可能有负数。柱子越高，表示那一段的数越常见；粉色是超过红线的部分。多抽之后，细框还留着最开始 30 次的样子。<b>图上没画出的数，也算在内。</b></p>
+  </section>
+  <section id="ending" class="distribution-ending" aria-labelledby="ending-title" hidden><p class="step-label">这一轮看完了</p><h2 id="ending-title" tabindex="-1">刚才这两下，<br>有什么不一样？</h2><p id="answer-history"></p><p id="ending-summary"></p><div class="takeaway-grid"><p><span>01</span><b>拖着尾巴，不代表大数就常见。</b>指数这台也往右拖尾，但越往远处，出现大数的机会掉得很快。这叫“轻尾”。</p><p><span>02</span><b>有些分布，更容易遇上大数。</b>帕累托这台，远处的机会减少得没那么快。它属于“重尾”，也属于“长尾”——两个名字可以同时成立。</p><p><span>03</span><b>没抽到，不等于不可能。</b>这次抽到了几次，和理论上有多大机会，是两回事。</p></div><p class="ending-boundary">不用急着记住所有名字。这里知道三台怎么抽数，才知道它们各是哪类；换成一小堆现实数据，不能只看图就下结论。“肥尾”在不同地方用法不完全一样，这里按“重尾”来讲，更准确的解释放在下面。</p></section>
+  <section id="optional-exploration" class="optional-exploration" hidden><p class="step-label">想再多看一点？</p><h2>再来一台，不太一样的。</h2><p>它叫“对数正态”，也比较容易冒出大数。但它不是帕累托那种幂律：“重尾”并不只有一种。</p><button id="inspect-transfer" type="button">看看对数正态这次抽到了什么 ↗</button><div id="transfer-lab" class="transfer-lab" hidden><h3 id="transfer-model">对数正态</h3><div id="chart-lognormal" class="distribution-chart" role="img" aria-label="对数正态抽出的数字"></div><div class="chart-axis"><span>−4</span><span>0</span><span>+4</span><span>+8</span><span>+12</span><span>+16</span></div><strong id="transfer-tail"></strong><p id="transfer-probability"></p><p id="transfer-overflow"></p></div></section>
+  <details class="distribution-method"><summary>想换一批数，或看看公式？</summary><div><p>这次的抽数编号是 <b id="seed-value"></b>。用同一个编号，重玩还会抽到一样的数；换编号，就换一组，从头开始。</p><button id="new-sample" type="button">换一批数，再来一次 ↗</button><p>为什么三台可以放在一起比？四台都用 Y=(X−m)/h：m 是理论中位数，h 是理论四分位距的一半。这样中位数都在 0，中间一半的宽度都是 2。不是把每批数重新拉伸，也不是让均值或标准差相等。非对称分布的 Q1/Q3 不一定等于 −1/+1。4 和 16 只是这次选来比较的数，不是通用的风险标准。</p><p>原始分布：正态 N(0,1)，指数 Exp(1)，帕累托 xₘ=1、α=1.5，对数正态 exp(N(0,1))。帕累托在此有有限均值、无限理论方差，但样本均值仍会收敛。对数正态则有有限方差，所以“重尾”不等于“方差无限”。</p><p>更准确地说，令 S(x)=P(Y&gt;x)。长尾要求每个固定 c&gt;0 都有 S(x+c)/S(x)→1；重尾要求所有正 t 的指数矩 E[e<sup>tY</sup>] 都不存在。“肥尾”有时泛指重尾，有时特指幂律尾，这里用前一种说法。日常说的“长尾商品”也不等于这个数学定义。</p><p>每台按自己的伪随机序列抽数：多抽只接着往下抽，不换掉原来的数，也不会为了演示强塞一个大数。挪红线只重新数一遍。计算机的随机数有精度限制；数学公式里的分布仍然没有上界。图只画 −4 到 16 之间的数，外面的也都计数。3,030 次是为了方便这一轮互动，不代表这么多就足以证明分布属于哪类。</p><p>只在你的浏览器里计算，不上传、不新增保存记录，也不接外部 AI。这些只是模拟数字，不代表真实天气、收入或其他实测数据。</p><ul><li><a href="https://adamwierman.com/wp-content/uploads/2021/05/book-05-11.pdf" target="_blank" rel="noopener">Nair / Wierman / Zwart：重尾、长尾与 fat-tail 的不同口径</a></li><li><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm" target="_blank" rel="noopener">NIST：正态分布</a> · <a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda3667.htm" target="_blank" rel="noopener">指数分布</a> · <a href="https://www.itl.nist.gov/div898/handbook/apr/section1/apr164.htm" target="_blank" rel="noopener">对数正态分布</a></li><li><a href="https://arxiv.org/abs/0706.1062" target="_blank" rel="noopener">Clauset / Shalizi / Newman：为什么目测曲线不能确立幂律</a></li></ul></div></details>
+  <footer class="distribution-footer"><a href="./">← 回到算法游乐场</a><span>合成数据 · 可重复观察 · MADE BY CHEN QUAN</span></footer>
+ </main>
+ <dialog id="guide" class="distribution-guide"><h2>三台机器抽数，<br>你来看看有什么不同。</h2><ol><li><b>先多抽一些。</b>每台已经抽了 30 次，再各抽 3,000 次，看看谁冒出的大数更多。</li><li><b>再挪一下线。</b>还是刚才那些数，把红线从 4 挪到 16，只数比 16 大的。</li><li><b>最后想一想。</b>如果这次没碰到，以后就不可能碰到吗？</li></ol><p>下面会留着前后对比，不用靠记忆。随时可以从头再玩。</p><button id="close-guide" type="button">回去试试</button></dialog>
+ <noscript><p>互动采样需要 JavaScript。模型说明和返回游乐场的链接仍可阅读。</p></noscript>
+</body></html>

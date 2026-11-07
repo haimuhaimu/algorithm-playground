@@ -26,22 +26,59 @@ test('decorative mining orbits are clipped without a programmatically scrollable
 });
 const files=['app.mjs','core.mjs','data.mjs','evolution-core.mjs','evolution.css','evolution.html','evolution.mjs','firefly-core.mjs','firefly.css','firefly.html','firefly.mjs','index.html','mining-core.mjs','mining.css','mining.html','mining.mjs','navigation.css','navigation.mjs','neural-core.mjs','neural.css','neural.html','neural.mjs','pathfinding-core.mjs','pathfinding.css','pathfinding.html','pathfinding.mjs','pixel-core.mjs','pixel.css','pixel.html','pixel.mjs','sand-core.mjs','sand.css','sand.html','sand.mjs','style.css'];
 files.push('neural-lesson.mjs','neural-lesson-ui.mjs','neural-lesson.css');
+files.push('pathfinding-cats.mjs','pathfinding-cats-ui.mjs','pathfinding-cats.css');
 files.push('neural-step.mjs','neural-step-view.mjs');
 files.push('neural-guide.mjs','neural-guide-ui.mjs','neural-guide-view.mjs','neural-guide.css');
+files.push('neural-cat-lesson.mjs','neural-cat-lesson-ui.mjs','neural-cat-lesson.css',
+ 'neural-cat-01.jpg','neural-cat-02.jpg','neural-cat-03.jpg','neural-cat-04.jpg',
+ 'neural-cat-05.jpg','neural-cat-06.jpg','neural-cat-07.jpg','neural-cat-08.jpg');
+files.push('neural-cat-coach.mjs','neural-cat-coach-ui.mjs');
+files.push('neural-cat-quick-ui.mjs');
+files.push('neural-cat-09.jpg','neural-cat-10.jpg','neural-cat-11.jpg','neural-cat-12.jpg',
+ 'neural-cat-13.jpg','neural-cat-14.jpg','neural-cat-15.jpg','neural-cat-16.jpg',
+ 'neural-cat-17.jpg','neural-cat-18.jpg','neural-cat-19.jpg','neural-cat-20.jpg');
 files.push('neural-gradient.mjs','neural-gradient-ui.mjs');
 files.push('neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs','neural-residual.css');
 files.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-generalization-view.mjs','neural-generalization.css');
 files.push('space-theme.css');
+files.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css','learning-route-trials.mjs');
+files.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
+files.push('genai-handoff.mjs','bayes-tool.mjs');
+files.push('agent-mission.html','agent-mission.css','agent-mission.mjs','agent-tool.mjs');
+files.push('agent-reroute.html','agent-reroute.css','agent-reroute-ui.mjs','agent-reroute-tool.mjs');
+files.push('agent-frames.html','agent-frames.css','agent-frames-ui.mjs','agent-frames-tool.mjs');
 files.push('Silkscreen-Regular.ttf','Silkscreen-OFL.txt');
 files.push('pixel-recipient.mjs','pixel-recipient-ui.mjs','pixel-recipient.css');
+files.push('pixel-code.mjs','pixel-code-ui.mjs','pixel-code.css');
+files.push('pixel-delivery.mjs');
+files.push('pixel-tool.mjs','pixel-tool-ui.mjs');
 files.push('sand-lesson.mjs','sand-lesson-ui.mjs');
 files.push('mining-shared-evidence.mjs','mining-shared-ui.mjs');
+files.push('mining-bayes.mjs','mining-bayes-ui.mjs','mining-bayes.css');
+files.push('distributions.html','distributions.css','distributions.mjs','distributions-core.mjs');
 files.push('feedback-story.mjs','feedback-story-ui.mjs','feedback-story.css');
 files.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');
+files.push('recommendation-cards.mjs');
 files.push('evolution-birth.mjs','local-drafts.mjs','world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
 files.push('world-model-planning.mjs');
 files.push('sand-history.mjs');
-files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');files.sort();
+files.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');
+files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');
+files.push('cat-album.css','cat-album.mjs','cat-album-cover.jpg','cat-comic-substitute.jpg','cat-comic-boss.jpg','cat-comic-warmth.jpg');
+files.push('cat-album-episodes.mjs',
+ 'cat-comic-standby-sound.jpg','cat-comic-third-exit.jpg','cat-comic-blanket-move.jpg',
+ 'cat-comic-window-audience.jpg','cat-comic-open-is-enough.jpg','cat-comic-dont-throw.jpg',
+ 'cat-comic-expression-check.jpg','cat-comic-grooming-service.jpg','cat-comic-squeeze-in.jpg',
+ 'cat-comic-models-ready.jpg','cat-comic-same-destination.jpg','cat-comic-tail-please.jpg',
+ 'cat-comic-on-time.jpg','cat-comic-all-innocent.jpg','cat-comic-got-it.jpg',
+ 'cat-comic-air-burial.jpg','cat-comic-photo-retake.jpg','cat-comic-bedroom-edition.jpg',
+ 'cat-comic-evening-show.jpg','cat-comic-last-bite.jpg','cat-comic-new-bed.jpg',
+);
+files.push('studio-cat-assets.mjs',
+ 'studio-heim-portrait.png','studio-heim-idle.png','studio-heim-run.png',
+ 'studio-bobby-portrait.png','studio-bobby-idle.png','studio-bobby-run.png',
+ 'studio-chouchou-portrait.png','studio-chouchou-idle.png','studio-chouchou-run.png');
+files.sort();
 test('server serves only runtime assets with correct types, headers and methods',async()=>{
  const server=createAppServer(root);
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -58,6 +95,30 @@ test('server serves only runtime assets with correct types, headers and methods'
   const head=await fetch(base+'/style.css',{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'');
   assert.equal((await fetch(base+'/index.html',{method:'POST'})).status,405);
   for(const path of ['/package.json','/docs/spec.md','/.git/config','/%2e%2e%2fpackage.json','/%252e%252e/package.json','/%zz'])assert.equal((await fetch(base+path)).status,404,path);
+ }finally{await new Promise(resolve=>server.close(resolve));}
+});
+test('paired preview can read only public teaching modules from exact owned or loopback origins',async()=>{
+ const server=createAppServer(root);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const base=`http://127.0.0.1:${server.address().port}`;
+  for(const origin of ['https://haimuhaimu.github.io','http://127.0.0.1:3102','http://localhost:1024']){
+   const response=await fetch(base+'/learning-route-trials.mjs',{headers:{Origin:origin}});
+   assert.equal(response.status,200);assert.equal(response.headers.get('access-control-allow-origin'),origin);
+   assert.equal(response.headers.get('vary'),'Origin');assert.equal(response.headers.get('access-control-allow-credentials'),null);
+   assert.match(response.headers.get('content-security-policy'),/connect-src 'none'/);
+  }
+  for(const origin of ['null','https://evil.example','https://haimuhaimu.github.io.evil.example','https://user@haimuhaimu.github.io','https://haimuhaimu.github.io/','http://127.0.0.1:80','http://localhost:3102/path','http://127.0.0.1:003102']){
+   const response=await fetch(base+'/learning-tool.mjs',{headers:{Origin:origin}});
+   assert.equal(response.status,200);assert.equal(response.headers.get('access-control-allow-origin'),null,origin);assert.equal(response.headers.get('vary'),'Origin');
+  }
+  for(const path of ['/learn.html','/learning-route.css','/package.json','/not-allowed.mjs']){
+   const response=await fetch(base+path,{headers:{Origin:'http://127.0.0.1:3102'}});
+   assert.equal(response.headers.get('access-control-allow-origin'),null,path);
+  }
+  const head=await fetch(base+'/learning-route-trials.mjs',{method:'HEAD',headers:{Origin:'http://127.0.0.1:3102'}});
+  assert.equal(head.headers.get('access-control-allow-origin'),'http://127.0.0.1:3102');assert.equal(await head.text(),'');
+  const post=await fetch(base+'/learning-route-trials.mjs',{method:'POST',headers:{Origin:'http://127.0.0.1:3102'}});
+  assert.equal(post.status,405);assert.equal(post.headers.get('access-control-allow-origin'),null);
  }finally{await new Promise(resolve=>server.close(resolve));}
 });
 test('build ships all ten experiments and all runtime files with byte-for-byte source parity',async()=>{

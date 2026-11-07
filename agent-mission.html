@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="description" content="算法游乐场 Agent 实战首关：对照两轮操作，分清工具回执和任务完成。">
+ <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
+ <link rel="stylesheet" href="./home.css?v=home-learning-v2"><link rel="stylesheet" href="./agent-mission.css?v=signing-desk-v1">
+ <script type="module" src="./agent-mission.mjs?v=handoff-trust-v1"></script>
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
+ <title>显示成功，补给真的到了吗？ · 算法游乐场</title>
+</head>
+<body>
+ <a class="skip-link" href="#mission-actions">跳到操作</a>
+ <header class="home-header">
+  <a class="home-brand" href="./"><span class="pixel-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>算法游乐场</span></a>
+  <nav aria-label="任务导航"><a href="./#learning-routes">学习路线</a><button id="home-theme" type="button" aria-label="切换深色模式" hidden>◐</button></nav>
+ </header>
+ <main class="mission-main" id="mission" aria-labelledby="mission-title">
+  <header class="mission-intro">
+   <p class="pixel-label">AGENT MISSION / 01</p>
+   <h1 id="mission-title">显示成功，<span>补给真的到了吗？</span></h1>
+   <p>给 07 号站送一箱补给。系统说「已受理」，你的任务是确认对方真的收到了。 <a class="mission-text-link" href="./agent-reroute.html#mission">下一关：新指令来了 <span aria-hidden="true">→</span></a></p>
+  </header>
+  <div class="mission-workbench">
+   <figure class="mission-scene" id="mission-scene" data-receipt="unknown" data-backup="false">
+    <svg viewBox="0 0 576 274" aria-hidden="true" focusable="false">
+     <defs>
+      <g id="supply-box">
+       <path class="scene-box-left" d="M0 0l24 12v24L0 24z"/>
+       <path class="scene-box-right" d="M24 12L48 0v24L24 36z"/>
+       <path class="scene-box-top" d="M0 0l24-12L48 0 24 12z"/>
+       <path class="scene-box-tape" d="M8-4l8-4L40 4l-8 4z"/>
+      </g>
+     </defs>
+     <path class="scene-land-shadow" d="M28 137L252 25l306 135-233 113z"/>
+     <path class="scene-land-left" d="M20 118l300 132v19L20 137z"/>
+     <path class="scene-land-right" d="M320 269l232-116v-19L320 250z"/>
+     <path class="scene-land" d="M20 118L252 2l300 132-232 116z"/>
+     <path class="scene-land-grid" d="M64 140L300 24m-188 140L349 45m-189 143L395 66m-187 146L442 86m-186 150L492 108M70 93l298 133M118 69l298 133M166 45l298 133M214 21l298 133"/>
+     <path class="scene-main-route" d="M118 124l86-43 156 70 86-42"/>
+     <path class="scene-backup-route" d="M120 131l141 65 177-86"/>
+     <path class="scene-pad-top" d="M70 124l49-24 58 29-49 24z"/>
+     <path class="scene-pad-side" d="M70 124l58 29v9l-58-29zm58 29l49-24v9l-49 24z"/>
+     <path class="scene-pad-top" d="M400 104l49-24 58 29-49 24z"/>
+     <path class="scene-pad-side" d="M400 104l58 29v9l-58-29zm58 29l49-24v9l-49 24z"/>
+     <path class="scene-pad-mark" d="M414 104l35-17 44 22-35 17z"/>
+     <use href="#supply-box" x="100" y="96"/>
+     <g class="scene-barrier" transform="translate(256 103)">
+      <path d="M-20 0l46 23v7L-20 7z" fill="#543c4e"/><path d="M-20 0l10-5 46 23-10 5z" fill="#f2b24f"/>
+      <path d="M-2-1l8-4 9 5-8 4zm20 10l8-4 9 5-8 4z" fill="#543c4e"/>
+     </g>
+     <path class="scene-station" d="M470 85V43l23-12 28 14v42l-27 13z"/>
+     <path class="scene-station-side" d="M494 100V58l27-13v42z"/>
+     <path class="scene-station-top" d="M470 43l23-12 28 14-27 13z"/>
+     <g class="scene-signing-desk">
+      <path class="scene-station-top" d="M437 31l12-8h47l-9 8z"/>
+      <rect class="scene-station-window" x="437" y="31" width="50" height="53"/>
+      <image href="./studio-bobby-portrait.png" x="439" y="33" width="46" height="46"/>
+      <path class="scene-desk-counter" d="M435 77h54v7h-54z"/>
+     </g>
+     <g class="scene-confirmed"><use href="#supply-box" x="421" y="77"/><path d="M511 74l8 8 15-16" class="scene-check"/></g>
+    </svg>
+    <figcaption><span>07 号站 · 波比的签收台</span><strong id="mission-scene-caption">等待签收证据</strong></figcaption>
+   </figure>
+   <section class="mission-console" aria-labelledby="mission-current">
+    <header class="mission-console-head"><h2 id="mission-current" tabindex="-1">第 1 轮</h2><p>剩余工具机会 <strong id="mission-budget">3 / 3</strong></p></header>
+    <dl class="mission-signals">
+     <div><dt>工具回执</dt><dd id="mission-tool" data-tone="success">已受理</dd></div>
+     <div><dt>签收证据</dt><dd id="mission-receipt" data-tone="unknown">未核验</dd></div>
+    </dl>
+    <p class="mission-feedback" id="mission-feedback" role="status">受理只说明系统接了单。对方收到没有，还要查签收。</p>
+    <div class="mission-actions" id="mission-actions" role="group" aria-label="决定下一步" tabindex="-1">
+     <button class="mission-button mission-primary" id="mission-check" type="button" disabled>查签收</button>
+     <button class="mission-button" id="mission-retry" type="button" disabled>重试</button>
+     <button class="mission-button mission-stop" id="mission-stop" type="button" disabled>停止</button>
+    </div>
+    <button class="mission-button mission-primary" id="mission-restart" type="button" hidden>同条件再试</button>
+    <p class="mission-cost" id="mission-cost">查询和重试各用 1 次机会，停止不耗次数。</p>
+    <div class="mission-share" id="mission-share" hidden>
+     <h3 id="mission-share-title" tabindex="-1">两轮已结束</h3>
+     <p>带回的是这两轮操作，不是「已掌握」认证。</p>
+     <div class="mission-share-actions">
+      <button class="mission-button mission-primary" id="mission-return" type="button" hidden>带回 GenAI OS 复盘</button>
+      <button class="mission-button" id="mission-export" type="button">生成实验 JSON</button>
+     </div>
+     <a class="mission-text-link" id="mission-os-fallback" href="https://haimuhaimu.github.io/genai-learning-os/?page=routes&amp;section=agent-journey" target="_blank" rel="noopener noreferrer" hidden>打开 GenAI OS，手动导入（新窗口）</a>
+     <p id="mission-os-manual" hidden>本地预览：生成 JSON 后，回到配对的 GenAI OS 预览，在 Agent 路线里手动导入。</p>
+     <div id="mission-export-record" hidden>
+      <label for="mission-export-text">可重放的实验 JSON</label>
+      <textarea id="mission-export-text" rows="6" readonly spellcheck="false"></textarea>
+      <button class="mission-button" id="mission-copy" type="button">复制 JSON</button>
+     </div>
+     <p class="mission-share-status" id="mission-share-status" role="status"></p>
+    </div>
+   </section>
+  </div>
+  <section class="mission-review" aria-labelledby="mission-review-title">
+   <h2 id="mission-review-title">看两轮分别做了什么</h2>
+   <p id="mission-comparison">两轮从相同条件开始：同一张补给单，同样 3 次工具机会。</p>
+   <div class="mission-trials">
+    <article class="mission-trial"><h3>第 1 轮记录</h3><div id="mission-trial-1"></div></article>
+    <article class="mission-trial"><h3>第 2 轮记录</h3><div id="mission-trial-2"><p>首轮结束后，可回到同一起点再试。</p></div></article>
+   </div>
+   <details class="mission-notes"><summary>为什么不把「已受理」算作成功？</summary><p>工具成功说明调用有回音，任务成功要对照用户的目标。这关的目标是拿到签收证据。重试可能让事情往前走，但它不是签收；停止也可以是合理决定，只要说明哪些事还没有核实。</p></details>
+   <p class="mission-boundary">这是固定条件的模拟任务，没有真实派单或外部工具调用。两轮记录只留在当前页面，刷新会清空；只有你主动带回或复制，记录才会离开这里。</p>
+  </section>
+ </main>
+ <footer class="home-footer"><a href="./#learning-routes">返回学习路线</a><span>MADE BY CHEN QUAN</span></footer>
+ <noscript><p class="no-script">启用 JavaScript 后才能操作这条任务路线。<a href="./#learning-routes">返回学习路线</a>。</p></noscript>
+</body>
+</html>

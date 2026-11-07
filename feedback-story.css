@@ -25,6 +25,7 @@
 .feedback-mini-card.is-changed{border-style:dashed}
 .feedback-mini-card.is-selected{border:2px solid var(--ink);padding:10px}
 .feedback-mini-art{display:grid;place-items:center;width:44px;height:50px;border-radius:8px;background:var(--topic);color:#20241c;font-size:28px;font-weight:700}
+.feedback-mini-art > .recommendation-post-art{display:block;inline-size:100%;block-size:100%;min-block-size:0;object-fit:contain;image-rendering:pixelated}
 .feedback-mini-card h4{font-size:13px;line-height:1.5;margin:3px 0;overflow-wrap:anywhere}
 .feedback-mini-topic,.feedback-mini-creator{display:block;font-size:10px;color:var(--muted);line-height:1.5}
 .feedback-movement{font-size:11px;font-weight:600;white-space:nowrap;padding:5px 7px;border-radius:6px;background:var(--soft)}

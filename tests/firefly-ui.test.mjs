@@ -131,3 +131,16 @@ test('real frame playback announces whole seconds and stops automatically at bot
   click('listening-exit');assert.equal(ui.frames.size,0);click('play');assert.equal(ui.frames.size,1);
  }finally{ui.restore();}
 });
+
+test('one-oscillator inspection pauses but preserves the two-group checkpoint, and the group can resume without concurrent replay',async()=>{
+ const ui=await boot();try{
+  const el=id=>ui.elements.get(id),click=id=>el(id).dispatchEvent(new Event('click'));
+  click('listening-start');click('listening-fast');const evidence=el('comparison-before').innerHTML;
+  click('beat-open');assert.equal(el('play').getAttribute('aria-pressed'),'false');assert.equal(ui.frames.size,0);
+  assert.equal(el('listening-lesson').dataset.stage,'before');assert.equal(el('comparison-before').innerHTML,evidence);
+  click('beat-faster');click('beat-run');click('beat-replay');const stale=[...ui.frames.values()][0];assert.equal(ui.frames.size,1);
+  click('listening-wide');assert.equal(el('listening-lesson').dataset.stage,'comparing');assert.equal(ui.frames.size,1,'only the actual group playback is scheduled');
+  stale(5000);assert.equal(el('beat-scrub').value,'0');assert.equal(el('comparison-before').innerHTML,evidence);
+  click('listening-fast');assert.equal(el('listening-comparison').dataset.outcome,'joined');assert.equal(ui.frames.size,0);
+ }finally{ui.restore();}
+});

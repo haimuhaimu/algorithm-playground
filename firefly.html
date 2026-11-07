@@ -4,9 +4,9 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="点乱一片萤火，看看它们如何重新找到同一个节拍。可交互的相位同步算法实验。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./firefly.css">
- <script type="module" src="./firefly.mjs"></script><title>算法游乐场 · 萤火虫合奏</title>
- <link rel="stylesheet" href="./navigation.css"><script type="module" src="./navigation.mjs"></script>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./firefly.css?v=cat-beat-v1"><link rel="stylesheet" href="./firefly-beat.css?v=cat-beat-v1">
+ <script type="module" src="./firefly.mjs?v=cat-beat-v1&amp;entry=bobby-tap"></script><title>算法游乐场 · 萤火虫合奏</title>
+ <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head>
 <body>
@@ -18,8 +18,43 @@
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./recommendation.html">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html" aria-current="page">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="firefly-main">
   <section class="firefly-intro"><p class="eyebrow">80 个小节拍，一场没有指挥的合奏</p><h1>各自很整齐，<span>为什么还没合拍？</span></h1><p>让两群互相听见。亲手改变一次连接，看懂局部与整体的区别。</p></section>
+  <section class="beat-panel" id="beat-panel" aria-labelledby="beat-title">
+   <header class="beat-heading"><div><p class="eyebrow">先看一只 / 再看一群</p><h2 id="beat-title">它怎样跟上别人的节拍？</h2><p>放大一只金色萤火虫：先猜它会怎么调整，再走同样半秒，看见邻居究竟改了什么。</p></div><button id="beat-open" type="button" aria-expanded="false" aria-controls="beat-body">放大一只，试试看 ↗</button></header>
+   <div class="beat-body" id="beat-body" hidden>
+    <div class="beat-case-row"><div class="beat-cases" role="group" aria-label="选择邻居的情况"><button id="beat-ahead" aria-pressed="true">邻居领先</button><button id="beat-behind" aria-pressed="false">邻居落后</button><button id="beat-out" aria-pressed="false">听不见邻居</button></div><span id="beat-progress">已看过 0 / 3 种情况</span></div>
+    <p id="beat-context"></p>
+    <div class="beat-boards"><article><h3>开始前 · 同一个起点</h3><div id="beat-before"></div></article><article><h3 id="beat-after-title">半秒后 · 等你先猜</h3><div id="beat-after"></div></article></div>
+    <div class="beat-legend" aria-label="节拍钟图例"><span><i aria-hidden="true"></i>金针：这只</span><span><i class="legend-neighbor" aria-hidden="true"></i>青针：3 只邻居重合</span><span id="beat-legend-solo" hidden><i class="legend-solo" aria-hidden="true"></i>虚线：独自走</span></div>
+    <div class="beat-result" id="beat-result" hidden><h3 id="beat-result-title" tabindex="-1"></h3><p id="beat-numbers"></p><p id="beat-explanation"></p></div>
+    <div class="beat-guess-panel" id="beat-guess-panel"><p>和独自走相比，金针会怎样？</p><div class="beat-guesses" role="group" aria-label="先猜这只怎样跟拍"><button id="beat-faster" aria-pressed="false">加快追上</button><button id="beat-slower" aria-pressed="false">放慢等一等</button><button id="beat-same" aria-pressed="false">照旧</button></div></div>
+    <div class="beat-actions"><button id="beat-run" disabled>走半秒，看它怎么改 →</button><button id="beat-replay" hidden>慢放这半秒 ↻</button><button id="beat-retry" hidden>同一起点，重新猜</button></div>
+    <div class="beat-timeline" id="beat-timeline" hidden><label for="beat-scrub">逐拍回看 · 仅播放，不改结果<output id="beat-frame" for="beat-scrub"></output></label><input type="range" id="beat-scrub" min="0" max="30" step="1" value="0" disabled aria-label="回看这半秒的真实模拟帧"></div>
+    <p class="beat-ending" id="beat-ending" hidden></p>
+    <details class="cat-beat" id="cat-beat">
+     <summary id="cat-beat-summary">波比拍一下，谁听见了？</summary>
+     <div class="cat-beat-stage">
+      <p>三只萤火虫正好同拍。波比只拍一下，谁会先变？</p>
+      <img src="./studio-bobby-idle.png" width="331" height="360" alt="" loading="lazy" decoding="async">
+      <div><p class="cat-beat-note">虚线框内听得见波比</p><div id="cat-beat-map"></div></div>
+     </div>
+     <button id="cat-beat-try" type="button" aria-controls="cat-beat-result">让波比拍一下</button>
+     <p id="cat-beat-status" role="status"></p>
+     <div id="cat-beat-result" hidden>
+      <table class="cat-beat-table">
+       <caption>半秒后 · 同一起点，只有这一拍不同</caption>
+       <thead><tr><th scope="col">萤火虫</th><th scope="col">没拍</th><th scope="col">拍了</th></tr></thead>
+       <tbody id="cat-beat-rows"></tbody>
+      </table>
+      <p>B 没听见波比，却跟着 A 调整了节拍；C 离它们都远，和没拍时一样。波比没有再拍，接下来的半秒是萤火虫自己在互相跟拍。</p>
+      <p class="cat-beat-note">角度是闪光周期的位置，不是飞行方向。这里只算三只，不会改变下方池塘。</p>
+      <button id="cat-beat-reset" type="button">回到起点</button>
+     </div>
+    </details>
+    <details class="beat-boundary"><summary>这是怎样的对照？</summary><p>四只固定位置的放大小样本，运行与下方 80 只相同的 Kuramoto 更新函数。两组从同一初态出发，只把控制组的「互相影响」设为 0；天生步速、位置、步长完全相同。邻居也在演化，并非固定指挥。30 步 × 1/60 秒；慢放用 2 秒播放这半秒，不改变计算。</p><p>顶部是亮起时刻，指针一圈代表一次明暗周期；青针代表此样本里节拍恰好重合的三只邻居，不是隐藏的总指挥。角度是节拍位置，不是飞行方向。它是数学模型，不是生物学复现。记录仅保留在本页，刷新会重置；打开这里会暂停下方画布，但保留其场景和两群证据。</p></details>
+   </div>
+  </section>
   <section class="listening-lesson" id="listening-lesson" aria-labelledby="listening-title" data-stage="idle">
-   <div class="listening-heading"><span class="eyebrow" id="listening-stage">一次小实验 · 约半分钟</span><h2 id="listening-title">让两群互相听见</h2><p id="listening-instruction">先看它们各自找到节拍，再由你决定要不要让两群相互影响。没有指挥，也不需要刷到 100%。</p></div>
+   <div class="listening-heading"><span class="eyebrow" id="listening-stage">一次小实验 · 约半分钟</span><h2 id="listening-title">让两群互相听见</h2><p><span id="listening-instruction">先看它们各自找到节拍，再由你决定要不要让两群相互影响。没有指挥，也不需要刷到 100%。</span><br><a class="step-jump" id="cat-beat-link" href="#cat-beat">小实验：波比拍一下 <span aria-hidden="true">↑</span></a></p></div>
    <div class="listening-actions">
     <button id="listening-start" class="listening-primary">开始两群实验</button>
     <button id="listening-fast" hidden>快进到观察点</button>
@@ -33,7 +68,7 @@
   <section class="chorus-lab" aria-label="萤火虫同步实验">
    <div class="habitat-column">
     <div class="habitat">
-     <div class="habitat-heading"><span id="habitat-label">一起合拍</span><span id="elapsed">0.0 秒</span><label class="phase-toggle"><input type="checkbox" id="show-phase">看小节拍</label></div>
+     <div class="habitat-heading"><span id="habitat-label">一起合拍</span><img class="habitat-cat" src="./studio-bobby-idle.png" width="331" height="360" alt="" aria-hidden="true" decoding="async"><span id="elapsed">0.0 秒</span><label class="phase-toggle"><input type="checkbox" id="show-phase">看小节拍</label></div>
     <div class="touch-modes"><h2>你来插一手</h2><div role="group" aria-label="点按动作"><button data-mode="scatter" aria-pressed="true">打乱一片 <kbd>1</kbd></button><button data-mode="align" aria-pressed="false">点亮一片 <kbd>2</kbd></button></div><p id="interaction-status" role="status">试着点一下画布。</p></div>
      <canvas id="fireflies" width="960" height="600" tabindex="0" role="application" aria-label="萤火虫合奏互动画布" aria-describedby="field-help cursor-status">需要支持 Canvas 的浏览器。</canvas>
      <div id="group-readout" class="group-readout" hidden aria-label="两群的实时节拍">
