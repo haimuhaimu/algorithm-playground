@@ -61,6 +61,7 @@ files.push('seat-lesson.mjs','seat-lesson-ui.mjs','seat-lesson.css');
 files.push('recommendation-cards.mjs');
 files.push('evolution-birth.mjs','local-drafts.mjs','world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
 files.push('world-model-planning.mjs');
+files.push('sand-history.mjs');
 files.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');
 files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');
 files.push('cat-album.css','cat-album.mjs','cat-album-cover.jpg','cat-comic-substitute.jpg','cat-comic-boss.jpg','cat-comic-warmth.jpg');

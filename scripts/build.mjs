@@ -41,6 +41,7 @@ FILES.push('mining-bayes.mjs','mining-bayes-ui.mjs','mining-bayes.css');
 FILES.push('distributions.html','distributions.css','distributions.mjs','distributions-core.mjs');
 FILES.push('world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
 FILES.push('world-model-planning.mjs');
+FILES.push('sand-history.mjs');
 FILES.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');
 FILES.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');
 FILES.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');
