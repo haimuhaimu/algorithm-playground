@@ -12,9 +12,9 @@
  <script type="module" src="./neural-gradient-ui.mjs"></script>
  <link rel="stylesheet" href="./neural-residual.css"><script type="module" src="./neural-residual-ui.mjs"></script>
  <link rel="stylesheet" href="./neural-generalization.css"><script type="module" src="./neural-generalization-ui.mjs"></script>
- <link rel="stylesheet" href="./neural-cat-lesson.css"><script type="module" src="./neural-cat-lesson-ui.mjs"></script>
+ <link rel="stylesheet" href="./neural-cat-lesson.css?v=cat-label-evidence-v1"><script type="module" src="./neural-cat-lesson-ui.mjs"></script>
  <script type="module" src="./neural-cat-coach-ui.mjs"></script>
- <script type="module" src="./neural-cat-quick-ui.mjs"></script>
+ <script type="module" src="./neural-cat-quick-ui.mjs?v=cat-label-evidence-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head>
 <body>
@@ -63,6 +63,11 @@
        <p class="cat-quick-muted">原画供你认猫。模型只看手填的演示特征，不会直接识别照片。</p>
       </div>
      </div>
+     <dl id="cat-quick-evidence" class="cat-quick-evidence" aria-label="原画、标签与模型判断的对照" hidden>
+      <div><dt>原画里的身份</dt><dd id="cat-quick-truth"></dd></div>
+      <div><dt>你教它的名字</dt><dd id="cat-quick-taught"></dd></div>
+      <div><dt>两项线索训练后叫</dt><dd id="cat-quick-learned"></dd></div>
+     </dl>
      <p id="cat-quick-feedback" class="cat-quick-feedback" hidden></p>
      <button id="cat-quick-next" class="guide-primary cat-quick-next" type="button" hidden>拿两张新卡考它</button>
     </section>
@@ -75,6 +80,7 @@
       <figure class="cat-quick-card"><img id="cat-quick-image-08" width="320" height="320" alt="一只蓝眼猫侧身站着，有蓬松的白毛和深色尾巴。" loading="lazy"><figcaption><strong>这是臭臭</strong><span id="cat-quick-input-08" class="cat-quick-chip"></span><span id="cat-quick-fluff-08" class="cat-quick-chip cat-quick-added" hidden></span><span id="cat-quick-call-08" class="cat-quick-call"></span></figcaption></figure>
      </div>
      <p id="cat-quick-note" class="cat-quick-feedback"></p>
+     <p id="cat-quick-label-note" class="cat-quick-muted"></p>
      <button id="cat-quick-back" type="button">返回贴标签</button>
     </section>
     <p class="cat-quick-muted"><a href="#first-lesson">玩原来的圆方分类</a> · <a href="#field">去自由涂鸦</a></p>

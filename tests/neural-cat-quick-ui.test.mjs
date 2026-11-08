@@ -107,3 +107,45 @@ test('back preserves the teaching choice, new teaching resets the clue, and rese
  assert.equal(e('cat-practice').open,true);
  assert.equal(e('cat-coach-details').open,true);
 });
+
+test('a wrong tag is distinguished from the original identity and the model result without blocking exploration',()=>{
+ const {e}=fixture();
+ assert.ok(html.includes('两项线索训练后叫'),'the returned evidence identifies its two-feature snapshot');
+ e('cat-quick-tag-bobby').click();
+ assert.match(e('cat-quick-feedback').textContent,/只用脸颊和耳尖/);
+ assert.match(e('cat-quick-feedback').textContent,/原画.*臭臭.*你贴.*波比.*模型.*波比/);
+ assert.match(e('cat-quick-feedback').textContent,/不会.*核对.*身份/);
+ assert.equal(e('cat-quick-evidence').hidden,false);
+ assert.equal(e('cat-quick-truth').textContent,'臭臭');
+ assert.equal(e('cat-quick-taught').textContent,'波比');
+ assert.equal(e('cat-quick-learned').textContent,'波比');
+ assert.equal(e('cat-quick-evidence').getAttribute('data-label-state'),'mismatch');
+ e('cat-quick-next').click();
+ assert.equal(e('cat-quick-test').hidden,false,'a mistaken label is a valid experiment, not a blocked quiz');
+ e('cat-quick-clue-toggle').click();
+ assert.match(e('cat-quick-call-07').textContent,/波比.*猜对/);
+ assert.match(e('cat-quick-call-08').textContent,/臭臭.*猜对/);
+ assert.match(e('cat-quick-label-note').textContent,/新卡.*分对.*不代表.*标签.*贴对/);
+ assert.match(e('cat-quick-label-note').textContent,/仍.*波比/);
+});
+
+test('correcting the label updates the real outcome and resets only this lesson evidence',()=>{
+ const {e}=fixture();
+ e('cat-quick-tag-bobby').click();
+ e('cat-quick-tag-chouchou').click();
+ assert.equal(e('cat-quick-truth').textContent,'臭臭');
+ assert.equal(e('cat-quick-taught').textContent,'臭臭');
+ assert.equal(e('cat-quick-learned').textContent,'臭臭');
+ assert.equal(e('cat-quick-evidence').getAttribute('data-label-state'),'matches');
+ assert.match(e('cat-quick-feedback').textContent,/原先.*波比.*现在.*臭臭/);
+ e('cat-quick-next').click();
+ assert.match(e('cat-quick-label-note').textContent,/标签.*仍.*臭臭/);
+ e('cat-quick-clue-toggle').click();
+ assert.match(e('cat-quick-label-note').textContent,/标签.*仍.*臭臭/);
+ e('cat-quick-back').click();
+ e('cat-quick-reset').click();
+ assert.equal(e('cat-quick-evidence').hidden,true);
+ assert.equal(e('cat-quick-truth').textContent,'');
+ assert.equal(e('cat-quick-taught').textContent,'');
+ assert.equal(e('cat-quick-learned').textContent,'');
+});
