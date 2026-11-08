@@ -23,12 +23,22 @@ export function mountCatQuick({document}){
 
  function teach(){
   for(const label of labels)pressed('tag-'+label,training?.label===label);
-  const feedback=training
-   ?`你教它：${names[training.label]}。练完后，模型把这张练习卡判成${names[training.trainingCard.prediction]}。`
-   :'';
+  let feedback='';
+  const matches=training?.label===COACH_CARD.truth;
+  text('truth',training?names[COACH_CARD.truth]:'');
+  text('taught',training?names[training.label]:'');
+  text('learned',training?names[training.trainingCard.prediction]:'');
+  $('evidence').setAttribute('data-label-state',training?(matches?'matches':'mismatch'):'');
+  if(training){
+   const truth=names[COACH_CARD.truth],tag=names[training.label],learned=names[training.trainingCard.prediction];
+   feedback=matches
+    ?`这张练习卡原画是${truth}，你贴的也是${tag}。模型原先叫${names[coachBaseline().prediction]}，现在叫${learned}。换个标签，可以从同一起点再练一次。`
+    :`原画里这张练习卡是${truth}；你贴了${tag}，模型练完后也叫它${learned}。它按你给的标签学习，不会替你核对原画身份。`;
+  }
+  if(training)feedback='这里只用脸颊和耳尖训练。'+feedback;
   text('feedback',feedback);
   text('status',feedback);
-  for(const part of ['feedback','next','reset'])visible(part,Boolean(training));
+  for(const part of ['evidence','feedback','next','reset'])visible(part,Boolean(training));
  }
 
  function testCards(){
@@ -50,7 +60,11 @@ export function mountCatQuick({document}){
    ?`蓬松度一个 ${a.features[2]}、一个 ${b.features[2]}，${result.matches===2?'这次分对了两张。':a.prediction===b.prediction?'这次还是给了同一个名字。':'这次分开了，但没都分对。'}`
    :'两张卡给的是同一组分数，模型给了同一个答案。';
   text('note',note);
-  text('status',result.test.map(card=>`${names[card.truth]}：${$('call-'+card.id).textContent}`).join('。')+'。'+note);
+  const labelNote=training.label!==COACH_CARD.truth
+   ?`新卡${result.matches===2?'都分对了':'的结果'}，不代表刚才的标签就贴对了：那张臭臭仍被你贴成波比。加线索不会自动改标签，可以返回换个名字再试。`
+   :`练习卡的标签仍是${names[training.label]}。${added?'这次只加了蓬松度线索，原来的两项分数和18张标签都没换。':'先比较模型拿到的信息；下一次只加一条线索。'}`;
+  text('label-note',labelNote);
+  text('status',result.test.map(card=>`${names[card.truth]}：${$('call-'+card.id).textContent}`).join('。')+'。'+note+labelNote);
  }
 
  for(const label of labels)$('tag-'+label).addEventListener('click',()=>{

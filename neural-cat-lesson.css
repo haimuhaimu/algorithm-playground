@@ -306,6 +306,11 @@
 #cat-quick .cat-quick-call { color:var(--ink);font-weight:650; }
 #cat-quick .cat-quick-call[data-correct="true"] { color:var(--good); }
 #cat-quick .cat-quick-feedback { margin:10px 0;padding:9px 12px;border-inline-start:3px solid var(--good);border-radius:0 8px 8px 0;background:var(--soft);font-size:14px; }
+#cat-quick .cat-quick-evidence:not([hidden]) { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0 10px; }
+#cat-quick .cat-quick-evidence>div { min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper); }
+#cat-quick .cat-quick-evidence dt { font-size:11px;color:var(--muted);line-height:1.5; }
+#cat-quick .cat-quick-evidence dd { margin:4px 0 0;font-size:22px;font-weight:700;letter-spacing:-.03em;color:var(--ink); }
+#cat-quick-label-note { max-width:54ch;margin:10px 0; }
 #cat-quick .cat-quick-test-hint { margin:5px 0 8px; }
 #cat-quick .cat-quick-pair { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:410px;margin-top:12px; }
 #cat-quick .cat-quick-next { font-size:14px; }
