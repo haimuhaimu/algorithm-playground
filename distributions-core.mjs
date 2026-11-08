@@ -179,6 +179,35 @@ export function summarize(values, threshold) {
   return { n, mean, median, max, tailCount, tailRate: n ? tailCount / n : null, histogram, below, above, latest: values.slice(-6) };
 }
 
+// Keep the chart boundary (>=16) separate from the strict red-line test (>x).
+// Records retain their draw index, including duplicate values, without mutating
+// or replacing any observations when the threshold moves.
+export function collectOverflowEvidence(values, threshold, baselineThreshold = 4) {
+  finite(threshold, 'threshold');
+  finite(baselineThreshold, 'baseline threshold');
+  if (threshold < -4 || baselineThreshold < -4) throw new RangeError('Collection comparisons must start within the chart or to its right');
+  if (!Array.isArray(values) || values.length > MAX_COUNT) throw new TypeError('values must be an array of at most 10000 finite numbers');
+  const before = { total: 0, inChart: 0, outside: 0 };
+  const current = { total: 0, inChart: 0, outside: 0 };
+  const outside = [], dropped = [], kept = [];
+  let outsideMax = null;
+  for (const [index, value] of values.entries()) {
+    finite(value, 'sample');
+    const inChart = value >= -4 && value < 16;
+    const record = { index, value, before: value > baselineThreshold, after: value > threshold };
+    for (const [count, matches] of [[before, record.before], [current, record.after]]) {
+      if (matches) { count.total++; count[inChart ? 'inChart' : 'outside']++; }
+    }
+    if (value >= 16) {
+      outside.push({ ...record });
+      if (outsideMax === null || value > outsideMax) outsideMax = value;
+    }
+    if (record.before && !record.after) dropped.push({ ...record });
+    if (record.before && record.after) kept.push({ ...record });
+  }
+  return { threshold, baselineThreshold, before, current, outside, dropped, kept, outsideMax };
+}
+
 const OBSERVATORY_PHASES = ['ready', 'grown', 'pushed', 'done'];
 const OBSERVATORY_ANSWERS = ['sample', 'zero'];
 
@@ -240,7 +269,12 @@ export function observatoryEvidence(state) {
   validateState(state);
   const { phase, seed, count, threshold } = state;
   const summary = (id, n, limit) => ({ id, stats: summarize(sampleModel(id, n, seed), limit) });
-  const row = (id) => ({ ...summary(id, count, threshold), theoreticalTail: modelSurvival(id, threshold) });
+  const row = (id, withCollection = false) => {
+    const values = sampleModel(id, count, seed);
+    const evidence = { id, stats: summarize(values, threshold), theoreticalTail: modelSurvival(id, threshold) };
+    if (withCollection) evidence.collection = collectOverflowEvidence(values, threshold);
+    return evidence;
+  };
   const ending = phase === 'done' ? {
     firstAttemptCorrect: state.attempts[0] === 'sample',
     attemptsCount: state.attempts.length,
@@ -251,7 +285,7 @@ export function observatoryEvidence(state) {
     phase, seed, count, threshold, baselineThreshold: 4,
     baseline: MODEL_IDS.slice(0, 3).map((id) => summary(id, 30, 4)),
     comparison: phase === 'ready' ? null : MODEL_IDS.slice(0, 3).map((id) => summary(id, 3030, 4)),
-    rows: MODEL_IDS.slice(0, 3).map(row),
+    rows: MODEL_IDS.slice(0, 3).map((id) => row(id, true)),
     transfer: phase === 'done' && state.inspected ? row('lognormal') : null,
     ending,
   };
