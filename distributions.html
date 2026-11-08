@@ -2,9 +2,9 @@
 <html lang="zh-CN"><head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
  <meta name="description" content="让三台机器各抽一些数，看看谁更容易冒出大数字。亲手认识正态、长尾和重尾。"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./space-theme.css"><link rel="stylesheet" href="./distributions.css?v=studio-operators-v1">
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./space-theme.css"><link rel="stylesheet" href="./distributions.css?v=tail-collection-v1">
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
- <script type="module" src="./distributions.mjs?v=plain-3"></script><title>分布观察台 · 算法游乐场</title>
+ <script type="module" src="./distributions.mjs?v=tail-collection-v1"></script><title>分布观察台 · 算法游乐场</title>
 </head><body>
  <a class="skip-link" href="#observation-title">跳到观察台</a>
  <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><a class="back-link" href="./">全部实验 ↗</a><button class="quiet-button" id="about" type="button">怎么玩 ↗</button><button class="theme-button" id="theme" type="button" aria-label="切换深色模式">◐</button></div></header>
@@ -25,6 +25,20 @@
      <div class="machine-operator"><img src="./studio-heim-portrait.png" width="26" height="26" alt="" loading="lazy">嘿姆值班</div>
      <div id="comparison-normal" class="count-comparison" hidden><span><span id="previous-label-normal">最初 30 次</span> <b id="previous-normal"></b></span><span aria-hidden="true">→</span><span><span id="current-label-normal">现在 3,030 次</span> <b id="current-normal"></b></span></div>
      <div id="chart-normal" class="distribution-chart" role="img" aria-label="正态真实样本直方图"></div><div class="chart-axis"><span>−4</span><span>0</span><span>+4</span><span>+8</span><span>+12</span><span>+16</span></div><p id="overflow-normal" class="overflow-note"></p>
+     <section id="collection-normal" class="sample-collection" aria-labelledby="collection-title-normal" hidden>
+      <div class="collection-heading"><h4 id="collection-title-normal">图外大数收集区</h4><strong id="collection-count-normal"></strong></div>
+      <p class="collection-origin">主图画到 16；这里接住 16 和更大的数。</p>
+      <p id="collection-empty-normal" class="collection-empty"></p>
+      <ol id="collection-preview-normal" class="collection-preview" aria-label="按抽取顺序展示的图外数"></ol>
+      <p id="collection-preview-note-normal" class="collection-preview-note"></p>
+      <table id="collection-split-normal" class="collection-split" hidden>
+       <caption>同一批数，只挪红线</caption>
+       <thead><tr><th scope="col">越线数在哪</th><th scope="col">红线 4</th><th scope="col">红线 16</th></tr></thead>
+       <tbody><tr><th scope="row">主图里</th><td id="collection-inside-before-normal"></td><td id="collection-inside-after-normal"></td></tr><tr><th scope="row">图外</th><td id="collection-outside-before-normal"></td><td id="collection-outside-after-normal"></td></tr></tbody>
+      </table>
+      <p id="collection-shift-normal" class="collection-shift"></p>
+      <details id="collection-details-normal" class="collection-details"><summary id="collection-summary-normal">核对全部图外数</summary><p>下面保留原始数值；上面的预览约到两位小数，是否越线始终按原始数值判断。</p><ol id="collection-all-normal" class="collection-all" tabindex="0" aria-label="全部图外数，按原始抽取顺序"></ol></details>
+     </section>
      <details class="machine-details"><summary>还有哪些数？</summary><p id="before-normal"></p><p id="probability-normal"></p><p>最大的数 <b id="max-normal"></b> · 平均值 <b id="mean-normal"></b></p><p>最近六次：<span id="latest-normal"></span></p></details>
     </article>
     <article class="machine machine-exponential" id="machine-exponential">
@@ -32,6 +46,20 @@
      <div class="machine-operator"><img src="./studio-bobby-portrait.png" width="26" height="26" alt="" loading="lazy">波比值班</div>
      <div id="comparison-exponential" class="count-comparison" hidden><span><span id="previous-label-exponential">最初 30 次</span> <b id="previous-exponential"></b></span><span aria-hidden="true">→</span><span><span id="current-label-exponential">现在 3,030 次</span> <b id="current-exponential"></b></span></div>
      <div id="chart-exponential" class="distribution-chart" role="img" aria-label="指数真实样本直方图"></div><div class="chart-axis"><span>−4</span><span>0</span><span>+4</span><span>+8</span><span>+12</span><span>+16</span></div><p id="overflow-exponential" class="overflow-note"></p>
+     <section id="collection-exponential" class="sample-collection" aria-labelledby="collection-title-exponential" hidden>
+      <div class="collection-heading"><h4 id="collection-title-exponential">图外大数收集区</h4><strong id="collection-count-exponential"></strong></div>
+      <p class="collection-origin">主图画到 16；这里接住 16 和更大的数。</p>
+      <p id="collection-empty-exponential" class="collection-empty"></p>
+      <ol id="collection-preview-exponential" class="collection-preview" aria-label="按抽取顺序展示的图外数"></ol>
+      <p id="collection-preview-note-exponential" class="collection-preview-note"></p>
+      <table id="collection-split-exponential" class="collection-split" hidden>
+       <caption>同一批数，只挪红线</caption>
+       <thead><tr><th scope="col">越线数在哪</th><th scope="col">红线 4</th><th scope="col">红线 16</th></tr></thead>
+       <tbody><tr><th scope="row">主图里</th><td id="collection-inside-before-exponential"></td><td id="collection-inside-after-exponential"></td></tr><tr><th scope="row">图外</th><td id="collection-outside-before-exponential"></td><td id="collection-outside-after-exponential"></td></tr></tbody>
+      </table>
+      <p id="collection-shift-exponential" class="collection-shift"></p>
+      <details id="collection-details-exponential" class="collection-details"><summary id="collection-summary-exponential">核对全部图外数</summary><p>下面保留原始数值；上面的预览约到两位小数，是否越线始终按原始数值判断。</p><ol id="collection-all-exponential" class="collection-all" tabindex="0" aria-label="全部图外数，按原始抽取顺序"></ol></details>
+     </section>
      <details class="machine-details"><summary>还有哪些数？</summary><p id="before-exponential"></p><p id="probability-exponential"></p><p>最大的数 <b id="max-exponential"></b> · 平均值 <b id="mean-exponential"></b></p><p>最近六次：<span id="latest-exponential"></span></p></details>
     </article>
     <article class="machine machine-pareto" id="machine-pareto">
@@ -39,6 +67,20 @@
      <div class="machine-operator"><img src="./studio-chouchou-portrait.png" width="26" height="26" alt="" loading="lazy">臭臭值班</div>
      <div id="comparison-pareto" class="count-comparison" hidden><span><span id="previous-label-pareto">最初 30 次</span> <b id="previous-pareto"></b></span><span aria-hidden="true">→</span><span><span id="current-label-pareto">现在 3,030 次</span> <b id="current-pareto"></b></span></div>
      <div id="chart-pareto" class="distribution-chart" role="img" aria-label="帕累托真实样本直方图"></div><div class="chart-axis"><span>−4</span><span>0</span><span>+4</span><span>+8</span><span>+12</span><span>+16</span></div><p id="overflow-pareto" class="overflow-note"></p>
+     <section id="collection-pareto" class="sample-collection" aria-labelledby="collection-title-pareto" hidden>
+      <div class="collection-heading"><h4 id="collection-title-pareto">图外大数收集区</h4><strong id="collection-count-pareto"></strong></div>
+      <p class="collection-origin">主图画到 16；这里接住 16 和更大的数。</p>
+      <p id="collection-empty-pareto" class="collection-empty"></p>
+      <ol id="collection-preview-pareto" class="collection-preview" aria-label="按抽取顺序展示的图外数"></ol>
+      <p id="collection-preview-note-pareto" class="collection-preview-note"></p>
+      <table id="collection-split-pareto" class="collection-split" hidden>
+       <caption>同一批数，只挪红线</caption>
+       <thead><tr><th scope="col">越线数在哪</th><th scope="col">红线 4</th><th scope="col">红线 16</th></tr></thead>
+       <tbody><tr><th scope="row">主图里</th><td id="collection-inside-before-pareto"></td><td id="collection-inside-after-pareto"></td></tr><tr><th scope="row">图外</th><td id="collection-outside-before-pareto"></td><td id="collection-outside-after-pareto"></td></tr></tbody>
+      </table>
+      <p id="collection-shift-pareto" class="collection-shift"></p>
+      <details id="collection-details-pareto" class="collection-details"><summary id="collection-summary-pareto">核对全部图外数</summary><p>下面保留原始数值；上面的预览约到两位小数，是否越线始终按原始数值判断。</p><ol id="collection-all-pareto" class="collection-all" tabindex="0" aria-label="全部图外数，按原始抽取顺序"></ol></details>
+     </section>
      <details class="machine-details"><summary>还有哪些数？</summary><p id="before-pareto"></p><p id="probability-pareto"></p><p>最大的数 <b id="max-pareto"></b> · 平均值 <b id="mean-pareto"></b></p><p>最近六次：<span id="latest-pareto"></span></p></details>
     </article>
    </div>

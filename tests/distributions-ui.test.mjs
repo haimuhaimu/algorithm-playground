@@ -102,6 +102,61 @@ test('a double click cannot skip the just-revealed threshold step',async()=>{
  }finally{u.restore();}
 });
 
+test('actual off-chart values are previewed in draw order and the full collection remains available',async()=>{
+ const u=await boot();try{
+  assert.equal(u.get('collection-count-pareto')?.textContent,'1 个');
+  assert.match(u.get('collection-preview-pareto').innerHTML,/data-draw="7"/);
+  assert.match(u.get('collection-all-pareto').innerHTML,/31\.45827106611436/);
+  assert.equal(u.get('collection-empty-normal').hidden,false);
+  assert.equal(u.get('collection-preview-normal').innerHTML,'');
+  u.click('next-step');
+  assert.equal(u.get('collection-count-pareto').textContent,'88 个');
+  assert.equal((u.get('collection-preview-pareto').innerHTML.match(/data-draw=/g)||[]).length,6);
+  assert.equal((u.get('collection-all-pareto').innerHTML.match(/data-draw=/g)||[]).length,88);
+  assert.match(u.get('collection-all-pareto').innerHTML,/1752\.014995452643/);
+  assert.match(u.get('collection-preview-note-pareto').textContent,/前 6.*88/);
+ }finally{u.restore();}
+});
+
+test('moving the line preserves the collected draws and explains which real samples stop counting',async()=>{
+ const u=await boot();try{
+  u.click('next-step');
+  assert.ok(u.get('collection-all-pareto'),'the real collected observations must have a visible disclosure');
+  const draws=()=>[...u.get('collection-all-pareto').innerHTML.matchAll(/data-sample-value="([^"]+)"/g)].map(m=>m[1]);
+  const original=draws();assert.equal(original.length,88);
+  u.get('collection-details-pareto').open=true;
+  u.click('next-step');
+  assert.deepEqual(draws(),original);
+  assert.equal(u.get('collection-details-pareto').open,true,'the same-batch comparison preserves the open evidence');
+  for(const [id,inside,outside]of [['normal',11,0],['exponential',166,0],['pareto',264,88]]){
+   assert.equal(u.get('collection-split-'+id).hidden,false);
+   assert.equal(u.get('collection-inside-before-'+id).textContent,String(inside));
+   assert.equal(u.get('collection-inside-after-'+id).textContent,'0');
+   assert.equal(u.get('collection-outside-before-'+id).textContent,String(outside));
+   assert.equal(u.get('collection-outside-after-'+id).textContent,String(outside));
+  }
+  assert.match(u.get('collection-shift-pareto').textContent,/第.*4.*16/);
+  assert.equal(u.writes.length,0);
+ }finally{u.restore();}
+});
+
+test('reset or changing the seed closes stale collection disclosures and replaces their actual evidence',async()=>{
+ const u=await boot();try{
+  assert.ok(u.get('collection-all-pareto'),'the collection must exist before checking reset');
+  const original=u.get('collection-all-pareto').innerHTML;
+  u.click('next-step');u.click('next-step');u.get('collection-details-pareto').open=true;
+  u.click('reset-sample');
+  assert.equal(u.get('collection-details-pareto').open,false);
+  assert.equal(u.get('collection-split-pareto').hidden,true);
+  assert.equal(u.get('collection-all-pareto').innerHTML,original);
+  u.click('next-step');u.get('collection-details-pareto').open=true;u.click('new-sample');
+  assert.equal(u.get('collection-details-pareto').open,false);
+  assert.equal(u.get('collection-split-pareto').hidden,true);
+  assert.notEqual(u.get('collection-all-pareto').innerHTML,original);
+  assert.equal(u.get('sample-count').textContent,'30');
+ }finally{u.restore();}
+});
+
 async function boot(){
  const html=await readFile(new URL('../distributions.html',import.meta.url),'utf8').catch(()=>'');
  assert.ok(html.includes('id="distribution-app"'),'a standalone local distribution observatory must exist');

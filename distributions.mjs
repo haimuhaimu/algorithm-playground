@@ -1,4 +1,4 @@
-import {MODEL_INFO,createObservatory,actObservatory,observatoryEvidence} from './distributions-core.mjs?v=plain-3';
+import {MODEL_INFO,createObservatory,actObservatory,observatoryEvidence} from './distributions-core.mjs?v=tail-collection-v1';
 
 const IDS=['normal','exponential','pareto'];
 const numbers=value=>value===null?'—':Math.abs(value)>=10000?value.toExponential(2).replace('e-','e−'):Number(value.toFixed(2)).toLocaleString('en-US');
@@ -6,6 +6,37 @@ const probability=value=>value===0?'小于当前数值精度':value<.00001?(valu
 const frequency=value=>value===0?'0%':probability(value);
 const classifications={normal:'大多挤在中间',exponential:'往右拖着一条尾巴',pareto:'大数没那么罕见'};
 const countString=rows=>rows.map(r=>`${MODEL_INFO[r.id].label} ${r.stats.tailCount} 次`).join('，');
+
+function collectedSample(record,threshold,{full=false,pushed=false}={}){
+ const current=record.after?`超过 ${threshold}`:`没超过 ${threshold}`;
+ const comparison=pushed?`超过 4；${current}`:current;
+ const value=full?String(record.value):`≈${numbers(record.value)}`;
+ return `<li data-draw="${record.index+1}" data-sample-value="${record.value}"><small>第 ${record.index+1} 次</small><data value="${record.value}">${value}</data><span>${comparison}</span></li>`;
+}
+
+function renderCollection($,row,threshold,pushed){
+ const id=row.id,c=row.collection,n=c.outside.length;
+ $('collection-'+id).hidden=false;
+ $('collection-count-'+id).textContent=`${n} 个`;
+ $('collection-empty-'+id).hidden=n>0;
+ $('collection-empty-'+id).textContent=n?'':'这一批没有落在主图右边的数。没碰上，不代表不可能。';
+ $('collection-preview-'+id).innerHTML=c.outside.slice(0,6).map(r=>collectedSample(r,threshold)).join('');
+ $('collection-preview-note-'+id).hidden=!n;
+ $('collection-preview-note-'+id).textContent=n?`按抽取顺序，先看前 ${Math.min(6,n)} 个 / 共 ${n} 个。最大约 ${numbers(c.outsideMax)}。`:'';
+ $('collection-details-'+id).hidden=!n;
+ $('collection-summary-'+id).textContent=`核对全部 ${n} 个图外数`;
+ $('collection-all-'+id).innerHTML=c.outside.map(r=>collectedSample(r,threshold,{full:true,pushed})).join('');
+ $('collection-split-'+id).hidden=!pushed;
+ for(const [part,key]of [['inside','inChart'],['outside','outside']]){
+  $('collection-'+part+'-before-'+id).textContent=String(c.before[key]);
+  $('collection-'+part+'-after-'+id).textContent=String(c.current[key]);
+ }
+ const dropped=c.dropped[0];
+ $('collection-shift-'+id).hidden=!pushed;
+ $('collection-shift-'+id).textContent=dropped
+  ?`比如第 ${dropped.index+1} 次的 ≈${numbers(dropped.value)}：比 4 大，但没超过 16。这次数不进去了，样本没有被删掉。`
+  :`这批数里没有原先超过 4、这次没超过 16 的例子。没有为了演示另抽一批。`;
+}
 
 function histogram(stats,before,threshold,ceiling){
  const X=v=>16+(v+4)*22.4,Y=v=>145-128*v/ceiling;
@@ -50,6 +81,7 @@ export function initDistributions(){
    $('before-'+id).textContent=`最开始 30 次里，比 4 大的有 ${old.tailCount} 个；最大的数是 ${numbers(old.max)}。`;
    $('probability-'+id).textContent=`理论上，比 ${e.threshold} 大的数出现的概率约是 ${probability(row.theoreticalTail)}。这是数学公式给出的，不是这批数里出现的比例；电脑抽数还有精度限制，见下方说明。`;
    $('latest-'+id).textContent=s.latest.map(numbers).join(' · ');
+   renderCollection($,row,e.threshold,pushed);
   }
   if(e.transfer){
    const t=e.transfer,s=t.stats;$('transfer-model').textContent='对数正态';$('chart-lognormal').innerHTML=histogram(s,null,16,ceiling);
@@ -65,7 +97,7 @@ export function initDistributions(){
  $('next-step').addEventListener('click',event=>{if(!active()||event.detail>1)return;const phase=state.phase;if(phase==='ready'||phase==='grown'){act({type:phase==='ready'?'grow':'push'});$('step-title').focus({preventScroll:true});}});
  for(const value of ['sample','zero'])$('answer-'+value).addEventListener('click',()=>{act({type:'answer',value});if(state.phase==='done'&&active()){$('ending-title').focus({preventScroll:true});$('ending-title').scrollIntoView({block:'start',behavior:'instant'});}});
  $('inspect-transfer').addEventListener('click',()=>act({type:'inspect'}));
- function restart(action){if(!active())return;act(action);$('step-title').focus({preventScroll:true});$('observation-title').scrollIntoView({block:'start',behavior:'instant'});}
+ function restart(action){if(!active())return;for(const id of IDS)$('collection-details-'+id).open=false;act(action);$('step-title').focus({preventScroll:true});$('observation-title').scrollIntoView({block:'start',behavior:'instant'});}
  $('reset-sample').addEventListener('click',()=>restart({type:'reset'}));
  $('new-sample').addEventListener('click',()=>{if(!active())return;let value=crypto.getRandomValues(new Uint32Array(1))[0];if(value===state.seed)value=(value+1)>>>0;restart({type:'new-seed',value});});
  $('about').addEventListener('click',()=>{if(!doc.hidden)$('guide').showModal();});$('close-guide').addEventListener('click',()=>$('guide').close());
