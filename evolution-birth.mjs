@@ -11,15 +11,28 @@ function difference(before,after){
 
 export function createBirthView(){
  const $=id=>document.getElementById(id),dialog=$('birth-dialog'),canvas=$('birth-scene'),ctx=canvas.getContext('2d');
- let race,view,step=0,segment=0,focusParent=0,time=0,complete=false,running=false,raf=null,last=null,token=0;
+ let race,view,step=0,segment=0,focusParent=0,time=0,complete=false,guess=null,running=false,raf=null,last=null,token=0;
  const runs=()=>[view.parents[0].run,view.parents[1].run,view.inheritedRun,view.childRun];
  const end=()=>Math.max(...runs().map(r=>r.time));
  const set=(id,text)=>{$(id).textContent=text;};
  const colors=()=>{const css=getComputedStyle(document.documentElement),get=n=>css.getPropertyValue('--'+n).trim();return {a:get('birth-a'),b:get('birth-b'),child:get('good'),mut:get('birth-mut'),ink:get('ink'),muted:get('muted'),paper:get('paper'),soft:get('soft'),line:get('line')};};
+ function updateCats(){
+  const driver=$('birth-driver');driver.hidden=step!==3;
+  $('birth-assembly-desk').hidden=step===3;$('birth-finish-desk').hidden=step!==3;
+  if(step!==3)return;
+  const run=view.childRun,p=positionAt(run,time),arrived=time>=run.time;
+  driver.style.left=`${p.x/WIDTH*100}%`;driver.style.top=`${p.y/HEIGHT*100}%`;
+  driver.dataset.low=String(p.y<100);
+  driver.dataset.motion=arrived?(run.finished?'finished':'stopped'):time===0?'ready':running?'running':'paused';
+  set('birth-driver-state',arrived?(run.finished?'波比已到终点':'波比在实际碰撞处停下了'):time===0?'波比在后代车里，准备试跑':'波比小车标记当前回放位置');
+  set('birth-finish-label',complete?'本轮已记下的成绩':'同一辆后代 · 等本轮对照跑完');
+  set('birth-finish-score',complete?`后代 #${view.index+1} · ${result(run)}`:'等待这次实跑');
+  set('birth-finish-difference',complete?`对比未变异路线：${difference(view.inheritedRun,run)}。`:'');
+ }
  function stop(){running=false;token++;if(raf!==null)cancelAnimationFrame(raf);raf=null;last=null;}
  function stroke(points,color,width=3,dash=[]){if(!points.length)return;ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);}
  function draw(){
-  if(!view||!ctx)return;const c=colors();
+  if(!view||!ctx)return;const c=colors();updateCats();
   ctx.fillStyle=c.paper;ctx.fillRect(0,0,WIDTH,HEIGHT);ctx.lineCap='round';ctx.lineJoin='round';
   stroke(view.track.points,c.line,ROAD_RADIUS*2+3);stroke(view.track.points,c.soft,ROAD_RADIUS*2);
   stroke(view.track.points,c.muted,1,[6,12]);
@@ -50,7 +63,7 @@ export function createBirthView(){
    ctx.fillStyle=c.paper;ctx.strokeStyle=c.ink;ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,13,0,Math.PI*2);ctx.fill();ctx.stroke();
    ctx.fillStyle=c.ink;ctx.textAlign='center';ctx.font='bold 12px sans-serif';ctx.fillText(String(segment+1),p.x,p.y+4);
   }
-  canvas.setAttribute('aria-label',step===3?`四条路线同场模拟，已播放 ${time.toFixed(1)} 秒${complete?'，下方有完整文字结果':''}`:`第 ${segment+1} 个路标对照。${$('birth-segment-detail').textContent}`);
+  canvas.setAttribute('aria-label',step===3?`四条路线同场模拟，波比小车标记最终后代的真实位置，已播放 ${time.toFixed(1)} 秒${complete?'，下方有完整文字结果':''}`:`第 ${segment+1} 个路标对照。${$('birth-segment-detail').textContent}`);
  }
  function updatePlayback(){
   set('birth-clock',complete?`本次已完整模拟 · 回放 ${time.toFixed(1)} 秒`:`${running?'正在实跑':'等待 / 已暂停'} · 模拟 ${time.toFixed(1)} 秒`);
@@ -76,7 +89,7 @@ export function createBirthView(){
   $('birth-selection-note').hidden=step!==0;
   const draws=view.parents.map((p,i)=>`${i?'B':'A'} 的抽选：${p.candidates.map(n=>'#'+(n+1)).join('、')} → #${p.index+1}`).join('\n');
   set('birth-selection-note',draws+'\n'+(view.parents[0].index===view.parents[1].index?'两次选中了同一辆车，所以 A、B 相同。这是合法结果，不伪造另一位父母。':'抽选允许重复，不保证抽到全场冠军。另有 2 辆精英车直接保留，不经过交叉。'));
-  set('birth-legend',step===0?'实线 A · 虚线 B｜这是候选路线，不是已行驶轨迹':step===1?'路标来源：A 蓝点 / B 棕点｜中性连线是新组合':step===2?'虚线：未变异 · 绿线：最终后代 · 橙色：变异影响处':'A 蓝 · B 棕 · 未变异 灰虚线 · 最终后代 绿');
+  set('birth-legend',step===0?'实线 A · 虚线 B｜这是候选路线，不是已行驶轨迹':step===1?'路标来源：A 蓝点 / B 棕点｜中性连线是新组合':step===2?'虚线：未变异 · 绿线：最终后代 · 橙色：变异影响处':'A 蓝 · B 棕 · 未变异 灰虚线 · 最终后代 绿。波比小车是放大的位置标记，大小不参与碰撞。');
   $('birth-genome').hidden=step===0||step===3;
   $('birth-segment-control').hidden=step===3;$('birth-segment-detail').hidden=step===3;
   $('birth-genome').innerHTML=view.sources.map((source,i)=>{const changed=step>=2&&view.mutations.some(m=>m.index===i);return `<span class="gene-${source?'b':'a'}${changed?' gene-mutated':''}${i===segment?' gene-selected':''}">${source?'B':'A'}${changed?'·':''}</span>`;}).join('');
@@ -86,6 +99,20 @@ export function createBirthView(){
   set('birth-segment-detail',step===0?`父代 ${focusParent?'B':'A'} 的第 ${segment+1} 个路标：左右偏移 ${offset(view.parents[focusParent].genes[segment])} 单位。`:step===1?`${inherited}，左右偏移 ${offset(view.inherited[segment])} 单位。`: `${inherited}。${m?`变异使左右偏移从 ${offset(m.before)} 变成 ${offset(m.after)} 单位。`:'这个路标没有变异，保持继承的位置。'}${step===3?' 单点不是全部原因；下方比较的是所有变异合起来的效果。':''}`);
   $('birth-step-next').hidden=step===3;set('birth-step-next',['看它继承了什么 →','看看哪里变异了 →','一起跑一次，检验猜想 →'][step]||'');
   $('birth-playback').hidden=step!==3;
+  $('birth-guess').hidden=step!==2;
+  const guessLabels={better:'更好',same:'一样',worse:'更差'};
+  for(const choice of Object.keys(guessLabels)){
+   const button=$('birth-guess-'+choice);button.disabled=complete;button.setAttribute('aria-pressed',String(guess===choice));
+  }
+  $('birth-guess-lock').hidden=!complete;
+  $('birth-guess-note').hidden=step!==3;
+  set('birth-guess-note',guess?`你猜：${guessLabels[guess]}。重点看「未变异」和「后代」，用同一套规则跑一次。`:'这次先不猜，直接看真实实跑。比较的是未变异路线和最终后代，不是父母。');
+  if(step===2)set('birth-step-next',complete?'回看同场实跑 →':guess?'保留这个猜想，去实跑 →':'不猜，直接实跑 →');
+  if(complete){
+   const outcome=compareRuns(view.inheritedRun,view.childRun).outcome;
+   const actual=['faster','gained-finish','further'].includes(outcome)?'better':['slower','lost-finish','shorter'].includes(outcome)?'worse':'same';
+   set('birth-guess-result',`${guess?`你猜${guessLabels[guess]}`:'本轮未作预测'}；实际${guessLabels[actual]}。${guess?(guess===actual?'这次与你的判断一致。':'这次和你的判断不同，看看下面两条路线的实跑差别。'):''}`);
+  }else set('birth-guess-result','');
   set('birth-a-result',result(view.parents[0].run));set('birth-b-result',result(view.parents[1].run));
   set('birth-inherited-result',result(view.inheritedRun));set('birth-child-result',result(view.childRun));
   const best=view.parents[0].run.score>=view.parents[1].run.score?view.parents[0].run:view.parents[1].run;
@@ -94,7 +121,7 @@ export function createBirthView(){
   updatePlayback();draw();
  }
  function choose(index){
-  stop();view=inspectBirth(race,index);step=0;time=0;complete=false;focusParent=0;segment=view.mutations[0]?.index??0;
+  stop();view=inspectBirth(race,index);step=0;time=0;complete=false;guess=null;focusParent=0;segment=view.mutations[0]?.index??0;
   set('birth-generation',`第 ${view.parentGeneration} 代 → 第 ${view.generation} 代 · 后代 #${index+1}`);render();
  }
  function stage(value){stop();step=value;render();$('birth-step-title').focus({preventScroll:true});}
@@ -105,6 +132,8 @@ export function createBirthView(){
   if(time>=end()){finish();return;}updatePlayback();draw();schedule();
  });}
  for(let i=0;i<4;i++)$('birth-stage-'+i).addEventListener('click',()=>stage(i));
+ for(const id of ['birth-heim-art','birth-bobby-art','birth-chouchou-art'])$(id).addEventListener('error',()=>{$(id).hidden=true;});
+ for(const choice of ['better','same','worse'])$('birth-guess-'+choice).addEventListener('click',()=>{if(step!==2||complete)return;guess=choice;stage(3);});
  $('birth-step-next').addEventListener('click',()=>stage(Math.min(3,step+1)));
  $('birth-child').addEventListener('change',()=>choose(Number($('birth-child').value)));
  for(const [id,i]of [['birth-parent-a',0],['birth-parent-b',1]])$(id).addEventListener('click',()=>{focusParent=i;render();});
