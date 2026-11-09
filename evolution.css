@@ -33,6 +33,27 @@
 .birth-visual{min-width:0;grid-column:1;grid-row:1;background:var(--paper)}
 .birth-detail-controls{min-width:0;grid-column:1;grid-row:2}.birth-story{grid-column:2;grid-row:1 / span 2}
 #birth-scene{width:100%;height:auto;aspect-ratio:1.875;display:block;border:1px solid var(--line);border-radius:10px}
+.birth-track-frame{position:relative;min-width:0;width:100%;isolation:isolate}
+.birth-driver{position:absolute;z-index:1;width:clamp(28px,8%,48px);aspect-ratio:1;transform:translate(-50%,-78%);pointer-events:none}
+.birth-driver[data-low=true]{transform:translate(-50%,8%)}
+.birth-driver img{position:absolute;width:82%;height:82%;object-fit:contain;left:9%;top:-8%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
+.birth-car-body{position:absolute;left:0;right:0;bottom:4%;height:39%;background:var(--good);border:1px solid var(--ink);border-radius:5px 9px 5px 5px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.15)}
+.birth-car-body:before,.birth-car-body:after{content:"";position:absolute;bottom:-5px;width:19%;height:6px;border-radius:3px;background:var(--ink)}
+.birth-car-body:before{left:13%}.birth-car-body:after{right:13%}.birth-car-body i{display:block;width:27%;height:2px;background:var(--paper);margin:4px 0 0 64%}
+.birth-driver[data-motion=stopped] .birth-car-body{outline:2px dashed var(--birth-mut);outline-offset:3px}
+.birth-assembly-desk{display:flex;align-items:center;gap:14px;padding:0 4px 12px}
+.birth-assembly-desk>img{width:92px;height:auto;flex-shrink:0;object-fit:contain}
+.birth-assembly-desk>div{min-width:0}.birth-assembly-desk strong{font-size:11px;font-weight:650}.birth-assembly-desk .birth-segment-detail{min-height:0;margin:5px 0 0}
+.birth-finish-desk{display:flex;align-items:center;gap:12px;padding:13px 0 4px;border-top:1px solid var(--line)}
+.birth-finish-cat{position:relative;flex:0 0 65px;align-self:flex-end;min-height:78px}
+.birth-finish-cat img{display:block;width:65px;height:78px;object-fit:contain}
+.birth-finish-cat>span{position:absolute;right:-4px;top:1px;font-size:26px;color:var(--ink)}
+.birth-finish-board{min-width:0;flex:1;border:1px solid var(--line);border-radius:8px;padding:11px 14px;background:var(--soft)}
+.birth-finish-board>strong,.birth-finish-board>span,.birth-finish-board>output,.birth-finish-board>small{display:block}
+.birth-finish-board>strong{font-size:11px;font-weight:650}.birth-finish-board>span{font-size:10px;color:var(--muted);margin-top:4px}
+.birth-finish-board>output{font:13px/1.7 ui-monospace,monospace;margin-top:5px;color:var(--ink)}
+.birth-finish-board>p,.birth-finish-board>small{font-size:11px;line-height:1.7;color:var(--muted);margin-top:4px}
+@media(max-height:520px) and (min-width:761px){.birth-finish-desk{gap:8px;padding-top:6px}.birth-finish-cat{flex-basis:48px;min-height:58px}.birth-finish-cat img{width:48px;height:58px}.birth-finish-cat>span{font-size:20px}.birth-finish-board{padding:6px 9px}.birth-finish-board>strong{font-size:10px}.birth-finish-board>span{font-size:9px;margin-top:2px}.birth-finish-board>output{font-size:11px;margin-top:2px}.birth-finish-board>p{font-size:10px;line-height:1.5;margin-top:2px}.birth-finish-board>small{display:none}}
 .birth-legend{font-size:11px;line-height:1.7;color:var(--muted);margin:10px 0 14px}
 .birth-genome{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:3px}
 .birth-genome span{font:10px/30px ui-monospace,monospace;text-align:center;border-radius:3px;color:var(--paper);position:relative}
@@ -52,6 +73,16 @@
 #birth-selection-note{white-space:pre-line}
 .birth-primary{background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);border-radius:7px;min-height:46px;padding:12px 16px;font-size:12px;font-weight:650}
 #birth-step-next{width:100%;margin-top:10px}
+.birth-guess{min-width:0;margin:20px 0 0;padding:15px;border:1px solid var(--line);border-radius:10px;background:var(--soft)}
+.birth-guess legend{padding:0 5px;font-size:14px;font-weight:700;line-height:1.6}
+.birth-guess p,.birth-guess-note{font-size:12px;line-height:1.8;color:var(--muted);margin:0 0 12px}
+.birth-guess-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.birth-guess-options button{min-height:48px;padding:9px 5px;border:1px solid var(--line);border-radius:7px;background:var(--paper);color:var(--ink);font-size:12px;font-weight:600}
+.birth-guess-options button[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.birth-guess-options button:disabled{opacity:.6;cursor:default}
+#birth-guess-lock{margin:12px 0 0}
+.birth-guess-note{padding-left:12px;border-left:2px solid var(--good)}
+#birth-results>.birth-guess-result{border-top:1px solid var(--line);padding-top:14px;font-size:14px;font-weight:650;color:var(--ink)}
 .birth-play-buttons{display:flex;gap:8px;flex-wrap:wrap}.birth-play-buttons button{min-height:46px;border-radius:7px;padding:12px 14px;font-size:12px}#birth-finish{border:1px solid var(--line)}
 #birth-clock{font:11px/1.8 ui-monospace,monospace;color:var(--muted);margin:10px 0}
 .birth-scrub{display:block;font-size:11px;color:var(--muted);margin-top:14px}
@@ -63,7 +94,7 @@
 .birth-boundary{font-size:10px;line-height:1.9;color:var(--muted);margin-top:22px;padding-top:15px;border-top:1px solid var(--line)}
 .birth-dialog button:focus-visible,.birth-dialog input:focus-visible,.birth-dialog select:focus-visible,.birth-entry:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 @media(max-width:760px){.birth-entry{width:100%;justify-content:space-between;gap:8px}.birth-entry span{font-size:9px}.birth-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);padding:16px;border-radius:12px}.birth-header{gap:10px;margin-bottom:12px}.birth-header h2{font-size:20px}.birth-header button{font-size:10px;padding:8px}.birth-eyebrow{font-size:9px}.birth-toolbar{display:block}.birth-toolbar>span{display:block;margin-top:7px;font-size:9px}.birth-toolbar select{flex:1}.birth-stages{margin:12px 0;gap:0}.birth-stages button{font-size:11px;padding:10px 3px}.birth-workbench{display:flex;flex-direction:column;gap:18px}.birth-visual,.birth-story{width:100%;position:static}.birth-genome{grid-template-columns:repeat(12,minmax(0,1fr));gap:4px}.birth-genome span{line-height:24px}.birth-genome .gene-mutated{line-height:20px}.birth-segment{margin-top:12px}.birth-legend{font-size:10px;margin:8px 0 10px}.birth-story h3{font-size:20px}#birth-explanation{font-size:12px}.birth-boundary{margin-top:18px}.birth-scores dd{font-size:12px}}
-@media(max-height:520px) and (min-width:761px){.birth-dialog{padding:12px 20px}.birth-dialog[open]{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}.birth-header{margin-bottom:0}.birth-header h2{font-size:18px}.birth-header button{font-size:10px;padding:8px}.birth-eyebrow{font-size:9px}.birth-toolbar{justify-content:flex-end}.birth-toolbar>span{display:none}.birth-stages,.birth-workbench,.birth-boundary{grid-column:1/-1}.birth-workbench{grid-template-columns:1fr 1fr;gap:18px}.birth-visual{position:sticky;top:0;grid-row:1 / span 2}.birth-detail-controls{grid-column:2;grid-row:2}.birth-story{grid-row:1}.birth-stages{margin:8px 0 12px}.birth-story h3{font-size:18px}.birth-genome{grid-template-columns:repeat(12,minmax(0,1fr))}.birth-genome span{line-height:22px}.birth-genome .gene-mutated{line-height:18px}.birth-legend{margin:6px 0}.birth-segment{margin-top:10px}.birth-segment-detail{font-size:11px}.birth-header button{order:-1}}
+@media(max-height:520px) and (min-width:761px){.birth-dialog{padding:12px 20px}.birth-dialog[open]{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}.birth-header{margin-bottom:0}.birth-header h2{font-size:18px}.birth-header button{font-size:10px;padding:8px}.birth-eyebrow{font-size:9px}.birth-toolbar{justify-content:flex-end}.birth-toolbar>span{display:none}.birth-stages,.birth-workbench,.birth-boundary{grid-column:1/-1}.birth-workbench{grid-template-columns:1fr 1fr;gap:18px}.birth-visual{position:sticky;top:0;grid-row:1 / span 2}.birth-detail-controls{grid-column:2;grid-row:2}.birth-story{grid-row:1}.birth-stages{margin:8px 0 12px}.birth-story h3{font-size:18px}.birth-genome{grid-template-columns:repeat(12,minmax(0,1fr))}.birth-genome span{line-height:22px}.birth-genome .gene-mutated{line-height:18px}.birth-legend{font-size:10px;line-height:1.5;margin:4px 0}.birth-segment{margin-top:10px}.birth-segment-detail{font-size:11px}.birth-header button{order:-1}}
 @media(max-width:760px){.birth-detail-controls{width:100%}}
 .race-lessons{display:flex;align-items:center;gap:20px;flex-wrap:wrap}.adapt-entry{font-size:12px;margin-top:18px;text-decoration:underline;text-underline-offset:4px;min-height:44px;display:flex;align-items:center}
 .race-challenge a{display:inline-block;color:var(--good);text-underline-offset:3px}
@@ -75,7 +106,7 @@
 .adapt-actions{display:flex;align-items:center;flex-wrap:wrap;gap:16px;margin:22px 0 14px}.adapt-actions a{font-size:12px;text-underline-offset:4px;min-height:44px;display:flex;align-items:center}.adapt-actions>span{font-size:11px;color:var(--muted);line-height:1.8}.adapt-lab button:disabled{opacity:.45;cursor:not-allowed}.adapt-boundary{font-size:10px;line-height:1.9;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}.adapt-lab button:focus-visible,.adapt-lab a:focus-visible,.adapt-entry:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 @media(max-width:760px){.race-lessons{gap:4px}.adapt-entry{margin-top:0}.adapt-lab{padding:18px 14px;margin-top:0}.adapt-header{display:block}.adapt-header h2{font-size:22px}.adapt-header button{width:100%;margin-top:16px}.adapt-cards{grid-template-columns:minmax(0,1fr);gap:12px}.adapt-card{padding:14px}.adapt-card canvas{max-height:240px}.adapt-card h3{font-size:16px}.adapt-checkpoint{display:block}.adapt-checkpoint span{display:block;margin-top:4px}.adapt-card>p:last-child,.adapt-legend,.adapt-boundary{font-size:11px}.adapt-explanation p{font-size:13px}.adapt-actions{gap:6px 14px}.adapt-actions button{width:100%}.adapt-actions>span{width:100%}}
 @media(max-height:520px) and (min-width:761px){.adapt-lab{padding:18px}.adapt-header h2{font-size:21px}.adapt-cards{gap:8px}.adapt-card{padding:10px}.adapt-card h3{font-size:13px}.adapt-card strong{font-size:13px}}
-@media(max-width:760px) and (min-height:521px){.birth-header{position:sticky;top:-16px;z-index:3;background:var(--paper);padding:8px 0}.birth-header h2{font-size:18px}.birth-workbench{display:grid;grid-template-columns:minmax(0,1fr);gap:0}.birth-visual,.birth-detail-controls{display:contents}#birth-scene{position:sticky;top:58px;z-index:2;background:var(--paper)}.birth-story{margin-top:18px;grid-column:auto;grid-row:auto}}
+@media(max-width:760px) and (min-height:521px){.birth-header{position:sticky;top:-16px;z-index:3;background:var(--paper);padding:8px 0}.birth-header h2{font-size:18px}.birth-workbench{display:grid;grid-template-columns:minmax(0,1fr);gap:0}.birth-visual,.birth-detail-controls{display:contents}.birth-track-frame{position:sticky;top:58px;z-index:2;background:var(--paper)}.birth-story{margin-top:18px;grid-column:auto;grid-row:auto}}
 
 .race-timeline{align-items:center}
 .race-timekeeper{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}

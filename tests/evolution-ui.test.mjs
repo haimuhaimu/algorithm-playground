@@ -17,7 +17,7 @@ async function boot({hidden=false,reduced=false}={}){
  const frames=new Map();let id=0;
  const ctx=new Proxy({},{get:(target,key)=>target[key]??(()=>{})});
  class Element extends EventTarget{
-  constructor(){super();this.dataset={};this.attributes=new Map();this.width=900;this.height=480;this.checked=false;this.value='';}
+  constructor(){super();this.dataset={};this.style={};this.attributes=new Map();this.width=900;this.height=480;this.checked=false;this.value='';}
   setAttribute(k,v){this.attributes.set(k,v);}getAttribute(k){return this.attributes.get(k);}
   getContext(){return ctx;}getBoundingClientRect(){return {left:0,top:0,width:900,height:480};}
   setPointerCapture(){}releasePointerCapture(){}focus(){}showModal(){this.open=true;}close(){this.open=false;this.dispatchEvent(new Event('close'));}
@@ -254,4 +254,153 @@ test('birth selection shows each recorded draw, not merely the generic tournamen
   ui.click('birth-stage-0');ui.click('birth-parent-a');assert.match(ui.elements.get('birth-segment-detail').textContent,/父代 A/);
   ui.click('birth-parent-b');assert.match(ui.elements.get('birth-segment-detail').textContent,/父代 B/);
  }finally{ui.restore();}
+});
+
+test('a mutation prediction starts the same run without revealing its result, then checks the actual slower child',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.elements.has('birth-guess-better'),'the mutation stage offers a concrete optional prediction');
+  u.click('inspect-birth');u.click('birth-stage-2');u.click('birth-guess-better');
+  assert.equal(u.elements.get('birth-stage-3').getAttribute('aria-current'),'step');
+  assert.equal(u.elements.get('birth-results').hidden,true);
+  assert.match(u.elements.get('birth-guess-note').textContent,/你猜.*更好/);
+  assert.equal(u.elements.get('birth-guess-result').textContent,'');
+  u.click('birth-finish');
+  assert.equal(u.elements.get('birth-results').hidden,false);
+  assert.match(u.elements.get('birth-guess-result').textContent,/你猜.*更好.*实际.*更差/);
+  // Fixed seed: this inherited child finishes in 26.65 s; mutation finishes in 26.74 s.
+  assert.match(u.elements.get('birth-inherited-result').textContent,/26\.65/);
+  assert.match(u.elements.get('birth-child-result').textContent,/26\.74/);
+  assert.equal(u.elements.get('birth-guess-better').getAttribute('aria-pressed'),'true');
+ }finally{u.restore();}
+});
+
+test('a different real child can improve, and choosing it clears the previous prediction',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.elements.has('birth-guess-worse'));
+  u.click('inspect-birth');u.click('birth-stage-2');u.click('birth-guess-worse');u.click('birth-finish');
+  assert.match(u.elements.get('birth-guess-result').textContent,/你猜.*更差.*实际.*更差/);
+  u.elements.get('birth-child').value='5';u.fire(u.elements.get('birth-child'),'change');
+  assert.equal(u.elements.get('birth-results').hidden,true);
+  assert.equal(u.elements.get('birth-guess-better').getAttribute('aria-pressed'),'false');
+  assert.equal(u.elements.get('birth-guess-worse').getAttribute('aria-pressed'),'false');
+  assert.equal(u.elements.get('birth-guess-result').textContent,'');
+  u.click('birth-stage-2');u.click('birth-guess-better');u.click('birth-finish');
+  // Same fixed population, child #6: 25.71 s without mutation, 25.24 s after mutation.
+  assert.match(u.elements.get('birth-guess-result').textContent,/你猜.*更好.*实际.*更好/);
+  assert.match(u.elements.get('birth-inherited-result').textContent,/25\.71/);
+  assert.match(u.elements.get('birth-child-result').textContent,/25\.24/);
+ }finally{u.restore();}
+});
+
+test('zero mutation stays equal, and seeing the result locks the original guess throughout rewind and replay',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.elements.has('birth-guess-same'));
+  u.elements.get('mutation').value='0';u.fire(u.elements.get('mutation'),'input');
+  u.click('inspect-birth');u.click('birth-stage-2');u.click('birth-guess-same');
+  u.click('birth-stage-1');u.click('birth-stage-3');
+  assert.match(u.elements.get('birth-guess-note').textContent,/你猜.*一样/);
+  u.click('birth-stage-2');assert.doesNotMatch(u.elements.get('birth-step-next').textContent,/不猜/);
+  u.click('birth-step-next');
+  u.click('birth-run');assert.match(u.elements.get('birth-guess-result').textContent,/你猜.*一样.*实际.*一样/);
+  u.elements.get('birth-time').value='0';u.fire(u.elements.get('birth-time'),'input');
+  u.click('birth-stage-2');
+  assert.equal(u.elements.get('birth-guess-better').disabled,true);
+  const revealed=u.elements.get('birth-guess-result').textContent;
+  // Synthetic stale click also cannot overwrite the frozen pre-run choice.
+  u.click('birth-guess-better');u.click('birth-stage-3');u.click('birth-run');
+  assert.equal(u.elements.get('birth-guess-result').textContent,revealed);
+  assert.equal(u.elements.get('birth-guess-same').getAttribute('aria-pressed'),'true');
+ }finally{u.restore();}
+});
+
+test('skipping the prediction still permits direct results, without inventing a player answer',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.elements.has('birth-guess-note'));
+  u.click('inspect-birth');u.click('birth-stage-3');
+  assert.equal(u.elements.get('birth-guess-result').textContent,'');
+  u.click('birth-finish');
+  assert.match(u.elements.get('birth-guess-result').textContent,/未作预测.*实际.*更差/);
+  for(const choice of ['better','same','worse'])assert.equal(u.elements.get('birth-guess-'+choice).getAttribute('aria-pressed'),'false');
+  u.click('birth-close');u.click('inspect-birth');
+  assert.equal(u.elements.get('birth-guess-result').textContent,'');
+  assert.equal(u.elements.get('birth-guess-better').disabled,false);
+ }finally{u.restore();}
+});
+
+test('Heim shares the actual selected-gene detail, while Bobby follows the simulated clock including rewind',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.elements.has('birth-assembly-desk'),'the assembly scene includes Heim beside the actual gene controls');
+  u.click('inspect-birth');u.click('birth-stage-1');
+  assert.equal(u.elements.get('birth-assembly-desk').hidden,false);
+  const previous=u.elements.get('birth-segment-detail').textContent;
+  u.elements.get('birth-segment').value='10';u.fire(u.elements.get('birth-segment'),'input');
+  assert.notEqual(u.elements.get('birth-segment-detail').textContent,previous);
+  assert.match(u.elements.get('birth-segment-detail').textContent,/第 11 个路标/);
+  u.click('birth-stage-3');
+  const driver=u.elements.get('birth-driver');
+  assert.equal(driver.hidden,false);assert.equal(u.elements.get('birth-assembly-desk').hidden,true);
+  assert.ok(Math.abs(parseFloat(driver.style.left)-8.8888889)<1e-6);
+  assert.equal(driver.style.top,'50%');
+  u.elements.get('birth-time').value='5';u.fire(u.elements.get('birth-time'),'input');
+  // Hand-inspected fixed run at 5 s: (153.60155, 336.92039) on a 900×480 field.
+  assert.ok(Math.abs(parseFloat(driver.style.left)-17.0668394)<1e-6);
+  assert.ok(Math.abs(parseFloat(driver.style.top)-70.1917489)<1e-6);
+  u.elements.get('birth-time').value='0';u.fire(u.elements.get('birth-time'),'input');
+  assert.ok(Math.abs(parseFloat(driver.style.left)-8.8888889)<1e-6);
+  assert.equal(driver.style.top,'50%');
+ }finally{u.restore();}
+});
+
+test('Chouchou waits to reveal the actual score, keeps it identified during replay, and clears it for another child',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.elements.has('birth-finish-score'));
+  u.click('inspect-birth');assert.equal(u.elements.get('birth-finish-desk').hidden,true);
+  u.click('birth-stage-3');assert.equal(u.elements.get('birth-finish-desk').hidden,false);
+  assert.doesNotMatch(u.elements.get('birth-finish-score').textContent,/26\.74|完赛/);
+  assert.equal(u.elements.get('birth-finish-difference').textContent,'');
+  u.click('birth-finish');
+  assert.match(u.elements.get('birth-finish-score').textContent,/26\.74.*完赛/);
+  assert.match(u.elements.get('birth-finish-difference').textContent,/未变异.*慢.*0\.09/);
+  assert.equal(u.elements.get('birth-driver').dataset.motion,'finished');
+  u.elements.get('birth-time').value='0';u.fire(u.elements.get('birth-time'),'input');
+  assert.match(u.elements.get('birth-finish-label').textContent,/本轮.*成绩/);
+  assert.match(u.elements.get('birth-finish-score').textContent,/26\.74/);
+  u.elements.get('birth-child').value='5';u.fire(u.elements.get('birth-child'),'change');
+  u.click('birth-stage-3');
+  assert.doesNotMatch(u.elements.get('birth-finish-score').textContent,/26\.74|25\.24/);
+  assert.equal(u.elements.get('birth-finish-difference').textContent,'');
+ }finally{u.restore();}
+});
+
+test('a blocked Bobby car stays at the true stopped position instead of being sent to the finish',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.elements.has('birth-driver'));
+  u.fire(u.modes[2],'click');
+  // The UI deliberately refuses obstacles at the start/finish. A valid wall
+  // across the middle produces a real stopped child instead of bypassing that rule.
+  for(const y of [200,240,280])for(const type of ['pointerdown','pointerup'])u.fire(u.elements.get('race'),type,{isPrimary:true,button:0,pointerId:7,clientX:450,clientY:y,pointerType:'mouse'});
+  u.click('inspect-birth');u.click('birth-stage-3');u.click('birth-finish');
+  const driver=u.elements.get('birth-driver');
+  assert.equal(driver.dataset.motion,'stopped');
+  // Fixed stopped sample: (437.37018, 218.01457), not the finish at (820,240).
+  assert.ok(Math.abs(parseFloat(driver.style.left)-48.5966871)<1e-6);
+  assert.ok(Math.abs(parseFloat(driver.style.top)-45.4197030)<1e-6);
+  assert.match(u.elements.get('birth-finish-score').textContent,/未完赛.*51%/);
+  assert.doesNotMatch(u.elements.get('birth-finish-score').textContent,/秒.*完赛/);
+ }finally{u.restore();}
+});
+
+test('missing cat artwork keeps the real car marker and all original run controls usable',async()=>{
+ const u=await boot({reduced:true});try{
+  assert.ok(u.elements.has('birth-bobby-art'));
+  u.click('inspect-birth');
+  for(const id of ['birth-bobby-art','birth-heim-art','birth-chouchou-art']){
+   const art=u.elements.get(id);u.fire(art,'error');assert.equal(art.hidden,true);
+  }
+  u.click('birth-stage-3');u.click('birth-run');
+  assert.equal(u.elements.get('birth-driver').hidden,false);
+  assert.equal(u.elements.get('birth-results').hidden,false);
+  assert.match(u.elements.get('birth-finish-score').textContent,/26\.74/);
+  u.click('birth-close');assert.equal(u.frames.size,0);
+ }finally{u.restore();}
 });
