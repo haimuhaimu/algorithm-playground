@@ -1,4 +1,4 @@
-import {createWorkflow,briefs,produce,draw,assess,retouch,improve} from './rsi-core.mjs?v=rule-trial-1';
+import {createWorkflow,briefs,produce,draw,assess,retouch,improve} from './rsi-core.mjs?v=saved-poster-v1';
 
 // Trials run a candidate without installing it. A decision changes the reusable
 // workflow, never the manually repaired artwork or the captured comparison.

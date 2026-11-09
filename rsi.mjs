@@ -1,5 +1,5 @@
-import {ISSUE_LABELS} from './rsi-core.mjs?v=rule-trial-1';
-import {createPosterStory,posterStoryAction,posterStoryView} from './rsi-session.mjs?v=rule-trial-1';
+import {ISSUE_LABELS} from './rsi-core.mjs?v=saved-poster-v1';
+import {createPosterStory,posterStoryAction,posterStoryView} from './rsi-session.mjs?v=saved-poster-v1';
 
 const POSES={front:'正面打招呼',side:'侧身',jump:'跃起'};
 export function poster(art){
@@ -64,6 +64,10 @@ export function initStudio(doc=document,win=window){
   $('story-next').hidden=!NEXT[s.stage];$('story-next').textContent=next;
   $('choice-controls').hidden=s.stage!=='decision';$('challenge-controls').hidden=s.stage!=='challenge';
   $('ending-controls').hidden=s.stage!=='ending';
+  const saved=s.stage==='ending'?s.repairRecord:null;
+  $('saved-poster').hidden=!saved;
+  $('saved-poster-art').innerHTML=saved?poster(saved):'';
+  if(!saved)$('saved-poster').open=false;
   $('assistant-note').hidden=!['trial','challenge','decision'].includes(s.stage);
   $('assistant-copy').textContent='候选规则：外套永远固定绿色。只改衣服，不改变角色、姿势，也不改变助手找改法的方法。现在只是试用，尚未保存。';
   for(const prediction of ['green','brief'])$('predict-'+prediction).setAttribute('aria-pressed',String(s.prediction===prediction));

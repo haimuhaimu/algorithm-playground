@@ -59,6 +59,19 @@
 .outcome>span{font-size:13px;font-weight:600;color:var(--good)}
 .outcome p{font-size:14px;line-height:1.9;margin-top:8px}
 .takeaway{font-size:13px;line-height:1.9;color:var(--muted)}
+.saved-poster{margin:16px 0 4px;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow-wrap:anywhere}
+.saved-poster summary{min-height:44px;padding:14px;cursor:pointer;color:var(--ink);line-height:1.6}
+.saved-poster summary strong{font-size:14px;font-weight:600}
+.saved-poster summary small{display:block;margin-top:4px;font-size:11px;color:var(--muted)}
+.saved-poster[open] summary{border-bottom:1px solid var(--line)}
+.saved-poster-content{display:grid;grid-template-columns:112px minmax(0,1fr);gap:16px;padding:14px;align-items:start}
+.saved-poster-content figure{margin:0;min-width:0}
+.saved-poster-content figure>div{overflow:hidden;border-radius:4px;background:var(--soft)}
+.saved-poster-content svg{display:block;width:100%;height:auto}
+.saved-poster-content figcaption{font-size:10px;line-height:1.7;color:var(--muted);margin-top:8px}
+.saved-poster-content p{font-size:12px;line-height:1.85;color:var(--ink);margin:0 0 10px}
+.saved-poster-content .small-note{font-size:11px;color:var(--muted);margin-bottom:0}
+@media(max-width:450px){.saved-poster-content{grid-template-columns:96px minmax(0,1fr);gap:12px;padding:12px}.saved-poster summary{padding:12px}}
 .text-button{min-height:44px;font-size:12px;color:var(--muted);text-align:left;text-decoration:underline;text-underline-offset:4px;margin-top:14px}
 .evidence{border-top:1px solid var(--line);margin-top:18px;padding-top:6px}
 .evidence summary,.rsi-boundaries summary{min-height:44px;padding:12px 0;font-size:12px;color:var(--muted);cursor:pointer}

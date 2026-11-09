@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="一条改法修好了旧委托，却弄错新要求。先亲手试用，看见副作用，再决定保留或撤回。">
 <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
-<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><link rel="stylesheet" href="./rsi.css?v=rule-trial-1&amp;art=studio-client-v1">
-<script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script><script type="module" src="./rsi.mjs?v=rule-trial-1"></script>
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><link rel="stylesheet" href="./rsi.css?v=saved-poster-v1&amp;art=studio-client-v1">
+<script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script><script type="module" src="./rsi.mjs?v=saved-poster-v1"></script>
 <title>算法游乐场 · 会进化的 AI 创作室</title>
 <link rel="stylesheet" href="./space-theme.css">
 </head><body>
@@ -45,7 +45,17 @@
    <p id="prediction-note" class="small-note" role="status"></p>
    <button id="run-trial" class="rsi-primary" disabled>用这条规则试画，不保存 →</button>
   </div>
-  <div id="ending-controls" hidden><div class="outcome"><span id="outcome-label"></span><p id="outcome-copy"></p></div><p class="takeaway" id="takeaway"></p><p class="small-note" id="saved-repair"></p></div>
+  <div id="ending-controls" hidden>
+   <div class="outcome"><span id="outcome-label"></span><p id="outcome-copy"></p></div>
+   <p class="takeaway" id="takeaway"></p><p class="small-note" id="saved-repair"></p>
+   <details class="saved-poster" id="saved-poster" hidden>
+    <summary id="saved-poster-summary"><strong>波比这次收到的海报</strong><small>点开回看 · 你在第一步修好的成品</small></summary>
+    <div class="saved-poster-content">
+     <figure><div id="saved-poster-art"></div><figcaption>第一步修好的成品</figcaption></figure>
+     <div><p>这是最初那份委托的成品，不是新委托的重画结果。</p><p>保留或撤回的是助手的规则，这张海报不会被改写。</p><p class="small-note">只保留在这一轮；刷新或从头重玩会重新开始。</p></div>
+    </div>
+   </details>
+  </div>
   <button id="revisit" class="text-button" hidden>回到刚才的选择，试试另一条路 ↺</button>
   <details class="evidence" id="evidence" hidden><summary>想看依据？展开这次的记录</summary><p id="evidence-copy"></p></details>
  </section>

@@ -89,3 +89,58 @@ test('desktop decision and ending reveal the new instruction instead of retainin
  assert.equal(b.nodes.get('guide-title').scrolls.at(-1)?.block,'start');
  b.click('keep-rule');assert.equal(b.nodes.get('guide-title').scrolls.at(-1)?.block,'start');
 });
+test('both endings let the player inspect the manually repaired poster without replacing the new commission output',()=>{
+ for(const decision of ['keep','withdraw']){
+  const b=boot();
+  assert.equal(b.doc.getElementById('saved-poster')?.hidden,true);
+  reachDecision(b);b.click(decision+'-rule');
+  assert.equal(b.nodes.get('saved-poster').hidden,false);
+  assert.equal(b.nodes.get('saved-poster').open,false);
+  assert.match(b.nodes.get('saved-poster-art').innerHTML,/aria-label="狐狸，绿色外套，侧身"/);
+  assert.match(b.nodes.get('after-art').innerHTML,decision==='keep'?/绿色/:/珊瑚色/);
+  assert.equal(b.ui.state.decision,decision);
+ }
+});
+test('saved poster rendering reads the captured artwork rather than reconstructing a fixed green template',()=>{
+ const b=boot();b.click('story-next');
+ // A valid non-default snapshot catches renderers that hard-code the example.
+ Object.assign(b.ui.state.repairRecord,{species:'rabbit',coat:'coral',pose:'jump',scene:'moon'});
+ b.click('story-next');b.click('story-next');b.click('story-next');
+ b.click('predict-green');b.click('run-trial');b.click('withdraw-rule');
+ const saved=b.nodes.get('saved-poster-art')?.innerHTML||'';
+ assert.match(saved,/aria-label="兔子，珊瑚色外套，跃起"/);
+ assert.match(saved,/MOON WALK/);
+ assert.match(b.nodes.get('after-art').innerHTML,/aria-label="狐狸，珊瑚色外套，侧身"/);
+});
+test('opening the saved poster is read-only and theme changes preserve its disclosure state',()=>{
+ const b=boot();reachDecision(b);b.click('withdraw-rule');
+ const card=b.doc.getElementById('saved-poster');assert.ok(card,'missing saved artwork disclosure');
+ const state=structuredClone(b.ui.state),art=b.nodes.get('saved-poster-art').innerHTML;
+ card.open=true;card.dispatchEvent(new Event('toggle'));
+ assert.deepEqual(b.ui.state,state);
+ b.click('theme');assert.equal(card.open,true);assert.equal(b.nodes.get('saved-poster-art').innerHTML,art);
+ card.open=false;card.dispatchEvent(new Event('toggle'));
+ assert.deepEqual(b.ui.state,state);
+});
+test('revisiting a decision closes the saved card and the alternate ending keeps the same real artwork',()=>{
+ const b=boot();reachDecision(b);b.click('keep-rule');
+ const card=b.doc.getElementById('saved-poster');assert.ok(card,'missing saved artwork disclosure');
+ const saved=b.nodes.get('saved-poster-art').innerHTML;card.open=true;
+ b.click('revisit');assert.equal(card.hidden,true);assert.equal(card.open,false);
+ assert.equal(b.nodes.get('saved-poster-art').innerHTML,'');
+ b.click('withdraw-rule');assert.equal(card.hidden,false);assert.equal(card.open,false);
+ assert.equal(b.nodes.get('saved-poster-art').innerHTML,saved);
+ assert.match(b.nodes.get('after-art').innerHTML,/珊瑚色/);
+});
+test('restarting clears the old disclosure and a second round renders only its own captured poster',()=>{
+ const b=boot();reachDecision(b);b.click('withdraw-rule');
+ const card=b.doc.getElementById('saved-poster');assert.ok(card,'missing saved artwork disclosure');card.open=true;
+ b.click('reset');assert.equal(b.ui.state.repairRecord,null);
+ assert.equal(card.hidden,true);assert.equal(card.open,false);assert.equal(b.nodes.get('saved-poster-art').innerHTML,'');
+ b.click('story-next');Object.assign(b.ui.state.repairRecord,{species:'rabbit',pose:'front',scene:'sea'});
+ b.click('story-next');b.click('story-next');b.click('story-next');
+ b.click('predict-brief');b.click('run-trial');b.click('keep-rule');
+ assert.match(b.nodes.get('saved-poster-art').innerHTML,/aria-label="兔子，绿色外套，正面打招呼"/);
+ assert.match(b.nodes.get('saved-poster-art').innerHTML,/SLOW SUNSET/);
+ assert.equal(card.open,false);
+});
