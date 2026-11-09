@@ -4,8 +4,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="点乱一片萤火，看看它们如何重新找到同一个节拍。可交互的相位同步算法实验。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./firefly.css?v=cat-beat-v1"><link rel="stylesheet" href="./firefly-beat.css?v=cat-beat-v1">
- <script type="module" src="./firefly.mjs?v=cat-beat-v1&amp;entry=bobby-tap"></script><title>算法游乐场 · 萤火虫合奏</title>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./firefly.css?v=scope-legend-v1"><link rel="stylesheet" href="./firefly-beat.css?v=scope-legend-v1">
+ <script type="module" src="./firefly.mjs?v=scope-legend-v1&amp;entry=bobby-tap"></script><title>算法游乐场 · 萤火虫合奏</title>
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
 </head>
@@ -70,13 +70,18 @@
     <div class="habitat">
      <div class="habitat-heading"><span id="habitat-label">一起合拍</span><img class="habitat-cat" src="./studio-bobby-idle.png" width="331" height="360" alt="" aria-hidden="true" decoding="async"><span id="elapsed">0.0 秒</span><label class="phase-toggle"><input type="checkbox" id="show-phase">看小节拍</label></div>
     <div class="touch-modes"><h2>你来插一手</h2><div role="group" aria-label="点按动作"><button data-mode="scatter" aria-pressed="true">打乱一片 <kbd>1</kbd></button><button data-mode="align" aria-pressed="false">点亮一片 <kbd>2</kbd></button></div><p id="interaction-status" role="status">试着点一下画布。</p></div>
-     <canvas id="fireflies" width="960" height="600" tabindex="0" role="application" aria-label="萤火虫合奏互动画布" aria-describedby="field-help cursor-status">需要支持 Canvas 的浏览器。</canvas>
+     <canvas id="fireflies" width="960" height="600" tabindex="0" role="application" aria-label="萤火虫合奏互动画布" aria-describedby="field-help scope-description cursor-status">需要支持 Canvas 的浏览器。</canvas>
      <div id="group-readout" class="group-readout" hidden aria-label="两群的实时节拍">
       <div><span class="group-left">左群内部</span><strong id="left-coherence">—</strong></div><div><span class="group-right">右群内部</span><strong id="right-coherence">—</strong></div><div><span>两群节拍错开</span><strong id="group-gap">—</strong></div>
       <p id="group-message"></p>
      </div>
      <p class="field-caption" id="field-caption">点一下，把附近的节拍打乱</p>
      <div class="chorus-transport"><button id="play" class="primary" aria-pressed="true">暂停</button><button id="step">走一拍</button><button id="shuffle">重新散开</button><button id="reset">重置</button></div>
+     <div class="scope-legend" id="scope-legend" aria-label="画布上的两种范围">
+      <div><i class="scope-mark scope-direct" aria-hidden="true"></i><span><b>虚线 · 你点的一下</b><small>固定范围</small></span></div>
+      <div><i class="scope-mark scope-neighbors" aria-hidden="true"></i><span><b>实线 · 它们彼此跟拍</b><small>范围示意：<output id="scope-radius" for="radius">整片</output></small></span></div>
+     </div>
+     <p class="scope-description" id="scope-description">实线在光标处示意距离；每只萤火虫都用它找邻居。点按范围不会随滑杆变大。</p>
     </div>
     <p class="near-play-status" id="play-status" role="status">运行中 · 点按可以干预</p>
     <nav id="listening-jumps" class="listening-jumps" aria-label="本轮实验位置" hidden><a href="#listening-lesson">回到本轮选择 ↑</a><a id="listening-result-jump" href="#comparison-title" hidden>查看前后证据 ↓</a></nav>
@@ -86,7 +91,7 @@
     <div class="chorus-presets" role="group" aria-label="同步场景"><button data-preset="chorus" aria-pressed="true"><b>一起合拍</b><small>听见整片萤火</small></button><button data-preset="independent" aria-pressed="false"><b>各闪各的</b><small>不受别人影响</small></button><button data-preset="islands" aria-pressed="false"><b>两群对唱</b><small>只听身边的小伙伴</small></button></div>
     <div class="chorus-sliders">
      <label for="coupling">互相影响 <output id="coupling-value">2.4</output><input id="coupling" type="range" min="0" max="3" step="0.1" value="2.4"><small>拉到 0，谁也不迁就谁。</small></label>
-     <label for="radius">看见多远 <output id="radius-value">整片</output><input id="radius" type="range" min="0.15" max="2" step="0.01" value="2"><small>范围缩小，只和附近的节拍互动。</small></label>
+     <label for="radius">看见多远 <output id="radius-value">整片</output><input id="radius" type="range" min="0.15" max="2" step="0.01" value="2"><small>只改它们之间的跟拍距离，不改你的点按范围。</small></label>
      <label for="spread">天生的节奏差 <output id="spread-value">0.12</output><input id="spread" type="range" min="0" max="0.6" step="0.01" value="0.12"><small>差异越大，越难一直合拍。</small></label>
     </div>
     <p class="chorus-tip" id="scene-tip">先等它们合拍，再点乱一小片。它们会自己找回节奏吗？</p>

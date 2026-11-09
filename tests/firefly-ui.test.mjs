@@ -14,8 +14,11 @@ test('mobile reading order reaches scene settings before secondary observation c
 let bootNumber=0;
 async function boot({hidden=false,reducedMotion=false}={}){
  const frames=new Map();let nextFrame=0;
+ const arcs=[];
  const context={createRadialGradient:()=>({addColorStop(){}})};
  for(const name of ['fillRect','beginPath','arc','fill','stroke','setLineDash','ellipse','moveTo','lineTo','clearRect','fillText'])context[name]=()=>{};
+ context.setLineDash=values=>{context.dash=[...values];};
+ context.arc=(...args)=>arcs.push({args,dash:[...(context.dash||[])]});
  class Element extends EventTarget{
   constructor(){super();this.dataset={};this.attributes=new Map();this.width=960;this.height=600;this.checked=false;this.textWrites=0;}
   set textContent(value){this.text=value;this.textWrites++;}
@@ -40,8 +43,42 @@ async function boot({hidden=false,reducedMotion=false}={}){
  Object.assign(globalThis,globals);
  try{await import(new URL(`../firefly.mjs?lifecycle-test=${++bootNumber}`,import.meta.url));}
  catch(error){restore();throw error;}
- return {document,frames,elements,restore,visible(value){document.hidden=!value;document.dispatchEvent(new Event('visibilitychange'));}};
+ return {document,frames,elements,arcs,restore,visible(value){document.hidden=!value;document.dispatchEvent(new Event('visibilitychange'));}};
 }
+
+test('range legend distinguishes the adjustable neighbor radius from the fixed direct intervention',async()=>{
+ const ui=await boot({reducedMotion:true});
+ try{
+  const el=id=>ui.elements.get(id),field=el('fireflies');
+  assert.ok(el('scope-legend'),'the two drawn ranges need an in-place legend');
+  for(const [radius,display] of [[.15,'0.15'],[2,'整片']]){
+   el('radius').value=radius;el('radius').dispatchEvent(new Event('input'));
+   assert.equal(el('scope-radius').textContent,display);
+   ui.arcs.length=0;field.dispatchEvent(new Event('focus'));
+   assert.equal(ui.arcs[0].args[2],radius*600,'solid circle must match the real neighbor radius');
+   assert.deepEqual(ui.arcs[0].dash,[]);
+   assert.equal(ui.arcs[1].args[2],132,'dashed circle must stay at the real .22 brush radius');
+   assert.deepEqual(ui.arcs[1].dash,[4,5]);
+   for(const key of ['2','Enter']){const event=new Event('keydown');Object.defineProperty(event,'key',{value:key});field.dispatchEvent(event);}
+   assert.equal(el('interaction-status').textContent,'点亮了 12 个节拍。','widening neighbor hearing must not directly light the whole field');
+   assert.equal(ui.frames.size,0,'an input must not resume a paused world');
+  }
+ }finally{ui.restore();}
+});
+test('guided comparison hides the free-intervention legend and restores it on exit',async()=>{
+ const ui=await boot({reducedMotion:true});
+ try{
+  const el=id=>ui.elements.get(id),click=id=>el(id).dispatchEvent(new Event('click'));
+  assert.equal(el('scope-legend')?.hidden,false);
+  click('listening-start');assert.equal(el('scope-legend').hidden,true);
+  assert.match(el('scope-description').textContent,/锁定/);
+  click('listening-fast');click('listening-wide');click('listening-fast');
+  assert.equal(el('scope-legend').hidden,true);
+  click('listening-exit');assert.equal(el('scope-legend').hidden,false);
+  assert.equal(el('scope-radius').textContent,'整片');
+  assert.doesNotMatch(el('scope-description').textContent,/锁定/);
+ }finally{ui.restore();}
+});
 
 test('a hidden initial load stays truthfully paused after foregrounding until Continue',async()=>{
  const ui=await boot({hidden:true});
