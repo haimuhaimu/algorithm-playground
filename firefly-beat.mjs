@@ -1,4 +1,4 @@
-import {TAU,stepSwarm,configureSwarm,perturbSwarm} from './firefly-core.mjs?v=cat-beat-v1';
+import {TAU,stepSwarm,configureSwarm,perturbSwarm} from './firefly-core.mjs?v=scope-legend-v1';
 
 const copy=world=>({...world,settings:{...world.settings},points:world.points.map(p=>({...p}))});
 const scenarios=new Set(['ahead','behind','out']),guesses=new Set(['faster','slower','same']);
