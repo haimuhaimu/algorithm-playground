@@ -1,5 +1,5 @@
-import {TAU,createSwarm,stepSwarm,coherence,configureSwarm,perturbSwarm,measureGroups,createListening,advanceListening,chooseListening,listeningOutcome,answerListening} from './firefly-core.mjs?v=cat-beat-v1';
-import {mountBeatLesson} from './firefly-beat-ui.mjs?v=cat-beat-v1&entry=bobby-tap';
+import {TAU,createSwarm,stepSwarm,coherence,configureSwarm,perturbSwarm,measureGroups,createListening,advanceListening,chooseListening,listeningOutcome,answerListening} from './firefly-core.mjs?v=scope-legend-v1';
+import {mountBeatLesson} from './firefly-beat-ui.mjs?v=scope-legend-v1&entry=bobby-tap';
 
 const $=id=>document.getElementById(id),field=$('fireflies'),ctx=field.getContext('2d');
 const clock=$('phase-clock').getContext('2d'),chart=$('history').getContext('2d');
@@ -26,6 +26,9 @@ if(!ctx||!clock||!chart){
    $(key).value=world.settings[key];
    $(key+'-value').textContent=key==='radius'?(world.settings[key]>=1.9?'整片':world.settings[key].toFixed(2)):world.settings[key].toFixed(key==='coupling'?1:2);
   }
+  $('scope-radius').textContent=$('radius-value').textContent;
+  $('scope-legend').hidden=locked;
+  $('scope-description').textContent=locked?'引导中点按已锁定；只比较萤火虫彼此听见的范围。':'实线在光标处示意距离；每只萤火虫都用它找邻居。点按范围不会随滑杆变大。';
   const defaults=createSwarm(world.preset).settings;
   const untouched=Object.keys(defaults).every(key=>defaults[key]===world.settings[key]);
   document.querySelectorAll('[data-preset]').forEach(b=>{b.disabled=locked;b.setAttribute('aria-pressed',String(untouched&&b.dataset.preset===world.preset));});

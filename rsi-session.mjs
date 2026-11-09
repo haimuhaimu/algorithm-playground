@@ -1,20 +1,25 @@
-import {createWorkflow,briefs,produce,draw,assess,retouch,improve} from './rsi-core.mjs?v=saved-poster-v1';
+import {createWorkflow,briefs,produce,draw,assess,retouch,improve} from './rsi-core.mjs?v=bobby-rule-v1';
 
 // Trials run a candidate without installing it. A decision changes the reusable
 // workflow, never the manually repaired artwork or the captured comparison.
 function posterBrief(){
- return {id:'lili-garden',title:'栗栗的花园海报',scene:'garden',
-  target:{species:'fox',coat:'green',pose:'side'},
-  reference:{species:'fox',coat:'coral',pose:'side'}};
+ return {id:'bobby-garden',title:'波比的花园海报',scene:'garden',
+  target:{species:'bobby',coat:'green',pose:'side'},
+  reference:{species:'bobby',coat:'coral',pose:'side'}};
 }
 function comparePoster(workflow,candidate,job){
  return {before:assess([draw(workflow,job)],[job]),
   after:assess([draw(candidate,job)],[job])};
 }
+function posterRuleTrial(s){
+ if(!s.transfer)return null;
+ return s.retest||{rule:'fixed-green',workflow:s.proposal.workflow,
+  jobs:[s.proposal.job,s.job],first:s.proposal,second:s.transfer};
+}
 export function createPosterStory(){
  const job=posterBrief(),workflow=createWorkflow(),art=draw(workflow,job);
  return {stage:'mistake',job,workflow,art,original:{...art},repairRecord:null,
-  proposal:null,decision:null,prediction:null,transfer:null};
+  proposal:null,decision:null,prediction:null,transfer:null,selectedRule:'fixed-green',retest:null};
 }
 export function posterStoryAction(s,a){
  if(a.type==='reset')return createPosterStory();
@@ -25,7 +30,7 @@ export function posterStoryAction(s,a){
  if(a.type==='redraw'&&s.stage==='repaired')return {...s,stage:'repeat',art:draw(s.workflow,s.job)};
  if(a.type==='propose'&&s.stage==='repeat'){
   const workflow={...s.workflow,outfit:'fixed-green',version:s.workflow.version+1};
-  return {...s,stage:'trial',proposal:{workflow,...comparePoster(s.workflow,workflow,s.job)}};
+  return {...s,stage:'trial',proposal:{workflow,job:structuredClone(s.job),...comparePoster(s.workflow,workflow,s.job)}};
  }
  if(a.type==='challenge'&&s.stage==='trial'){
   const job={...s.job,target:{...s.job.target,coat:'coral'}};
@@ -38,8 +43,20 @@ export function posterStoryAction(s,a){
   const transfer=comparePoster(s.workflow,s.proposal.workflow,s.job);
   return {...s,stage:'decision',transfer};
  }
+ if(a.type==='select-rule'&&s.stage==='decision'&&['fixed-green','brief'].includes(a.rule)){
+  return a.rule===s.selectedRule?s:{...s,selectedRule:a.rule};
+ }
+ if(a.type==='retest'&&s.stage==='decision'){
+  const workflow={...s.workflow,outfit:s.selectedRule==='brief'?'locked':'fixed-green',version:s.workflow.version+1};
+  const jobs=structuredClone([s.proposal.job,s.job]);
+  const retest={rule:s.selectedRule,workflow,jobs,
+   first:comparePoster(s.workflow,workflow,jobs[0]),second:comparePoster(s.workflow,workflow,jobs[1])};
+  return {...s,retest};
+ }
  if(a.type==='decide'&&s.stage==='decision'&&s.transfer&&['keep','withdraw'].includes(a.decision)){
-  const workflow={...(a.decision==='keep'?s.proposal.workflow:s.workflow)};
+  const trial=posterRuleTrial(s);
+  if(a.decision==='keep'&&trial.rule!==s.selectedRule)return s;
+  const workflow={...(a.decision==='keep'?trial.workflow:s.workflow)};
   return {...s,stage:'ending',decision:a.decision,workflow,art:draw(workflow,s.job)};
  }
  if(a.type==='revisit'&&s.stage==='ending'){
@@ -49,13 +66,14 @@ export function posterStoryAction(s,a){
 }
 export function posterStoryView(s){
  const chapter=['mistake','repaired','repeat'].includes(s.stage)?1:['trial','challenge'].includes(s.stage)?2:3;
+ const ruleTrial=posterRuleTrial(s),pendingRule=!!ruleTrial&&ruleTrial.rule!==s.selectedRule;
  let before=null,after=s.art;
  if(s.stage==='repaired')before=s.original;
  if(s.stage==='repeat')before=s.repairRecord;
  if(s.stage==='trial'){before=s.proposal.before.art[0];after=s.proposal.after.art[0];}
- if(s.stage==='decision'){before=s.transfer.before.art[0];after=s.transfer.after.art[0];}
+ if(s.stage==='decision'){before=ruleTrial.second.before.art[0];after=ruleTrial.second.after.art[0];}
  if(s.stage==='ending')before=s.transfer.before.art[0];
- return {chapter,before,after,decision:s.decision,issues:assess([after],[s.job]).issues[0]};
+ return {chapter,before,after,decision:s.decision,issues:assess([after],[s.job]).issues[0],ruleTrial,pendingRule};
 }
 export function createStudio(){
  const workflow=createWorkflow(),jobs=briefs('first'),art=produce(workflow,jobs);

@@ -24,6 +24,30 @@ test('poster reflects actual species clothing and pose without external assets',
  assert.notEqual(a,b);assert.match(a,/兔子/);assert.match(b,/狐狸/);assert.match(b,/跃起/);
  assert.doesNotMatch(a,/<script|<image|https?:/);
 });
+test('Bobby posters reuse the same untouched original artwork and change the scarf color only',()=>{
+ const green=poster({species:'bobby',coat:'green',pose:'side',scene:'garden'});
+ const coral=poster({species:'bobby',coat:'coral',pose:'side',scene:'garden'});
+ const image=svg=>svg.match(/<image\b[^>]*>/)?.[0];
+ assert.ok(image(green),'Bobby must use the original raster rather than a generic animal drawing');
+ assert.match(image(green),/href="\.\/studio-bobby-idle\.png"/);
+ assert.equal(image(green),image(coral),'the original image and geometry must remain identical');
+ assert.doesNotMatch(image(green),/filter|mask|opacity/,'the fur must not be recolored');
+ assert.match(green,/aria-label="波比，绿色围巾，侧身"/);
+ assert.match(coral,/aria-label="波比，珊瑚色围巾，侧身"/);
+ const scarf=svg=>svg.match(/<g data-part="scarf"[\s\S]*?<\/g>/)?.[0];
+ assert.ok(scarf(green),'a distinct scarf layer is required');assert.notEqual(scarf(green),scarf(coral));
+ assert.equal(scarf(green).replace(/#[a-f0-9]{6}/g,''),scarf(coral).replace(/#[a-f0-9]{6}/g,''),'only palette values may differ, not scarf placement');
+});
+test('Bobby is the visible subject of both briefs and the saved original, not only the client badge',()=>{
+ const b=boot();
+ assert.match(b.nodes.get('after-art').innerHTML,/波比，珊瑚色围巾/);
+ assert.match(b.nodes.get('brief-copy').textContent,/波比.*绿色.*围巾/);
+ reachDecision(b);assert.match(b.nodes.get('before-art').innerHTML,/波比，珊瑚色围巾/);
+ assert.match(b.nodes.get('after-art').innerHTML,/波比，绿色围巾/);
+ assert.match(b.nodes.get('art-status').textContent,/围巾/);
+ b.click('withdraw-rule');assert.match(b.nodes.get('saved-poster-art').innerHTML,/波比，绿色围巾/);
+ assert.match(b.nodes.get('after-art').innerHTML,/波比，珊瑚色围巾/);
+});
 test('one initial poster and local repair do not install a rule',()=>{
  const b=boot();assert.equal(b.ui.state.stage,'mistake');
  assert.equal(b.nodes.get('before-figure').hidden,true);assert.equal(b.nodes.get('story-next').hidden,false);
@@ -96,7 +120,7 @@ test('both endings let the player inspect the manually repaired poster without r
   reachDecision(b);b.click(decision+'-rule');
   assert.equal(b.nodes.get('saved-poster').hidden,false);
   assert.equal(b.nodes.get('saved-poster').open,false);
-  assert.match(b.nodes.get('saved-poster-art').innerHTML,/aria-label="狐狸，绿色外套，侧身"/);
+  assert.match(b.nodes.get('saved-poster-art').innerHTML,/aria-label="波比，绿色围巾，侧身"/);
   assert.match(b.nodes.get('after-art').innerHTML,decision==='keep'?/绿色/:/珊瑚色/);
   assert.equal(b.ui.state.decision,decision);
  }
@@ -110,7 +134,7 @@ test('saved poster rendering reads the captured artwork rather than reconstructi
  const saved=b.nodes.get('saved-poster-art')?.innerHTML||'';
  assert.match(saved,/aria-label="兔子，珊瑚色外套，跃起"/);
  assert.match(saved,/MOON WALK/);
- assert.match(b.nodes.get('after-art').innerHTML,/aria-label="狐狸，珊瑚色外套，侧身"/);
+ assert.match(b.nodes.get('after-art').innerHTML,/aria-label="波比，珊瑚色围巾，侧身"/);
 });
 test('opening the saved poster is read-only and theme changes preserve its disclosure state',()=>{
  const b=boot();reachDecision(b);b.click('withdraw-rule');
@@ -143,4 +167,58 @@ test('restarting clears the old disclosure and a second round renders only its o
  assert.match(b.nodes.get('saved-poster-art').innerHTML,/aria-label="兔子，绿色外套，正面打招呼"/);
  assert.match(b.nodes.get('saved-poster-art').innerHTML,/SLOW SUNSET/);
  assert.equal(card.open,false);
+});
+test('the rule field appears only after the real failure and cannot keep an untested edit',()=>{
+ const b=boot();assert.equal(b.doc.getElementById('rule-editor')?.hidden,true);
+ reachDecision(b);assert.equal(b.nodes.get('rule-editor').hidden,false);
+ b.click('rule-brief');assert.equal(b.ui.state.selectedRule,'brief');
+ assert.equal(b.nodes.get('rule-brief').attrs['aria-pressed'],'true');
+ assert.equal(b.nodes.get('rule-fixed-green').attrs['aria-pressed'],'false');
+ assert.equal(b.nodes.get('keep-rule').disabled,true);
+ assert.match(b.nodes.get('rule-test-status').textContent,/还没试|尚未/);
+ assert.match(b.nodes.get('after-art').innerHTML,/绿色/,'selection alone does not fake a new drawing');
+ assert.equal(b.ui.state.workflow.outfit,'mixed');
+ b.click('withdraw-rule');assert.equal(b.ui.state.stage,'ending');
+ assert.equal(b.nodes.get('rule-editor').hidden,true);
+});
+test('retesting renders both actual commission results then keeps precisely the tested rule',()=>{
+ const b=boot();reachDecision(b);const saved=structuredClone(b.ui.state.repairRecord);
+ b.click('rule-brief');b.click('retest-rule');
+ assert.equal(b.nodes.get('keep-rule').disabled,false);
+ assert.equal(b.nodes.get('rule-retest-results').hidden,false);
+ assert.match(b.nodes.get('rule-first-art').innerHTML,/波比，绿色围巾/);
+ assert.match(b.nodes.get('rule-second-art').innerHTML,/波比，珊瑚色围巾/);
+ assert.match(b.nodes.get('rule-first-result').textContent,/通过/);assert.match(b.nodes.get('rule-second-result').textContent,/通过/);
+ assert.match(b.nodes.get('after-art').innerHTML,/珊瑚色/);
+ assert.match(b.nodes.get('keep-rule-copy').textContent,/当前委托/);
+ assert.match(b.nodes.get('assistant-copy').textContent,/当前委托/);
+ assert.equal(b.ui.state.workflow.outfit,'mixed');
+ b.click('keep-rule');assert.equal(b.ui.state.workflow.outfit,'locked');
+ assert.match(b.nodes.get('outcome-label').textContent,/当前委托/);
+ assert.doesNotMatch(b.nodes.get('outcome-copy').textContent,/忽略珊瑚色|仍固定绿色/);
+ assert.match(b.nodes.get('saved-poster-art').innerHTML,/波比，绿色围巾/);
+ assert.deepEqual(b.ui.state.repairRecord,saved);
+ b.click('revisit');assert.equal(b.nodes.get('keep-rule').disabled,false);
+ b.click('withdraw-rule');assert.equal(b.ui.state.workflow.outfit,'mixed');
+ assert.match(b.nodes.get('after-art').innerHTML,/珊瑚色/);
+});
+test('editing after a retest labels the visible old result and fixed-green retesting exposes the failure again',()=>{
+ const b=boot();reachDecision(b);b.click('rule-brief');b.click('retest-rule');b.click('rule-fixed-green');
+ assert.equal(b.nodes.get('keep-rule').disabled,true);
+ assert.match(b.nodes.get('rule-test-status').textContent,/上次|还没试|尚未/);
+ assert.match(b.nodes.get('after-art').innerHTML,/珊瑚色/);
+ b.click('retest-rule');assert.match(b.nodes.get('rule-second-art').innerHTML,/绿色/);
+ assert.match(b.nodes.get('rule-second-result').textContent,/未通过/);
+ assert.equal(b.nodes.get('keep-rule').disabled,false);
+ b.click('keep-rule');assert.equal(b.ui.state.workflow.outfit,'fixed-green');
+ assert.match(b.nodes.get('outcome-copy').textContent,/仍|依然/);
+});
+test('theme and replay preserve the edited test while reset clears the editor and result cards',()=>{
+ const b=boot(320,740);reachDecision(b);b.click('rule-brief');b.click('retest-rule');
+ const evidence=structuredClone(b.ui.state.retest);b.click('theme');assert.deepEqual(b.ui.state.retest,evidence);
+ b.click('keep-rule');b.click('revisit');assert.deepEqual(b.ui.state.retest,evidence);
+ assert.equal(b.nodes.get('rule-brief').attrs['aria-pressed'],'true');
+ b.click('reset');assert.equal(b.ui.state.retest,null);assert.equal(b.ui.state.selectedRule,'fixed-green');
+ assert.equal(b.nodes.get('rule-editor').hidden,true);assert.equal(b.nodes.get('rule-retest-results').hidden,true);
+ assert.equal(b.nodes.get('rule-first-art').innerHTML,'');assert.equal(b.nodes.get('rule-second-art').innerHTML,'');
 });
