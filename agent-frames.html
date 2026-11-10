@@ -5,12 +5,13 @@
  <meta name="description" content="算法游乐场 Agent 第三关：在 08 号站的 9 帧画面里，只能留 3 帧。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./home.css?v=agent-frames-v1">
- <link rel="stylesheet" href="./agent-frames.css?v=monitor-desk-v1">
+ <link rel="stylesheet" href="./agent-frames.css?v=heim-packet-v1">
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
- <script type="module" src="./agent-frames-ui.mjs?v=handoff-trust-v1"></script>
+ <script type="module" src="./agent-frames-ui.mjs?v=heim-packet-v1"></script>
  <title>只留三帧，你会留下哪一帧？ · 算法游乐场</title>
+ <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
-<body>
+<body class="play-showcase">
  <a class="skip-link" href="#frames-controls">跳到操作</a>
  <header class="home-header">
   <a class="home-brand" href="./"><span class="pixel-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>算法游乐场</span></a>
@@ -20,7 +21,7 @@
   <header class="frames-intro">
    <p class="frames-mono">AGENT MISSION / 03</p>
    <h1 id="frames-title">只留三帧，<span>你会留下哪一帧？</span></h1>
-   <p>补给到了 08 号站。现场有 9 帧画面，但 Agent 只能收到 3 帧。先看固定抽帧，再由你来换中间那一帧。</p>
+   <p>嘿姆在监看台等着核验 08 号站。现场有 9 帧画面，但你只能交给 Agent 3 帧。先看固定抽帧，再亲手换中间一帧，让 Agent 把有依据的判断带给嘿姆。</p>
   </header>
   <div class="frames-workbench" id="frames-workbench">
    <figure class="frames-monitor">
@@ -37,7 +38,7 @@
     <h2 id="frames-status" tabindex="-1">第一轮：固定抽帧</h2>
     <p id="frames-feedback" role="status">系统会按固定间隔留 3 帧。</p>
     <div class="frames-budget">
-     <span>交给 Agent 的 3 帧</span>
+     <span>交给 Agent，带给嘿姆的 3 帧</span>
      <ol id="frames-slots" aria-label="交给 Agent 的三帧"></ol>
     </div>
     <div class="frames-controls" id="frames-controls" role="group" aria-label="画面控制" tabindex="-1">
@@ -52,7 +53,7 @@
   </div>
   <section class="frames-compare" id="frames-compare" aria-labelledby="frames-compare-title" hidden>
    <header class="frames-section-head">
-    <p class="frames-mono">TWO CUTS / ONE CLIP</p>
+    <p class="frames-mono frames-recipient"><img src="./studio-heim-portrait.png" width="28" height="28" alt="" draggable="false">嘿姆收到的画面 / 同一段原片</p>
     <h2 id="frames-compare-title" tabindex="-1">同一段画面，Agent 看到了什么？</h2>
     <p id="frames-comparison-summary"></p>
    </header>
@@ -61,13 +62,13 @@
      <h3 id="frames-fixed-title">01 固定抽帧</h3>
      <ol id="frames-fixed-ids" aria-label="固定抽帧的三帧"></ol>
      <p id="frames-fixed-evidence"></p>
-     <p class="frames-result"><span>Agent 结论</span> <strong id="frames-fixed-result"></strong></p>
+     <p class="frames-result"><span>Agent 给嘿姆的结论</span> <strong id="frames-fixed-result"></strong></p>
     </article>
     <article class="frames-cut frames-manual-cut" aria-labelledby="frames-manual-title">
      <h3 id="frames-manual-title">02 手动留帧</h3>
      <ol id="frames-manual-ids" aria-label="手动留帧的三帧"></ol>
      <p id="frames-manual-evidence"></p>
-     <p class="frames-result"><span>Agent 结论</span> <strong id="frames-manual-result"></strong></p>
+     <p class="frames-result"><span>Agent 给嘿姆的结论</span> <strong id="frames-manual-result"></strong></p>
     </article>
    </div>
    <div class="frames-original">

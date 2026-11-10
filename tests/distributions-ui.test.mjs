@@ -3,6 +3,26 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 let serial=0;
 
+test('the cat operators keep ownership of the same real samples after moving the red line',async()=>{
+ const u=await boot();try{
+  u.click('next-step');
+  const values=()=>[...u.get('collection-all-pareto').innerHTML.matchAll(/data-sample-value="([^"]+)"/g)].map(m=>m[1]);
+  const saved=values(),max=u.get('max-pareto').textContent;
+  for(const [id,cat]of [['normal','嘿姆'],['exponential','波比'],['pareto','臭臭']]){
+   assert.ok(u.get('collection-title-'+id).textContent.includes(cat));
+   assert.ok(u.get('latest-'+id).textContent.includes(cat));
+  }
+  u.click('next-step');
+  assert.deepEqual(values(),saved);assert.equal(u.get('max-pareto').textContent,max);
+  const summary=u.get('observation-result').textContent;
+  for(const [id,cat,before,after]of [['normal','嘿姆',11,0],['exponential','波比',166,0],['pareto','臭臭',352,88]]){
+   assert.match(summary,new RegExp(cat+'[^；]*'+before+' → '+after));
+   assert.equal(u.get('tail-'+id).textContent,after+' 次');
+  }
+  assert.equal(u.writes.length,0);
+ }finally{u.restore();}
+});
+
 test('entry names the generators and offers one next action beside the thirty-draw evidence',async()=>{
  const u=await boot();try{
   assert.equal(u.get('sample-count').textContent,'30');

@@ -26,7 +26,9 @@ test('first feedback renders both six-card snapshots and keeps the action-specif
  assert.match(e['feedback-action'].textContent,/少一点/);
  assert.match(e['feedback-interest'].textContent,/100 → 88/);
  assert.match(e['feedback-reason'].textContent,/仍在第 1/);
- assert.match(e['feedback-reason'].textContent,/0\.8468/);
+ assert.match(e['feedback-reason'].textContent,/第 4.*席位|第 4.*席/);
+ assert.match(e['feedback-reason'].textContent,/0\.7983/);
+ assert.match(e['feedback-reason'].textContent,/0\.7763/);
  assert.match(e['feedback-after'].innerHTML,/新进入/);
 });
 test('an illustrated food post keeps its title, image and creator on both sides of feedback',async()=>{
@@ -43,10 +45,11 @@ test('an illustrated food post keeps its title, image and creator on both sides 
 });
 test('later taste or rule changes mark a pinned snapshot as history without rewriting it',async()=>{
  const {story,elements:e}=await setup(),r=evidence();story.record(r);
- const old=e['feedback-after'].innerHTML;
+ const old=e['feedback-after'].innerHTML,oldScores=e['feedback-score-comparison'].innerHTML;
  story.sync({...r.weights,diversity:85},r.after.profile);
  assert.match(e['feedback-record-state'].textContent,/已继续变化/);
  assert.equal(e['feedback-after'].innerHTML,old);
+ assert.equal(e['feedback-score-comparison'].innerHTML,oldScores);
  story.record(captureFeedback(POSTS,r.weights,r.after.profile,'1-0',1));
  assert.equal(e['feedback-after'].innerHTML,old,'unarmed later feedback must not replace evidence');
  story.sync(r.weights,r.after.profile);assert.match(e['feedback-record-state'].textContent,/一致/);
@@ -75,4 +78,18 @@ test('close candidate scores stay visibly distinguishable when the explanation s
  story.record(captureFeedback(POSTS,{click:82,diversity:0,newcomer:4},INITIAL_PROFILE,'0-4',-1));
  const values=[...e['feedback-reason'].textContent.matchAll(/得 ([0-9.]+) 分/g)].map(m=>Number(m[1]));
  assert.equal(values.length,2);assert.ok(values[0]>values[1],`displayed scores must differ: ${values}`);
+});
+test('the changed-seat explanation preserves the two real card identities and literal before/after scores',async()=>{
+ const {story,elements:e}=await setup();story.record(evidence());
+ assert.match(e['feedback-decision-title'].textContent,/第 4.*席/);
+ const table=e['feedback-score-comparison'].innerHTML;
+ const food=table.match(/<tr[^>]*data-post="1-0"[\s\S]*?<\/tr>/)?.[0];
+ const cat=table.match(/<tr[^>]*data-post="0-3"[\s\S]*?<\/tr>/)?.[0];
+ assert.ok(food&&cat,'both actual competitors at the changed seat are visible');
+ assert.match(food,/嘿姆盯上了那碗面/);assert.match(food,/studio-heim-idle\.png/);
+ assert.equal((food.match(/0\.7983/g)||[]).length,2);
+ assert.match(cat,/今天也被猫拒绝了/);assert.match(cat,/0\.8195/);assert.match(cat,/0\.7763/);
+ assert.match(table,/这一席/);
+ assert.match(e['feedback-before'].innerHTML,/<li[^>]*is-focus[^>]*data-post="0-3"/);
+ assert.match(e['feedback-after'].innerHTML,/<li[^>]*is-focus[^>]*data-post="1-0"/);
 });

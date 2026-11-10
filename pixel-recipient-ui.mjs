@@ -1,16 +1,18 @@
-import { createRecipientLesson, readRecipientBit, chooseRecipientColor } from './pixel-recipient.mjs?v=recipient-1';
+import { createRecipientLesson, createRecipientLessonFromPacket, readRecipientBit, chooseRecipientColor } from './pixel-recipient.mjs?v=first-letter-v1';
 
 const names = ['米白', '墨黑', '苔绿', '珊瑚'];
 const equal = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
-export function setupRecipient({ getPixels, available, cancelStroke }) {
+export function setupRecipient({ getPixels, available, cancelStroke, onProgress = () => {} }) {
   const $ = id => document.getElementById('recipient-' + id);
-  let state = null, stage = 'source', peek = false, answer = null;
+  let state = null, stage = 'source', peek = false, answer = null, source = null, packet = null;
   const focus = id => { $(id).focus(); $(id).scrollIntoView({ block: ['title', 'work-title', 'verdict'].includes(id) ? 'start' : 'nearest', behavior: 'auto' }); };
   const strip = (pixels, codes = null, offset = 0) => pixels.map((color, i) =>
     `<div class="recipient-cell"><i class="color-${color}" aria-hidden="true"></i><span>${names[color]}</span><code>${codes ? codes[color] : '✓'}</code><span class="visually-hidden">第 ${offset + i + 1} 格</span></div>`).join('');
   function refresh() {
     if (!state) return;
-    const note = equal(getPixels(), state.snapshot)
+    const note = source
+      ? `本轮读的是刚才成功寄出的真实邮包。${equal(getPixels(), state.snapshot) ? '同一张图、同一本暗号表。' : '画纸已改，这里仍保留那封成功来信。'}练习不会改原画、草稿或上次来信。`
+      : equal(getPixels(), state.snapshot)
       ? '本轮封存了当前画纸的副本。练习不会改原画、草稿或上次来信。'
       : '画纸已改。本轮仍用刚才封存的旧图；要换信，请回到寄件处再点「当一次收件员」。';
     if ($('snapshot-note').textContent !== note) $('snapshot-note').textContent = note;
@@ -69,10 +71,16 @@ export function setupRecipient({ getPixels, available, cancelStroke }) {
           : '选一次，把刚才的操作变成自己的结论。';
     }
     refresh();
+    onProgress({ source, restored: state.restored.length, answer });
   }
-  function begin(snapshot) {
-    state = createRecipientLesson(snapshot); stage = 'source'; peek = false; answer = null;
+  function open(next, origin = null, bytes = null) {
+    state = next; source = origin; packet = bytes; stage = 'source'; peek = false; answer = null;
     render(); focus('title');
+  }
+  function begin(snapshot) { open(createRecipientLesson(snapshot)); }
+  function openParcel(parcel) {
+    const bytes = Uint8Array.from(parcel.packet);
+    open(createRecipientLessonFromPacket(bytes), parcel, bytes);
   }
   $('start').addEventListener('click', () => {
     if (!available()) return;
@@ -100,11 +108,14 @@ export function setupRecipient({ getPixels, available, cancelStroke }) {
     peek = !peek; render();
     if (peek) $('source').scrollIntoView({ block: 'nearest', behavior: 'auto' });
   });
-  $('replay').addEventListener('click', () => { if (state && available()) begin(state.snapshot); });
+  $('replay').addEventListener('click', () => {
+    if (!state || !available()) return;
+    open(packet ? createRecipientLessonFromPacket(packet) : createRecipientLesson(state.snapshot), source, packet);
+  });
   for (const value of ['loss', 'code']) $('answer-' + value).addEventListener('click', () => {
     if (!state || stage !== 'done' || !available()) return;
     answer = value; render();
   });
   render();
-  return { refresh };
+  return { refresh, openParcel };
 }

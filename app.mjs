@@ -1,9 +1,9 @@
-import {POSTS,TOPICS,PRESETS,INITIAL_PROFILE} from './data.mjs?v=recommendation-studio-v2';
-import {rankPosts,metrics,feedback,challenge,experiment} from './core.mjs?v=recommendation-studio-v2';
-import {captureFeedback} from './feedback-story.mjs?v=recommendation-studio-v2';
-import {mountFeedbackStory} from './feedback-story-ui.mjs?v=recommendation-studio-v2';
-import {mountSeatLesson} from './seat-lesson-ui.mjs?v=recommendation-studio-v2';
-import {renderRecommendationCard} from './recommendation-cards.mjs?v=recommendation-studio-v2';
+import {POSTS,TOPICS,PRESETS,INITIAL_PROFILE} from './data.mjs?v=feedback-focus-v1';
+import {rankPosts,metrics,feedback,challenge,experiment} from './core.mjs?v=feedback-focus-v1';
+import {captureFeedback} from './feedback-story.mjs?v=feedback-focus-v1';
+import {mountFeedbackStory} from './feedback-story-ui.mjs?v=feedback-focus-v1';
+import {mountSeatLesson} from './seat-lesson-ui.mjs?v=feedback-focus-v1';
+import {renderRecommendationCard} from './recommendation-cards.mjs?v=feedback-focus-v1';
 
 const $=id=>document.getElementById(id);
 const feedbackStory=mountFeedbackStory({document});

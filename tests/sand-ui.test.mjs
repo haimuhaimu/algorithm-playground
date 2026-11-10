@@ -44,7 +44,21 @@ test('near-canvas brush hint follows material, radius, keyboard and pause withou
   assert.equal(catBowl.attributes.get('aria-pressed'),'true');
   assert.ok(Number(els.get('water-count').textContent)>0);
   assert.match(els.get('scene-tip').textContent,/碗/);
+  assert.ok(els.get('bowl-open'),'the actual cat-bowl scene needs an outlet action');
+  assert.equal(els.get('bowl-tools').hidden,false);
+  const fullBowl=counts();
+  els.get('bowl-open').dispatchEvent(new Event('click'));
+  assert.equal(counts()[1],fullBowl[1],'opening only walls keeps every water cell');
+  assert.equal(Number(counts()[2]),Number(fullBowl[2])-3);
+  assert.equal(els.get('bowl-open').disabled,true);
+  assert.equal(els.get('play').attributes.get('aria-pressed'),'false');
+  assert.match(els.get('bowl-status').textContent,/0/);
+  els.get('history-undo').dispatchEvent(new Event('click'));
+  assert.deepEqual(counts(),fullBowl);assert.equal(els.get('bowl-open').disabled,false);
+  els.get('history-redo').dispatchEvent(new Event('click'));
+  assert.equal(Number(counts()[2]),Number(fullBowl[2])-3);assert.equal(els.get('bowl-open').disabled,true);
   scenes.find(button=>button.dataset.scene==='splitter').dispatchEvent(new Event('click'));
+  assert.equal(els.get('bowl-tools').hidden,true);
   assert.deepEqual(counts(),before,'the original scene remains restorable');
  }finally{for(const[k,d]of old)if(d)Object.defineProperty(globalThis,k,d);else delete globalThis[k];}
 });

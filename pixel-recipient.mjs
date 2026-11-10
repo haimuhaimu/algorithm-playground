@@ -2,8 +2,15 @@ import { encode, inspectPacket } from './pixel-core.mjs?v=recipient-1';
 
 export function createRecipientLesson(pixels) {
   if (!Array.isArray(pixels) || pixels.length !== 256) throw new TypeError('Expected 256 postcard pixels');
-  const snapshot = Object.freeze([...pixels]);
-  const encoded = encode(snapshot), trace = inspectPacket(encoded.packet, snapshot.length);
+  return createRecipientLessonFromPacket(encode(pixels).packet);
+}
+
+export function createRecipientLessonFromPacket(packet) {
+  if (!(packet instanceof Uint8Array)) throw new TypeError('Expected postcard packet bytes');
+  const bytes = Uint8Array.from(packet), trace = inspectPacket(bytes, 256);
+  const snapshot = Object.freeze([...trace.pixels]);
+  const counts = [0, 0, 0, 0];
+  for (const color of snapshot) counts[color]++;
   // Pick one contiguous half-row, preferring varied colors. This is selection,
   // never new encoding: codes and offsets still belong to the entire postcard.
   let start = 0, diversity = 0;
@@ -14,9 +21,9 @@ export function createRecipientLesson(pixels) {
   return Object.freeze({
     snapshot, start,
     codes: Object.freeze(trace.codes),
-    counts: Object.freeze(encoded.counts),
+    counts: Object.freeze(counts),
     entries: Object.freeze(trace.entries.slice(start, start + 8).map(Object.freeze)),
-    packetBytes: encoded.packet.length,
+    packetBytes: bytes.length,
     treeBits: trace.treeBits, payloadBits: trace.payloadBits, paddingBits: trace.paddingBits,
     restored: Object.freeze([]), prefix: '', readBits: 0, feedback: 'ready',
   });

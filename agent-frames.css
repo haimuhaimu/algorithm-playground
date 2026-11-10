@@ -56,13 +56,19 @@
 .frames-primary:hover:not(:disabled){background:var(--home-action-hover);border-color:var(--home-action-hover)}
 
 .frames-section-head h2{margin:7px 0;font-size:clamp(23px,3.6vw,42px);letter-spacing:-.055em;line-height:1.17}
+.frames-recipient{display:flex;align-items:center;gap:8px}
+.frames-recipient img{width:28px;height:28px;object-fit:contain;image-rendering:pixelated}
 .frames-section-head p:not(.frames-mono),.frames-share p{margin-top:7px;color:var(--home-muted);line-height:1.6;font-size:14px}
 .frames-comparison-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
 .frames-cut{padding:16px 18px}
 .frames-manual-cut{border-color:var(--home-accent)}
 .frames-cut h3,.frames-original h3{font-size:16px;line-height:1.3}
 .frames-cut p{font-size:13px;line-height:1.55;color:var(--home-muted);margin-top:9px}
-.frames-cut ol{max-width:270px}
+.frames-cut ol{width:100%}
+.frames-packet-thumb{display:block;aspect-ratio:560/284;width:100%;overflow:hidden;background:#e9c0d8;border-radius:4px}
+.frames-packet-thumb svg{display:block;width:100%;height:100%}
+.frames-budget .frames-packet-caption,.frames-cut .frames-packet-caption{font:11px/1.4 ui-sans-serif,system-ui,sans-serif;color:var(--home-muted);padding:0 3px}
+.frames-packet-wait{display:grid;place-items:center;aspect-ratio:560/284;font-size:10px;color:var(--home-muted)}
 .frames-cut .frames-result{color:var(--home-ink)}
 .frames-result span{font-size:11px;color:var(--home-muted);margin-right:4px}
 .frames-original{padding:16px 18px}
@@ -109,7 +115,7 @@
  .frames-budget{margin:9px 0}
  .frames-budget li{gap:0;padding:5px 2px}
  .frames-tip{margin-top:5px}
- .frames-comparison-grid{gap:7px;margin:12px 0}
+ .frames-comparison-grid{grid-template-columns:1fr;gap:7px;margin:12px 0}
  .frames-cut,.frames-original,.frames-share{padding:10px}
  .frames-timeline{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
  .frames-thumb{aspect-ratio:3/1}
@@ -125,6 +131,6 @@
 }
 @media(forced-colors:active){
  .frames-intro h1 span{background:none;color:CanvasText}
- .frames-scene svg,.frames-thumb svg{forced-color-adjust:none}
+ .frames-scene svg,.frames-thumb svg,.frames-packet-thumb svg{forced-color-adjust:none}
  .frames-timeline button[aria-pressed=true]{border:2px solid Highlight;box-shadow:none}
 }

@@ -1,4 +1,4 @@
-import {traceRanking} from './core.mjs?v=recommendation-studio-v2';
+import {traceRanking} from './core.mjs?v=feedback-focus-v1';
 
 export function createSeatLesson(posts,weights,profile,size=6){
  const snapshot=structuredClone({posts,weights,profile});

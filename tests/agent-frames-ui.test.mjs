@@ -53,6 +53,36 @@ function open(journey) {
  return {e, click, step, sends, location, document, timers, tick};
 }
 
+test('the received packet shows only frames already captured, never future footage',()=>{
+ const {e,click,step}=open();
+ const shown=()=>[...e('slots').innerHTML.matchAll(/data-packet-frame="(\d+)"/g)].map(m=>Number(m[1]));
+ assert.deepEqual(shown(),[0]);
+ assert.equal((e('slots').innerHTML.match(/<svg /g)||[]).length,1);
+ assert.doesNotMatch(e('slots').innerHTML,/允许卸货/);
+ step(4);assert.deepEqual(shown(),[0,4]);
+ step(4);assert.deepEqual(shown(),[0,4,8]);
+ click('start-manual');step(5);assert.deepEqual(shown(),[0]);
+ click('pin');assert.deepEqual(shown(),[0,5]);
+ assert.match(e('slots').innerHTML,/允许卸货/);
+});
+
+test('each comparison packet displays exactly its actual three frames without adding the missing sign',()=>{
+ for(const pick of [4,5]){
+  const {e,click,step}=open();step(8);click('start-manual');step(pick);click('pin');step(8-pick);
+  for(const [side,want]of [['fixed',[0,4,8]],['manual',[0,pick,8]]]){
+   const markup=e(side+'-ids').innerHTML;
+   assert.deepEqual([...markup.matchAll(/data-packet-frame="(\d+)"/g)].map(m=>Number(m[1])),want);
+   assert.equal((markup.match(/<svg /g)||[]).length,3);
+   assert.equal(markup.includes('允许卸货'),side==='manual'&&pick===5);
+   assert.doesNotMatch(markup,/studio-.*\.png/,'Heim stays outside the evidence');
+  }
+  click('export');const receipt=JSON.parse(e('export-text').value);
+  assert.deepEqual(receipt.result.evidence.fixed.frameIds,[0,4,8]);
+  assert.deepEqual(receipt.result.evidence.manual.frameIds,[0,pick,8]);
+  assert.equal(receipt.result.evidence.manual.signFrame,pick===5?5:null);
+ }
+});
+
 test('playback is opt-in; pause and a hidden page stop it without consuming future frames', () => {
  const {e, click, step, document, timers, tick} = open();
  assert.equal(e('scene').dataset.frame, '0');

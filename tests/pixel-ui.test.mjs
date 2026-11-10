@@ -5,6 +5,51 @@ import { memoryStorage } from './storage-helper.mjs';
 import { DRAFT_KEYS } from '../local-drafts.mjs';
 import { preset } from '../pixel-core.mjs';
 let serial = 0;
+test('the first-letter handoff waits for a verified delivery, then reads that packet after the drawing changes',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  assert.ok(u.els.has('first-letter-read'),'a continuous send-to-read action belongs to the real postcard page');
+  assert.equal(u.els.get('first-letter-read').disabled,true);
+  u.click('first-letter-read');assert.equal(u.els.get('recipient-lesson').hidden,true);
+  u.click('send');assert.equal(u.els.get('first-letter-read').disabled,false);
+  const sent=u.pixels('receiver');
+  u.click('first-letter-read');const original=u.els.get('recipient-source-strip').innerHTML;
+  u.click('preset-noise');const drawing=u.pixels('editor'),writes=storage.writes;
+  u.click('first-letter-read');assert.equal(u.els.get('recipient-source-strip').innerHTML,original);
+  assert.match(u.els.get('recipient-snapshot-note').textContent,/成功寄出/);
+  u.click('recipient-begin');
+  for(let i=0;i<8;i++){
+   for(let b=0;b<4&&!u.els.get('recipient-read').disabled;b++)u.click('recipient-read');
+   const prefix=u.els.get('recipient-prefix').textContent;
+   const c=[0,1,2,3].find(c=>u.els.get('recipient-code-'+c).textContent===prefix);
+   if(i===0){u.click('recipient-color-'+((c+1)%4));assert.match(u.els.get('recipient-progress').textContent,/0.*8/);}
+   u.click('recipient-color-'+c);
+  }
+  assert.equal(u.els.get('first-letter-step-3').getAttribute('aria-current'),'step');
+  u.click('recipient-answer-loss');assert.equal(u.els.get('first-letter-step-3').dataset.complete,'false');
+  u.click('recipient-answer-code');assert.equal(u.els.get('first-letter-step-3').dataset.complete,'true');
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),sent);
+  assert.equal(storage.writes,writes,'manual handoff and reflection never overwrite a saved drawing or receipt');
+  u.click('recipient-start');assert.notEqual(u.els.get('recipient-source-strip').innerHTML,original,'the old independent exercise still uses the current drawing');
+ }finally{u.restore();}
+});
+test('unfinished, cancelled and replayed packets cannot replace the successful first letter',async()=>{
+ const u=await boot();try{
+  assert.ok(u.els.has('first-letter-read'));
+  assert.ok(u.els.has('first-letter-resume'),'a cancelled new send leaves an accessible action beside the old successful receipt');
+  u.click('send');assert.equal(u.els.get('first-letter-read').disabled,true);
+  u.finish();assert.equal(u.els.get('first-letter-next').hidden,false);assert.equal(u.els.get('first-letter-resume').hidden,true);
+  u.click('first-letter-read');const original=u.els.get('recipient-source-strip').innerHTML;
+  u.click('preset-noise');u.click('send');u.hide();u.doc.hidden=false;u.fire(u.doc,'visibilitychange');u.finish();
+  assert.equal(u.els.get('first-letter-read').disabled,false,'returning to the page must leave the successful-letter action usable');
+  assert.equal(u.els.get('first-letter-next').hidden,true);assert.equal(u.els.get('first-letter-resume').hidden,false);
+  u.click('first-letter-resume');assert.equal(u.els.get('recipient-source-strip').innerHTML,original);
+  u.click('delivery-replay');u.click('delivery-toggle');u.finish();
+  u.click('first-letter-read');assert.equal(u.els.get('recipient-source-strip').innerHTML,original);
+  u.click('send');u.finish();u.click('first-letter-read');
+  assert.notEqual(u.els.get('recipient-source-strip').innerHTML,original,'only a new successful send replaces the main-route letter');
+  assert.equal(u.els.get('first-letter-step-3').dataset.complete,'false');
+ }finally{u.restore();}
+});
 test('allocating codes preserves editor, draft writes, last receipt and existing recipient/reorder exercises',async()=>{
  const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
   assert.ok(u.els.has('code-start'),'code allocation must be integrated in the actual postcard page');

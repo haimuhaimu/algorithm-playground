@@ -5,12 +5,13 @@
  <meta name="description" content="接管推荐首页，调一调算法，看见点击、多样性和新作者之间的取舍。一个使用合成数据的可玩实验。">
  <meta name="color-scheme" content="light dark">
  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e3ed78'/%3E%3Cpath d='M16 22h32M16 42h32M25 15v14M39 35v14' stroke='%2321231c' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
- <link rel="stylesheet" href="./style.css?v=recommendation-studio-v2"><link rel="stylesheet" href="./feedback-story.css?v=recommendation-studio-v2"><link rel="stylesheet" href="./seat-lesson.css?v=recommendation-studio-v2"><script type="module" src="./app.mjs?v=recommendation-studio-v2"></script>
+ <link rel="stylesheet" href="./style.css?v=feedback-focus-v1"><link rel="stylesheet" href="./feedback-story.css?v=feedback-focus-v1"><link rel="stylesheet" href="./seat-lesson.css?v=feedback-focus-v1"><script type="module" src="./app.mjs?v=feedback-focus-v1"></script>
  <title>算法游乐场 · 首页，交给你了</title>
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
+ <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
-<body>
+<body class="play-showcase">
  <a class="skip-link" href="#feed-section">跳到推荐首页</a>
  <header class="site-header">
   <a class="brand" href="./" aria-label="算法游乐场首页"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a>
@@ -97,8 +98,8 @@
    <div id="feedback-story-content" hidden>
     <div class="feedback-action-line"><h3 id="feedback-action"></h3><strong class="feedback-interest" id="feedback-interest"></strong></div><p class="feedback-fixed-rules" id="feedback-fixed-rules"></p>
     <p class="feedback-summary" id="feedback-summary"></p>
+    <div class="feedback-explanation"><div><h3>01 / 你的反馈改了什么？</h3><p id="feedback-cause"></p></div><div><h3 id="feedback-decision-title">02 / 哪一席先变了？</h3><p id="feedback-reason"></p></div><div id="feedback-score-comparison" class="feedback-score-comparison"></div><small class="feedback-score-boundary">这里的入选/未选只指这一席，不是整页去留。按本次记录的两份口味计算，规则与已占主题相同；不混比不同轮次的分数。</small></div>
     <div class="feedback-snapshots"><section aria-label="反馈前的六张卡片"><div class="feedback-snapshot-heading"><h3>反馈前</h3><span>点下按钮的前一刻</span></div><ol id="feedback-before"></ol></section><section aria-label="反馈后的六张卡片"><div class="feedback-snapshot-heading"><h3>反馈后</h3><span>同一套规则重新选六张</span></div><ol id="feedback-after"></ol></section></div>
-    <div class="feedback-explanation"><div><h3>01 / 你的反馈改了什么？</h3><p id="feedback-cause"></p></div><div><h3>02 / 这张卡为什么在这里？</h3><p id="feedback-reason"></p><small>只比较同一个席位上的候选得分；多样性加分也使用该席位之前已选中的主题数，不混比不同轮次的分数。</small></div></div>
     <div class="feedback-question"><h3>换你判断：卡片上的反馈，直接作用在哪里？</h3><div class="feedback-answers"><button id="feedback-answer-card" type="button" aria-pressed="false">屏蔽或置顶这一张卡</button><button id="feedback-answer-topic" type="button" aria-pressed="false">调整这一类内容的兴趣</button></div><p class="feedback-judgment" id="feedback-judgment" role="status" aria-live="polite"></p></div>
    </div>
    <div class="feedback-story-footer"><p>这份对照不会被后续操作覆盖；点「记录下一次反馈」才会替换。仅在本页保留，刷新或重置后清空。<br>合成内容 + 人为设定的简化算法，不代表真实推荐平台。</p><a href="#feed-section">回到首页继续试 ↑</a></div>

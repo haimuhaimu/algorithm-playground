@@ -16,7 +16,7 @@ function restore(before){({map,preset,edited}=before);invalidate();render();}
 function travelHistory(backward){
  endStroke();const source=backward?undoStack:redoStack,target=backward?redoStack:undoStack;
  if(!source.length)return;target.push(snapshot());restore(source.pop());
- $('play-status').textContent=`已${backward?'撤销':'重做'}改图，两边已同步。点开始重新找路。`;
+ $('play-status').textContent=`已${backward?'撤销':'重做'}改图，两边已同步。${$('play-status').textContent}`;
 }
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const cells={};
@@ -97,6 +97,26 @@ function drawComparisonMap(id,savedMap,result,changes,label){
  });
  grid.replaceChildren(...children);
 }
+function renderRunGuidance(done){
+ const changed=baseline&&!sameMap(baseline.map,map);
+ let next;
+ if(!baseline){
+  next=edited?'还没有改前对照。先跑完这张图留作对照。':'先跑完一轮，留住对照。';
+  $('path-intro-copy').textContent=edited
+   ?'这张图已经改过，但还没有改前的实跑对照。可以先撤销再跑，或把当前这张图跑完留作对照。'
+   :'先跑完这张图，留住地图和结果。再改一格墙，再跑一次看变化。';
+ }else if(!changed){
+  next=done?'已留住对照。改一格，再跑一次。':'当前地图与对照相同。改一格，再跑一次。';
+  $('path-intro-copy').textContent='已保留这张图和结果。改一格墙，再跑一次，看路线和探索量怎样变。';
+ }else{
+  next=done?'前后都已跑完，往下看对照。':'原对照还在。再跑这张图，揭晓变化。';
+  $('path-intro-copy').textContent=done
+   ?'两轮都跑完了。往下看前后对照：哪一格改了，路线和探索量为什么变。'
+   :'原来的地图和结果还在。跑完这张改过的图，就能比较路线和探索量。';
+ }
+ $('play-status').textContent=playing?`正在展开第 ${step} 步`:traces&&!done?`已暂停在第 ${step} 步`:next;
+ return next;
+}
 function renderComparison(done){
  if(done){currentRun??=captureRun(map);baseline??=currentRun;}
  const view=[baseline,map,done,currentRun,comparisonAlgorithm];
@@ -135,7 +155,7 @@ function renderComparison(done){
 for(const name of names)$('compare-'+name).addEventListener('click',()=>{comparisonAlgorithm=name;renderComparison(complete());});
 $('compare-run').addEventListener('click',()=>{finishRun();$('compare-reason-title').focus({preventScroll:true});});
 $('compare-rebase').addEventListener('click',()=>{
- if(!complete())return;baseline=currentRun;renderComparison(true);
+ if(!complete())return;baseline=currentRun;render();
  $('compare-status').textContent='已把这轮设为新对照。下一次修改将与它比较。';
 });
 function render(){
@@ -169,14 +189,13 @@ function render(){
  $('play').dataset.playing=playing;$('step').disabled=playing;
  $('editing-label').textContent=({wall:'画墙',erase:'橡皮',start:'移起点',goal:'移终点'})[tool];
  $('wall-count').textContent=`${map.walls.length} 格墙`;
- $('play-status').textContent=done?'本轮完成，可以改图再试。':playing?`正在展开第 ${step} 步`:
-  traces?`已暂停在第 ${step} 步`:edited?(baseline?'地图已改变，原对照已保留。':'地图已改变，跑完一轮建立对照。'):'地图就绪，等你出题。';
  renderComparison(done);
+ const nextAction=renderRunGuidance(done);
  renderGuess();
  document.querySelectorAll('[data-map]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.map===preset)));
  document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===tool)));
  const status=$('challenge-status');status.classList.remove('won');
- if(!done){$('summary-title').textContent='最短的路，不止一种找法。';$('result-copy').textContent=traces?'让这一轮跑完，再比较探索数量与路径长度。':'先跑一轮，再挪动一块墙。地图里的一个小改变，就可能让算法换一种走法。';status.textContent=edited?'地图改好了，跑一轮看看。':'先改一笔，再试试。';return;}
+ if(!done){$('summary-title').textContent='最短的路，不止一种找法。';$('result-copy').textContent=traces?'让这一轮跑完，再比较探索数量与路径长度。':'先跑一轮，再挪动一块墙。地图里的一个小改变，就可能让算法换一种走法。';status.textContent=traces?(baseline?'先跑完这张图，再看结果。':'先跑完这一轮，留下完整对照。'):nextAction;return;}
  const b=traces.bfs,a=traces.astar;
  if(!b.found){$('summary-title').textContent='这次，不是谁慢，是无路可走。';$('result-copy').textContent=`两边都已找遍可达区域，各探索了 ${b.visited.length} 格。用橡皮打开一道缺口，再试一次。`;status.textContent='需要留一条通往出口的路。';return;}
  const difference=b.visited.length-a.visited.length,percent=Math.round(Math.abs(difference)/b.visited.length*100);
