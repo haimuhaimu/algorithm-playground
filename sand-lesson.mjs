@@ -1,4 +1,4 @@
-import {EMPTY,SAND,WATER,WALL,observeSandStep,countMaterials} from './sand-core.mjs?v=bowl-outlet-v1';
+import {EMPTY,SAND,WATER,WALL,observeSandStep,countMaterials} from './sand-core.mjs?v=background-pause-v1';
 
 export const SAND_ORIGIN=Object.freeze({x:2,y:1});
 export const SAND_OUTCOMES=Object.freeze({down:'往下 ↓',left:'左下 ↙',right:'右下 ↘',stay:'停住 ·'});
