@@ -9,6 +9,20 @@ const frequency=value=>value===0?'0%':probability(value);
 const classifications={normal:'大多挤在中间',exponential:'往右拖着一条尾巴',pareto:'大数没那么罕见'};
 const countString=rows=>rows.map(r=>`${machineName(r.id)} ${r.stats.tailCount} 次`).join('，');
 
+export function observatoryQuestion(row,threshold){
+ const cat=operators[row.id],n=numbers(row.stats.n),limit=numbers(threshold),count=numbers(row.stats.tailCount);
+ const absent=row.stats.tailCount===0;
+ return {
+  evidence:`只看${machineName(row.id)}：这批抽了 ${n} 次，超过 ${limit} 的有 ${count} 次。`,
+  prompt:absent
+   ?`${cat}这次没抽到比 ${limit} 大的数，就能说“以后也不可能”吗？`
+   :`${cat}这批碰到过大数。假如下批没碰到，就能说“以后也不可能”吗？`,
+  feedback:absent
+   ?`${cat}这批抽了 ${n} 次，0 次超过 ${limit}。只能说这批没碰上，不能说数学上的${MODEL_INFO[row.id].label}分布不可能出现这么大的数。再想想？`
+   :`${cat}这批有 ${count} 次超过 ${limit}。假如下批没有，也不能抹掉这次见过的大数，更不能说以后不可能。再想想？`,
+ };
+}
+
 function collectedSample(record,threshold,{full=false,pushed=false}={}){
  const current=record.after?`超过 ${threshold}`:`没超过 ${threshold}`;
  const comparison=pushed?`超过 4；${current}`:current;
@@ -64,8 +78,11 @@ export function initDistributions(){
   $('observation-result').textContent=e.phase==='ready'?'':!pushed?`这次比 4 大的数：${countString(e.rows)}。`:`红线从 4 挪到 16 后：${e.rows.map((r,i)=>`${machineName(r.id)} ${e.comparison[i].stats.tailCount} → ${r.stats.tailCount}`).join('；')} 次。`;
   $('next-step').hidden=pushed;$('next-step').textContent=step===1?'每台再抽 3,000 次 →':'把红线挪到 16 →';
   $('answer-panel').hidden=!pushed||done;
+  const question=observatoryQuestion(e.rows.find(row=>row.id==='normal'),e.threshold);
+  $('answer-question').textContent=question.prompt;
+  $('answer-evidence').textContent=question.evidence;
   for(const a of ['sample','zero']){$('answer-'+a).disabled=!pushed||done;$('answer-'+a).setAttribute('aria-pressed',String(state.attempts.at(-1)===a));}
-  $('answer-feedback').textContent=state.attempts.at(-1)==='zero'?'没抽到，只能说明这次没碰上。按正态分布的公式，比 16 大的数仍可能出现，只是机会非常小。再想想？':'';
+  $('answer-feedback').textContent=state.attempts.at(-1)==='zero'?question.feedback:'';
   $('ending').hidden=!done;$('optional-exploration').hidden=!done;$('transfer-lab').hidden=!e.transfer;$('inspect-transfer').disabled=!done||Boolean(e.transfer);
   $('threshold-note').textContent=`· 只数比 ${e.threshold} 大的`;
   const ceiling=Math.min(1,Math.max(.3,...[...e.rows,...e.baseline,...(e.transfer?[e.transfer]:[])].flatMap(r=>r.stats.histogram.map(n=>Math.ceil(n/r.stats.n*10)/10))));

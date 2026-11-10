@@ -1,5 +1,5 @@
 import { encode, decode, preset, stroke, rearrangement, POSTCARD_COLORS, EDITOR_POSTCARD_PRESETS, STUDIO_POSTCARD_NAMES, POSTAGE_BYTE_STEPS, postageByteTrial } from './pixel-core.mjs?v=cat-postage-byte-v1';
-import { setupRecipient } from './pixel-recipient-ui.mjs?v=first-letter-v1';
+import { setupRecipient } from './pixel-recipient-ui.mjs?v=recipient-resume-v1';
 import { setupCodeLesson } from './pixel-code-ui.mjs?v=code-1';
 import { createDelivery, deliveryAt } from './pixel-delivery.mjs?v=delivery-1';
 import { setupPixelToolUI } from './pixel-tool-ui.mjs?v=studio-postcards-v2';
@@ -103,13 +103,19 @@ function renderFirstLetter() {
     ? received ? '画纸和上次来信都保留着。本轮从寄出开始，不会自动重寄或把旧记录当作完成。' : '先选一张三猫明信片，也可以直接寄当前画纸。点「打包寄出」，看看它怎样到达。'
     : concluded ? '这一轮走完了：你亲手还原了 8 格，并核对了无损的含义。这不是掌握证明。'
     : restored === 8 ? '8 格已经读回来了。看看原片段和你的结果，再做最后一个判断。'
+    : reading && firstLetter.stage === 'reading' ? `这封信已读回 ${restored} / 8 格。回到画纸不会清掉进度，可以接着读。`
     : '已成功寄出。接下来，你来读回这封信的 8 格，不让动画替你选颜色。';
   $('first-letter-read').disabled = !deliveredParcel || !context || !receivedContext;
   const inline = !!deliveredParcel && deliveryView?.verifiedParcel === deliveredParcel && !$('delivery-panel').hidden;
   $('first-letter-next').hidden = !inline;
   $('first-letter-resume').hidden = !deliveredParcel || inline;
   $('first-letter-resume').disabled = !deliveredParcel || !context || !receivedContext;
-  $('first-letter-read').textContent = deliveredParcel ? '亲手读回这封信的 8 格 →' : '先寄出，再来亲手读信';
+  const readLabel = !deliveredParcel ? '先寄出，再来亲手读信'
+    : restored === 8 ? concluded ? '回看这封信（8 / 8 格）→' : '核对这封信（8 / 8 格）→'
+    : reading && firstLetter.stage === 'reading' ? `继续读（${restored} / 8 格）→`
+    : '亲手读回这封信的 8 格 →';
+  $('first-letter-read').textContent = readLabel;
+  $('first-letter-resume').textContent = readLabel;
   $('first-letter-note').textContent = deliveredParcel
     ? `成功来信 ${deliveredParcel.bytes} B · ${equal(pixels,deliveredParcel.snapshot) ? '用刚才那封信，不另换一张图。' : '画纸已改，仍读上一封成功来信；新画纸不会被覆盖。'}只在本页保留这条实操，不写学习进度。`
     : '完整收齐并核验后，这个入口才会开放。原来的单独练习也保留。';

@@ -5,7 +5,7 @@
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pixel.css?v=first-letter-v1"><link rel="stylesheet" href="./pixel-recipient.css?v=recipient-1">
  <link rel="stylesheet" href="./pixel-code.css?v=code-1">
- <script type="module" src="./pixel.mjs?v=first-letter-v1"></script><title>算法游乐场 · 像素邮局</title>
+ <script type="module" src="./pixel.mjs?v=recipient-resume-v1"></script><title>算法游乐场 · 像素邮局</title>
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
@@ -157,7 +157,7 @@
     <div class="recipient-check"><h4>最后一个判断：这封信究竟改变了什么？</h4><div role="group" aria-label="判断无损压缩的含义"><button id="recipient-answer-loss" type="button">删掉了一些不重要的格子</button><button id="recipient-answer-code" type="button">一格没删，换了记录颜色的写法</button></div><p id="recipient-takeaway" role="status">选一次，把刚才的操作变成自己的结论。</p></div>
     <details><summary>为什么没有空格，也不会读错？</summary><p>这份 Huffman 暗号表中，没有一个完整暗号是另一个暗号的开头。读到一个完整暗号，就能确定一格；下一位从头开始读。只有一种颜色时，本实验约定每格仍写一个 0。</p><p>收件端先从邮包的编码树读出这张表，再按固定的 256 格解码。本练习替你读好了树和前面的像素，只手动还原标出的 8 格；不是单独压缩这 8 格。颜色表不是对所有画通用的，换图后可能改变。</p></details>
    </div>
-   <footer class="recipient-footer"><button id="recipient-replay" type="button">用这封信重新练习</button><span>练习只保留在本页，刷新后结束；画纸草稿照常保留。</span></footer>
+   <footer class="recipient-footer"><button id="recipient-replay" type="button">用这封信重新练习</button><span>同一封成功来信可以接着读；点这里才从头练习。进度只保留在本页，刷新后结束；画纸草稿照常保留。</span></footer>
   </section>
   <section id="reorder-lesson" class="reorder-lesson" aria-labelledby="reorder-title" hidden>
    <div class="reorder-heading"><div><p class="eyebrow">一个亲手验证的小实验</p><h2 id="reorder-title" tabindex="-1">换了位置，邮费会变吗？</h2></div><a href="#editor">回到画纸 ↑</a></div>

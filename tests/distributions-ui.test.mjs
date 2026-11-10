@@ -3,6 +3,47 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 let serial=0;
 
+test('the final question singles out Heim with the actual batch evidence, without replacing the other cats results',async()=>{
+ const u=await boot();try{
+  u.click('next-step');u.click('next-step');
+  assert.ok(u.get('answer-question'),'the question needs an explicitly identified target');
+  assert.match(u.get('answer-question').textContent,/嘿姆.*16/);
+  assert.match(u.get('answer-evidence').textContent,/嘿姆（正态）/);
+  assert.match(u.get('answer-evidence').textContent,/3,030.*16.*0 次/);
+  assert.equal(u.get('tail-pareto').textContent,'88 次');
+  assert.equal((u.get('collection-all-pareto').innerHTML.match(/data-draw=/g)||[]).length,88);
+  u.click('answer-zero');assert.match(u.get('answer-feedback').textContent,/嘿姆/);
+  assert.match(u.get('answer-feedback').textContent,/3,030/);
+  assert.equal(u.writes.length,0);
+ }finally{u.restore();}
+});
+test('resetting a wrong answer clears its feedback and replaces the question evidence with the fresh batch',async()=>{
+ const u=await boot();try{
+  u.click('next-step');u.click('next-step');u.click('answer-zero');
+  assert.ok(u.get('answer-evidence'));
+  u.click('reset-sample');
+  assert.equal(u.get('answer-panel').hidden,true);assert.equal(u.get('answer-feedback').textContent,'');
+  assert.match(u.get('answer-evidence').textContent,/30 次.*4.*0 次/);
+  for(const choice of ['sample','zero'])assert.equal(u.get('answer-'+choice).getAttribute('aria-pressed'),'false');
+  u.click('new-sample');u.click('next-step');u.click('next-step');
+  assert.match(u.get('answer-evidence').textContent,/3,030.*16.*0 次/);
+  assert.equal(u.get('answer-feedback').textContent,'');
+ }finally{u.restore();}
+});
+test('question copy never claims zero when its actual target has positive observations',async()=>{
+ const api=await import('../distributions.mjs');
+ assert.equal(typeof api.observatoryQuestion,'function');
+ const seen=api.observatoryQuestion({id:'normal',stats:{n:40,tailCount:2}},7);
+ assert.match(seen.evidence,/嘿姆（正态）.*40 次.*7.*2 次/);
+ assert.match(seen.prompt,/假如.*下.*没/);
+ assert.doesNotMatch(seen.prompt,/这次没抽到/);
+ assert.match(seen.feedback,/这批.*2 次/);
+ const absent=api.observatoryQuestion({id:'normal',stats:{n:80,tailCount:0}},9);
+ assert.match(absent.evidence,/80 次.*9.*0 次/);
+ assert.match(absent.prompt,/嘿姆.*9/);
+ assert.match(absent.feedback,/80 次/);
+});
+
 test('the cat operators keep ownership of the same real samples after moving the red line',async()=>{
  const u=await boot();try{
   u.click('next-step');
