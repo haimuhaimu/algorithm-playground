@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 let serial=0;
-async function boot({reduced=true}={}){
+async function boot({reduced=true,hidden=false}={}){
  const html=await readFile(new URL('../sand.html',import.meta.url),'utf8');let doc;
  const pixels=new Map();
  const ctx=new Proxy({fillRect(x,y,w,h){if(w===864&&h===576)pixels.clear();else if(w===12&&h===12)pixels.set(`${x},${y}`,this.fillStyle);}},{get:(o,k)=>o[k]??(()=>{})});
@@ -18,7 +18,7 @@ async function boot({reduced=true}={}){
  els.get('brush').value='2';els.get('speed').value='40';
  const materials=[1,2,3,0].map(v=>Object.assign(new Element(),{dataset:{material:String(v)}}));
  const scenes=[...new Set([...html.matchAll(/data-scene="([^"]+)"/g)].map(([,name])=>name))].map(v=>Object.assign(new Element(),{dataset:{scene:v}})),stage=new Element();
- doc=Object.assign(new EventTarget(),{hidden:false,documentElement:new Element(),getElementById:id=>els.get(id),querySelector:()=>stage,querySelectorAll:s=>s==='[data-material]'?materials:scenes});
+ doc=Object.assign(new EventTarget(),{hidden,documentElement:new Element(),getElementById:id=>els.get(id),querySelector:()=>stage,querySelectorAll:s=>s==='[data-material]'?materials:scenes});
  const frames=new Map(),win=new EventTarget();let seq=0;
  const globals={document:doc,window:win,matchMedia:q=>Object.assign(new EventTarget(),{matches:reduced&&q.includes('reduced-motion')}),requestAnimationFrame:fn=>{frames.set(++seq,fn);return seq;},cancelAnimationFrame:id=>frames.delete(id)};
  const old=new Map(Object.keys(globals).map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
@@ -38,6 +38,40 @@ async function boot({reduced=true}={}){
   count:key=>Number(els.get(key+'-count').textContent),
   stamp(x=8,y=10){this.pointer('pointerdown',x,y);this.pointer('pointerup',x,y);}};
 }
+
+test('a background initial load stays paused and starts with one Continue without losing its world',async()=>{
+ const u=await boot({reduced:false,hidden:true});try{
+  const initial=u.pixels();
+  assert.equal(u.els.get('play').getAttribute('aria-pressed'),'false','a world without a scheduled frame must not claim to be playing');
+  assert.equal(u.stage.dataset.paused,'true');assert.match(u.els.get('lab-status').textContent,/已暂停/);
+  assert.equal(u.frames.size,0);assert.equal(u.els.get('tick-count').textContent,'第 0 拍');
+  u.doc.hidden=false;u.doc.dispatchEvent(new Event('visibilitychange'));
+  assert.equal(u.frames.size,0,'returning to the page must not silently advance the simulation');
+  assert.deepEqual(u.pixels(),initial);assert.equal(u.els.get('history-undo').disabled,true);
+  u.click('play');
+  assert.equal(u.els.get('play').getAttribute('aria-pressed'),'true');assert.equal(u.frames.size,1);
+  u.tick(10000);assert.equal(u.els.get('tick-count').textContent,'第 1 拍','time spent in the background must not be replayed');
+  u.click('play');assert.equal(u.frames.size,0);assert.equal(u.stage.dataset.paused,'true');
+ }finally{u.restore();}
+});
+
+test('backgrounding a running cat bowl freezes the world and keeps its undo and redo checkpoints',async()=>{
+ const u=await boot({reduced:false});try{
+  assert.equal(u.frames.size,1,'a visible page still starts normally');
+  u.scene('cat-bowl');u.material(0);u.brush(0);u.stamp(36,42);u.tick(1000);
+  const before=u.pixels(),tick=u.els.get('tick-count').textContent,stale=[...u.frames.values()];
+  u.doc.hidden=true;u.doc.dispatchEvent(new Event('visibilitychange'));
+  assert.equal(u.frames.size,0);assert.equal(u.stage.dataset.paused,'true');
+  stale.forEach(fn=>fn(20000));
+  u.doc.hidden=false;u.doc.dispatchEvent(new Event('visibilitychange'));
+  assert.deepEqual(u.pixels(),before);assert.equal(u.els.get('tick-count').textContent,tick);
+  assert.equal(u.selected('cat-bowl'),'true');assert.equal(u.frames.size,0);
+  u.click('history-undo');assert.equal(u.els.get('tick-count').textContent,'第 0 拍');
+  u.click('history-redo');assert.deepEqual(u.pixels(),before);assert.equal(u.els.get('tick-count').textContent,tick);
+  u.click('play');assert.equal(u.frames.size,1);u.tick(30000);
+  assert.equal(u.els.get('tick-count').textContent,'第 2 拍');
+ }finally{u.restore();}
+});
 
 test('one full drag rewinds the exact world and tick, redo restores the evolved checkpoint, and restore pauses',async()=>{
  const u=await boot();try{
