@@ -5,6 +5,79 @@ import { memoryStorage } from './storage-helper.mjs';
 import { DRAFT_KEYS } from '../local-drafts.mjs';
 import { preset } from '../pixel-core.mjs';
 let serial = 0;
+function restoreRecipientCells(u, count) {
+ for(let i=0;i<count;i++){
+  for(let bit=0;bit<4&&!u.els.get('recipient-read').disabled;bit++)u.click('recipient-read');
+  const prefix=u.els.get('recipient-prefix').textContent;
+  const color=[0,1,2,3].find(c=>u.els.get('recipient-code-'+c).textContent===prefix);
+  assert.notEqual(color,undefined,'the visible complete code must have a color');
+  u.click('recipient-color-'+color);
+ }
+}
+test('reopening the same successful letter resumes restored cells and the partially read next code',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
+  u.click('send');u.click('first-letter-read');u.click('recipient-begin');
+  restoreRecipientCells(u,3);u.click('recipient-read');u.click('recipient-peek');
+  const kept=Object.fromEntries(['progress','prefix','stream','restored','feedback'].map(id=>[id,u.els.get('recipient-'+id)[id==='stream'||id==='restored'?'innerHTML':'textContent']]));
+  assert.match(kept.progress,/3 \/ 8/);
+  assert.notEqual(kept.prefix,'—');
+  assert.equal(u.els.get('recipient-read').disabled,false,'this saved prefix is not yet a complete code');
+  assert.equal(u.els.get('recipient-color-0').disabled,true);
+  u.click('preset-bobby');const drawing=u.pixels('editor'),receipt=u.pixels('receiver'),writes=storage.writes;
+  u.click('first-letter-read');
+  assert.equal(u.els.get('recipient-work').hidden,false,'same-letter navigation must not return to the introduction');
+  for(const [id,value] of Object.entries(kept))assert.equal(u.els.get('recipient-'+id)[id==='stream'||id==='restored'?'innerHTML':'textContent'],value,id+' survives re-entry');
+  assert.equal(u.els.get('recipient-peek').getAttribute('aria-expanded'),'true');
+  assert.equal(u.doc.activeElement,u.els.get('recipient-work-title'));
+  assert.match(u.els.get('first-letter-read').textContent,/继续读.*3.*8/);
+  assert.match(u.els.get('first-letter-resume').textContent,/继续读.*3.*8/);
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),receipt);assert.equal(storage.writes,writes);
+  for(let bit=0;bit<4&&!u.els.get('recipient-read').disabled;bit++)u.click('recipient-read');
+  const complete=u.els.get('recipient-prefix').textContent;
+  const correct=[0,1,2,3].find(c=>u.els.get('recipient-code-'+c).textContent===complete);
+  u.click('recipient-color-'+((correct+1)%4));
+  const feedback=u.els.get('recipient-feedback').textContent;assert.match(feedback,/不对应/);
+  u.click('first-letter-resume');
+  assert.equal(u.els.get('recipient-feedback').textContent,feedback);
+  assert.equal(u.els.get('recipient-prefix').textContent,complete);
+  assert.match(u.els.get('recipient-progress').textContent,/3 \/ 8/);
+  assert.equal(storage.writes,writes);
+ }finally{u.restore();}
+});
+test('completed letter review preserves the conclusion until the explicit restart is chosen',async()=>{
+ const u=await boot({reduced:true});try{
+  u.click('send');u.click('first-letter-read');u.click('recipient-begin');restoreRecipientCells(u,8);
+  u.click('recipient-answer-code');const takeaway=u.els.get('recipient-takeaway').textContent;
+  u.click('first-letter-resume');
+  assert.equal(u.els.get('recipient-end').hidden,false);
+  assert.equal(u.els.get('recipient-takeaway').textContent,takeaway);
+  assert.equal(u.els.get('first-letter-step-3').dataset.complete,'true');
+  assert.equal(u.doc.activeElement,u.els.get('recipient-verdict'));
+  assert.match(u.els.get('first-letter-read').textContent,/回看/);
+  u.click('recipient-replay');
+  assert.equal(u.els.get('recipient-source').hidden,false);assert.equal(u.els.get('recipient-end').hidden,true);
+  assert.match(u.els.get('recipient-progress').textContent,/0 \/ 8/);
+  assert.equal(u.els.get('first-letter-step-3').dataset.complete,'false');
+  assert.doesNotMatch(u.els.get('first-letter-read').textContent,/继续|回看/);
+  u.click('recipient-start');u.click('recipient-begin');restoreRecipientCells(u,1);u.click('first-letter-read');
+  assert.match(u.els.get('recipient-progress').textContent,/0 \/ 8/,'returning from independent practice must not resurrect the pre-restart result');
+  assert.equal(u.els.get('recipient-begin').hidden,false);
+ }finally{u.restore();}
+});
+test('independent practice cannot erase a successful-letter session, but a new successful send starts fresh',async()=>{
+ const u=await boot({reduced:true});try{
+  u.click('send');u.click('first-letter-read');u.click('recipient-begin');restoreRecipientCells(u,3);
+  const restored=u.els.get('recipient-restored').innerHTML;
+  u.click('recipient-start');u.click('recipient-begin');restoreRecipientCells(u,1);
+  u.click('first-letter-read');
+  assert.match(u.els.get('recipient-progress').textContent,/3 \/ 8/);
+  assert.equal(u.els.get('recipient-restored').innerHTML,restored);
+  u.click('send');u.click('first-letter-read');
+  assert.match(u.els.get('recipient-progress').textContent,/0 \/ 8/,'even identical bytes belong to a new successful send');
+  assert.equal(u.els.get('recipient-begin').hidden,false);
+  assert.doesNotMatch(u.els.get('first-letter-read').textContent,/继续|回看/);
+ }finally{u.restore();}
+});
 test('the first-letter handoff waits for a verified delivery, then reads that packet after the drawing changes',async()=>{
  const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
   assert.ok(u.els.has('first-letter-read'),'a continuous send-to-read action belongs to the real postcard page');

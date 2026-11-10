@@ -223,23 +223,34 @@ $('guess-reveal').addEventListener('click',guessStep);
 $('guess-restart').addEventListener('click',()=>{if(!guessing||guessRound)return;step=1;currentRun=null;beginQuestion();render();});
 $('guess-algorithm').addEventListener('change',()=>{if(!names.includes($('guess-algorithm').value))return;guessAlgorithm=$('guess-algorithm').value;if(guessing)beginQuestion();render();});
 $('speed').addEventListener('change',()=>{if(playing){clearTimeout(timer);schedule();}});
+function restoreStroke(before,runBefore){
+ ({map,preset,edited}=before);stop();leaveGuess();
+ ({traces,step,currentRun}=runBefore);render();
+}
 function endStroke(commit=true){
- if(!stroke)return;const {grid,id,before}=stroke;stroke=null;
+ if(!stroke)return;const {grid,id,before,runBefore}=stroke;stroke=null;
  if(commit&&before){
-  if(sameMap(before.map,map)){({preset,edited}=before);render();}
+  if(sameMap(before.map,map))restoreStroke(before,runBefore);
   else remember(before);
  }
  if(grid.hasPointerCapture(id))grid.releasePointerCapture(id);
  historyControls();
 }
 function cancelStroke(){
- const before=stroke?.before;endStroke(false);
- if(before){restore(before);$('play-status').textContent='这一笔已取消，原地图保留。';}
+ const {before,runBefore}=stroke||{};endStroke(false);
+ if(before){restoreStroke(before,runBefore);$('play-status').textContent=runBefore.traces?'这一笔已取消，原地图和运行进度都保留。':'这一笔已取消，原地图保留。';}
 }
 function applyCells(indices){
  let next=map;for(const index of indices)next=editMap(next,index,tool);
  if(next===map)return;
- if(stroke)stroke.before??=snapshot();else remember(snapshot());
+ if(stroke){
+  if(!stroke.before){
+   stroke.before=snapshot();
+   // A tentative gesture may hide results, but cancellation must restore them.
+   // Keep playback out of the map-only undo history and never auto-resume it.
+   stroke.runBefore={traces,step,currentRun};
+  }
+ }else remember(snapshot());
  map=next;edited=true;preset=null;invalidate();render();
 }
 document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>{endStroke();leaveGuess();tool=b.dataset.tool;render();}));

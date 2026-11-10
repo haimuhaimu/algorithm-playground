@@ -5,6 +5,9 @@ const equal = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
 export function setupRecipient({ getPixels, available, cancelStroke, onProgress = () => {} }) {
   const $ = id => document.getElementById('recipient-' + id);
   let state = null, stage = 'source', peek = false, answer = null, source = null, packet = null;
+  // Keep the successful letter separate from the optional current-drawing exercise.
+  // This slot is page-local; a new successful send has a new parcel identity.
+  let savedParcel = null;
   const focus = id => { $(id).focus(); $(id).scrollIntoView({ block: ['title', 'work-title', 'verdict'].includes(id) ? 'start' : 'nearest', behavior: 'auto' }); };
   const strip = (pixels, codes = null, offset = 0) => pixels.map((color, i) =>
     `<div class="recipient-cell"><i class="color-${color}" aria-hidden="true"></i><span>${names[color]}</span><code>${codes ? codes[color] : '✓'}</code><span class="visually-hidden">第 ${offset + i + 1} 格</span></div>`).join('');
@@ -71,7 +74,8 @@ export function setupRecipient({ getPixels, available, cancelStroke, onProgress 
           : '选一次，把刚才的操作变成自己的结论。';
     }
     refresh();
-    onProgress({ source, restored: state.restored.length, answer });
+    if (source) savedParcel = { state, stage, peek, answer, source, packet };
+    onProgress({ source, restored: state.restored.length, answer, stage });
   }
   function open(next, origin = null, bytes = null) {
     state = next; source = origin; packet = bytes; stage = 'source'; peek = false; answer = null;
@@ -79,6 +83,12 @@ export function setupRecipient({ getPixels, available, cancelStroke, onProgress 
   }
   function begin(snapshot) { open(createRecipientLesson(snapshot)); }
   function openParcel(parcel) {
+    if (savedParcel?.source === parcel) {
+      ({ state, stage, peek, answer, source, packet } = savedParcel);
+      render();
+      focus(stage === 'done' ? 'verdict' : stage === 'reading' ? 'work-title' : 'title');
+      return;
+    }
     const bytes = Uint8Array.from(parcel.packet);
     open(createRecipientLessonFromPacket(bytes), parcel, bytes);
   }

@@ -249,6 +249,67 @@ test('only an explicitly requested completed round replaces the baseline',async(
  }finally{u.restore();}
 });
 
+for(const interruption of ['pointercancel','lostpointercapture','Escape','blur','hidden','pagehide'])test(`cancelled map edits retain the completed current result immediately after ${interruption}`,async()=>{
+ const u=await boot();try{
+  u.click('finish');u.tool('erase');u.edit(82);u.click('finish');u.tool('wall');
+  const before=u.map(),metrics=Object.fromEntries(['bfs-explored','astar-explored','compare-after-bfs','compare-after-astar','compare-bfs-delta','compare-astar-delta'].map(id=>[id,u.els.get(id).textContent]));
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  assert.equal(u.els.get('compare-after-distance').textContent,'12');
+  const history=u.els.get('history-status').textContent;
+  u.pointer('pointerdown',0);assert.equal(u.map()[0],'墙');
+  if(interruption==='Escape')u.key('Escape');
+  else if(interruption==='hidden'){u.doc.hidden=true;u.fire(u.doc,'visibilitychange');}
+  else if(['blur','pagehide'].includes(interruption))u.fire(window,interruption);
+  else u.pointer(interruption,0);
+  assert.equal(Number(u.els.get('bfs-distance').textContent),12,'cancelling does not require another search');
+  assert.equal(Number(u.els.get('astar-distance').textContent),12);
+  assert.equal(u.els.get('compare-after-distance').textContent,'12');
+  assert.equal(u.els.get('compare-distance-delta').textContent,'少 8 步');
+  assert.deepEqual(u.map(),before,'both the geometry and its displayed search trace survive');
+  for(const [id,value]of Object.entries(metrics))assert.equal(u.els.get(id).textContent,value,id);
+  assert.equal(u.els.get('history-status').textContent,history,'cancel does not become an undo entry');
+  assert.equal(u.timers.size,0);
+ }finally{u.restore();}
+});
+
+test('cancelling a gesture restores the paused search playhead without making a partial run complete',async()=>{
+ const u=await boot();try{
+  u.click('finish');u.tool('erase');u.edit(82);u.click('step');u.click('step');u.click('step');
+  const before=u.map();assert.equal(u.els.get('bfs-explored').textContent,3);
+  u.tool('wall');u.pointer('pointerdown',0);u.key('Escape');
+  assert.deepEqual(u.map(),before);
+  assert.equal(u.els.get('bfs-explored').textContent,3);
+  assert.equal(u.els.get('bfs-distance').textContent,'待揭晓');
+  assert.equal(u.els.get('compare-after-distance').textContent,'待运行');
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  u.click('step');assert.equal(u.els.get('bfs-explored').textContent,4,'the next step continues, rather than restarting');
+ }finally{u.restore();}
+});
+
+test('cancelling a gesture during playback preserves its playhead but never restarts the timer',async()=>{
+ const u=await boot();try{
+  u.click('play');const tick=[...u.timers.values()][0];u.timers.clear();tick();
+  assert.equal(u.els.get('bfs-explored').textContent,1);
+  const before=u.map();u.pointer('pointerdown',0);u.pointer('pointercancel',0);
+  assert.deepEqual(u.map(),before);assert.equal(u.els.get('bfs-explored').textContent,1);
+  assert.equal(u.els.get('play').dataset.playing,false);assert.equal(u.timers.size,0);
+  tick();assert.equal(u.els.get('bfs-explored').textContent,1,'an already queued callback cannot advance the restored paused run');
+  assert.equal(u.els.get('compare-empty').hidden,false,'a partial run is still not a baseline');
+ }finally{u.restore();}
+});
+
+test('a drag that returns the start to its original cell retains the same completed comparison',async()=>{
+ const u=await boot();try{
+  u.click('finish');u.tool('erase');u.edit(82);u.click('finish');u.tool('start');
+  const before=u.map(),history=u.els.get('history-status').textContent;
+  u.pointer('pointerdown',75);u.pointer('pointermove',76);u.pointer('pointerup',76);
+  assert.deepEqual(u.map(),before);
+  assert.equal(u.els.get('compare-after-distance').textContent,'12');
+  assert.equal(u.els.get('compare-distance-delta').textContent,'少 8 步');
+  assert.equal(u.els.get('history-status').textContent,history);
+ }finally{u.restore();}
+});
+
 test('partial playback is not recorded as a baseline and cancelled edits keep comparison evidence',async()=>{
  const u=await boot();try{
   assert.ok(u.els.has('compare-empty'),'first-run guidance is available');
