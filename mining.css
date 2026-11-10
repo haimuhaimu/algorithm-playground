@@ -133,6 +133,13 @@
 @media(max-height:500px) and (min-width:761px){.sim-field{min-height:275px}.sim-planets{padding:15px 10px 48px;gap:5px 0}.sim-planets .planet{padding:3px 0;gap:3px}.sim-planets .planet-body{width:32px;height:32px}.sim-planets .planet-2 .planet-body:after{width:50px;height:12px;left:-11px;top:11px}.sim-planets .planet-name{margin-top:1px}.simulation-console{padding:14px;gap:8px}.simulation-narration h4{font-size:19px}.simulation-heading{padding:10px 14px}}
 /* Keep the original station box: its top and center are the flight origin. */
 #mining-flight{scroll-margin-top:16px}
+.crew-receipt{padding:16px 24px 4px;border-top:1px solid var(--line)}
+.crew-receipt-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.crew-receipt-heading h3{font-size:13px;font-weight:650;margin:0}.crew-receipt-heading>span{font-size:10px;color:var(--muted);flex-shrink:0}
+.crew-receipt-empty,.crew-receipt-note,.crew-receipt-pending{font-size:11px;line-height:1.65;color:var(--muted);margin:8px 0}.crew-receipt-pending{color:var(--ink)}
+.crew-receipt-trip{font-size:12px;line-height:1.6;margin:12px 0 9px;font-weight:600}
+.crew-receipt-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:0;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.crew-receipt-pair>div+div{padding-left:16px;border-left:1px solid var(--line)}
+.crew-receipt-pair dt{font-size:10px;line-height:1.5;color:var(--muted)}.crew-receipt-pair dd{margin:6px 0 0;font-size:17px;font-weight:600;line-height:1.4;font-variant-numeric:tabular-nums}.crew-receipt-pair .crew-receipt-rate{font-size:11px;color:var(--muted);font-weight:400}
+@media(max-width:760px){.crew-receipt{padding:14px 14px 0}.crew-receipt-pair{gap:12px}.crew-receipt-pair>div+div{padding-left:12px}.crew-receipt-pair dd{font-size:15px}.crew-receipt-heading h3{font-size:12px}}
 #launchpad{pointer-events:none;user-select:none}
 #launchpad .crew-cradle{position:relative;height:34px}
 .crew-dock{position:absolute;left:50%;top:12px;width:148px;height:auto;transform:translate(-50%,-50%)}

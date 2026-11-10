@@ -13,6 +13,23 @@ const simulation={elapsed:0,phase:'ready',running:false,continuous:false,last:nu
 function newSeed(){return crypto.getRandomValues(new Uint32Array(1))[0];}
 function completed(){return record.history.length===BUDGET;}
 function setStatus(message){$('status').textContent=message;}
+function renderCrewReceipt(){
+ const round=record.history.length,move=record.history.at(-1),hasRecord=Boolean(move);
+ $('crew-receipt').dataset.round=String(round);
+ $('crew-receipt-body').hidden=!hasRecord;$('crew-receipt-empty').hidden=hasRecord;
+ $('crew-receipt-label').textContent=hasRecord?(pending!==null?'上一趟已带回':'这一趟已带回'):'等待第一条线索';
+ $('crew-receipt-empty').textContent=pending!==null?'三猫正在探测，结果还没带回来。':'还没有完成的探测。先选一颗星球。';
+ $('crew-receipt-pending').hidden=pending===null;
+ $('crew-receipt-pending').textContent=pending!==null?`第 ${round+1} 趟正前往${names[pending]}，新结果尚未计入。`:'';
+ if(!hasRecord){for(const id of ['trip','before','after','before-rate','after-rate'])$('crew-receipt-'+id).textContent='';return;}
+ const n=record.counts[move.arm],wins=record.wins[move.arm],beforeN=n-1,beforeWins=wins-move.reward;
+ const rate=(w,n)=>`实测 ${Number((w/n*100).toFixed(1))}%`;
+ $('crew-receipt-trip').textContent=`第 ${round} 趟 · ${names[move.arm]} · ${move.reward?'带回 1 块矿':'空手而归'}`;
+ $('crew-receipt-before').textContent=beforeN?`${beforeWins} 矿 / ${beforeN} 次`:'还没探过';
+ $('crew-receipt-before-rate').textContent=beforeN?rate(beforeWins,beforeN):'暂无样本比例';
+ $('crew-receipt-after').textContent=`${wins} 矿 / ${n} 次`;
+ $('crew-receipt-after-rate').textContent=rate(wins,n);
+}
 function render(){
  $('remaining').textContent=String(BUDGET-record.history.length);$('minerals').textContent=String(record.total);
  $('round-mode').textContent=replay?'复盘局 · 已有历史':'首次探索';$('seed-label').textContent='星域 '+world.seed.toString(16).toUpperCase().padStart(8,'0');
@@ -31,6 +48,7 @@ function render(){
  }));
  $('results').hidden=!completed();$('view-results').hidden=!completed();
  $('decision-replay').hidden=!completed()||!replayRuns;
+ renderCrewReceipt();
 }
 function reveal(){
  replayRuns={you:{record,steps:traceChoices(record.history)},...Object.fromEntries(['greedy','epsilon','ucb'].map(key=>[key,runPolicyTrace(world,key)]))};

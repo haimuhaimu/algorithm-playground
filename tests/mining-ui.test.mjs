@@ -2,6 +2,58 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 let serial=0;
+test('crew return receipt uses the completed free trip and keeps first samples distinct from a zero rate',async()=>{
+ const u=await boot({seed:42});try{
+  const e=id=>u.els.get(id);
+  assert.ok(e('crew-receipt'),'the player crew needs a real returned-log view beside the mission');
+  assert.equal(e('crew-receipt-body').hidden,true);
+  u.click('planet-0');u.tick(0);u.tick(200);
+  assert.equal(e('crew-receipt-body').hidden,true,'an unfinished trip cannot become evidence');
+  u.tick(500);
+  assert.equal(e('crew-receipt-body').hidden,false);assert.equal(e('crew-receipt').dataset.round,'1');
+  assert.match(e('crew-receipt-trip').textContent,/苔原.*空手/);
+  assert.match(e('crew-receipt-before').textContent,/还没探过/);assert.doesNotMatch(e('crew-receipt-before-rate').textContent,/0%/);
+  assert.equal(e('crew-receipt-after').textContent,'0 矿 / 1 次');assert.equal(e('crew-receipt-after-rate').textContent,'实测 0%');
+  u.click('planet-0');u.finish();
+  assert.equal(e('crew-receipt-before').textContent,'0 矿 / 1 次');assert.equal(e('crew-receipt-after').textContent,'0 矿 / 2 次');
+  assert.equal(e('crew-receipt-before-rate').textContent,e('crew-receipt-after-rate').textContent,'a second empty trip need not change the sample rate');
+  assert.equal(e('sample-1').textContent,'未探测');assert.equal(e('remaining').textContent,'28');
+ }finally{u.restore();}
+});
+test('crew receipt freezes the last returned evidence across cancellation and stale callbacks, and resets only with the game',async()=>{
+ const u=await boot({seed:42});try{
+  const e=id=>u.els.get(id),saved=()=>['crew-receipt-trip','crew-receipt-before','crew-receipt-after','crew-receipt-before-rate','crew-receipt-after-rate'].map(id=>e(id).textContent);
+  assert.ok(e('crew-receipt'));
+  u.click('planet-0');u.finish();const first=saved();
+  u.click('planet-1');const stale=[...u.frames.values()][0];
+  assert.deepEqual(saved(),first);assert.match(e('crew-receipt-pending').textContent,/第 2 趟.*尚未计入/);assert.match(e('crew-receipt-label').textContent,/上一趟/);
+  u.click('about');stale(9000);assert.deepEqual(saved(),first);assert.equal(e('crew-receipt-pending').hidden,true);assert.equal(e('remaining').textContent,'29');
+  e('guide').close();u.click('planet-1');const hidden=[...u.frames.values()][0];u.hide();u.show();hidden(9000);assert.deepEqual(saved(),first);
+  u.click('planet-1');const mediaStale=[...u.frames.values()][0];u.media.matches=true;u.fire(u.media,'change');mediaStale(9000);assert.deepEqual(saved(),first);
+  u.click('planet-1');assert.equal(e('crew-receipt').dataset.round,'2');
+  assert.equal(e('crew-receipt-after').textContent,'1 矿 / 1 次');assert.equal(e('crew-receipt-after-rate').textContent,'实测 100%');
+  assert.equal(e('sample-0').textContent,'0 矿 / 1 次');assert.equal(e('remaining').textContent,'28');
+  const second=saved();u.click('bayes-start');assert.deepEqual(saved(),second);u.click('bayes-close');
+  u.click('replay');assert.equal(e('crew-receipt-body').hidden,true);assert.equal(e('crew-receipt').dataset.round,'0');assert.equal(e('crew-receipt-after').textContent,'');
+  assert.match(e('round-mode').textContent,/复盘/);u.click('planet-0');u.click('new');assert.equal(e('crew-receipt-body').hidden,true);assert.equal(e('remaining').textContent,'30');
+ }finally{u.restore();}
+});
+test('returned samples show a falling empirical rate without rewriting other planets or a later policy replay',async()=>{
+ const u=await boot({seed:42,reduced:true});try{
+  const e=id=>u.els.get(id);
+  assert.ok(e('crew-receipt'));
+  for(const arm of [1,1,1,1])u.click('planet-'+arm);
+  assert.match(e('crew-receipt-trip').textContent,/第 4 趟.*珊瑚.*空手/);
+  assert.equal(e('crew-receipt-before').textContent,'3 矿 / 3 次');assert.equal(e('crew-receipt-after').textContent,'3 矿 / 4 次');
+  assert.equal(e('crew-receipt-before-rate').textContent,'实测 100%');assert.equal(e('crew-receipt-after-rate').textContent,'实测 75%');
+  assert.equal(e('minerals').textContent,'3');assert.equal(e('sample-0').textContent,'未探测');
+  for(let i=4;i<30;i++)u.click('planet-1');
+  const last=['crew-receipt-trip','crew-receipt-before','crew-receipt-after'].map(id=>e(id).textContent);
+  u.click('replay-prev');e('replay-actor').value='you';u.fire(e('replay-actor'),'change');
+  assert.deepEqual(['crew-receipt-trip','crew-receipt-before','crew-receipt-after'].map(id=>e(id).textContent),last);
+  assert.equal(e('crew-receipt').dataset.round,'30');assert.equal(e('remaining').textContent,'0');
+ }finally{u.restore();}
+});
 test('the free-flight dock and moving player craft share the same three occupied seats',async()=>{
  const html=await readFile(new URL('../mining.html',import.meta.url),'utf8');
  const dock=html.match(/<div\b[^>]*\bid="launchpad"[^>]*>([\s\S]*?)<\/div>/)?.[1];

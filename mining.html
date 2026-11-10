@@ -3,8 +3,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="30 次探测，5 颗未知星球。继续挖刚才赚到的，还是去试没挖过的？亲手体验多臂老虎机的探索与利用。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=station-cat-v1&amp;art=crew-flight-v1"><link rel="stylesheet" href="./mining-bayes.css?v=station-cat-v1">
- <script type="module" src="./mining.mjs?v=station-cat-v1"></script><title>算法游乐场 · 盲盒探矿</title>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=station-cat-v1&amp;art=crew-return-v1"><link rel="stylesheet" href="./mining-bayes.css?v=station-cat-v1">
+ <script type="module" src="./mining.mjs?v=station-cat-v1&amp;art=crew-return-v1"></script><title>算法游乐场 · 盲盒探矿</title>
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
@@ -131,6 +131,16 @@
     </div>
    </div>
    <div class="mission-feedback"><span class="status-dot" aria-hidden="true"></span><p id="status" role="status">这里没有地图。第一趟，凭直觉选就好。</p><a id="view-results" class="view-results" href="#results-title" hidden>看看算法的选择 ↓</a></div>
+   <div class="crew-receipt" id="crew-receipt" role="region" aria-labelledby="crew-receipt-title">
+    <div class="crew-receipt-heading"><h3 id="crew-receipt-title">三猫带回的线索</h3><span id="crew-receipt-label">等待第一条线索</span></div>
+    <p class="crew-receipt-empty" id="crew-receipt-empty">还没有完成的探测。先选一颗星球。</p>
+    <p class="crew-receipt-pending" id="crew-receipt-pending" hidden></p>
+    <div id="crew-receipt-body" hidden>
+     <p class="crew-receipt-trip" id="crew-receipt-trip"></p>
+     <dl class="crew-receipt-pair"><div><dt>这趟之前</dt><dd id="crew-receipt-before"></dd><dd class="crew-receipt-rate" id="crew-receipt-before-rate"></dd></div><div><dt>这趟之后</dt><dd id="crew-receipt-after"></dd><dd class="crew-receipt-rate" id="crew-receipt-after-rate"></dd></div></dl>
+     <p class="crew-receipt-note" id="crew-receipt-note">这是已探到的样本比例，不是真实产矿概率。其他星球的记录未变。</p>
+    </div>
+   </div>
    <div class="flight-history"><div><span>你的航行记录</span><small>◆ 有收获 · · 空手归</small></div><ol id="history" aria-label="已完成的探测记录"></ol></div>
    <a class="mining-lesson-return" href="#shared-title">回到同线索挑战 ↑</a>
   </section>
