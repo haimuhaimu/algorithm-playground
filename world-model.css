@@ -37,3 +37,13 @@
 .flight-pilot img{width:26px;height:26px;border-radius:5px}
 .world-ship .world-pilot-rim{fill:none;stroke:var(--ink);stroke-width:.18}
 @media(max-width:420px){.flight-pilot img{width:22px;height:22px}}
+.pilot-identity{display:flex;align-items:center;gap:10px;min-width:0}
+.pilot-identity img{width:48px;height:48px;object-fit:contain;flex:none}
+.pilot-identity>div{min-width:0}.pilot-identity strong{display:block;font-size:13px;font-weight:650;line-height:1.5;color:var(--ink)}
+.pilot-identity #scene-label{display:block;font-size:11px;line-height:1.6;margin-top:3px}
+.scene-top #progress{flex:none;white-space:nowrap}
+.pilot-readout{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 0;padding:12px 0 2px;border-top:1px solid var(--line)}
+.pilot-readout>div{min-width:0}.pilot-readout>div+div{padding-left:14px;border-left:1px solid var(--line)}
+.pilot-readout dt{font-size:10px;line-height:1.5;color:var(--muted)}
+.pilot-readout dd{font-size:13px;font-weight:600;line-height:1.65;color:var(--ink);margin:5px 0 0;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.pilot-identity img{width:42px;height:42px}.pilot-identity{gap:8px}.pilot-identity strong{font-size:12px}.pilot-identity #scene-label{font-size:10px}.pilot-readout{gap:9px;margin-top:10px;padding-top:10px}.pilot-readout>div+div{padding-left:10px}.pilot-readout dd{font-size:12px}.scene-top #progress{font-size:9px}}
