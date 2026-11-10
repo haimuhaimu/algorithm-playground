@@ -1,4 +1,4 @@
-import {feedback,rankPosts,scorePost,probability,metrics} from './core.mjs?v=recommendation-studio-v2';
+import {feedback,rankPosts,scorePost,probability,metrics} from './core.mjs?v=feedback-focus-v1';
 
 function freeze(value){
  if(value&&typeof value==='object'){
@@ -21,20 +21,28 @@ export function captureFeedback(posts,weights,profile,postId,direction){
   const a=position(before.feed,id),b=position(after.feed,id);
   return {id,beforeRank:a,afterRank:b,kind:a===null?'entered':b===null?'exited':a===b?'same':b<a?'up':'down'};
  });
- // Compare candidates at one actual selection slot, using that slot's topic counts.
- const slot=afterRank||after.feed.length,previous=after.feed.slice(0,slot-1),counts={};
+ // At the first divergence the already-seated prefix is identical on both sides.
+ // Compare the old and new winners there, not an unchanged clicked card's slot.
+ const firstChanged=after.feed.findIndex((p,i)=>p.id!==before.feed[i]?.id);
+ const slot=firstChanged>=0?firstChanged+1:afterRank||after.feed.length,previous=after.feed.slice(0,slot-1),counts={};
  for(const p of previous)counts[p.topic]=(counts[p.topic]||0)+1;
  const candidates=posts.filter(p=>!previous.some(selected=>selected.id===p.id))
   .map(p=>({...p,...scorePost(p,weights,next,counts)}))
   .sort((a,b)=>b.score-a.score||String(a.id).localeCompare(String(b.id),'en'));
- const selected=candidates[0],alternative=afterRank?candidates[1]||null:candidates.find(p=>p.id===postId);
+ const selected=candidates[0],beforeSelected=before.feed[slot-1];
+ const alternative=firstChanged>=0?candidates.find(p=>p.id===beforeSelected.id):afterRank?candidates[1]||null:candidates.find(p=>p.id===postId);
+ const comparisonRows=[selected,alternative].filter(Boolean).map(candidate=>{
+  const original=posts.find(p=>p.id===candidate.id);
+  return {post:{...original},before:scorePost(original,weights,profile,counts),after:scorePost(original,weights,next,counts)};
+ });
  const delta=next[post.topic]-profile[post.topic];
  return freeze(structuredClone({
   weights:{...weights},before,after,changes,
   action:{post:{...post},direction,beforeRank,afterRank,interestDelta:delta,
    probabilityBefore:probability(post,profile),probabilityAfter:probability(post,next)},
   effect:delta===0?'limit':!(weights.click>0)?'unweighted':'adjusted',
-  decision:{slot,selected,alternative,tied:!!alternative&&selected.score===alternative.score},
+  decision:{slot,selected,alternative,tied:!!alternative&&selected.score===alternative.score,
+   firstChangedSlot:firstChanged>=0?slot:null,prefixIds:previous.map(p=>p.id),beforeSelected,comparisonRows},
  }));
 }
 

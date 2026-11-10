@@ -1,15 +1,26 @@
-# Algorithm Playground：给 AI 的实验工具（本地首版）
+# Algorithm Playground：给 AI 的实验工具与记录
 
-这个工具让有本地执行能力的 AI 助手，使用与网页相同的引擎运行、解释和重放学习路线、像素解码与贝叶斯小课。它不是聊天机器人，也不是学习认证。
+这个工具让有本地执行能力的 AI 助手，使用与对应网页小课相同的引擎运行、解释和重放固定案例。它不是聊天机器人，也不是学习认证；不是每个网页实验都已经有执行接口。
 
 ## 能做什么
 
-- `list`：发现十个网页实验，并区分其中可编程运行的能力。
-- `describe learning-route` / `describe pixel-decode` / `describe bayes-update`：读取各自的固定条件、可用动作与边界。
+- `list`：发现十个基础网页实验，以及当前可编程运行的小课。
+- `describe <id>`：读取所选能力的固定条件、可用动作与边界。
 - `run`：从固定起点重放动作，返回真实计算、每步接受/拒绝状态及下一步可用动作。
 - `replay`：重新计算一份实验记录，检查它是否与当前版本引擎一致。
 
-**当前可编程执行的是 `learning-route`、`pixel-decode` 与 `bayes-update`。** 分别对应现有涂鸦三站学习路线、像素邮局字节解码与逐位回放、盲盒探矿中的固定贝叶斯小课；没有因此新增实验，也没有把所有网页玩法都包装成执行接口。
+**当前有六个可编程执行的固定案例：**
+
+| id | 对应小课 |
+| --- | --- |
+| `learning-route` | 涂鸦三站：分类、走一步梯度、新题检验 |
+| `pixel-decode` | 像素邮局：固定预设的真实字节解码与逐位回放 |
+| `bayes-update` | 盲盒探矿：固定日志上的贝叶斯更新 |
+| `agent-tool-loop` | Agent 首关：显示成功，补给真的到了吗？ |
+| `agent-reroute` | Agent 第二关：新指令来了，旧任务还该继续吗？ |
+| `agent-frames` | Agent 第三关：只留三帧，你会留下哪一帧？ |
+
+以 `list` / `describe` 的实时返回值为准。`experiments` 里的 `execution: "browser-only"` 不是执行能力；分布观察台等未包装的网页也不能凭名字直接 `run`。涂鸦猫卡、自由画纸或整局探矿不等于上表的小课接口。
 
 ## 在有权使用的本地项目中运行
 
@@ -19,6 +30,9 @@
 node scripts/learning-tool.mjs list
 node scripts/learning-tool.mjs describe learning-route
 node scripts/learning-tool.mjs describe pixel-decode
+node scripts/learning-tool.mjs describe agent-tool-loop
+node scripts/learning-tool.mjs describe agent-reroute
+node scripts/learning-tool.mjs describe agent-frames
 printf '%s' '{"actions":[{"action":"train"}]}' | node scripts/learning-tool.mjs run
 node scripts/learning-tool.mjs replay < my-learning-receipt.json
 ```
@@ -81,7 +95,7 @@ const verified = replayLearningReceipt(pixelReceipt);
 
 AI 收到记录后应：
 
-1. 先确认 `schemaVersion=1` 及对应工具版本（`learning-route-v1` 或 `pixel-decode-v1`），用 `replay` 重算；不相信记录里自称的分数或已还原格数。
+1. 先确认 `schemaVersion=1`、`experimentId` 及对应工具的 `engineVersion`（见 `describe` 与 manifest），用 `replay` 重算；不相信记录里自称的分数、签收状态或已还原格数。
 2. 只解释实际发生的动作、固定条件和真实结果；保留错误预测与被拒绝的动作，不补造因果。
 3. 分开“完成流程”“猜对一次”和“掌握概念”。`producer` 只描述生成渠道，不认证身份。重放一致也不证明某个人实际操作过。
 4. 一次只建议改变一个允许的条件；优先让学习者自己预测，再运行。
@@ -127,7 +141,9 @@ Playground 负责动手验证和记录；GenAI OS 负责把概念、公式和产
 - [梯度下降](https://haimuhaimu.github.io/genai-learning-os/?page=foundation&node=gradient-descent)：对照这一步改变的参数。
 - [Transformer Block](https://haimuhaimu.github.io/genai-learning-os/?page=foundation&node=transformer-block)：继续看残差与模块结构，**不声称本三站路线已经演示它**。
 
-这些深链按 GenAI OS main `2fe3c059e29967edd878c58cadb765363ab68261` 源码核验，梯度目标也已通过真实浏览器打开。当前只是概念出口，**GenAI OS 端尚未导入这份收据**；它的现有进度导入 schema 不是实验记录 schema。本工具不把实验完成写成 GenAI OS 学习进度，也不跨应用搬运数据；打开课程时，GenAI OS 自身的“已浏览”记录仍按原站规则处理。
+上面是概念阅读入口，打开链接本身不会导入实验收据。实验记录与原有进度导入使用不同 schema，不能混用；CLI/库接口只返回数据，不直接替用户写入 GenAI OS。
+
+网页的模型学习路线、贝叶斯小课和 Agent 三关，已提供从有效 GenAI OS 来程中显式带回本轮记录的操作：完成所需流程后，学习者自己点击返回。发送端会重算记录，并核对请求编号、路线、工具版本和允许的返回地址；接收后是否保存由 GenAI OS 的复核/确认流程决定。它不是后台自动发送，也不自动证明掌握或改写其他学习记录。直接打开普通网页不会凭空生成一份来程；像素回放目前使用显式导出 JSON，而不是上述返程入口。
 
 两个 GitHub Pages 项目共享 `haimuhaimu.github.io` origin；不同存储键不构成浏览器隔离。本工具不枚举或读取任何私有存储。把收据主动交给外部 AI 后，内容会离开浏览器，不再受“本地计算”承诺涵盖。
 

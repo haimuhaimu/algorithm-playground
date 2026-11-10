@@ -1,7 +1,7 @@
-import {TOPICS,PRESETS} from './data.mjs?v=recommendation-studio-v2';
-import {probability,scorePost} from './core.mjs?v=recommendation-studio-v2';
-import {createSeatLesson,chooseSeat,nextSeat,currentRound,lessonMatches,diversityCounterfactual,carryoverComparison,seatGuessOptions} from './seat-lesson.mjs?v=recommendation-studio-v2';
-import {escapeCardText as escape,recommendationTitle as title,recommendationThumbnail as art} from './recommendation-cards.mjs?v=recommendation-studio-v2';
+import {TOPICS,PRESETS} from './data.mjs?v=feedback-focus-v1';
+import {probability,scorePost} from './core.mjs?v=feedback-focus-v1';
+import {createSeatLesson,chooseSeat,nextSeat,currentRound,lessonMatches,diversityCounterfactual,carryoverComparison,seatGuessOptions} from './seat-lesson.mjs?v=feedback-focus-v1';
+import {escapeCardText as escape,recommendationTitle as title,recommendationThumbnail as art} from './recommendation-cards.mjs?v=feedback-focus-v1';
 
 const label=post=>TOPICS[post.topic]?.short||post.topic;
 const number=value=>Number(value.toPrecision(12)).toString();

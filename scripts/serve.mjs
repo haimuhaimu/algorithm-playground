@@ -11,6 +11,7 @@ for(const name of ['pathfinding-cats.mjs','pathfinding-cats-ui.mjs'])TYPES[name]
 TYPES['pathfinding-cats.css']='text/css; charset=utf-8';
 Object.assign(TYPES,{'sand.html':'text/html; charset=utf-8','sand.css':'text/css; charset=utf-8','sand.mjs':'text/javascript; charset=utf-8','sand-core.mjs':'text/javascript; charset=utf-8'});
 TYPES['sand-history.mjs']='text/javascript; charset=utf-8';
+TYPES['sand-bowl.mjs']='text/javascript; charset=utf-8';
 Object.assign(TYPES,{'firefly.html':'text/html; charset=utf-8','firefly.css':'text/css; charset=utf-8','firefly.mjs':'text/javascript; charset=utf-8','firefly-core.mjs':'text/javascript; charset=utf-8'});
 Object.assign(TYPES,{'firefly-beat.mjs':'text/javascript; charset=utf-8','firefly-beat-ui.mjs':'text/javascript; charset=utf-8','firefly-beat.css':'text/css; charset=utf-8'});
 Object.assign(TYPES,{'evolution.html':'text/html; charset=utf-8','evolution.css':'text/css; charset=utf-8','evolution.mjs':'text/javascript; charset=utf-8','evolution-core.mjs':'text/javascript; charset=utf-8'});
@@ -42,6 +43,7 @@ for(const name of ['neural-generalization.mjs','neural-generalization-ui.mjs','n
 TYPES['neural-generalization.css']='text/css; charset=utf-8';
 TYPES['neural-guide.css']='text/css; charset=utf-8';
 TYPES['space-theme.css']='text/css; charset=utf-8';
+TYPES['experiment-showcase.css']='text/css; charset=utf-8';
 TYPES['Silkscreen-Regular.ttf']='font/ttf';
 TYPES['Silkscreen-OFL.txt']='text/plain; charset=utf-8';
 TYPES['feedback-story.mjs']='text/javascript; charset=utf-8';

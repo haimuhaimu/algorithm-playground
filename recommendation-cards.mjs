@@ -1,5 +1,5 @@
-import {TOPICS} from './data.mjs?v=recommendation-studio-v2';
-import {probability} from './core.mjs?v=recommendation-studio-v2';
+import {TOPICS} from './data.mjs?v=feedback-focus-v1';
+import {probability} from './core.mjs?v=feedback-focus-v1';
 
 // Display-only remapping. The same post IDs and original data still go to the scorer.
 const studioPosts={

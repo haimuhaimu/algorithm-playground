@@ -2,17 +2,18 @@
 <html lang="zh-CN">
 <head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
- <meta name="description" content="画一道墙，给算法出道题。在同一张地图上对比广度优先搜索和 A*，亲手试出寻路的不同。">
+ <meta name="description" content="先跑一遍，再改一格。在同一张地图上对比广度优先搜索和 A*，保留前后结果，亲手试出寻路的不同。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pathfinding.css">
- <script type="module" src="./pathfinding.mjs"></script>
+ <script type="module" src="./pathfinding.mjs?v=first-run-guide-v1"></script>
  <title>算法游乐场 · 寻路竞技场</title>
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./pathfinding-cats.css?v=snack-routes-v1">
  <link rel="stylesheet" href="./space-theme.css">
  <script type="module" src="./pathfinding-cats-ui.mjs?v=snack-routes-v1"></script>
+ <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
-<body>
+<body class="play-showcase">
  <a class="skip-link" href="#arena">跳到寻路地图</a>
  <header class="site-header">
   <a class="brand" href="./" aria-label="算法游乐场首页"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a>
@@ -20,7 +21,7 @@
  </header>
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./recommendation.html">01 推荐系统</a><a href="./pathfinding.html" aria-current="page">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="path-main">
-  <section class="path-intro"><p class="eyebrow">同一张地图，两种找路的直觉</p><h1>你出题，<span>算法找路。</span></h1><p class="intro-copy">画一道墙，把出口藏远一点。看看谁在四处寻找，谁更有方向感。</p><a class="cat-route-entry" href="#cat-route-lab">三猫去同一个零食点 <span aria-hidden="true">↓</span></a></section>
+  <section class="path-intro"><p class="eyebrow">同一张地图，两种找路的直觉</p><h1>你出题，<span>算法找路。</span></h1><p class="intro-copy" id="path-intro-copy">先跑完这张图，留住地图和结果。再改一格墙，再跑一次看变化。</p><a class="cat-route-entry" href="#cat-route-lab">三猫去同一个零食点 <span aria-hidden="true">↓</span></a></section>
   <section class="map-toolbar" id="path-lab" aria-label="地图与播放工具">
    <details class="map-editing" id="map-editing" open><summary>改地图与画笔 <span id="editing-label">画墙</span></summary><div class="tool-row">
     <div class="map-presets" role="group" aria-label="选择地图"><button data-map="empty" aria-pressed="false">空白地图</button><button data-map="detour" aria-pressed="true">绕个远路</button><button data-map="maze" aria-pressed="false">曲折迷宫</button></div>
@@ -36,7 +37,7 @@
     <button class="play-button" id="play">开始找路 <span aria-hidden="true">▶</span></button>
     <button class="secondary-button" id="step">走一步</button><button class="secondary-button" id="finish">直接看结果</button>
     <label class="speed-control" for="speed">播放速度 <select id="speed"><option value="90">慢一点</option><option value="40" selected>正常</option><option value="12">快一点</option></select></label>
-    <span id="play-status" role="status">地图就绪，等你出题。</span>
+    <span id="play-status" role="status">先跑完一轮，留住对照。</span>
    </div>
   </section>
   <div class="guess-entry">
@@ -132,7 +133,7 @@
   </section>
   <section class="race-summary" aria-labelledby="summary-title">
    <div class="summary-main"><p class="eyebrow">这一局，发现了什么</p><h2 id="summary-title">最短的路，不止一种找法。</h2><p id="result-copy">先跑一轮，再挪动一块墙。地图里的一个小改变，就可能让算法换一种走法。</p></div>
-   <div class="map-challenge"><h3>给你一个出题挑战</h3><p>亲手改一张地图，让 A* 少探索至少一半格子，还能找到出口。</p><p id="challenge-status">先改一笔，再试试。</p></div>
+   <div class="map-challenge"><h3>给你一个出题挑战</h3><p>亲手改一张地图，让 A* 少探索至少一半格子，还能找到出口。</p><p id="challenge-status">先跑完一轮，留住对照。</p></div>
   </section>
   <details class="algorithm-notes"><summary>为什么都能找到最短路？这个比较又有什么边界？</summary><div><p>这里只能上下左右走，每一步成本相同。广度优先搜索按层展开，所以第一次找到终点就是最短路。</p><p>A* 使用「已走步数 + 曼哈顿距离」排序。曼哈顿距离是不考虑墙时的横向加纵向距离，在这张地图里不会高估余程，所以也能保证最短路。分数相同优先预计余程更短的节点，再按入队顺序。</p><p>两边每一拍各展开一个格子，找到终点后各自停止。探索数包括起终点，不包括仅进入待探索队列的格子；路线步数不包括起点。探索更少不等于实际运行更快，A* 还要维护排序。</p><p>相同地图必得相同结果。A* 不保证在每张地图上都省下一半搜索；路线可能不同，但最短长度相同。刷新会重置地图，无账号、上传或追踪。</p></div></details>
   <section class="bottom-note"><span>自己出题，才有新发现。</span><p>四向移动，每步成本为 1。动画用来理解过程，不代表性能跑分。</p><span class="signature">MADE BY CHEN QUAN</span></section>

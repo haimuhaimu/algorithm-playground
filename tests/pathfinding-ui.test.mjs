@@ -44,6 +44,66 @@ async function boot(){
   selected(){return presets.find(b=>b.getAttribute('aria-pressed')==='true')?.dataset.map;}};
 }
 
+test('first-run guidance waits for a complete real baseline before inviting a map edit',async()=>{
+ const u=await boot();try{
+  assert.match(u.els.get('play-status').textContent,/先.*跑.*对照/);
+  assert.match(u.els.get('challenge-status').textContent,/先.*跑.*对照/);
+  u.click('step');
+  assert.equal(u.els.get('compare-empty').hidden,false,'one search step is not saved evidence');
+  assert.match(u.els.get('play-status').textContent,/暂停/);
+  assert.match(u.els.get('challenge-status').textContent,/跑完.*对照/);
+  u.click('finish');
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  assert.match(u.els.get('play-status').textContent,/改一格/);
+  assert.match(u.els.get('path-intro-copy').textContent,/已.*保留.*改一格/);
+ }finally{u.restore();}
+});
+
+test('guidance follows baseline geometry through an edit, real comparison and undo',async()=>{
+ const u=await boot();try{
+  u.click('finish');u.tool('erase');u.edit(82);
+  assert.match(u.els.get('play-status').textContent,/原对照.*再跑/);
+  assert.match(u.els.get('challenge-status').textContent,/跑.*这张图/);
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  assert.equal(u.els.get('compare-after-distance').textContent,'待运行');
+  u.click('finish');
+  assert.equal(u.els.get('compare-after-distance').textContent,'12');
+  assert.match(u.els.get('path-intro-copy').textContent,/前后.*对照/);
+  u.click('undo-map');
+  assert.match(u.els.get('play-status').textContent,/与对照相同/);
+  assert.match(u.els.get('path-intro-copy').textContent,/改一格/);
+  u.preset('empty');
+  assert.match(u.els.get('play-status').textContent,/原对照.*再跑/,'a different preset is also a changed map');
+ }finally{u.restore();}
+});
+
+test('editing first acknowledges missing evidence and undo can recover the unplayed map',async()=>{
+ const u=await boot();try{
+  u.tool('erase');u.edit(82);
+  assert.equal(u.els.get('compare-empty').hidden,false);
+  assert.match(u.els.get('play-status').textContent,/还没有.*对照/);
+  assert.match(u.els.get('path-intro-copy').textContent,/撤销.*再跑/);
+  assert.equal(u.els.get('undo-map').disabled,false);
+  u.click('undo-map');u.click('finish');
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  u.tool('erase');u.edit(82);u.click('finish');
+  assert.equal(u.els.get('compare-after-distance').textContent,'12');
+  assert.equal(u.els.get('compare-distance-delta').textContent,'少 8 步');
+ }finally{u.restore();}
+});
+
+test('running an edited-first map only saves that actual run and rebasing returns to the edit invitation',async()=>{
+ const u=await boot();try{
+  u.tool('erase');u.edit(82);u.click('finish');
+  assert.equal(u.els.get('compare-before-distance').textContent,'12','no unplayed original run is fabricated');
+  assert.match(u.els.get('play-status').textContent,/改一格/);
+  assert.match(u.els.get('path-intro-copy').textContent,/已.*保留.*改一格/);
+  u.tool('wall');u.edit(82);u.click('finish');u.click('compare-rebase');
+  assert.equal(u.els.get('compare-before-distance').textContent,'20');
+  assert.match(u.els.get('play-status').textContent,/改一格/);
+ }finally{u.restore();}
+});
+
 test('the cat case keeps only one edit and never rewrites the original arena or its undo history',async()=>{
  const u=await boot();try{
   u.edit(0);u.click('finish');

@@ -10,7 +10,7 @@
 
 新增独立小课「分布观察台」：让正态、指数和帕累托三台机器各抽一些随机数，先多抽一点，再用同一批数把红线从 4 挪到 16，看看还剩多少大数字。保留前后次数、原来的图形和图外读数，最后想一想“没抽到，是不是就不可能”；对数正态可以在结束后选看。全部在浏览器里计算，不上传、不新增保存记录；已知模型的类别与这次抽到的结果分开解释，不凭一张图给现实数据定性。[试玩分布观察台 →](https://haimuhaimu.github.io/algorithm-playground/distributions.html)
 
-Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, a blind-box mining game about exploration vs exploitation, a pixel postcard editor with real lossless Huffman encoding, a tiny learned world-model flight lab, and an evolving AI art studio about local edits, reusable workflows, and improvement methods. No account required.
+Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, a blind-box mining game about exploration vs exploitation, a pixel postcard editor with real lossless Huffman encoding, a tiny learned world-model flight lab, and an AI art studio about editing one poster, testing reusable rules, and choosing whether to keep or roll them back. No account required.
 
 调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
 
@@ -34,7 +34,13 @@ Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs 
 
 第九个实验是「脑内预演室」：教小飞船从试飞经历中预测运动。先在同一趟记录上对照学习前后的预测，再另选路线、真实试飞；方向、推力、风和橙色真实轨迹不变，让学习和规划各自看得见。最后面对“只换目标，要不要重新学习”的独立选择，回顾这轮实验学到了什么。[直接玩脑内预演室 →](https://haimuhaimu.github.io/algorithm-playground/world-model.html)
 
-第十个实验是「会进化的 AI 创作室」：同一张花园海报贯穿到底。先把兔子修回狐狸，再看助手为什么又画错；对照一次试改，亲自选择保留或撤回，再看它遇到衣服问题时会怎么办。两条路有不同结果，可以回到同一次选择重试。十个实验可从导航切换。[直接玩 AI 创作室 →](https://haimuhaimu.github.io/algorithm-playground/rsi.html)
+第十个实验是「会进化的 AI 创作室」：波比的花园海报贯穿到底。先修好一张绿色围巾海报，再看“以后都固定绿色”为什么会弄错珊瑚色新委托。你可以只改围巾的取色方式，用同样两份委托复测，再保留或撤回；最初修好的成品仍可展开回看。它演示验证候选规则，不会改变助手寻找改法的方法。十个实验可从导航切换。[直接玩 AI 创作室 →](https://haimuhaimu.github.io/algorithm-playground/rsi.html#workshop)
+
+## 让自己的 AI 陪你玩
+
+有本地执行能力的 AI 可以按 [使用指南](AI_USAGE.md) 发现工具、试跑固定案例，再重算一份真实实验记录。目前覆盖三站模型学习路线、像素解码、贝叶斯小课和 Agent 三关；完整能力与动作以 `list` / `describe` 返回值为准。[静态 manifest](learning-tool-manifest.json) 只用于发现，不是在线执行服务。
+
+其余网页实验仍需浏览器操作，不能把它们当作已支持的执行接口。无需付费模型或密钥，不读取私有画纸和草稿；AI 代跑与某个人实际操作、完成流程与掌握概念，都必须分开。
 
 ## 本地运行
 
@@ -73,13 +79,13 @@ npm run verify
 
 ### 会进化的 AI 创作室
 
-- 角色、服装、动作与场景参数直接驱动原创 SVG 插画；没有真实生图服务、大模型调用或私有角色素材。始终使用同一份“狐狸、绿色外套、侧身”的花园海报要求，判断只检查是否符合要求，不评价审美。
-- 手动修图只改变这张作品，不改变助手的出图规则。按旧做法重新画会重复兔子错误；原始图和手动修复记录独立保留。
-- 先展示助手针对角色错误的试改与前后对照，再由用户决定。保留会同时留下角色规则与“先找错再选改法”的方法；撤回则均不留下。随后的画面由实际选定规则重新生成，不是换一段结尾文案。
-- 接着让同一份要求遇到新的衣服参考错误。用户先判断哪里不对，再让所选方法尝试一次；猜测不会改变算法结果。诊断法尝试衣服规则，旧固定顺序先尝试正面构图；只有合格张数严格增加才自动保留这次试改。结尾诚实展示实际结果与有限边界。
-- 可返回同一次取舍，从相同基线重试另一条路；后续结果与猜测会清空，手动修图记录保留。首次体验最多显示两张对照图，内部证据默认折叠。
-- 这是 RSI 思想的有限教学模型，不是开放式自主 RSI。任务、错误类型、规则与诊断方法都已预设；选择预设改进器不等同于系统自主发明新算法，也不证明能无限变强。
-- 全部本地计算，无上传、追踪、外部素材或自动保存；刷新重置。完成浏览器桌面与手机/横屏视口验收，未做实体手机验收。
+- 使用三猫工作室可公开的波比原画，独立围巾层只改颜色，不重画脸、毛色或姿势。绿色旧委托与珊瑚色新委托使用同一张参考图、同一角色、姿势和场景；判断只检查是否符合要求，不评价审美。没有真实生图服务或大模型调用。
+- 手动返修只改变眼前这张作品，不改变规则；按旧办法重画仍使用参考图的珊瑚色。原图与本轮手动修好的成品分别保留。
+- “固定绿色”在旧委托通过、在新委托失败。玩家先猜再看真实出图，猜测不改变输出，也不改变首次失败证据。
+- 之后可以只把围巾取色改成“读取当前委托”，显式用原来两份要求复测。新选择尚未实跑时不能保留；匹配的实际试验记录才允许安装。保留或撤回都由玩家决定，不会自动将通过的候选当作已安装。
+- 保留后按实际选定规则重画；撤回继续旧办法，不是只更换结尾文案。返回选择点保留本轮证据和成品，可以再试另一条路；从头重玩或刷新会清空本轮。成品卡读取真实返修快照，不根据新委托重建。
+- 这是 RSI 相关概念中“验证候选改进、保留或回退”的有限模拟，不是开放式自主 RSI，也没有改进诊断或寻找改法的方法。任务和取色规则预设，两份委托通过不证明普遍有效或能无限变强。
+- 全部本地计算，无上传、追踪或自动保存。已做桌面及窄屏/横屏浏览器验收，不等于实体手机、读屏器或学习效果验证。
 
 ### 脑内预演室
 

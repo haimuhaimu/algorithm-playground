@@ -5,13 +5,17 @@ import {readFile} from 'node:fs/promises';
 const root=new URL('../',import.meta.url);
 const pages=['recommendation','pathfinding','sand','firefly','evolution','neural','mining','pixel','world-model','rsi'];
 
-test('every experiment loads the shared visual system after its lesson styles',async()=>{
- for(const page of pages){
+test('all experiment and route entries apply the homepage-aligned shell after local lesson styles',async()=>{
+ for(const page of [...pages,'distributions','agent-mission','agent-reroute','agent-frames','learn']){
   const html=await readFile(new URL(page+'.html',root),'utf8');
   const sheets=[...html.matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)].map(match=>match[1].split('?')[0]);
-  assert.equal(sheets.at(-1),'./space-theme.css',page+' must apply shared presentation last');
-  assert.equal(sheets.filter(name=>name==='./space-theme.css').length,1);
+  assert.equal(sheets.at(-1),'./experiment-showcase.css',page+' must apply the homepage shell last');
+  assert.equal(sheets.filter(name=>name==='./experiment-showcase.css').length,1);
+  assert.match(html,/<body\b[^>]*class="[^"]*\bplay-showcase\b/,'the shell is explicitly scoped: '+page);
+  if(pages.includes(page))assert.equal(sheets.filter(name=>name==='./space-theme.css').length,1);
  }
+ const home=await readFile(new URL('index.html',root),'utf8');
+ assert.ok(!home.includes('experiment-showcase.css'),'the reference homepage remains unchanged');
 });
 
 test('light and dark theme text and actions meet readable contrast on all surfaces',async()=>{

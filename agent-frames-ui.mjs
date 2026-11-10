@@ -61,6 +61,12 @@ function sceneArt({id, view, sign}) {
  </svg>`;
 }
 
+function packetArt(id) {
+ const frame=AGENT_FRAME_CLIP[id];
+ const note=frame.sign==='unload'?'门牌：允许卸货':frame.view==='blocked'?'货箱挡住门牌':'门牌读不清';
+ return `<span class="frames-packet-thumb" data-packet-frame="${id}" role="img" aria-label="第 ${id} 帧：${SCENE[frame.view][2]}">${sceneArt(frame)}</span><small class="frames-packet-caption">${note}</small>`;
+}
+
 export function mountAgentFrames({document, window}) {
  const e = name => document.getElementById(`frames-${name}`);
  const set = (name, text) => { if (e(name).textContent !== text) e(name).textContent = text; };
@@ -82,7 +88,7 @@ export function mountAgentFrames({document, window}) {
  }
 
  function drawRound(name, outcome) {
-  e(`${name}-ids`).innerHTML = outcome.frameIds.map(id => `<li>${frameId(id)}</li>`).join('');
+  e(`${name}-ids`).innerHTML = outcome.frameIds.map(id => `<li>${packetArt(id)}<strong>${frameId(id)}</strong></li>`).join('');
   set(`${name}-evidence`, outcome.signFrame === null ? '这三帧没拍清门牌。' : `${frameId(outcome.signFrame)} 拍清了「允许卸货」的门牌。`);
   set(`${name}-result`, outcome.conclusion === 'clear-to-unload' ? '允许卸货' : '证据不足，不能确认');
  }
@@ -145,8 +151,10 @@ export function mountAgentFrames({document, window}) {
    done: '',
   }[stage]);
   const slots = [{id: 0, label: '首帧'}, {id: first ? 4 : manualPick, label: first ? '固定中间帧' : '你的中间帧'}, {id: 8, label: '末帧'}];
-  e('slots').innerHTML = slots.map(({id: value, label}) =>
-   `<li data-received="${value !== null && (value <= id || done)}"><strong>${value === null ? '待选' : frameId(value)}</strong><span>${label}</span></li>`).join('');
+  e('slots').innerHTML = slots.map(({id: value, label}) => {
+   const received=value!==null&&(value<=id||done);
+   return `<li data-received="${received}">${received?packetArt(value):'<span class="frames-packet-wait">尚未收到画面</span>'}<strong>${value===null?'待选':frameId(value)}</strong><span>${label}</span></li>`;
+  }).join('');
   for (const name of ['advance', 'play']) {
    show(name, available('advance'));
    e(name).disabled = !available('advance');

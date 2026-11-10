@@ -1,5 +1,5 @@
 import { encode, decode, preset, stroke, rearrangement, POSTCARD_COLORS, EDITOR_POSTCARD_PRESETS, STUDIO_POSTCARD_NAMES, POSTAGE_BYTE_STEPS, postageByteTrial } from './pixel-core.mjs?v=cat-postage-byte-v1';
-import { setupRecipient } from './pixel-recipient-ui.mjs?v=recipient-1';
+import { setupRecipient } from './pixel-recipient-ui.mjs?v=first-letter-v1';
 import { setupCodeLesson } from './pixel-code-ui.mjs?v=code-1';
 import { createDelivery, deliveryAt } from './pixel-delivery.mjs?v=delivery-1';
 import { setupPixelToolUI } from './pixel-tool-ui.mjs?v=studio-postcards-v2';
@@ -15,6 +15,7 @@ let pixels = preset('heim'), color = 1, cursor = { x: 0, y: 0 }, focused = false
 let gesture = null, history = [], received = null, job = null, frame = 0;
 let reorder = null, recipient = null, codeLesson = null;
 let lastParcel = null, deliveryView = null, pixelToolExport = null;
+let deliveredParcel = null, firstLetter = { source: null, restored: 0, answer: null };
 const deliveryContext = $('delivery-preview').getContext('2d');
 const equal = (a, b) => a.length === b.length && a.every((value, i) => value === b[i]);
 const available = () => context && receivedContext && !document.hidden && !$('guide').open;
@@ -86,7 +87,39 @@ function render() {
   renderReorder();
   recipient?.refresh();
   codeLesson?.refresh();
+  renderFirstLetter();
 }
+function renderFirstLetter() {
+  const reading = deliveredParcel && firstLetter.source === deliveredParcel;
+  const restored = reading ? firstLetter.restored : 0;
+  const concluded = restored === 8 && firstLetter.answer === 'code';
+  const stage = !deliveredParcel ? 1 : restored === 8 ? 3 : 2;
+  for (let i = 1; i <= 3; i++) {
+    const complete = i === 1 ? !!deliveredParcel : i === 2 ? restored === 8 : concluded;
+    $('first-letter-step-' + i).dataset.complete = String(complete);
+    $('first-letter-step-' + i).setAttribute('aria-current', !concluded && stage === i ? 'step' : 'false');
+  }
+  $('first-letter-status').textContent = !deliveredParcel
+    ? received ? '画纸和上次来信都保留着。本轮从寄出开始，不会自动重寄或把旧记录当作完成。' : '先选一张三猫明信片，也可以直接寄当前画纸。点「打包寄出」，看看它怎样到达。'
+    : concluded ? '这一轮走完了：你亲手还原了 8 格，并核对了无损的含义。这不是掌握证明。'
+    : restored === 8 ? '8 格已经读回来了。看看原片段和你的结果，再做最后一个判断。'
+    : '已成功寄出。接下来，你来读回这封信的 8 格，不让动画替你选颜色。';
+  $('first-letter-read').disabled = !deliveredParcel || !context || !receivedContext;
+  const inline = !!deliveredParcel && deliveryView?.verifiedParcel === deliveredParcel && !$('delivery-panel').hidden;
+  $('first-letter-next').hidden = !inline;
+  $('first-letter-resume').hidden = !deliveredParcel || inline;
+  $('first-letter-resume').disabled = !deliveredParcel || !context || !receivedContext;
+  $('first-letter-read').textContent = deliveredParcel ? '亲手读回这封信的 8 格 →' : '先寄出，再来亲手读信';
+  $('first-letter-note').textContent = deliveredParcel
+    ? `成功来信 ${deliveredParcel.bytes} B · ${equal(pixels,deliveredParcel.snapshot) ? '用刚才那封信，不另换一张图。' : '画纸已改，仍读上一封成功来信；新画纸不会被覆盖。'}只在本页保留这条实操，不写学习进度。`
+    : '完整收齐并核验后，这个入口才会开放。原来的单独练习也保留。';
+}
+function readSuccessfulLetter() {
+  if (!available() || !deliveredParcel) return;
+  cancelStroke(); cancelSend('已取消未完成的寄送，改读上一封成功来信。');
+  recipient.openParcel(deliveredParcel);
+}
+for (const id of ['first-letter-read','first-letter-resume']) $(id).addEventListener('click', readSuccessfulLetter);
 function renderReorder() {
   $('reorder-lesson').hidden = !reorder;
   if (!reorder) return;
@@ -326,6 +359,9 @@ function finishDelivery(current) {
     const decoded = decode(current.parcel.encoded.packet,256);
     if (!equal(decoded,current.parcel.snapshot)) { cancelSend('还原校验未通过，保留上次来信。'); return; }
     received = {pixels:decoded,bytes:current.parcel.encoded.packet.length};
+    deliveredParcel = {packet:Uint8Array.from(current.parcel.encoded.packet),snapshot:Object.freeze([...decoded]),bytes:received.bytes};
+    current.verifiedParcel = deliveredParcel;
+    firstLetter = {source:deliveredParcel,restored:0,answer:null};
     draw(receivedContext,decoded);
     $('status').textContent = `送达了！${received.bytes} 字节，256 格一格不少。可以逐位拆这封信。`;
     job = null; render(); saveDraft();
@@ -405,7 +441,10 @@ if(draft.value){
 $('draft-status').textContent=draftMessage(draft.status);
 renderPresetSelection();
 setupCatPostage();
-recipient = setupRecipient({ getPixels: () => pixels, available, cancelStroke });
+recipient = setupRecipient({ getPixels: () => pixels, available, cancelStroke, onProgress: progress => {
+  if (!deliveredParcel || progress.source !== deliveredParcel) return;
+  firstLetter = progress; renderFirstLetter();
+} });
 codeLesson = setupCodeLesson({ document, getPixels: () => pixels, available, cancelStroke });
 pixelToolExport=setupPixelToolUI({document,window,getView:()=>deliveryView,available,pause:()=>{
  if(job){job.paused=true;job.epoch++;cancelAnimationFrame(frame);frame=0;renderDelivery(job);}

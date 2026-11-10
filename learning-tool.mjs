@@ -22,7 +22,7 @@ const EXPERIMENTS=[
  ['neural','涂鸦训练场','分类、梯度、残差与新题评估','neural.html#first-lesson'],
  ['mining','盲盒探矿','探索与利用、样本与反馈','mining.html#shared-title'],
  ['pixel','像素邮局','前缀码与无损压缩','pixel.html#code-start'],
- ['world-model','脑内预演室','模型学习、预测与规划的区别','world-model.html#planning-lab'],
+ ['world-model','脑内预演室','模型学习、预测与规划的区别','world-model.html#flight-guide'],
  ['rsi','AI 创作室','有限规则改进与验证，不是通用 RSI','rsi.html#workshop']
 ].map(([id,title,concept,path])=>({id,title,concept,url:BASE+path,execution:'browser-only'}));
 const BOUNDARIES=[

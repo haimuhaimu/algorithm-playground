@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {describeLearningTool,listLearningTools} from '../learning-tool.mjs';
 test('Heim sits inside the one real ship and is introduced outside the trajectory plot',async()=>{
  const html=await readFile(new URL('../world-model.html',import.meta.url),'utf8');
  const ship=html.match(/<g\b[^>]*\bid="ship"[^>]*>([\s\S]*?)<\/g>/)?.[1];
@@ -31,6 +32,23 @@ async function boot({reduced=false}={}){
   finish(){for(let i=0;i<=65;i++)this.tick(i*100);},
   hide(){doc.hidden=true;fire(doc,'visibilitychange');},show(){doc.hidden=false;fire(doc,'visibilitychange');}};
 }
+test('AI catalog entry is visible before any plan exists and the first flight remains playable',async()=>{
+ const u=await boot({reduced:true});try{
+  const urls=[describeLearningTool('world-model').url,listLearningTools().experiments.find(e=>e.id==='world-model').url];
+  for(const value of urls){
+   const url=new URL(value);
+   assert.equal(url.pathname,'/algorithm-playground/world-model.html');
+   const target=u.els.get(decodeURIComponent(url.hash.slice(1)));
+   assert.ok(target,'the AI-recommended anchor must exist in the actual page');
+   assert.equal(target.hidden,false,'the AI-recommended entry must be available before a flight or plan');
+  }
+  assert.equal(u.els.get('next').hidden,false);assert.equal(u.els.get('next').disabled,false);
+  u.click('next');
+  assert.equal(u.els.get('results').hidden,false,'the real first flight must still run');
+  assert.match(u.els.get('progress').textContent,/60 \/ 60/);
+  assert.ok(parseFloat(u.els.get('target-distance').textContent)>5,'the initial miss must not be replaced by a success screen');
+ }finally{u.restore();}
+});
 test('flight has visible progress, immutable prediction and results before explicit learning',async()=>{
  const u=await boot();try{
   assert.equal(u.els.get('learn').disabled,true);assert.match(u.els.get('model-label').textContent,/M0/);

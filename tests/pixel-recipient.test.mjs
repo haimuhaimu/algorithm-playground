@@ -2,6 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as core from '../pixel-core.mjs';
 
+test('a received lesson keeps the actual packet tree instead of rebuilding codes from the drawing', async () => {
+  const api=await import('../pixel-recipient.mjs');
+  assert.equal(typeof api.createRecipientLessonFromPacket,'function');
+  // Tree 0|101|100: black is 0, white is 1, unlike the canonical tied tree.
+  // 256 alternating white/black pixels; 7 tree + 256 payload + 1 padding bit.
+  const packet=Uint8Array.of(0x59,...Array(31).fill(0x55),0x54);
+  const lesson=api.createRecipientLessonFromPacket(packet);
+  assert.deepEqual(lesson.snapshot,Array.from({length:256},(_,i)=>i%2));
+  assert.deepEqual(lesson.codes,['1','0',null,null]);
+  assert.deepEqual(lesson.counts,[128,128,0,0]);
+  assert.equal(lesson.packetBytes,33);
+  assert.equal(lesson.treeBits,7);assert.equal(lesson.payloadBits,256);assert.equal(lesson.paddingBits,1);
+  assert.deepEqual(lesson.entries[0],{index:0,color:0,code:'1',startBit:7,endBit:8});
+  packet.fill(0);
+  assert.deepEqual(lesson.codes,['1','0',null,null]);
+  assert.deepEqual(lesson.snapshot.slice(0,8),[0,1,0,1,0,1,0,1]);
+  assert.throws(()=>api.createRecipientLessonFromPacket(Uint8Array.of(0x59,...Array(31).fill(0x55),0x55)),/padding/);
+});
+
 test('packet inspection reads exact code boundaries from hand-derived bytes', () => {
   assert.equal(typeof core.inspectPacket, 'function');
   // Tree: branch, leaf white(100), leaf black(101); payload white/black/white = 010.

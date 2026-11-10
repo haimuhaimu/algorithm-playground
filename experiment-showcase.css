@@ -1,0 +1,186 @@
+/* Homepage-aligned presentation, deliberately separate from simulation tokens.
+   Do not map --good/--accent/--signal to brand pink: racers, charts and evidence
+   use those colors. Existing canvases, grids, hit targets and saved state remain
+   owned by each experiment. No new animation or third-party assets. */
+:root {
+ --showcase-bg:var(--home-bg,#f5f5f7);
+ --showcase-surface:var(--home-surface,#ffffff);
+ --showcase-ink:var(--home-ink,#1d1d1f);
+ --showcase-muted:var(--home-muted,#626267);
+ --showcase-line:var(--home-line,#d9d9df);
+ --showcase-accent:var(--home-accent,#b52670);
+ --showcase-action:var(--home-action,#c22973);
+ --showcase-hover:var(--home-action-hover,#b21e65);
+ --showcase-pressed:var(--home-action-pressed,#9f1859);
+ --showcase-on-action:var(--home-on-action,#ffffff);
+ --showcase-title-start:var(--home-title-start,#a43fb1);
+ --showcase-title-middle:var(--home-title-middle,#cf2c85);
+ --showcase-title-end:var(--home-title-end,#c65735);
+ --showcase-tint:#f8eaf1;
+ --showcase-font:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+:root[data-theme="dark"] {
+ --showcase-bg:var(--home-bg,#101012);
+ --showcase-surface:var(--home-surface,#1c1c1e);
+ --showcase-ink:var(--home-ink,#f5f5f7);
+ --showcase-muted:var(--home-muted,#a9a9b0);
+ --showcase-line:var(--home-line,#37373b);
+ --showcase-accent:var(--home-accent,#ff94c5);
+ --showcase-title-start:var(--home-title-start,#d9a0f5);
+ --showcase-title-middle:var(--home-title-middle,#ff8cc5);
+ --showcase-title-end:var(--home-title-end,#ffb38a);
+ --showcase-tint:#34202c;
+}
+.play-showcase {
+ --action:var(--showcase-action); --on-action:var(--showcase-on-action);
+ background:var(--showcase-bg); color:var(--showcase-ink);
+ font-family:var(--showcase-font); -webkit-font-smoothing:antialiased;
+}
+.play-showcase :is(.site-header,.home-header) { min-height:76px; }
+.play-showcase .brand { font-size:17px; font-weight:650; letter-spacing:-.035em; }
+.play-showcase .brand small { display:none; }
+/* Reuse the homepage's four-pixel brand mark, with the existing three i nodes
+   plus one CSS square. The linked wordmark and accessible name are unchanged. */
+.play-showcase .brand-mark {
+ width:20px; height:20px; padding:0; display:grid; grid-template-columns:repeat(2,1fr);
+ gap:3px; background:none; border:0; border-radius:0; transform:none; color:var(--showcase-accent);
+}
+.play-showcase .brand-mark i { position:static; width:auto; height:auto; background:currentColor; border-radius:0; }
+.play-showcase .brand-mark i::before { content:none; }
+.play-showcase .brand-mark::after { content:""; background:currentColor; opacity:.35; }
+.play-showcase :is(.theme-button,#home-theme) {
+ width:44px; height:44px; min-height:44px; border-radius:50%;
+ color:var(--showcase-ink); background:var(--showcase-surface); border:1px solid var(--showcase-line);
+}
+.play-showcase .experiment-nav {
+ background:var(--showcase-bg); color:var(--showcase-ink);
+ border-color:var(--showcase-line);
+}
+.play-showcase .experiment-nav .experiment-links a { color:var(--showcase-muted); }
+.play-showcase .experiment-nav .experiment-links a[aria-current="page"] {
+ color:var(--showcase-accent); border-color:var(--showcase-accent);
+}
+.play-showcase .experiment-nav .experiment-links a:hover { color:var(--showcase-accent); }
+.play-showcase :is(.experiment-toggle,.experiment-current) { color:var(--showcase-ink); }
+.play-showcase .experiment-switch { color:var(--showcase-muted); }
+.play-showcase #guess-toggle { border-color:var(--showcase-line); }
+.play-showcase #guess-toggle[aria-pressed="true"] { border-color:var(--showcase-accent); }
+
+/* A common product introduction; workspace width and its layout stay local. */
+.play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro,.route-intro) {
+ display:block; text-align:center; max-width:1080px; margin:0 auto;
+ padding:40px 0 44px; position:relative;
+}
+.play-showcase :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro)::before,
+.play-showcase :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro)::after { display:none; }
+:root .play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro,.route-intro) h1 {
+ width:fit-content; max-width:100%; margin:14px auto 22px;
+ font:750 clamp(40px,5.1vw,68px)/1.14 var(--showcase-font);
+ letter-spacing:-.06em; text-wrap:balance; color:var(--showcase-ink);
+ background:none; -webkit-text-fill-color:var(--showcase-ink);
+}
+:root .play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro,.route-intro) h1 span {
+ display:inline; color:inherit; font:inherit; background:none; -webkit-text-fill-color:inherit;
+}
+.play-showcase main :is(.intro-copy,.sand-intro>div>p:last-child,.firefly-intro>p:last-child,.race-intro>p,.neural-intro>p,.mining-intro>div>p:last-child,.pixel-intro>div>p:last-child,.world-intro>p:last-child,.rsi-intro>p:last-child,.distribution-lead,.mission-intro>p:last-child,.frames-intro>p:last-child,.route-intro>p) {
+ max-width:44em; margin-inline:auto; font-size:18px; font-weight:500;
+ line-height:1.65; letter-spacing:-.02em; color:var(--showcase-muted); text-wrap:pretty;
+}
+.play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro) .eyebrow {
+ color:var(--showcase-muted); font-size:11px; font-weight:500; letter-spacing:.015em;
+}
+.play-showcase :is(.cat-route-entry,.step-jump,.mission-text-link,.route-back-home) { color:var(--showcase-accent); }
+.play-showcase .race-lessons { justify-content:center; }
+.play-showcase .intro-note { margin:18px auto 0; padding:0; justify-content:center; text-align:center; }
+.play-showcase .intro-note .note-arrow { display:none; }
+.play-showcase :is(.lab-stamp,.postmark) { display:none; }
+.play-showcase .round-tag {
+ display:inline-flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:4px 12px;
+ margin:18px auto 0; padding:0; border:0; background:none; color:var(--showcase-muted); text-align:center;
+}
+.play-showcase .round-tag :is(span,small) { margin:0; line-height:1.5; }
+.play-showcase .guide-progress li[aria-current="step"] { color:var(--showcase-accent); border-color:var(--showcase-accent); }
+.play-showcase #guide-stage { color:var(--showcase-accent); }
+
+/* Outer materials only. Night habitats, pixel art and scene SVGs are subjects,
+   not mistaken dark-mode panels. Inner evidence retains its semantic palette. */
+.play-showcase :is(.panel,.map-toolbar,.algorithm-board,.raceboard,.drawing-board,.mission,.flight-deck,.art-desk,.grain-lesson,.listening-lesson,.label-lab,.shared-lab,.recipient-lesson,.adapt-lab,.seat-lesson,.post-office,.beat-panel,.neural-guide,.cat-lesson,.cat-route-lab,.observation,.mission-console,.mission-trial,.frames-console,.frames-cut,.frames-original,.frames-share,.route-task,.machine,.transfer-lab) {
+ background-color:var(--showcase-surface); border-color:var(--showcase-line);
+ border-radius:24px; box-shadow:0 3px 18px #1d1d1f04;
+}
+.play-showcase :is(.seat-lesson,.shared-lab,.neural-guide,.cat-lesson,.cat-route-lab,.beat-panel,.recipient-lesson,.grain-lesson,.listening-lesson,.adapt-lab) h2 {
+ font-family:var(--showcase-font); font-weight:750; letter-spacing:-.04em;
+}
+.play-showcase .birth-entry { border-radius:20px; border-color:var(--showcase-line); }
+
+/* Explicit UI controls only: a grid cell is also a button, so no all-button
+   padding/min-size/radius rule belongs in this stylesheet. */
+:root .play-showcase main :is(.run-button,.play-button,.sand-play,.primary,.listening-primary,.label-primary,.seat-primary,.birth-primary,.recipient-primary,.rsi-primary,.send-button,.grain-run,#shared-fly,#beat-run,.guide-primary,.bayes-entry button,.code-entry button,.code-lab .code-primary,.bayes-lesson button.bayes-primary,.mission-button.mission-primary,.frames-primary,.route-primary,.distribution-main .distribution-primary) {
+ background:var(--showcase-action); color:var(--showcase-on-action); border-color:transparent;
+ border-radius:999px; min-height:44px; font-weight:650;
+ box-shadow:none; filter:none; text-decoration:none;
+}
+:root .play-showcase main :is(.run-button,.play-button,.sand-play,.primary,.listening-primary,.label-primary,.seat-primary,.birth-primary,.recipient-primary,.rsi-primary,.send-button,.grain-run,#shared-fly,#beat-run,.guide-primary,.bayes-entry button,.code-entry button,.code-lab .code-primary,.bayes-lesson button.bayes-primary,.mission-button.mission-primary,.frames-primary,.route-primary,.distribution-main .distribution-primary):not(:disabled):hover {
+ background:var(--showcase-hover); color:var(--showcase-on-action); border-color:transparent;
+ box-shadow:0 5px 18px #c229731c; filter:none;
+}
+:root .play-showcase main :is(.run-button,.play-button,.sand-play,.primary,.listening-primary,.label-primary,.seat-primary,.birth-primary,.recipient-primary,.rsi-primary,.send-button,.grain-run,#shared-fly,#beat-run,.guide-primary,.bayes-entry button,.code-entry button,.code-lab .code-primary,.bayes-lesson button.bayes-primary,.mission-button.mission-primary,.frames-primary,.route-primary,.distribution-main .distribution-primary):not(:disabled):active {
+ background:var(--showcase-pressed); color:var(--showcase-on-action); box-shadow:none;
+}
+:root .play-showcase main :is(.run-button,.play-button,.sand-play,.primary,.listening-primary,.label-primary,.seat-primary,.birth-primary,.recipient-primary,.rsi-primary,.send-button,.grain-run,#shared-fly,#beat-run,.guide-primary,.bayes-entry button,.code-entry button,.code-lab .code-primary,.bayes-lesson button.bayes-primary,.mission-button.mission-primary,.frames-primary,.route-primary,.distribution-main .distribution-primary):disabled {
+ background:var(--showcase-line); color:var(--showcase-muted); border-color:var(--showcase-line);
+ box-shadow:none; filter:none; opacity:.65;
+}
+.play-showcase :is(.secondary-button,.mission-button,.frames-button,.route-options button,.frames-frame-choice,.map-presets button,.drawing-tools button,.scene-buttons button,.race-tools button,.training-actions button,.step-actions button,.label-actions button,.listening-actions button,.recipient-color-options button,.simulation-controls button,.shared-actions button,.grain-guesses button) { border-radius:12px; }
+.play-showcase :is(.preset,.map-presets button,.track-presets button,.dataset-presets button,.chorus-presets button)[aria-pressed="true"] {
+ border-color:var(--showcase-accent); background:var(--showcase-tint); color:var(--showcase-ink);
+}
+.play-showcase :is(button,a,summary,input,select):focus-visible {
+ outline:3px solid var(--showcase-accent); outline-offset:4px;
+}
+.play-showcase .experiment-nav .experiment-links a:focus-visible { outline-offset:-4px; }
+.play-showcase :is(.bottom-note,.world-footer,.rsi-footer,.distribution-footer) { color:var(--showcase-muted); }
+
+@supports ((background-clip:text) or (-webkit-background-clip:text)) {
+ :root .play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro,.route-intro) h1 {
+  background-image:linear-gradient(100deg,var(--showcase-title-start),var(--showcase-title-middle) 48%,var(--showcase-title-end));
+  background-clip:text; -webkit-background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+ }
+}
+@media (max-width:760px) {
+ .play-showcase :is(.site-header,.home-header) { min-height:72px; }
+ .play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro,.route-intro) { padding:32px 0 30px; }
+ :root .play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro,.route-intro) h1 {
+  font-size:clamp(34px,8.4vw,44px); line-height:1.2; letter-spacing:-.055em; margin:12px auto 18px;
+ }
+ /* The existing span is the sentence's second clause, not an arbitrary accent.
+    Keep "补给" / "到底" intact instead of wrapping halfway through a word. */
+ :root .play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro) h1 span { display:block; }
+ .play-showcase :is(.route-task-heading,.guide-prompt) h2 { text-wrap:balance; }
+ .play-showcase main :is(.intro-copy,.sand-intro>div>p:last-child,.firefly-intro>p:last-child,.race-intro>p,.neural-intro>p,.mining-intro>div>p:last-child,.pixel-intro>div>p:last-child,.world-intro>p:last-child,.rsi-intro>p:last-child,.distribution-lead,.mission-intro>p:last-child,.frames-intro>p:last-child,.route-intro>p) { font-size:16px; line-height:1.7; }
+ .play-showcase .intro-note { display:none; }
+ .play-showcase .experiment-nav .experiment-links a { background:var(--showcase-surface); border-color:var(--showcase-line); }
+ .play-showcase .experiment-nav .experiment-links a[aria-current="page"] { background:var(--showcase-tint); }
+ .play-showcase :is(.panel,.map-toolbar,.algorithm-board,.raceboard,.drawing-board,.mission,.flight-deck,.art-desk,.grain-lesson,.listening-lesson,.label-lab,.shared-lab,.recipient-lesson,.adapt-lab,.seat-lesson,.post-office,.beat-panel,.neural-guide,.cat-lesson,.cat-route-lab,.observation,.mission-console,.mission-trial,.frames-console,.frames-cut,.frames-original,.frames-share,.route-task,.machine,.transfer-lab) { border-radius:20px; }
+}
+@media (orientation:landscape) and (max-height:520px) {
+ .play-showcase :is(.site-header,.home-header) { min-height:58px; height:auto; }
+ .play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro,.route-intro) { padding:18px 0 22px; }
+ :root .play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro,.route-intro) h1 { font-size:34px; margin:8px auto 12px; }
+}
+@media (prefers-reduced-motion:reduce) {
+ .play-showcase :is(button,a,summary) { transition:none; }
+}
+@media (prefers-contrast:more),print {
+ :root .play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro,.route-intro) h1 {
+  background:none; color:var(--showcase-ink); -webkit-text-fill-color:var(--showcase-ink);
+ }
+}
+@media (forced-colors:active) {
+ :root .play-showcase main :is(.intro,.path-intro,.sand-intro,.firefly-intro,.race-intro,.neural-intro,.mining-intro,.pixel-intro,.world-intro,.rsi-intro,.distribution-intro,.mission-intro,.frames-intro,.route-intro) h1 { background:none; color:CanvasText; -webkit-text-fill-color:CanvasText; }
+ :root .play-showcase main :is(.run-button,.play-button,.sand-play,.primary,.listening-primary,.label-primary,.seat-primary,.birth-primary,.recipient-primary,.rsi-primary,.send-button,.grain-run,#shared-fly,#beat-run,.guide-primary,.bayes-entry button,.code-entry button,.code-lab .code-primary,.bayes-lesson button.bayes-primary,.mission-button.mission-primary,.frames-primary,.route-primary,.distribution-main .distribution-primary) {
+  /* System colors also win over the more specific hover/disabled variants. */
+  background:ButtonFace!important; color:ButtonText!important; border:1px solid ButtonText!important;
+ }
+ .play-showcase :is(button,a,summary,input,select):focus-visible { outline-color:Highlight; }
+}

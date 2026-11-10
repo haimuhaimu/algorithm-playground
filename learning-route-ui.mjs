@@ -1,4 +1,4 @@
-import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=handoff-trust-v1';
+import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=route-actions-v2';
 import {paintGuide} from './neural-guide-view.mjs';
 import {paintGeneralization} from './neural-generalization-view.mjs';
 import {runLearningRoute} from './learning-tool.mjs?v=learning-tool-v1';

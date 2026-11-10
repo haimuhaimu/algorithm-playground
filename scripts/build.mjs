@@ -24,7 +24,7 @@ FILES.push('neural-cat-09.jpg','neural-cat-10.jpg','neural-cat-11.jpg','neural-c
 FILES.push('neural-gradient.mjs','neural-gradient-ui.mjs');
 FILES.push('neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs','neural-residual.css');
 FILES.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-generalization-view.mjs','neural-generalization.css');
-FILES.push('space-theme.css');
+FILES.push('space-theme.css','experiment-showcase.css');
 FILES.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css','learning-route-trials.mjs');
 FILES.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
 FILES.push('genai-handoff.mjs','bayes-tool.mjs');
@@ -42,6 +42,7 @@ FILES.push('distributions.html','distributions.css','distributions.mjs','distrib
 FILES.push('world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
 FILES.push('world-model-planning.mjs');
 FILES.push('sand-history.mjs');
+FILES.push('sand-bowl.mjs');
 FILES.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');
 FILES.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');
 FILES.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');

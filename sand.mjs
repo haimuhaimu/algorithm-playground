@@ -1,5 +1,6 @@
-import {EMPTY,SAND,WATER,WALL,createWorld,stepWorld,paintStroke,countMaterials} from './sand-core.mjs?v=edit-history-2';
-import {createHistory,snapshot,recordChange,undoChange,redoChange,discardFuture} from './sand-history.mjs?v=edit-history-2';
+import {EMPTY,SAND,WATER,WALL,createWorld,stepWorld,paintStroke,countMaterials} from './sand-core.mjs?v=bowl-outlet-v1';
+import {createHistory,snapshot,recordChange,undoChange,redoChange,discardFuture} from './sand-history.mjs?v=bowl-outlet-v1';
+import {openBowl,observeBowl} from './sand-bowl.mjs?v=bowl-outlet-v1';
 const $=id=>document.getElementById(id),canvas=$('sandbox'),ctx=canvas.getContext('2d');
 const names=['橡皮','沙子','水','墙'],sizes=['细','小','中','大','很大'];
 const tips={splitter:'往屋顶尖端倒水，再擦掉一小段斜坡。两边的去向会怎么变？',hourglass:'在沙漏的细口补一堵墙，让时间停住；再挖开它，让沙继续走。',empty:'造一只杯子，装点水，再撒一把沙。也可以在杯底开一道口。','cat-bowl':'臭臭的碗里有水。可以撒一把沙，也可以擦开碗底，看水往哪流。'};
@@ -50,6 +51,12 @@ function render(){
   ctx.beginPath();ctx.moveTo(x-4,y);ctx.lineTo(x+4,y);ctx.moveTo(x,y-4);ctx.lineTo(x,y+4);ctx.stroke();
  }
  const counts=countMaterials(world);
+ $('bowl-tools').hidden=scene!=='cat-bowl';
+ if(scene==='cat-bowl'){
+  const bowl=observeBowl(world);
+  $('bowl-open').disabled=bowl.openingOpen;
+  $('bowl-status').textContent=`碗底下 ${bowl.waterBelow} 格水 · 整幅画布 ${counts.water} 格水`;
+ }
  for(const key of ['sand','water','wall'])$(key+'-count').textContent=counts[key];
  $('tick-count').textContent='第 '+world.tick+' 拍';
  renderHistory();
@@ -143,6 +150,14 @@ function reset(nextScene){
  $('scene-tip').textContent=tips[scene];controls('场景已重置 · '+(playing?'正在演化':'已暂停'));render();schedule();
 }
 document.querySelectorAll('[data-scene]').forEach(b=>b.addEventListener('click',()=>reset(b.dataset.scene)));
+$('bowl-open').addEventListener('click',()=>{
+ if(scene!=='cat-bowl'||document.hidden)return;
+ endStroke();stop();
+ const before=currentState(),walls=observeBowl(world).wallsRemaining,next=openBowl(world);
+ if(next===world)return;
+ world=next;history=recordChange(history,before,currentState(),'打开碗底小口');
+ controls(`已暂停 · 只擦开 ${walls} 格墙，水还没动。点「继续」或「走一拍」看水流。`);render();
+});
 $('reset').addEventListener('click',()=>reset(scene));
 $('play').addEventListener('click',()=>{endStroke();if(playing)stop();else{playing=true;lastTick=performance.now();controls();schedule();}});
 $('step').addEventListener('click',()=>{endStroke();stop();simulate();controls('已走一拍 · 第 '+world.tick+' 拍');render();});

@@ -3,17 +3,23 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="画一张像素明信片，用真正的 Huffman 编码打包寄出，再一格不差地还原。亲手玩懂信息量与无损压缩。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pixel.css?v=cat-postage-byte-v1"><link rel="stylesheet" href="./pixel-recipient.css?v=recipient-1">
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./pixel.css?v=first-letter-v1"><link rel="stylesheet" href="./pixel-recipient.css?v=recipient-1">
  <link rel="stylesheet" href="./pixel-code.css?v=code-1">
- <script type="module" src="./pixel.mjs?v=cat-postage-byte-v1"></script><title>算法游乐场 · 像素邮局</title>
+ <script type="module" src="./pixel.mjs?v=first-letter-v1"></script><title>算法游乐场 · 像素邮局</title>
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
-</head><body>
+ <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
+</head><body class="play-showcase">
  <a class="skip-link" href="#editor">跳到明信片画纸</a>
  <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><button class="quiet-button" id="about">怎么玩 ↗</button><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div></header>
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./recommendation.html">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html" aria-current="page">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="pixel-main">
   <section class="pixel-intro"><div><p class="eyebrow">08 / A LITTLE LESS, EXACTLY THE SAME</p><h1>把一张画，<span>装进几枚字节。</span></h1><p>画点什么，交给 0 和 1。看看它能不能轻装到达。</p></div><div class="postmark" aria-hidden="true"><span>PIXEL POST</span><strong>16 × 16</strong><span>LOSSLESS DELIVERY</span></div></section>
+  <section id="first-letter" class="pixel-journey" aria-labelledby="first-letter-title">
+   <div class="pixel-journey-heading"><div><p class="eyebrow">第一次来，就从这一封开始</p><h2 id="first-letter-title">寄出去，再亲手读回来。</h2></div><a href="#editor">直接自由画图 ↗</a></div>
+   <ol aria-label="这封明信片的三步实操"><li id="first-letter-step-1" aria-current="step"><span>01</span><strong>寄出这张画</strong></li><li id="first-letter-step-2"><span>02</span><strong>亲手读回 8 格</strong></li><li id="first-letter-step-3"><span>03</span><strong>核对这次发现</strong></li></ol>
+   <p id="first-letter-status" role="status">选一张三猫明信片，或继续当前画纸。先点「打包寄出」。</p>
+  </section>
   <section class="post-office" aria-label="像素明信片工作台">
    <div class="drawing-desk">
     <div class="local-draft"><p id="draft-status" role="status">草稿仅在此浏览器保留，不上传。</p><button id="forget-draft" type="button">删除本地草稿</button></div>
@@ -74,16 +80,17 @@
       <div class="delivery-reading"><p id="delivery-cell"></p><div class="delivery-code-focus"><code id="delivery-prefix">—</code><span aria-hidden="true">→</span><i id="delivery-cell-result" role="img" aria-label="放大后的这一格：暗号未收齐"></i></div><div id="delivery-codebook" class="delivery-codebook" aria-label="当前这封信的暗号表"></div></div>
      </div>
      <p id="delivery-explanation" class="delivery-explanation" aria-live="off"></p>
+     <div id="first-letter-next" class="first-letter-continue" hidden><p class="eyebrow">下一步 / 你来接手</p><h3>刚才这封信，你也能读回来。</h3><button id="first-letter-read" class="send-button" type="button" disabled>先寄出，再来亲手读信</button><p id="first-letter-note" class="local-note">完整收齐并核验后，这个入口才会开放。</p></div>
      <div class="delivery-controls"><button id="delivery-toggle" type="button">暂停</button><button id="delivery-bit" type="button">读下一位 <span aria-hidden="true">+1 bit</span></button></div>
      <p id="delivery-skipped" class="delivery-note"></p>
      <details class="pixel-ai"><summary>让我的 AI 重放这封信</summary><p id="pixel-ai-note">先寄一封内置图案，再生成记录。</p><button id="pixel-ai-generate" type="button" disabled>暂停并生成当前解码记录</button><div id="pixel-ai-record" hidden><label for="pixel-ai-text">可重放 JSON · 仅这封内置图案</label><textarea id="pixel-ai-text" rows="5" readonly spellcheck="false" aria-describedby="pixel-ai-status"></textarea><button id="pixel-ai-copy" type="button">复制记录，交给我的 AI</button></div><p id="pixel-ai-status" role="status"></p><p>先用本地工具 replay 重新计算，再解释这些位为什么能还原这一格。不会自动发送，不会自动标记“学会”。<a href="./AI_USAGE.md" target="_blank" rel="noopener">查看 AI 接口说明 ↗</a></p></details>
     </section>
     <div class="receiving-desk">
      <div class="received-postcard"><canvas id="receiver" width="512" height="512" aria-label="从二进制包解码还原的明信片"></canvas><span class="postcard-address" aria-hidden="true">TO: THE OTHER SIDE</span></div>
-     <div class="receipt-copy"><h2>成功收到的信 <span>新信送达前，保留上一封</span></h2><p id="receipt" role="status">还没有来信</p><p class="challenge" id="challenge">小挑战：画一张你喜欢的图，让它不超过 48 B。</p></div>
+     <div class="receipt-copy"><h2>成功收到的信 <span>新信送达前，保留上一封</span></h2><p id="receipt" role="status">还没有来信</p><button id="first-letter-resume" class="send-button" type="button" disabled hidden>读上一封成功来信的 8 格 →</button><p class="challenge" id="challenge">小挑战：画一张你喜欢的图，让它不超过 48 B。</p></div>
     </div>
-    <p class="dispatch-hint">改几笔，再寄一次。邮包大小会变，画里的每一格都不会少。</p>
-    <div class="recipient-entry"><span>这串 0 和 1，真的能读成一张画吗？</span><button id="recipient-start" type="button">当一次收件员 ↗</button><small>从当前画纸截取 8 格，你来读暗号。原画和草稿不变。</small></div>
+    <details class="first-letter-independent"><summary>也可以单独练当前画纸</summary><div class="recipient-entry"><span>不必先寄送，随时可以练。</span><button id="recipient-start" type="button">当一次收件员 ↗</button><small>从当前画纸截取 8 格，你来读暗号。原画、草稿和上次来信不变。</small></div></details>
+    <p class="dispatch-hint">读完还想试？可以改几笔再寄，或去下方分暗号、打乱图案。原有玩法都在。</p>
    </div>
   </section>
   <div class="code-entry"><div><p class="eyebrow">不只读暗号，也来分暗号</p><h2>暗号到底怎么分？</h2><p>同一张画，你分的暗号，会比算法更省吗？</p></div><button id="code-start" type="button">拿这张画分一次暗号 →</button></div>
@@ -188,6 +195,6 @@
   <details class="pixel-notes"><summary>邮包里究竟装了什么？算法与边界</summary><div><p>固定 16×16、四种颜色的共享协议，原始像素每格 2 bit，共 64 B。Huffman 树按频次构建；同频时按子树最小颜色编号排序。单色图仍为每格分配 1 bit，因此不等于零字节。</p><p>编码树先序存入包：内部节点是 0，叶子是 1 加 2 bit 颜色编号；后面是实际像素编码，再补零至整字节。展示大小包含树和补齐。收件端只用这些字节与固定格数解码，不从原画复制。这不是 PNG/JPEG 文件大小；尺寸、共享调色板、文件头与网络协议不在两边比较范围内。</p><p>熵为 −Σ p log₂p，单位 bit/格；是当前颜色分布的信息量，不是当前文件体积或图画质量分。动画只是观察过程，不代表运算速度。所有图案和代码独立创作，算法参考 <a href="https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1252/assignments/7-huffman/huffman" target="_blank" rel="noopener noreferrer">Stanford CS106B 的 Huffman 教学 ↗</a>。</p><p>纯本地计算，无上传或账号。本地草稿保留画纸、画笔、最多 30 次撤销与上次成功收到的明信片；刷新后恢复，不自动寄送。只在此浏览器、此站点保留，不是云备份。取消笔画保留原画；切后台或打开说明会取消寄送，保留上一张收到的明信片，回来不会自动重寄。减少动画时立即解码。</p></div></details>
   <footer class="bottom-note"><span>少说一点，意思一点不少。</span><span class="signature">MADE BY CHEN QUAN</span></footer>
  </main>
- <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">寄一张很轻的明信片。</h2><ol><li>选一个图案，或在 16×16 画纸上自由涂画。</li><li>画纸下方会显示邮包大小。先看它变轻还是变重；想看暗号，再展开「拆开邮包」。</li><li>点「打包寄出」，另一端会从真实字节重新拼出你的画。</li><li>试试把一幅喜欢的图压进 48 B；没有美术评分，玩得开心就好。</li></ol><p>画纸支持鼠标和触摸。Tab 进入画纸，方向键移动，空格 / Enter 落笔，1–4 换色。撤销保留 30 次修改；草稿会在此浏览器保留。删除本地草稿不改变当前画纸，继续操作会重新保存。</p></dialog>
+ <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">寄出去，再亲手读回来。</h2><ol><li>选一张三猫明信片，或继续在 16×16 画纸上自由涂画。</li><li>点「打包寄出」，看另一端从真实字节重新拼出你的画。</li><li>等完整送达，点「亲手读回这封信的 8 格」。读一位，查暗号表，再亲手选颜色；用的始终是刚才成功寄出的那封信。</li><li>核对原片段和自己的结果，再判断有没有删掉像素。短不短看实际数字，不把 8 格片段当成整封邮包。</li><li>想继续玩，再试 48 B 邮费挑战、分暗号或打乱对照。也可以单独练当前画纸，不必先寄送。</li></ol><p>画纸支持鼠标和触摸。Tab 进入画纸，方向键移动，空格 / Enter 落笔，1–4 换色。撤销保留 30 次修改；草稿会在此浏览器保留。三步路标只记本页这轮，不会把恢复的草稿或旧来信自动算成完成。删除本地草稿不改变当前画纸，继续操作会重新保存。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验像素邮局。</p></noscript>
 </body></html>

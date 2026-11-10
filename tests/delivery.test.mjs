@@ -7,6 +7,14 @@ import {createAppServer} from '../scripts/serve.mjs';
 import {build} from '../scripts/build.mjs';
 
 const root=new URL('../',import.meta.url).pathname;
+test('the homepage-aligned shell is publicly served as exact CSS bytes, including its versioned URL',async()=>{
+ const server=createAppServer(root);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const url=`http://127.0.0.1:${server.address().port}/experiment-showcase.css?v=home-aligned-v1`,response=await fetch(url);
+  assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/text\/css/);
+  assert.deepEqual(Buffer.from(await response.arrayBuffer()),await readFile(join(root,'experiment-showcase.css')));
+ }finally{await new Promise(resolve=>server.close(resolve));}
+});
 test('changed legacy neural entry modules have fresh request URLs and still serve exact JavaScript bytes',async()=>{
  const server=createAppServer(root);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  try{
@@ -40,7 +48,7 @@ files.push('neural-cat-09.jpg','neural-cat-10.jpg','neural-cat-11.jpg','neural-c
 files.push('neural-gradient.mjs','neural-gradient-ui.mjs');
 files.push('neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs','neural-residual.css');
 files.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-generalization-view.mjs','neural-generalization.css');
-files.push('space-theme.css');
+files.push('space-theme.css','experiment-showcase.css');
 files.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css','learning-route-trials.mjs');
 files.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
 files.push('genai-handoff.mjs','bayes-tool.mjs');
@@ -62,6 +70,7 @@ files.push('recommendation-cards.mjs');
 files.push('evolution-birth.mjs','local-drafts.mjs','world-model.html','world-model.css','world-model.mjs','world-model-core.mjs','world-model-environment.mjs','world-model-session.mjs','world-model-lesson.mjs');
 files.push('world-model-planning.mjs');
 files.push('sand-history.mjs');
+files.push('sand-bowl.mjs');
 files.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');
 files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');
 files.push('cat-album.css','cat-album.mjs','cat-album-cover.jpg','cat-comic-substitute.jpg','cat-comic-boss.jpg','cat-comic-warmth.jpg');
