@@ -138,6 +138,29 @@ function renderPlanning(){
  $('planning-result').hidden=!hasResult;
  if(hasResult)$('planning-result').textContent=`刚才实飞「${routeNames[plan.selectedKey]}」：出发时预测距靶心 ${errorText(plan.distance)} → 实际 ${errorText(f.distance)} 单位。${f.distance<=f.target.radius?'这次实际进圈了。':'这次实际没进圈。'}${f.error>3?'模型的轨迹预测仍有偏差；选得再认真，也需要真实经历来校准。':'预测和实际较接近；能否进圈还取决于选的路线。'}`;
 }
+function renderPilot({comparison:c,flight:f,displayFlight,active,predicted,target}){
+ const mode=c?'comparison':active?(running?'flight':'paused'):displayFlight&&f.done?'complete':'preview';
+ $('pilot-readout').dataset.mode=mode;
+ $('pilot-actual-label').textContent=c?'原来那趟真实试飞':'真实试飞';
+ if(c){
+  $('pilot-state').textContent=`嘿姆没有重飞 · 第 ${c.number} 趟回看`;
+  $('pilot-expect-label').textContent='同一趟 · 轨迹偏差';
+  $('pilot-expect').textContent=`${errorText(c.beforeError)} → ${errorText(c.afterError)} 单位`;
+ }else if(displayFlight){
+  $('pilot-state').textContent=active?(running?'嘿姆正在实飞':'嘿姆的试飞已暂停'):`嘿姆完成了第 ${f.number} 趟`;
+  $('pilot-expect-label').textContent='出发时预测 · 轨迹偏差';
+  $('pilot-expect').textContent=f.done?`${errorText(f.error)} 单位`:'验证中，跑完才知道';
+ }else{
+  $('pilot-state').textContent=session.plan?'嘿姆待命 · 新路线还没验证':'嘿姆待命 · 尚未起飞';
+  $('pilot-expect-label').textContent='出发前的预演';
+  const end=predicted.at(-1),distance=Math.hypot(end.x-target.x,end.y-target.y);
+  $('pilot-expect').textContent=`预计距靶心 ${errorText(distance)} · 尚未验证`;
+ }
+ if(c||displayFlight&&f.done){
+  const end=c?c.actual.at(-1):f.actual.at(-1),distance=c?Math.hypot(end.x-c.target.x,end.y-c.target.y):f.distance;
+  $('pilot-actual').textContent=`${distance<=target.radius?'已进圈':'未进圈'} · 距靶心 ${errorText(distance)}`;
+ }else $('pilot-actual').textContent=active?`第 ${f.step} / ${STEPS} 拍 · 尚未结束`:'尚未试飞';
+}
 function render(){
  const s=session,f=s.flight,active=Boolean(f&&!f.done),displayFlight=view==='flight'&&f,c=view==='comparison'?s.comparison:null;
  const focusedControl=[$('pause'),$('step')].find(el=>el===document.activeElement);
@@ -170,12 +193,14 @@ function render(){
  $('prediction-end').setAttribute('visibility',c?'hidden':'visible');
  const angle=actual.length>1?Math.atan2(ship.vy,ship.vx)*180/Math.PI:s.controls.angle;
  $('ship').setAttribute('transform',`translate(${ship.x} ${ship.y}) rotate(${angle})`);
+ $('world-pilot-image').setAttribute('transform',`rotate(${-angle})`);
  const target=c?c.target:displayFlight?f.target:s.target;
  $('target-marker').setAttribute('transform',`translate(${target.x-TARGET.x} ${target.y-TARGET.y})`);
  $('scene').setAttribute('viewBox',bounds([predicted,learned,actual],target));
  $('scene-label').textContent=c?'同一趟 · 只更新预测，没有重新飞':displayFlight?`想象 vs 现实 · ${f.done?'已完成':running?'试飞中':'已暂停'}`:'它想象的路线 · 尚未试飞';
  $('progress').textContent=c?'固定记录':`${displayFlight?f.step:0} / ${STEPS} 拍`;
  $('scene-desc').textContent=c?`第 ${c.number} 趟训练经历回看。学习前 M${c.beforeVersion} 偏差 ${errorText(c.beforeError)}，学习后 M${c.afterVersion} 偏差 ${errorText(c.afterError)}。两次预测使用同一起点和推力，橙色真实记录未改变，不代表下一趟表现。`:displayFlight?`本趟第 ${f.step} 拍；虚线是出发前模型 M${f.modelVersion} 的预测，实线是真实轨迹。${f.done?`实际距靶心 ${f.distance.toFixed(1)} 单位。`:''}`:'虚线是下一趟模型预演，尚未实际试飞。目标在右侧圆环。';
+ renderPilot({comparison:c,flight:f,displayFlight,active,predicted,target});
  renderComparison(c);
  $('results').hidden=!f?.done;$('result-link').hidden=!f?.done;
  if(f?.done){

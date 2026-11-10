@@ -32,6 +32,45 @@ async function boot({reduced=false}={}){
   finish(){for(let i=0;i<=65;i++)this.tick(i*100);},
   hide(){doc.hidden=true;fire(doc,'visibilitychange');},show(){doc.hidden=false;fire(doc,'visibilitychange');}};
 }
+test('Heim reports only the displayed flight stage and waits for actual completion before a result',async()=>{
+ const u=await boot();try{
+  const e=id=>u.els.get(id);
+  assert.ok(e('pilot-state'),'Heim needs a readable in-scene state, not only a small static crew badge');
+  assert.equal(e('pilot-readout').dataset.mode,'preview');assert.match(e('pilot-state').textContent,/嘿姆.*待命/);
+  assert.match(e('pilot-actual').textContent,/尚未试飞/);
+  u.click('fly');u.tick(0);u.tick(1000);
+  assert.equal(e('pilot-readout').dataset.mode,'flight');assert.match(e('pilot-state').textContent,/嘿姆.*实飞/);
+  assert.match(e('pilot-actual').textContent,/10.*60/);assert.doesNotMatch(e('pilot-actual').textContent,/已进圈|14\.1/);
+  assert.match(e('pilot-expect').textContent,/验证中/);
+  u.click('pause');assert.equal(e('pilot-readout').dataset.mode,'paused');assert.match(e('pilot-state').textContent,/暂停/);
+  const ship=e('ship').getAttribute('transform');u.click('step');assert.notEqual(e('ship').getAttribute('transform'),ship);assert.match(e('pilot-actual').textContent,/11.*60/);
+  const angle=Number(e('ship').getAttribute('transform').match(/rotate\(([^)]+)\)/)[1]);
+  const portraitAngle=Number(e('world-pilot-image').getAttribute('transform').match(/rotate\(([^)]+)\)/)[1]);
+  assert.ok(Math.abs(angle+portraitAngle)<1e-10,'the portrait stays upright without changing the real ship heading');
+  u.click('next');u.tick(0);u.tick(6000);
+  assert.equal(e('pilot-readout').dataset.mode,'complete');assert.match(e('pilot-expect').textContent,/16\.6/);
+  assert.match(e('pilot-actual').textContent,/未进圈.*14\.1/);
+ }finally{u.restore();}
+});
+
+test('learning changes Heim prediction readout but never the actual endpoint, while planning remains unverified',async()=>{
+ const u=await boot({reduced:true});try{
+  const e=id=>u.els.get(id);
+  assert.ok(e('pilot-state'),'current-flight crew readout exists');
+  u.click('fly');const actual=e('actual-path').getAttribute('points'),ship=e('ship').getAttribute('transform'),receipt=e('pilot-actual').textContent;
+  u.click('learn');
+  assert.equal(e('pilot-readout').dataset.mode,'comparison');assert.match(e('pilot-state').textContent,/没有重飞/);
+  assert.match(e('pilot-expect').textContent,/16\.6.*→.*0\.1/);
+  assert.equal(e('pilot-actual').textContent,receipt);assert.equal(e('actual-path').getAttribute('points'),actual);assert.equal(e('ship').getAttribute('transform'),ship);
+  for(const id of ['compare-before','compare-after']){u.click(id);assert.equal(e('pilot-actual').textContent,receipt);assert.equal(e('ship').getAttribute('transform'),ship);}
+  u.click('plan');
+  assert.equal(e('pilot-readout').dataset.mode,'preview');assert.match(e('pilot-expect').textContent,/预计/);
+  assert.match(e('pilot-actual').textContent,/尚未试飞/);assert.doesNotMatch(e('pilot-state').textContent,/已进圈|成功/);
+  const pending=e('pilot-actual').textContent;u.click('planning-original');assert.equal(e('pilot-actual').textContent,pending);
+  u.click('wind-flip');assert.match(e('pilot-actual').textContent,/尚未试飞/);
+  u.click('reset');assert.equal(e('pilot-readout').dataset.mode,'preview');assert.match(e('pilot-state').textContent,/待命/);assert.match(e('pilot-expect').textContent,/尚未验证/);
+ }finally{u.restore();}
+});
 test('AI catalog entry is visible before any plan exists and the first flight remains playable',async()=>{
  const u=await boot({reduced:true});try{
   const urls=[describeLearningTool('world-model').url,listLearningTools().experiments.find(e=>e.id==='world-model').url];
@@ -121,6 +160,7 @@ test('pause, background and reset invalidate stale animation without auto-resume
   assert.equal(u.frames.size,0);assert.equal(u.els.get('actual-path').getAttribute('points'),points);
   u.click('step');assert.match(u.els.get('progress').textContent,/5 \/ 60/);
   u.click('next');assert.match(u.els.get('status').textContent,/继续试飞/);u.tick(5000);u.hide();u.show();assert.equal(u.frames.size,0);
+  assert.equal(u.els.get('pilot-readout').dataset.mode,'paused');assert.match(u.els.get('pilot-state').textContent,/暂停/);
   u.click('next');const old=[...u.frames.values()][0];u.click('reset');old(15000);
   assert.equal(u.frames.size,0);assert.match(u.els.get('model-label').textContent,/M0/);assert.equal(u.els.get('results').hidden,true);
  }finally{u.restore();}
@@ -232,14 +272,17 @@ test('independent choice executes a real route, explains its result, and finishe
   assert.equal(u.els.get('choices').hidden,false);
   assert.equal(u.els.get('next').hidden,true);
   assert.equal(u.els.get('target-marker').getAttribute('transform'),'translate(24 18)');
+  assert.equal(u.els.get('pilot-readout').dataset.mode,'preview');assert.match(u.els.get('pilot-actual').textContent,/尚未试飞/,'the old goal success must not become success at the moved goal');
   assert.equal(u.doc.activeElement,u.els.get('choice-reuse'),'entering the decision has a visible focus target');
   u.click('choice-reuse');
   assert.ok(parseFloat(u.els.get('target-distance').textContent)>5);
+  assert.match(u.els.get('pilot-actual').textContent,/未进圈/);
   assert.match(u.els.get('guide-copy').textContent,/原路线/);
   assert.equal(u.els.get('finish-lesson').hidden,false,'a failed method can still reach the recap');
   u.click('next');assert.equal(u.els.get('choices').hidden,false);
   u.click('choice-plan');
   assert.ok(parseFloat(u.els.get('target-distance').textContent)<=5);
+  assert.match(u.els.get('pilot-actual').textContent,/已进圈/);
   assert.match(u.els.get('model-label').textContent,/M2/,'replanning never retrains the model');
   u.click('next');assert.equal(u.els.get('lesson-ending').hidden,false);
   assert.match(u.els.get('recap-decision').textContent,/2.*重新规划路线/);
