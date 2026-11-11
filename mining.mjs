@@ -1,6 +1,6 @@
-import {BUDGET,createWorld,createRecord,pull,runPolicyTrace,traceChoices} from './mining-core.mjs?v=station-cat-v1';
-import {initSharedLesson} from './mining-shared-ui.mjs?v=station-cat-v1';
-import {initBayesLesson} from './mining-bayes-ui.mjs?v=station-cat-v1';
+import {BUDGET,createWorld,createRecord,pull,runPolicyTrace,traceChoices} from './mining-core.mjs?v=transfer-feedback-v1';
+import {initSharedLesson} from './mining-shared-ui.mjs?v=transfer-feedback-v1';
+import {initBayesLesson} from './mining-bayes-ui.mjs?v=transfer-feedback-v1';
 
 const $=id=>document.getElementById(id);
 const names=['苔原','珊瑚','琥珀','雾蓝','月白'];

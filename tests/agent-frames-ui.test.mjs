@@ -9,11 +9,12 @@ const mount = existsSync(uiFile) ? (await import(uiFile)).mountAgentFrames : nul
 function open(journey) {
  assert.equal(typeof mount, 'function', 'Level 03 needs an interactive player');
  const html = readFileSync(pageFile, 'utf8');
+ let focused = null;
  class Element extends EventTarget {
   hidden = false; disabled = false; dataset = {}; textContent = ''; innerHTML = ''; value = '';
   click() { if (!this.hidden && !this.disabled) this.dispatchEvent(new Event('click')); }
   setAttribute(key, value) { this[key] = String(value); }
-  focus() {}
+  focus() { focused = this; }
   select() {}
  }
  const nodes = new Map([...html.matchAll(/<[a-z][\w:-]*\b[^>]*\bid="([\w-]+)"[^>]*>/g)].map(([tag, id]) => [
@@ -50,7 +51,7 @@ function open(journey) {
   const [id, fn] = timers.entries().next().value;
   timers.delete(id); fn();
  };
- return {e, click, step, sends, location, document, timers, tick};
+ return {e, click, step, sends, location, document, window, timers, tick, focused: () => focused};
 }
 
 test('the received packet shows only frames already captured, never future footage',()=>{
@@ -129,6 +130,27 @@ test('stepping while focused on the controls announces the current visual eviden
  assert.match(e('announcement').textContent, /第 5 帧.*允许卸货/);
  step(1);
  assert.doesNotMatch(e('announcement').textContent, /允许卸货/);
+});
+
+test('a manual action brings a clipped player back into view without moving focus or scrolling on playback ticks', () => {
+ const {e, click, step, document, window, tick, focused} = open();
+ step(8); click('start-manual'); step(3);
+ let top = -90, scrolls = 0;
+ window.innerHeight = 560;
+ window.scrollBy = ({top: delta}) => { top -= delta; scrolls++; };
+ const player = document.getElementById('frames-player') ?? e('workbench');
+ player.getBoundingClientRect = () => ({top, bottom: top + 310, height: 310});
+ e('advance').focus(); step(1);
+ assert.equal(e('scene').dataset.frame, '4');
+ assert.ok(top >= 0 && top + 310 <= 560, 'both the current image and the controls must fit');
+ assert.equal(focused(), e('advance'));
+ assert.equal(scrolls, 1);
+ click('play'); tick();
+ assert.equal(e('scene').dataset.frame, '5');
+ assert.equal(scrolls, 1, 'an automatic frame must not scroll the page');
+ click('pin');
+ assert.match(e('pin').textContent, /已保留第 5 帧/);
+ assert.equal(scrolls, 1, 'pinning an already visible player must not scroll');
 });
 
 test('redo discards the unsent second attempt and its export while preserving the fixed baseline', () => {

@@ -135,7 +135,7 @@ export function mountAgentFrames({document, window}) {
   const frame = AGENT_FRAME_CLIP[id], first = stage === 'baseline' || stage === 'baseline-done';
   const done = stage === 'done';
   paint('scene', frame);
-  set('position', `第 ${id} 帧 / 共 9 帧 · ${time(frame)}`);
+  set('position', `第 ${id} / 9 帧 · ${time(frame)}`);
   set('announcement', playing || done ? '' : `第 ${id} 帧：${SCENE[frame.view][2]}`);
   set('caption', `「${frame.caption}」`);
   for (const [name, current] of [['round-one', first], ['round-two', !first]]) e(name).setAttribute('aria-current', current ? 'step' : 'false');
@@ -182,6 +182,16 @@ export function mountAgentFrames({document, window}) {
   timeout = null;
  }
 
+ function revealPlayer() {
+  const player = e('player');
+  if (e('workbench').hidden || !window.scrollBy || !player?.getBoundingClientRect) return;
+  const {top, bottom, height} = player.getBoundingClientRect(), viewport = window.innerHeight;
+  const margin = 8;
+  if (height + margin * 2 > viewport) return;
+  const delta = top < 0 ? top - margin : bottom > viewport ? bottom - viewport + margin : 0;
+  if (delta) window.scrollBy({top: delta, behavior: 'instant'});
+ }
+
  function act(action) {
   if (document.hidden || !available(action)) return;
   try { run = runAgentFrames([...run.actions, {action}], SOURCE); }
@@ -207,14 +217,18 @@ export function mountAgentFrames({document, window}) {
   }, 1200);
  }
 
- e('advance').addEventListener('click', () => { stop(); act('advance'); });
+ function operate(action) {
+  if (document.hidden || !available(action)) return;
+  stop(); act(action); revealPlayer();
+ }
+ e('advance').addEventListener('click', () => operate('advance'));
  e('play').addEventListener('click', () => {
   if (document.hidden || !available('advance')) return;
   if (playing) stop();
   else { playing = true; queue(); }
-  render();
+  render(); revealPlayer();
  });
- for (const name of ['pin', 'start-manual']) e(name).addEventListener('click', () => { stop(); act(name); });
+ for (const name of ['pin', 'start-manual']) e(name).addEventListener('click', () => operate(name));
  document.addEventListener('visibilitychange', () => { if (document.hidden) { stop(); render(); } });
  window.addEventListener('pagehide', () => { stop(); render(); });
  e('timeline').addEventListener('click', event => {
@@ -235,7 +249,7 @@ export function mountAgentFrames({document, window}) {
   set('share-status', '');
   retryNotice = true;
   render();
-  focus('status');
+  focus('advance'); revealPlayer();
  }
  e('redo').addEventListener('click', redo);
  e('retry-empty').addEventListener('click', redo);

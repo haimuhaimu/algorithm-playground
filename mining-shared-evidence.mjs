@@ -1,4 +1,4 @@
-import {createWorld,createRecord,pull,chooseDecision} from './mining-core.mjs?v=station-cat-v1';
+import {createWorld,createRecord,pull,chooseDecision} from './mining-core.mjs?v=transfer-feedback-v1';
 
 // Curated reproducible teaching case, not the player's current mission.
 const SEED=265;

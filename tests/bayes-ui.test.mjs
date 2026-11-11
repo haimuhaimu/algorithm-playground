@@ -5,18 +5,50 @@ import {initBayesLesson} from '../mining-bayes-ui.mjs';
 import {replayLearningReceipt} from '../learning-tool.mjs';
 
 async function boot(handoff=false){
- const source=await readFile(new URL('../mining.html',import.meta.url),'utf8'),els=new Map(),listeners=new Map();
+ const source=await readFile(new URL('../mining.html',import.meta.url),'utf8'),els=new Map(),listeners=new Map(),scrolls=[];
+ let focused=null;
  for(const [,id]of source.matchAll(/\bid="([^"]+)"/g)){
-  const handlers=new Map(),attrs=new Map();els.set(id,{id,hidden:false,disabled:false,value:'',textContent:'',innerHTML:'',open:false,handlers,setAttribute:(k,v)=>attrs.set(k,v),getAttribute:k=>attrs.get(k),addEventListener:(n,fn)=>handlers.set(n,fn),focus(){},scrollIntoView(){},select(){}});
+  const handlers=new Map(),attrs=new Map();els.set(id,{id,hidden:false,disabled:false,value:'',textContent:'',innerHTML:'',open:false,handlers,setAttribute:(k,v)=>attrs.set(k,v),getAttribute:k=>attrs.get(k),addEventListener:(n,fn)=>handlers.set(n,fn),focus(){focused=id;},scrollIntoView(){scrolls.push(id);},select(){}});
  }
  const previous={document:globalThis.document,window:globalThis.window},destinations=[];
  const query=new URLSearchParams({genaiJourney:'bayes-learning',genaiRequest:'bayes_test_12345678',genaiReturn:'http://127.0.0.1:3100/'});
  const location={href:'http://127.0.0.1:3103/mining.html'+(handoff?'?'+query:''),hash:'',assign:value=>destinations.push(value)};
  const document={hidden:false,getElementById:id=>els.get(id)},window={location,navigator:{clipboard:{writeText:async()=>{}}},addEventListener:(n,fn)=>listeners.set(n,fn)};
  globalThis.document=document;globalThis.window=window;initBayesLesson();
- return {els,document,window,destinations,click:id=>els.get(id)?.handlers.get('click')?.(),restore(){globalThis.document=previous.document;globalThis.window=previous.window;}};
+ return {els,document,window,destinations,scrolls,focused:()=>focused,click:id=>els.get(id)?.handlers.get('click')?.(),restore(){globalThis.document=previous.document;globalThis.window=previous.window;}};
 }
-function complete(u){for(const id of ['bayes-start','bayes-guess-same','bayes-reveal','bayes-change-many','bayes-update','bayes-answer-never','bayes-answer-evidence'])u.click(id);}
+function openTransfer(u){for(const id of ['bayes-start','bayes-guess-same','bayes-reveal','bayes-change-many','bayes-update'])u.click(id);}
+function complete(u){openTransfer(u);u.click('bayes-answer-never');u.click('bayes-answer-evidence');}
+test('a first correct transfer answer lands on the evidence before the recap',async()=>{
+ const u=await boot();try{
+  openTransfer(u);assert.equal(u.els.get('bayes-transfer-results').hidden,true);
+  u.click('bayes-answer-evidence');
+  assert.equal(u.scrolls.at(-1),'bayes-transfer-title');
+  assert.equal(u.focused(),'bayes-transfer-title');
+  assert.equal(u.els.get('bayes-transfer-prediction-one').textContent,'33.3%');
+  assert.equal(u.els.get('bayes-transfer-prediction-ten').textContent,'8.3%');
+  assert.equal(u.els.get('bayes-ending').hidden,false);
+  assert.equal(u.els.get('bayes-try-again').hidden,true);
+ }finally{u.restore();}
+});
+test('after a wrong answer the evidence is in view and retry only returns focus to the question',async()=>{
+ const u=await boot();try{
+  openTransfer(u);u.click('bayes-answer-guarantee');
+  assert.equal(u.focused(),'bayes-transfer-title');
+  assert.equal(u.scrolls.at(-1),'bayes-transfer-title');
+  assert.equal(u.els.get('bayes-ending').hidden,true);
+  assert.equal(u.els.get('bayes-try-again').hidden,false);
+  u.click('bayes-try-again');
+  assert.equal(u.focused(),'bayes-transfer-question');
+  assert.equal(u.els.get('bayes-transfer-results').hidden,false);
+  assert.equal(u.els.get('bayes-answer-guarantee').getAttribute('aria-pressed'),'true');
+  u.click('bayes-answer-evidence');assert.equal(u.focused(),'bayes-transfer-title');
+  u.click('bayes-export-generate');
+  const receipt=JSON.parse(u.els.get('bayes-export-text').value);
+  assert.deepEqual(receipt.result.evidence.attempts,['guarantee','evidence']);
+  assert.equal(replayLearningReceipt(receipt).matches,true);
+ }finally{u.restore();}
+});
 test('Bayes export journals actual wrong choices and resets, never reading the free game or drafts',async()=>{
  const u=await boot();try{
   assert.ok(u.els.has('bayes-export-generate'),'the finished lesson needs a real export entry');
