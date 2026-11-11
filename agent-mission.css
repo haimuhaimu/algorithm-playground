@@ -81,6 +81,7 @@
 .mission-share { border-top: 1px solid var(--home-line); padding-top: 12px; }
 .mission-share > p:not(.mission-share-status) { margin: 6px 0 12px; color: var(--home-muted); font-size: 13px; line-height: 1.5; }
 .mission-share-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#mission-next-level { display: inline-flex; align-items: center; justify-content: center; }
 .mission-text-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--home-accent); text-decoration: underline; text-underline-offset: 3px; font-size: 13px; }
 #mission-export-record { margin-top: 12px; }
 #mission-export-record label { font-size: 13px; font-weight: 650; }

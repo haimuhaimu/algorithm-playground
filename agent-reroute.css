@@ -72,13 +72,14 @@
 .reroute-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .reroute-actions > button { flex: 1 1 115px; min-width: 0; }
 .reroute-share:not([hidden]) { margin-top: 10px; }
+.reroute-next-level { display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px; text-align: center; }
 .reroute-share .mission-share-actions { gap: 7px; }
 .reroute-share .mission-share-status:empty { display: none; }
 .reroute-replay > p { color: var(--home-muted); font-size: 13px; margin: 0 0 6px; font-variant-numeric: tabular-nums; }
 .reroute-export-record { margin-top: 10px; }
 .reroute-export-record label { font-size: 13px; font-weight: 650; }
 .reroute-export-record textarea { display: block; width: 100%; margin: 6px 0 8px; padding: 8px; border: 1px solid var(--home-line); border-radius: 8px; background: var(--home-bg); color: var(--home-ink); font: 13px ui-monospace, monospace; resize: vertical; }
-.reroute-export-record textarea:focus-visible, .reroute-console button:focus-visible { outline: 2px solid var(--home-accent); outline-offset: 2px; }
+.reroute-export-record textarea:focus-visible, .reroute-console button:focus-visible, .reroute-next-level:focus-visible { outline: 2px solid var(--home-accent); outline-offset: 2px; }
 
 .reroute-review { margin-top: 27px; }
 .reroute-review-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--home-line); padding-bottom: 8px; }

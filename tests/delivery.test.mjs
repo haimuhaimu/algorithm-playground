@@ -15,6 +15,24 @@ test('the homepage-aligned shell is publicly served as exact CSS bytes, includin
   assert.deepEqual(Buffer.from(await response.arrayBuffer()),await readFile(join(root,'experiment-showcase.css')));
  }finally{await new Promise(resolve=>server.close(resolve));}
 });
+test('the three-cat header sprite is available to every page as a compact local PNG',async()=>{
+ const server=createAppServer(root);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const base=`http://127.0.0.1:${server.address().port}`;
+  const asset=await fetch(base+'/studio-brand-cats.png');
+  assert.equal(asset.status,200);
+  assert.equal(asset.headers.get('content-type'),'image/png');
+  const bytes=Buffer.from(await asset.arrayBuffer());
+  assert.equal(bytes.toString('ascii',1,4),'PNG');
+  assert.ok(bytes.length<32*1024,'the shared header does not load full-size cat illustrations');
+  for(const page of (await readdir(root)).filter(name=>name.endsWith('.html'))){
+   const html=await(await fetch(base+'/'+page)).text();
+   assert.match(html,/href="\.\/navigation\.css\?v=three-cat-brand-v1"/,page);
+  }
+  const css=await(await fetch(base+'/navigation.css?v=three-cat-brand-v1')).text();
+  assert.match(css,/url\(['"]?\.\/studio-brand-cats\.png['"]?\)/);
+ }finally{await new Promise(resolve=>server.close(resolve));}
+});
 test('changed legacy neural entry modules have fresh request URLs and still serve exact JavaScript bytes',async()=>{
  const server=createAppServer(root);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  try{
@@ -83,7 +101,7 @@ files.push('cat-album-episodes.mjs',
  'cat-comic-air-burial.jpg','cat-comic-photo-retake.jpg','cat-comic-bedroom-edition.jpg',
  'cat-comic-evening-show.jpg','cat-comic-last-bite.jpg','cat-comic-new-bed.jpg',
 );
-files.push('studio-cat-assets.mjs',
+files.push('studio-cat-assets.mjs','studio-brand-cats.png',
  'studio-heim-portrait.png','studio-heim-idle.png','studio-heim-run.png',
  'studio-bobby-portrait.png','studio-bobby-idle.png','studio-bobby-run.png',
  'studio-chouchou-portrait.png','studio-chouchou-idle.png','studio-chouchou-run.png');

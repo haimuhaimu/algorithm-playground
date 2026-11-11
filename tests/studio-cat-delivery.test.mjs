@@ -11,6 +11,7 @@ import {startServer} from '../scripts/serve.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const module = 'studio-cat-assets.mjs';
 const images = [
+  'studio-brand-cats.png',
   'studio-heim-portrait.png', 'studio-heim-idle.png', 'studio-heim-run.png',
   'studio-bobby-portrait.png', 'studio-bobby-idle.png', 'studio-bobby-run.png',
   'studio-chouchou-portrait.png', 'studio-chouchou-idle.png', 'studio-chouchou-run.png',
@@ -56,7 +57,7 @@ function assertTransparentRgba(bytes, file) {
   assert.ok(clear && visible, `${file} needs both fully clear background and visible artwork`);
 }
 
-test('build includes exactly the nine transparent studio PNGs and their module, byte-for-byte', async () => {
+test('build includes exactly the approved transparent studio PNGs and their module, byte-for-byte', async () => {
   const out = await mkdtemp(join(tmpdir(), 'studio-cats-build-'));
   try {
     await build(root, out);

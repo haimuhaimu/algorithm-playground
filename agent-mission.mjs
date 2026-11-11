@@ -71,7 +71,7 @@ export function mountAgentMission({document,window}){
   }catch{set('feedback','这次没有执行成功，原操作记录仍在。请重试。');return;}
   render();
   if(legal('restart'))el('restart').focus();
-  else if(receipt.result.workflowComplete)(canReturn?el('return'):el('export')).focus();
+  else if(receipt.result.workflowComplete)el('share-title').focus();
   else if(action==='restart'||!legal(action))el('current').focus();
  }
  for(const action of ['check','retry','stop','restart'])el(action).addEventListener('click',()=>act(action));

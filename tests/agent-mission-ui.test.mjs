@@ -72,6 +72,21 @@ test('same-condition replay preserves first-round actual evidence and two identi
  assert.equal(r.e('mission-export-text').value,'','nothing is exported implicitly');
 });
 
+test('two stopped rounds expose the next lesson beside the result without navigating or exporting',()=>{
+ const r=setup(),share=r.e('mission-share');
+ assert.equal(share.hidden,true);
+ r.click('stop');assert.equal(share.hidden,true,'one finished round is not enough');
+ r.click('restart','stop');
+ assert.equal(share.hidden,false);
+ assert.match(r.e('mission-comparison').textContent,/都没有核验到货/);
+ const actions=html.match(/id="mission-share"[\s\S]*?<div class="mission-share-actions">([\s\S]*?)<\/div>/)?.[1]??'';
+ assert.match(actions,/<a\b[^>]*id="mission-next-level"[^>]*href="\.\/agent-reroute\.html#mission"/);
+ assert.equal(r.e('mission-share-title').focused,true,'keyboard reading starts before the next and export actions');
+ assert.equal(r.location.href,getPage().href);
+ assert.deepEqual(r.sends,[]);
+ assert.equal(r.e('mission-export-text').value,'');
+});
+
 test('three fruitless checks exhaust only the budget, not the task',()=>{
  const r=setup();r.click('check','check','check');
  assert.equal(r.e('mission-budget').textContent,'0 / 3');

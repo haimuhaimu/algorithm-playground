@@ -47,7 +47,7 @@ FILES.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');
 FILES.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');
 FILES.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');
 FILES.push('cat-album.css','cat-album.mjs','cat-album-episodes.mjs','cat-album-cover.jpg',...episodes.map(episode=>episode.file));
-FILES.push('studio-cat-assets.mjs',
+FILES.push('studio-cat-assets.mjs','studio-brand-cats.png',
  'studio-heim-portrait.png','studio-heim-idle.png','studio-heim-run.png',
  'studio-bobby-portrait.png','studio-bobby-idle.png','studio-bobby-run.png',
  'studio-chouchou-portrait.png','studio-chouchou-idle.png','studio-chouchou-run.png');
