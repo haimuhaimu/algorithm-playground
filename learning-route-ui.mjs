@@ -1,9 +1,10 @@
-import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=route-actions-v2';
+import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=route-return-v1';
 import {paintGuide} from './neural-guide-view.mjs';
 import {paintGeneralization} from './neural-generalization-view.mjs';
 import {runLearningRoute} from './learning-tool.mjs?v=learning-tool-v1';
 import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=handoff-trust-v1';
 import {inspectLearningRouteTrials} from './learning-route-trials.mjs?v=handoff-trust-v1';
+import {saveRouteReturn,consumeRouteReturn} from './learning-route-return.mjs?v=route-return-v1';
 const shape=n=>n?'方':'圆';
 function markExample(canvas,p,dark){
  if(!p)return;
@@ -14,6 +15,7 @@ function markExample(canvas,p,dark){
 
 export function mountLearningRoute({document,window}){
  const $=id=>document.getElementById(id),set=(id,t)=>{$(id).textContent=t;},show=(id,value)=>{$(id).hidden=!value;};
+ const validateActions=actions=>runLearningRoute(actions,{producer:'browser-session'}),resumed=consumeRouteReturn(window,validateActions);
  const s=createLearningRoute(),canvas=$('route-map'),supported=!!canvas.getContext('2d');let before=false,explicitTheme=false,journal=[],exportGeneration=0,trials=[],trialLimit=false;
  const handoff=readGenaiHandoffContext(window.location,'model-learning');
  const media=window.matchMedia('(prefers-color-scheme: dark)');
@@ -114,7 +116,7 @@ export function mountLearningRoute({document,window}){
  function move(action,value){
   if(document.hidden||!supported)return;
   const old=s.stage,oldGradientSteps=s.gradient.model.epoch;actLearningRoute(s,action,value);
-  if(action==='reset'){journal=[];trials=[];trialLimit=false;}else journal.push(value===undefined?{action}:{action,value});
+  if(action==='reset'){journal=[];trials=[];trialLimit=false;show('route-return-status',false);}else journal.push(value===undefined?{action}:{action,value});
   if(action==='step'&&old==='gradient'&&oldGradientSteps===0&&s.gradient.model.epoch===1){
    try{trials=inspectLearningRouteTrials(runLearningRoute(journal,{producer:'browser-session'}));trialLimit=false;}
    catch{trialLimit=true;}
@@ -127,6 +129,28 @@ export function mountLearningRoute({document,window}){
   }
  }
  function clearExport(){exportGeneration++;$('route-export-text').value='';show('route-export-record',false);set('route-export-status','');set('route-genai-status','');}
+ function restore(snapshot){
+  const receipt=validateActions(snapshot.actions);
+  Object.assign(s,createLearningRoute());journal=receipt.actions;
+  receipt.actions.forEach((action,i)=>{if(receipt.steps[i].status!=='rejected')actLearningRoute(s,action.action,action.value);});
+  before=snapshot.before;trials=inspectLearningRouteTrials(receipt);trialLimit=false;
+  clearExport();render();
+  if(snapshot.exported&&s.stage==='summary'){
+   $('route-export-text').value=JSON.stringify(receipt,null,2);show('route-export-record',true);
+   set('route-export-status','已恢复之前生成的同一份实验记录；没有自动复制、发送或导入学习进度。');
+  }
+  set('route-return-status','已接回刚才这轮学习：预测、步长和真实结果都按原操作核验恢复。没有追加训练，也没有改自由草稿。');
+  show('route-return-status',true);$('route-return-status').focus({preventScroll:true});$('route-return-status').scrollIntoView({block:'start',behavior:'instant'});
+ }
+ for(const id of ['route-free','route-summary-free'])$(id).addEventListener('click',event=>{
+  const link=$(id);link.setAttribute('href','./neural.html#field');
+  if(event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+  const saved=saveRouteReturn(window,{actions:journal,before,exported:Boolean($('route-export-text').value)},validateActions);
+  link.setAttribute('target',saved?'_self':'_blank');link.setAttribute('rel','noopener noreferrer');
+  if(saved)link.setAttribute('href',saved.experimentUrl);
+  else{show('route-return-status',true);set('route-return-status','当前浏览器不能临时保留往返记录。完整实验会在新标签页打开；这条路线和本轮结果仍留在这里。');}
+ });
+ window.addEventListener?.('pageshow',event=>{if(event.persisted){const snapshot=consumeRouteReturn(window,validateActions);if(snapshot)restore(snapshot);}});
  $('route-genai-send').addEventListener('click',()=>{
   if(document.hidden||!supported||s.stage!=='summary'||!handoff)return;
   try{
@@ -165,7 +189,7 @@ export function mountLearningRoute({document,window}){
  for(const id of [3,6])$('route-inspect-'+id).addEventListener('click',()=>move('inspect',id-1));
  function theme(dark){document.documentElement.dataset.theme=dark?'dark':'light';$('home-theme').setAttribute('aria-label',dark?'切换浅色模式':'切换深色模式');render();}
  $('home-theme').hidden=false;$('home-theme').addEventListener('click',()=>{explicitTheme=true;theme(document.documentElement.dataset.theme!=='dark');});
- media.addEventListener('change',()=>{if(!explicitTheme)theme(media.matches);});clearExport();theme(media.matches);
+ media.addEventListener('change',()=>{if(!explicitTheme)theme(media.matches);});clearExport();theme(media.matches);if(resumed)restore(resumed);
  return {snapshot:()=>structuredClone(s)};
 }
 if(typeof document!=='undefined'&&document.getElementById('route-task'))mountLearningRoute({document,window});

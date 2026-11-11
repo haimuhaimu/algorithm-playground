@@ -1,12 +1,13 @@
-import {TAU,createSwarm,stepSwarm,coherence,configureSwarm,perturbSwarm,measureGroups,createListening,advanceListening,chooseListening,listeningOutcome,answerListening} from './firefly-core.mjs?v=scope-legend-v1';
-import {mountBeatLesson} from './firefly-beat-ui.mjs?v=scope-legend-v1&entry=bobby-tap';
+import {TAU,createSwarm,stepSwarm,coherence,configureSwarm,perturbSwarm,measureGroups,createListening,advanceListening,chooseListening,listeningOutcome,answerListening} from './firefly-core.mjs?v=pond-bobby-v1';
+import {mountBeatLesson} from './firefly-beat-ui.mjs?v=pond-bobby-v1&entry=bobby-tap';
 
 const $=id=>document.getElementById(id),field=$('fireflies'),ctx=field.getContext('2d');
 const clock=$('phase-clock').getContext('2d'),chart=$('history').getContext('2d');
 const titles={chorus:'一起合拍',independent:'各闪各的',islands:'两群对唱'};
-const tips={chorus:'先等它们合拍，再点乱一小片。它们会自己找回节奏吗？',independent:'互相影响是 0。试着点亮一片，再把影响调大，看看区别。',islands:'两群可以各自合拍。把「看见多远」拉到整片，看看它们能不能找到共同节奏。'};
+const tips={chorus:'先等它们合拍，再点乱一小片。它们会自己找回节奏吗？',independent:'互相影响是 0。让波比拍一下，再把影响调大，看看区别。',islands:'两群可以各自合拍。把「看见多远」拉到整片，看看它们能不能找到共同节奏。'};
 let world=createSwarm(),mode='scatter',playing=!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches;
 let cursor={x:0.5,y:0.5},showCursor=false,gesture=null,raf=null,last=null,accumulator=0;
+let lastClap=null;
 let history=[{t:0,r:coherence(world.points)}],lastSample=0,ink='#25271f',muted='#66695d',line='#dddfd2';
 let lesson=null,lessonRenderKey='';
 const DT=1/60,BRUSH=0.22;
@@ -33,7 +34,7 @@ if(!ctx||!clock||!chart){
   const untouched=Object.keys(defaults).every(key=>defaults[key]===world.settings[key]);
   document.querySelectorAll('[data-preset]').forEach(b=>{b.disabled=locked;b.setAttribute('aria-pressed',String(untouched&&b.dataset.preset===world.preset));});
   document.querySelectorAll('[data-mode]').forEach(b=>{b.disabled=locked;b.setAttribute('aria-pressed',String(b.dataset.mode===mode));});
-  $('field-caption').textContent=locked?'青绿是左群，暖黄是右群。观察内部整齐与两群错开的区别。':mode==='scatter'?'点一下，把附近的节拍打乱':'点一下，让附近的节拍在此刻亮起';
+  $('field-caption').textContent=locked?'青绿是左群，暖黄是右群。观察内部整齐与两群错开的区别。':mode==='scatter'?'点一下，把附近的节拍打乱':'金色虚线记住波比刚才拍的位置。它只拍一下，之后不再指挥。';
  }
  const percent=value=>Math.round(value*100)+'%';
  function focusLesson(){
@@ -112,6 +113,10 @@ if(!ctx||!clock||!chart){
    ctx.strokeStyle=`rgba(211,225,179,${.12+glow*.3})`;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x-5,y-3);ctx.lineTo(x,y);ctx.lineTo(x+5,y-3);ctx.stroke();
    if(showPhase){ctx.lineWidth=1.5;ctx.strokeStyle=`rgba(${color},.65)`;ctx.beginPath();ctx.arc(x,y,9,-Math.PI/2,p.phase-Math.PI/2);ctx.stroke();}
   }
+  if(lastClap){
+   ctx.strokeStyle='#ffd180';ctx.lineWidth=Math.max(2,1.5*W/(field.clientWidth||W));ctx.setLineDash([7,5]);
+   ctx.beginPath();ctx.arc(lastClap.x*W,lastClap.y*H,BRUSH*H,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  }
   const r=coherence(world.points);
   $('coherence').innerHTML=Math.round(r*100)+'<small>%</small>';
   $('coherence-label').textContent=groups?'瞬时整体值，不代表持续同拍':r>.9?'节拍很接近':r>.5?'部分合拍':'各有节奏';
@@ -152,12 +157,24 @@ if(!ctx||!clock||!chart){
  }
  function cancelGesture(){gesture=null;}
  function pause(message){document.dispatchEvent(new Event('firefly-world-action'));playing=false;cancelGesture();if(raf!==null)cancelAnimationFrame(raf);raf=null;last=null;accumulator=0;controls(message);draw();}
- function announceCursor(){ $('cursor-status').textContent=`光标横向 ${Math.round(cursor.x*100)}%，纵向 ${Math.round(cursor.y*100)}%，${mode==='scatter'?'打乱一片':'点亮一片'}`; }
+ function announceCursor(){ $('cursor-status').textContent=`光标横向 ${Math.round(cursor.x*100)}%，纵向 ${Math.round(cursor.y*100)}%，${mode==='scatter'?'打乱一片':'波比拍一下'}`; }
+ function selectMode(next){
+  if(lesson||document.hidden)return;
+  cancelGesture();mode=next;lastClap=null;
+  $('interaction-status').textContent=mode==='align'?'再点池塘，波比才会拍一下。':'再点池塘，把附近的节拍打乱。';
+  controls();announceCursor();draw();
+ }
  function apply(){
-  if(lesson){$('interaction-status').textContent='引导中只比较听见的范围；退出引导后可自由点乱。';return;}
+  if(lesson){$('interaction-status').textContent='引导中只比较听见的范围；退出引导后可自由点按。';return;}
+  if(document.hidden)return;
   const count=world.points.filter(p=>((p.x-cursor.x)*1.6)**2+(p.y-cursor.y)**2<=BRUSH**2).length;
   world=perturbSwarm(world,cursor,mode,BRUSH);
-  $('interaction-status').textContent=count?`${mode==='scatter'?'打乱':'点亮'}了 ${count} 个节拍。`:'这里没有萤火虫，试试点亮点附近。';
+  if(mode==='align'){
+   lastClap={...cursor};
+   $('interaction-status').textContent=count
+    ?`波比拍了一下：金色虚线圈内 ${count} 只对齐到亮起那一拍，圈外 ${world.points.length-count} 只没被直接拨动。`
+    :'波比拍了一下：金色虚线圈内 0 只，没有节拍被直接拨动。';
+  }else $('interaction-status').textContent=count?`打乱了 ${count} 个节拍。`:'这里没有萤火虫，试试亮点附近。';
   // Record the discontinuity at the current simulation time, also while paused.
   history.push({t:world.time,r:coherence(world.points)});history=history.slice(-600);draw();announceCursor();
  }
@@ -179,24 +196,24 @@ if(!ctx||!clock||!chart){
   const directions={ArrowLeft:[-.03,0],ArrowRight:[.03,0],ArrowUp:[0,-.03],ArrowDown:[0,.03]},d=directions[e.key];
   if(d){e.preventDefault();cursor={x:Math.max(0,Math.min(1,cursor.x+d[0])),y:Math.max(0,Math.min(1,cursor.y+d[1]))};showCursor=true;announceCursor();draw();}
   else if(e.key===' '||e.key==='Enter'){e.preventDefault();if(!e.repeat)apply();}
-  else if(e.key==='1'||e.key==='2'){e.preventDefault();mode=e.key==='1'?'scatter':'align';controls();announceCursor();draw();}
+  else if(e.key==='1'||e.key==='2'){e.preventDefault();if(!e.repeat)selectMode(e.key==='1'?'scatter':'align');}
  });
  function reset(preset,shuffle=false,preserve=false){
   if(lesson)return;
   cancelGesture();const next=createSwarm(preset,shuffle?world.seed+1:42),settings=world.settings;
   world=shuffle?{...next,points:world.points.map((p,i)=>({...p,phase:next.points[i].phase}))}:next;
   if(preserve)world=configureSwarm(world,settings);
-  history=[{t:0,r:coherence(world.points)}];lastSample=0;last=null;accumulator=0;showCursor=false;
+  history=[{t:0,r:coherence(world.points)}];lastSample=0;last=null;accumulator=0;showCursor=false;lastClap=null;
   $('interaction-status').textContent=shuffle?'换了一组初始节拍。':'场景已重置。';controls();draw();schedule();
  }
  document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>reset(b.dataset.preset)));
- document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{cancelGesture();mode=b.dataset.mode;controls();announceCursor();draw();}));
+ document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>selectMode(b.dataset.mode)));
  for(const key of ['coupling','radius','spread'])$(key).addEventListener('input',()=>{if(lesson)return;cancelGesture();world=configureSwarm(world,{[key]:Number($(key).value)});controls();draw();});
  $('show-phase').addEventListener('change',draw);
  $('play').addEventListener('click',()=>{if(lesson&&['before','after'].includes(lesson.stage))return;document.dispatchEvent(new Event('firefly-world-action'));if(playing)pause();else{playing=true;last=null;accumulator=0;controls();schedule();}});
  $('step').addEventListener('click',()=>{if(lesson&&['before','after'].includes(lesson.stage))return;pause();tick();controls('已走一拍 · 推进 1/60 秒');draw();});
  function adoptLesson(){
-  world=lesson.world;history=lesson.samples.map(s=>({t:s.time,r:s.value}));lastSample=world.time;last=null;accumulator=0;showCursor=false;
+  world=lesson.world;history=lesson.samples.map(s=>({t:s.time,r:s.value}));lastSample=world.time;last=null;accumulator=0;showCursor=false;lastClap=null;
   $('show-phase').checked=true;$('interaction-status').textContent='引导中固定其他条件，只比较两群听见的范围。';
  }
  $('listening-start').addEventListener('click',()=>{pause();lesson=createListening();adoptLesson();playing=!document.hidden;controls();draw();focusLesson();schedule();});

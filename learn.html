@@ -4,9 +4,9 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="从六个例子开始，亲眼看分类、动一次梯度，再用新题检验。陈全的算法游乐场精选学习路线。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./home.css?v=learning-tool-v1"><link rel="stylesheet" href="./learning-route.css?v=route-actions-v2">
+ <link rel="stylesheet" href="./home.css?v=learning-tool-v1"><link rel="stylesheet" href="./learning-route.css?v=route-return-v1">
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
- <script type="module" src="./learning-route-ui.mjs?v=route-actions-v2"></script><title>AI 怎么从例子里学会？ · 算法游乐场</title>
+ <script type="module" src="./learning-route-ui.mjs?v=route-return-v1"></script><title>AI 怎么从例子里学会？ · 算法游乐场</title>
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
 <body class="play-showcase">
@@ -15,6 +15,7 @@
  <main class="route-main">
   <header class="route-intro"><a class="route-back-home" href="./#learning-routes">精选学习路线 / 涂鸦训练场</a><h1>AI 怎么从<br>例子里学会？</h1><p>给它例子，看它改规则，再拿新题检验。<br>先不用背公式，亲手走一遍。</p><a class="route-primary route-start" href="#route-task">从两个错点开始 ↓</a></header>
   <ol class="route-progress" aria-label="三站学习路线"><li id="route-progress-0" aria-current="step"><span>看它学会分组</span><small>例子与规则</small></li><li id="route-progress-1"><span>亲手改一步</span><small>梯度与步长</small></li><li id="route-progress-2"><span>拿新题检验</span><small>学习与使用</small></li></ol>
+  <p id="route-return-status" class="route-return-status" role="status" tabindex="-1" hidden></p>
   <section class="route-task" id="route-task" aria-labelledby="route-title">
    <header class="route-task-heading"><span id="route-station">看它学会分组</span><h2 id="route-title" tabindex="-1">这两个错点，能分回来吗？</h2><p id="route-description">圆点进圆区，方点进方区。点的位置不变，看看分界线会怎样调整。</p></header>
    <div class="route-workbench">
@@ -36,7 +37,7 @@
    <section id="route-trials" class="route-trials" aria-labelledby="route-trials-title" hidden><h3 id="route-trials-title">换个步长，上一轮也留着。</h3><p>每次都从同样的 6 个例子、同样的参数 [1, −1, 0] 出发，只走一步。这里只比较练习误差，不拿它代替新题成绩。</p><div class="route-trial-cards"><p id="route-trial-previous" hidden></p><p id="route-trial-current"></p></div><p id="route-trial-status" role="status"></p></section>
    <details class="route-details"><summary>这次实验的条件与边界</summary><p id="route-condition" class="route-condition">固定六个例子，只调整分界，不移动点。</p><p id="route-boundary">这是位置分类，不是识别手写图像。例子和起点是固定的教学案例，各站过程独立于自由涂鸦草稿。刷新会重来，没有上传或跨站学习记录。</p><p id="route-formula"></p></details>
   </section>
-  <section id="route-summary" class="route-summary" aria-labelledby="route-summary-title" hidden><p class="route-summary-label">这次的实际记录</p><h2 id="route-summary-title" tabindex="-1">从看懂变化，<br>到知道怎样验证。</h2><ol><li><h3>从例子里学一条规则</h3><p id="route-summary-guide"></p></li><li><h3>改的是参数，不是例子</h3><p id="route-summary-gradient"></p></li><li><h3>学过，不等于处处都会</h3><p id="route-summary-test"></p></li></ol><p class="route-summary-limit">这轮只说明你完成了这组小实验，不证明已掌握机器学习。下次遇到分类问题，可以先问：例子是什么、规则改了什么、拿什么新题验证？</p><div class="route-exits"><a class="route-primary" href="./neural.html#field">自己画一组题，再试试 ↗</a><a href="https://haimuhaimu.github.io/genai-learning-os/?page=math-primer" target="_blank" rel="noopener noreferrer">带着实验，去 GenAI OS 读公式 ↗</a></div></section>
+  <section id="route-summary" class="route-summary" aria-labelledby="route-summary-title" hidden><p class="route-summary-label">这次的实际记录</p><h2 id="route-summary-title" tabindex="-1">从看懂变化，<br>到知道怎样验证。</h2><ol><li><h3>从例子里学一条规则</h3><p id="route-summary-guide"></p></li><li><h3>改的是参数，不是例子</h3><p id="route-summary-gradient"></p></li><li><h3>学过，不等于处处都会</h3><p id="route-summary-test"></p></li></ol><p class="route-summary-limit">这轮只说明你完成了这组小实验，不证明已掌握机器学习。下次遇到分类问题，可以先问：例子是什么、规则改了什么、拿什么新题验证？</p><div class="route-exits"><a id="route-summary-free" class="route-primary" href="./neural.html#field">自己画一组题，再试试 ↗</a><a href="https://haimuhaimu.github.io/genai-learning-os/?page=math-primer" target="_blank" rel="noopener noreferrer">带着实验，去 GenAI OS 读公式 ↗</a></div></section>
   <section id="route-genai-return" class="route-genai-return" aria-labelledby="route-genai-title" hidden>
    <p class="route-summary-label">接着刚才的学习路径</p><h2 id="route-genai-title" tabindex="-1">带着这次实验，回去复盘。</h2>
    <p>把你这轮的预测、步长和真实结果带回 GenAI OS，再决定下一步学什么。不会读取自由画布或草稿，也不会自动标成“已掌握”。</p>
@@ -53,7 +54,7 @@
    <p class="route-export-limit">这些是概念出口，不会自动携带或导入记录。外部 AI 可用本地工具重放本轮计算；记录来源不是身份认证，走完也不等于学会。</p>
   </section>
   <footer class="route-controls"><button id="route-back" type="button" hidden>← 上一站</button><button id="route-reset" class="route-text-button" type="button">重走整条路线</button></footer>
-  <aside class="route-free"><a id="route-free" href="./neural.html#field">也可以直接进入完整涂鸦训练场 ↗</a><p>原有自由绘画、草稿、残差连接和其他进阶实验都保留。本路线不读写它们。</p></aside>
+  <aside class="route-free"><a id="route-free" href="./neural.html#field">也可以直接进入完整涂鸦训练场 ↗</a><p>原有自由绘画、草稿、残差连接和其他进阶实验都保留，本路线不读写它们。进入完整实验时，仅在本标签页临时留住这轮操作，返回后核验恢复并清掉；不是永久进度，也不会上传。</p></aside>
  </main>
  <footer class="home-footer"><a href="./">回到算法游乐场</a><span>MADE BY CHEN QUAN</span><a href="./#experiments">探索十个实验 ↗</a></footer>
  <noscript><p class="no-script">这条互动路线需要 JavaScript。仍可打开上方完整实验与学习说明链接。</p></noscript>

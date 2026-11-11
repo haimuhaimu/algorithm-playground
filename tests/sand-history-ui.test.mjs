@@ -12,7 +12,7 @@ async function boot({reduced=true,hidden=false}={}){
   getBoundingClientRect(){return {left:0,top:0,right:864,bottom:576,width:864,height:576};}
   setPointerCapture(id){this.captures.add(id);}hasPointerCapture(id){return this.captures.has(id);}
   releasePointerCapture(id){this.captures.delete(id);this.dispatchEvent(Object.assign(new Event('lostpointercapture'),{pointerId:id}));}
-  focus(){doc.activeElement=this;}showModal(){}
+  focus(){doc.activeElement=this;}scrollIntoView(){this.scrolled=true;}showModal(){}
  }
  const els=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([,id])=>[id,new Element()]));
  els.get('brush').value='2';els.get('speed').value='40';
@@ -70,6 +70,68 @@ test('backgrounding a running cat bowl freezes the world and keeps its undo and 
   u.click('history-redo');assert.deepEqual(u.pixels(),before);assert.equal(u.els.get('tick-count').textContent,tick);
   u.click('play');assert.equal(u.frames.size,1);u.tick(30000);
   assert.equal(u.els.get('tick-count').textContent,'第 2 拍');
+ }finally{u.restore();}
+});
+
+test('Chouchou observes real water below the outlet, and history restores the observation',async()=>{
+ const u=await boot();try{
+  u.scene('cat-bowl');
+  const report=()=>u.els.get('bowl-report')?.textContent??'';
+  const amount=()=>u.els.get('bowl-status').textContent;
+  assert.match(report(),/先.*开个口/);
+  assert.equal(u.doc.activeElement,u.els.get('bowl-open'));
+  const before=u.pixels();
+  u.click('bowl-open');
+  assert.equal(u.doc.activeElement,u.els.get('step'));
+  assert.match(report(),/擦开.*还没.*水/);
+  assert.equal(u.els.get('tick-count').textContent,'第 0 拍');
+  assert.equal(u.count('water'),140);
+  window.innerHeight=568;
+  u.els.get('bowl-tools').getBoundingClientRect=()=>({top:-60});
+  u.els.get('step').getBoundingClientRect=()=>({bottom:306});
+  for(let i=0;i<3;i++){u.click('step');assert.match(report(),/还没.*水/);assert.match(amount(),/碗底下 0 格水/);}
+  assert.equal(u.els.get('bowl-tools').scrolled,true,'a step keeps the observation in view when it has scrolled above the canvas');
+  u.click('step');assert.match(report(),/碗下.*有水/);assert.match(amount(),/碗底下 1 格水/);
+  const after=u.pixels();
+  u.click('history-undo');assert.deepEqual(u.pixels(),before);assert.match(report(),/先.*开个口/);
+  u.click('history-redo');assert.deepEqual(u.pixels(),after);assert.match(report(),/碗下.*有水/);assert.match(amount(),/碗底下 1 格水/);
+  u.scene('splitter');assert.equal(u.els.get('bowl-tools').hidden,true);
+ }finally{u.restore();}
+});
+
+test('water painted under an unopened bowl is counted without calling it leakage',async()=>{
+ const u=await boot();try{
+  u.scene('cat-bowl');u.material(2);u.brush(0);u.stamp(8,46);
+  assert.match(u.els.get('bowl-status').textContent,/碗底下 1 格水/);
+  assert.match(u.els.get('bowl-report')?.textContent??'',/碗底还有墙.*碗下.*有水/);
+  assert.equal(u.els.get('bowl-open').disabled,false);
+  u.click('bowl-open');
+  assert.equal(u.els.get('tick-count').textContent,'第 0 拍');
+  assert.match(u.els.get('bowl-report').textContent,/碗下.*有水/);
+  assert.doesNotMatch(u.els.get('bowl-report').textContent,/漏出|流出/);
+ }finally{u.restore();}
+});
+
+test('opening the bowl in a short viewport reveals the focused step and keeps the water result by it',async()=>{
+ const u=await boot();try{
+  const el=id=>u.els.get(id);
+  u.win.innerHeight=320;
+  let offset=0;
+  for(const [id,top,bottom] of [['bowl-tools',12,147],['bowl-open',94,138],['step',381,425],['lab-status',438,465]]){
+   el(id).getBoundingClientRect=()=>({top:top-offset,bottom:bottom-offset});
+   el(id).scrollIntoView=({block})=>{offset=block==='center'?(top+bottom-u.win.innerHeight)/2:top-12;};
+  }
+  const visible=id=>{const r=el(id).getBoundingClientRect();return r.top>=0&&r.bottom<=u.win.innerHeight;};
+  u.scene('cat-bowl');
+  assert.ok(visible('bowl-open'));
+  u.click('bowl-open');
+  assert.equal(u.doc.activeElement,el('step'));
+  assert.ok(visible('step'),'the newly focused next action must not be below the viewport');
+  assert.equal(el('tick-count').textContent,'第 0 拍','opening alone does not advance the world');
+  for(let i=0;i<4;i++)u.click('step');
+  assert.ok(visible('step')&&visible('lab-status'),'the next action and its latest result remain together');
+  assert.match(el('lab-status').textContent,/第 4 拍.*碗底下 1 格水/);
+  assert.equal(u.count('water'),140);
  }finally{u.restore();}
 });
 

@@ -1,4 +1,4 @@
-import {EMPTY,WALL,WATER,paintStroke} from './sand-core.mjs?v=background-pause-v1';
+import {EMPTY,WALL,WATER,paintStroke} from './sand-core.mjs?v=chouchou-bowl-v1';
 
 // The existing cat-bowl floor is three cells thick. Remove walls only:
 // reopening must not erase a water/sand cell that has since entered the gap.

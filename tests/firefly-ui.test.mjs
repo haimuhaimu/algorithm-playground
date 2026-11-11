@@ -26,6 +26,7 @@ async function boot({hidden=false,reducedMotion=false}={}){
   setAttribute(name,value){this.attributes.set(name,value);}
   getAttribute(name){return this.attributes.get(name);}
   getContext(){return context;}
+  getBoundingClientRect(){return {left:0,top:0,width:this.width,height:this.height};}
   focus(){document.activeElement=this;}
  }
  const elements=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([,id])=>[id,new Element()]));
@@ -45,6 +46,10 @@ async function boot({hidden=false,reducedMotion=false}={}){
  catch(error){restore();throw error;}
  return {document,frames,elements,arcs,restore,visible(value){document.hidden=!value;document.dispatchEvent(new Event('visibilitychange'));}};
 }
+const press=(field,key,repeat=false)=>field.dispatchEvent(Object.assign(new Event('keydown',{cancelable:true}),{key,repeat}));
+function tap(field,x,y){
+ for(const name of ['pointerdown','pointerup'])field.dispatchEvent(Object.assign(new Event(name),{pointerId:1,pointerType:'touch',isPrimary:true,button:0,clientX:x,clientY:y}));
+}
 
 test('range legend distinguishes the adjustable neighbor radius from the fixed direct intervention',async()=>{
  const ui=await boot({reducedMotion:true});
@@ -60,9 +65,27 @@ test('range legend distinguishes the adjustable neighbor radius from the fixed d
    assert.equal(ui.arcs[1].args[2],132,'dashed circle must stay at the real .22 brush radius');
    assert.deepEqual(ui.arcs[1].dash,[4,5]);
    for(const key of ['2','Enter']){const event=new Event('keydown');Object.defineProperty(event,'key',{value:key});field.dispatchEvent(event);}
-   assert.equal(el('interaction-status').textContent,'点亮了 12 个节拍。','widening neighbor hearing must not directly light the whole field');
+   assert.match(el('interaction-status').textContent,/波比拍了一下.*圈内 12 只.*圈外 68 只/,'widening neighbor hearing must not directly light the whole field');
    assert.equal(ui.frames.size,0,'an input must not resume a paused world');
   }
+ }finally{ui.restore();}
+});
+test('Bobby makes one local tap and the marked radius stays at its position while paused',async()=>{
+ const ui=await boot({reducedMotion:true});try{
+  const el=id=>ui.elements.get(id),field=el('fireflies'),status=el('interaction-status');
+  press(field,'2');assert.match(status.textContent,/再点池塘/);
+  assert.doesNotMatch(status.textContent,/拍了一下/,'choosing a tool does not intervene');
+  tap(field,480,300);
+  assert.match(status.textContent,/波比拍了一下.*圈内 12 只.*圈外 68 只/);
+  assert.equal(el('elapsed').textContent,'0.0 秒');assert.equal(ui.frames.size,0);
+  const writes=status.textWrites;
+  press(field,'Enter',true);assert.equal(status.textWrites,writes,'a held key cannot keep clapping');
+  ui.arcs.length=0;press(field,'ArrowRight');
+  const lastClap=ui.arcs.find(a=>a.dash[0]===7&&a.args[2]===132);
+  assert.deepEqual(lastClap?.args.slice(0,3),[480,300,132],'the result marks the tap, not the later cursor');
+  tap(field,950,590);assert.match(status.textContent,/圈内 0 只.*没有节拍被直接拨动/);
+  ui.arcs.length=0;el('reset').dispatchEvent(new Event('click'));
+  assert.ok(!ui.arcs.some(a=>a.dash[0]===7),'reset clears the last clap marker');
  }finally{ui.restore();}
 });
 test('guided comparison hides the free-intervention legend and restores it on exit',async()=>{
@@ -72,6 +95,9 @@ test('guided comparison hides the free-intervention legend and restores it on ex
   assert.equal(el('scope-legend')?.hidden,false);
   click('listening-start');assert.equal(el('scope-legend').hidden,true);
   assert.match(el('scope-description').textContent,/锁定/);
+  press(el('fireflies'),'2');press(el('fireflies'),'Enter');
+  assert.match(el('interaction-status').textContent,/引导/);
+  assert.doesNotMatch(el('interaction-status').textContent,/波比拍了一下/);
   click('listening-fast');click('listening-wide');click('listening-fast');
   assert.equal(el('scope-legend').hidden,true);
   click('listening-exit');assert.equal(el('scope-legend').hidden,false);

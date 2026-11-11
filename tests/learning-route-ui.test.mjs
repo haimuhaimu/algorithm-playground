@@ -3,18 +3,71 @@ import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 const source=new URL('../learn.html',import.meta.url),html=existsSync(source)?readFileSync(source,'utf8'):'';
 const api=await import('../learning-route-ui.mjs').catch(()=>({}));
-function setup({noCanvas=false,width=1280,height=720,location}={}){
+function setup({noCanvas=false,width=1280,height=720,location,browser={}}={}){
  assert.equal(typeof api.mountLearningRoute,'function','real focused route controller must exist');
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
  class El extends EventTarget{constructor(){super();this.hidden=false;this.disabled=false;this.attributes={};this.dataset={};this.value='';this.width=800;this.height=480;this.textContent='';}
   setAttribute(k,v){this.attributes[k]=String(v);}click(){if(!this.disabled)this.dispatchEvent(new Event('click'));}focus(){this.focused=true;}scrollIntoView(){this.scrolled=true;}
   getContext(){return noCanvas?null:new Proxy({},{get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>(o[k]=v,true)});}}
  const nodes=new Map(ids.map(id=>[id,new El()])),doc=Object.assign(new EventTarget(),{hidden:false,documentElement:{dataset:{}},getElementById:id=>{assert.ok(nodes.has(id),'missing actual page control '+id);return nodes.get(id);}});
- const media=Object.assign(new EventTarget(),{matches:false}),win={innerWidth:width,innerHeight:height,matchMedia:()=>media,location};Object.defineProperty(win,'localStorage',{get(){throw Error('route must not access drafts or storage');}});
+ const media=Object.assign(new EventTarget(),{matches:false}),win=Object.assign(new EventTarget(),{innerWidth:width,innerHeight:height,matchMedia:()=>media,location},browser);Object.defineProperty(win,'localStorage',{get(){throw Error('route must not access drafts or storage');}});
+ if(Object.hasOwn(browser,'location'))Object.defineProperty(win,'location',{get:()=>browser.location,set:value=>{browser.location=value;},configurable:true});
  const c=api.mountLearningRoute({document:doc,window:win});return {c,e:id=>nodes.get(id),doc,win};
 }
 function first(r){r.e('route-main').click();r.e('route-main').click();r.e('route-guess-square').click();r.e('route-explain-good').click();r.e('route-continue').click();}
 function second(r){r.e('route-predict-points').click();r.e('route-main').click();r.e('route-explain-good').click();r.e('route-continue').click();}
+let returnSequence=0;
+function returnBrowser(values=new Map(),href='http://127.0.0.1:60064/learn.html#route-task'){
+ const browser={location:new URL(href),crypto:{randomUUID:()=>`00000000-0000-4000-8000-${String(++returnSequence).padStart(12,'0')}`},sessionStorage:{getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)}};
+ browser.history={state:{other:'kept'},replaceState(state,_,url){this.state=state;browser.location=new URL(url,browser.location);}};
+ return {browser,values};
+}
+test('leaving for the full experiment and returning restores the actual completed lesson and generated record',()=>{
+ const {browser,values}=returnBrowser(),r=setup({browser});first(r);
+ r.e('route-rate').value='.03';r.e('route-rate').dispatchEvent(new Event('change'));r.e('route-predict-points').click();r.e('route-main').click();r.e('route-retry').click();
+ r.e('route-rate').value='.6';r.e('route-rate').dispatchEvent(new Event('change'));second(r);
+ r.e('route-main').click();r.e('route-guess-all').click();r.e('route-explain-good').click();r.e('route-continue').click();
+ r.e('route-export-generate').click();const record=r.e('route-export-text').value;
+ r.e('route-free').click();assert.ok(browser.location.searchParams.has('route_resume'),'Back needs a bound resume entry before leaving');
+ const restored=setup({browser:returnBrowser(values,browser.location.href).browser});
+ assert.equal(restored.c.snapshot().stage,'summary');assert.equal(restored.e('route-summary').hidden,false);
+ assert.equal(restored.e('route-export-text').value,record,'same guesses, trials and computed evidence must return, not a new completion');
+ assert.equal(restored.c.snapshot().guide.model.epoch,120);assert.equal(restored.c.snapshot().gradient.model.epoch,1);
+ restored.e('route-back').click();restored.e('route-back').click();assert.match(restored.e('route-trial-previous').textContent,/0\.03.*0\.662/);assert.match(restored.e('route-trial-current').textContent,/0\.60.*0\.595/);
+});
+test('a mid-route return preserves a baseline view without awarding later stations or touching free drafts',()=>{
+ const {browser,values}=returnBrowser(),r=setup({browser});r.e('route-main').click();r.e('route-before').click();r.e('route-free').click();
+ assert.ok(browser.location.searchParams.has('route_resume'));
+ const restored=setup({browser:returnBrowser(values,browser.location.href).browser});
+ assert.equal(restored.c.snapshot().stage,'classify');assert.equal(restored.c.snapshot().guide.model.epoch,120);
+ assert.equal(restored.e('route-before').attributes['aria-pressed'],'true');assert.equal(restored.e('route-continue').disabled,true);assert.equal(restored.e('route-export-text').value,'');
+ const refreshed=setup({browser:returnBrowser(values,restored.win.location.href).browser});assert.equal(refreshed.c.snapshot().guide.model.epoch,0,'ordinary refresh remains a fresh fixed lesson');
+});
+test('blocked temporary storage opens the experiment separately and never clears the current record',()=>{
+ const {browser}=returnBrowser();browser.sessionStorage.setItem=()=>{throw Error('blocked');};
+ const r=setup({browser});r.e('route-main').click();r.e('route-free').click();
+ assert.equal(r.e('route-free').attributes.target,'_blank');assert.match(r.e('route-free').attributes.rel,/noopener/);
+ assert.equal(r.c.snapshot().guide.model.epoch,120);assert.ok(!browser.location.searchParams.has('route_resume'));
+});
+test('BFCache return consumes once without appending training, and a second round trip has a new token',()=>{
+ const {browser,values}=returnBrowser(),r=setup({browser});first(r);r.e('route-predict-points').click();r.e('route-main').click();
+ const before=r.c.snapshot();r.e('route-free').click();const firstToken=browser.location.searchParams.get('route_resume');
+ r.win.dispatchEvent(Object.assign(new Event('pageshow'),{persisted:true}));
+ assert.deepEqual(r.c.snapshot(),before);assert.equal(browser.location.searchParams.has('route_resume'),false);assert.equal(values.size,0);
+ r.e('route-retry').click();r.e('route-rate').value='.6';r.e('route-rate').dispatchEvent(new Event('change'));r.e('route-predict-rule').click();r.e('route-main').click();r.e('route-free').click();
+ assert.notEqual(browser.location.searchParams.get('route_resume'),firstToken);
+ const restored=setup({browser:returnBrowser(values,browser.location.href).browser});
+ assert.equal(restored.c.snapshot().gradient.rate,.6);assert.equal(restored.c.snapshot().gradient.model.epoch,1);
+ assert.match(restored.e('route-trial-previous').textContent,/0\.15/);assert.match(restored.e('route-trial-current').textContent,/0\.60.*0\.595/);
+});
+test('a temporary excursion preserves the original verified GenAI return context without auto-sending',()=>{
+ const href='http://127.0.0.1:60064/learn.html?genaiReturn=http%3A%2F%2F127.0.0.1%3A3102%2F&genaiRequest=journey_test_20261103&genaiJourney=model-learning#route-task';
+ const {browser,values}=returnBrowser(new Map(),href),r=setup({browser});first(r);second(r);r.e('route-main').click();r.e('route-guess-all').click();r.e('route-explain-good').click();r.e('route-continue').click();r.e('route-free').click();
+ const resumedBrowser=returnBrowser(values,browser.location.href).browser;let assigned='';resumedBrowser.location.assign=url=>{assigned=url;};
+ const restored=setup({browser:resumedBrowser});resumedBrowser.location.assign=url=>{assigned=url;};
+ assert.equal(restored.e('route-genai-return').hidden,false);assert.equal(assigned,'');
+ restored.e('route-genai-send').click();assert.match(assigned,/127\.0\.0\.1:3102/);assert.match(assigned,/#playground=/);
+});
 test('actual controller completes three tasks and reports computed evidence, not navigation clicks',()=>{
  const r=setup();assert.equal(r.e('route-summary').hidden,true);r.e('route-continue').click();assert.equal(r.c.snapshot().stage,'classify');
  first(r);assert.equal(r.c.snapshot().stage,'gradient');assert.equal(r.e('route-main').disabled,true);

@@ -14,6 +14,8 @@ function open({journey,clipboard}={}){
   click(){if(!this.hidden&&!this.disabled)this.dispatchEvent(new Event('click'));}
   setAttribute(key,value){this[key]=String(value);}
   focus(){this.focused=true;}
+  getBoundingClientRect(){return {top:20,bottom:150};}
+  scrollIntoView(){this.scrolled=true;}
   select(){this.selected=true;}
  }
  const nodes=new Map([...html.matchAll(/<[a-z][\w:-]*\b[^>]*\bid="([\w-]+)"[^>]*>/g)].map(([tag,id])=>[id,Object.assign(new Element(),{hidden:/\shidden(?:\s|>)/.test(tag),disabled:/\sdisabled(?:\s|>)/.test(tag)})]));
@@ -22,7 +24,7 @@ function open({journey,clipboard}={}){
  if(journey){page.searchParams.set('genaiReturn','http://127.0.0.1:3102/');page.searchParams.set('genaiRequest','agent-reroute-0123456789');page.searchParams.set('genaiJourney',journey);}
  const sends=[],location={href:page.href,assign:url=>sends.push(url)};
  const document={getElementById:get,documentElement:{dataset:{}},hidden:false};
- const window={location,navigator:{clipboard},matchMedia:()=>Object.assign(new EventTarget(),{matches:false})};
+ const window={location,innerHeight:568,navigator:{clipboard},matchMedia:()=>Object.assign(new EventTarget(),{matches:false})};
  for(const context of [window,document])for(const key of ['localStorage','sessionStorage'])Object.defineProperty(context,key,{get(){throw Error('this level must not touch storage');}});
  mount({document,window});
  const e=name=>get(`reroute-${name}`),click=(...names)=>names.forEach(name=>e(name).click());
@@ -92,6 +94,43 @@ test('replay shows the player’s own sequence, including stopping without verif
  click('replay-exit');
  assert.equal(e('scene').dataset.outcome,'unverified');
  assert.equal(e('share').hidden,false);
+});
+
+test('Chouchou responds to the actual receipt without changing the instruction or exported evidence',()=>{
+ for(const [decisions,pattern,newReceipt] of [
+  [['dispatch','advance','verify-new'],/SUP-08.*08 号站.*可以结案/,true],
+  [['dispatch','advance','accept-old'],/07 的回执.*08.*还没核验/,false],
+  [['keep-old','advance','stop'],/08.*还没派单.*不能算送到/,false],
+  [['dispatch','advance','stop'],/08.*派出.*还没核对签收/,false],
+ ]){
+  const {e,click}=open();click('advance','advance',...decisions.slice(0,-1));
+  assert.equal(e('response').hidden,true,'no response before a decision ends the run');
+  e('status').getBoundingClientRect=()=>({top:-50,bottom:25});
+  click(decisions.at(-1));
+  assert.equal(e('response').hidden,false);assert.match(e('response-text').textContent,pattern);
+  assert.equal(e('status').scrolled,true,'offscreen outcome is brought into view');
+  assert.equal(e('caption').textContent,'「改送 08 号站。」');
+  click('export');
+  const json=JSON.parse(e('export-text').value);
+  assert.equal(Boolean(json.result.evidence.newReceipt),newReceipt);
+  assert.equal(json.steps.length,5);
+  assert.doesNotMatch(e('export-text').value,/臭臭|可以结案/);
+  click('restart');assert.equal(e('response').hidden,true);assert.equal(e('response-text').textContent,'');
+ }
+});
+
+test('replay shows Chouchou’s response and its terminal event only once that step is reached',()=>{
+ const {e,click}=open();click('advance','advance','dispatch','advance','accept-old','replay');
+ assert.equal(e('response').hidden,true);
+ assert.doesNotMatch(e('timeline').innerHTML,/old-receipt-misattributed/);
+ click('replay-next','replay-next','replay-next','replay-next');
+ assert.equal(e('response').hidden,true);
+ assert.match(e('timeline').innerHTML,/old-receipt/);
+ assert.doesNotMatch(e('timeline').innerHTML,/old-receipt-misattributed/);
+ click('replay-next');assert.match(e('response-text').textContent,/07 的回执.*08.*还没核验/);
+ assert.match(e('timeline').innerHTML,/old-receipt-misattributed/);
+ click('replay-prev');assert.equal(e('response').hidden,true);assert.equal(e('response-text').textContent,'');
+ click('replay-exit');assert.equal(e('response').hidden,false);
 });
 
 test('standalone JSON exports only the current real run, and a fresh attempt clears the old view',()=>{

@@ -4,8 +4,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="算法游乐场 Agent 第二关：新指令来了，旧任务还该继续吗？">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./home.css?v=agent-reroute-v1"><link rel="stylesheet" href="./agent-mission.css?v=agent-reroute-v1"><link rel="stylesheet" href="./agent-reroute.css?v=subtitle-sender-v1">
- <script type="module" src="./agent-reroute-ui.mjs?v=handoff-trust-v1"></script>
+ <link rel="stylesheet" href="./home.css?v=agent-reroute-v1"><link rel="stylesheet" href="./agent-mission.css?v=agent-reroute-v1"><link rel="stylesheet" href="./agent-reroute.css?v=chouchou-reroute-v1">
+ <script type="module" src="./agent-reroute-ui.mjs?v=chouchou-reroute-v1"></script>
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <title>新指令来了，旧任务还该继续吗？ · 算法游乐场</title>
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
@@ -72,7 +72,7 @@
     <figcaption class="reroute-map-key"><span><i class="reroute-key-old" aria-hidden="true"></i><strong>07 号站</strong> <span id="reroute-old-route">原单在途</span></span><span><i class="reroute-key-new" aria-hidden="true"></i><strong>08 号站</strong> <span id="reroute-new-route">尚未派单</span></span></figcaption>
    </figure>
    <section class="mission-console reroute-console" aria-labelledby="reroute-status">
-    <h2 id="reroute-status" tabindex="-1">原单在途</h2>
+    <h2 id="reroute-status" tabindex="-1" aria-describedby="reroute-response-text">原单在途</h2>
     <div class="reroute-transcript">
      <span class="reroute-transcript-label"><img src="./studio-chouchou-portrait.png" width="208" height="208" alt="" decoding="async">用户字幕 · 臭臭</span>
      <p id="reroute-caption" aria-live="polite">「先送到 07 号站。」</p>
@@ -81,6 +81,10 @@
      <div><dt>07 原单 · SUP-07</dt><dd id="reroute-old-receipt">等待回执</dd></div>
      <div><dt>08 新单 · SUP-08</dt><dd id="reroute-new-receipt">未派单</dd></div>
     </dl>
+    <div class="reroute-response" id="reroute-response" hidden>
+     <span>臭臭 · 验收回应</span>
+     <p id="reroute-response-text"></p>
+    </div>
     <p class="mission-feedback reroute-feedback" id="reroute-feedback" role="status">07 原单已经发出。继续看用户怎么说。</p>
     <div id="reroute-controls" tabindex="-1">
      <div class="reroute-actions" id="reroute-actions" role="group" aria-label="决定下一步">

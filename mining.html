@@ -3,9 +3,9 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="30 次探测，5 颗未知星球。继续挖刚才赚到的，还是去试没挖过的？亲手体验多臂老虎机的探索与利用。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=station-cat-v1&amp;art=crew-return-v1"><link rel="stylesheet" href="./mining-bayes.css?v=station-cat-v1">
- <script type="module" src="./mining.mjs?v=station-cat-v1&amp;art=crew-return-v1"></script><title>算法游乐场 · 盲盒探矿</title>
- <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=station-cat-v1&amp;art=crew-roles-v1"><link rel="stylesheet" href="./mining-bayes.css?v=station-cat-v1">
+ <script type="module" src="./mining.mjs?v=station-cat-v1&amp;art=crew-roles-v1"></script><title>算法游乐场 · 盲盒探矿</title>
+ <link rel="stylesheet" href="./navigation.css?v=mobile-learning-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head><body class="play-showcase">
@@ -136,9 +136,13 @@
     <p class="crew-receipt-empty" id="crew-receipt-empty">还没有完成的探测。先选一颗星球。</p>
     <p class="crew-receipt-pending" id="crew-receipt-pending" hidden></p>
     <div id="crew-receipt-body" hidden>
-     <p class="crew-receipt-trip" id="crew-receipt-trip"></p>
+     <div class="crew-receipt-roles">
+      <div class="crew-receipt-role"><img src="./studio-bobby-portrait.png" width="28" height="28" alt=""><div><strong>波比 · 航线</strong><p id="crew-receipt-trip"></p></div></div>
+      <div class="crew-receipt-role"><img src="./studio-chouchou-portrait.png" width="28" height="28" alt=""><div><strong>臭臭 · 本趟收获</strong><p id="crew-receipt-haul"></p></div></div>
+     </div>
+     <div class="crew-receipt-role crew-receipt-log"><img src="./studio-heim-portrait.png" width="28" height="28" alt=""><div><strong>嘿姆 · 累计记录</strong><p id="crew-receipt-change"></p></div></div>
      <dl class="crew-receipt-pair"><div><dt>这趟之前</dt><dd id="crew-receipt-before"></dd><dd class="crew-receipt-rate" id="crew-receipt-before-rate"></dd></div><div><dt>这趟之后</dt><dd id="crew-receipt-after"></dd><dd class="crew-receipt-rate" id="crew-receipt-after-rate"></dd></div></dl>
-     <p class="crew-receipt-note" id="crew-receipt-note">这是已探到的样本比例，不是真实产矿概率。其他星球的记录未变。</p>
+     <p class="crew-receipt-note" id="crew-receipt-note">这里只比同一颗星球。样本比例不等于真实产矿概率，其他星球的记录未变。</p>
     </div>
    </div>
    <div class="flight-history"><div><span>你的航行记录</span><small>◆ 有收获 · · 空手归</small></div><ol id="history" aria-label="已完成的探测记录"></ol></div>
@@ -189,6 +193,7 @@
   <section class="mining-bridge"><div><p class="eyebrow">玩过以后，再认识它</p><h2>好结果，不一定来自好判断。<br><span>坏结果，也未必是坏选择。</span></h2><a href="https://haimuhaimu.github.io/genai-learning-os/?page=decision-math" target="_blank" rel="noopener noreferrer">去 AI 决策数学继续学 ↗</a></div><ol><li><b>刚才挖空了，还去吗？</b><p>一次空手，不代表没有矿。你看到的是样本，不是星球真正的产量。</p></li><li><b>总去最赚的，会错过什么？</b><p>探索花掉眼前的机会，也可能发现更好的去处。这就是「探索与利用」。</p></li><li><b>算法也在猜。</b><p>它们没有矿藏地图，只是用不同方法把已有反馈变成下一次选择。</p></li></ol></section>
   <details class="mining-notes"><summary>这局游戏背后的算法与边界</summary><div><p>这是多臂老虎机（multi-armed bandit）的矿星比喻，不涉及真实金钱。每颗星球的产矿概率在一局内固定，五个概率是 15%、30%、45%、60%、80%，开局随机分配。每趟收获是独立的 0 或 1 块矿石，不存在越挖越少或保底。</p><p>三个策略都先按顺序各探一次。守成派（greedy）选实测平均收获最高的；冒险派（ε-greedy）每次有 20% 概率均匀随机选星球，否则选实测最好的；好奇派（UCB1）选「平均收获 + √(2 ln 总次数 / 该星球次数)」最大的。相同分数优先选编号小的星球。这里固定 ε=0.2，不宣称渐减 ε 策略的理论保证。</p><p>所有 30×5 个潜在结果在开局时生成。相同星域和选择顺序可以复现；赛后才运行并展示对照，策略无法偷看未来或真实概率。赛后显示的产矿概率是模拟器设定，不是由这 30 次实验准确估计出来的。</p><p>灵感延续陈全 GenAI Learning OS 的「先判断、看反馈、再解释」，算法和界面独立实现。UCB1 参考 <a href="https://homes.di.unimi.it/~cesabian/Pubblicazioni/ml-02.pdf" target="_blank" rel="noopener noreferrer">Auer、Cesa-Bianchi 与 Fischer（2002）↗</a>。原生 HTML/CSS 插画，没有第三方素材。</p><p>纯浏览器本地计算，无账号、上传、追踪或自动保存。切换标签页或打开帮助会取消尚未到达的探测，不扣次数；回来不会自动出发。减少动画时点击立即结算。刷新会开始新局；重玩同一局会标记为复盘，不再作为盲测。</p></div></details>
   <footer class="bottom-note"><span>好奇心，也是一种策略。</span><span class="signature">MADE BY CHEN QUAN</span></footer>
+  <p class="learning-route-exit"><a href="./#learning-routes">← 回到学习路线，看看下一步</a></p>
  </main>
  <dialog id="guide" aria-labelledby="guide-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="guide-title">带着好奇心出发。</h2><ol><li>点一颗星球，花 1 次机会，带回 0 或 1 块矿石。</li><li>观察「矿石 / 探测次数」。刚开始的数据很少，不一定靠谱。</li><li>选择继续挖，或试试别处。你有 30 次机会。</li><li>结束后揭晓矿藏，也看看三种算法在这局拿到了多少。</li><li>点「逐趟看选择与理由」，切换策略和回合。先看出发前的样本，再看选择理由，最后看实际收获。</li></ol><p>上方「同一份线索」挑战先选星球，再看算法理由与模拟结果；不影响自由探索的成绩。两个区域均可用 Tab 和 Enter。只有自由探索的星球获得焦点时，数字键 1–5 才会出发。重玩同一局是已知历史的复盘；换片星域才是新一轮探索。没有自动保存。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验盲盒探矿。</p></noscript>

@@ -21,6 +21,7 @@ if(!ctx||!chart||!geneCanvas){
  function controls(){
   $('play').textContent=playing||batchLeft?'暂停':'继续';$('play').setAttribute('aria-pressed',String(playing||batchLeft>0));
   $('evolve').textContent=batchLeft?'快进中 '+batchLeft+' 代':'快进 10 代';
+  $('adapt-evolve').textContent=batchLeft?'暂停快进 · '+(10-batchLeft)+' / 10':'在同一新路况再进化 10 代';
   $('track-name').textContent=names[preset];$('generation').textContent=String(race.generation);
   $('mutation').value=String(Math.round(race.mutation*100));$('mutation-value').textContent=Math.round(race.mutation*100)+'%';
   field.dataset.mode=mode;
@@ -56,7 +57,7 @@ if(!ctx||!chart||!geneCanvas){
  }
  function renderAdaptation(){
   const a=race.adaptation,active=Boolean(a);
-  $('adapt-cards').hidden=!active;$('adapt-placeholder').hidden=active;$('adapt-evolve').disabled=!active;
+  $('adapt-pit').hidden=!active;$('adapt-cards').hidden=!active;$('adapt-placeholder').hidden=active;$('adapt-evolve').disabled=!active;
   $('adapt-pending').textContent=active&&elapsed<duration()?'第 '+race.generation+' 代尚未跑完，对照保留上一份完整结果。':'';
   if(!active){renderedComparison=null;return;}
   if(elapsed>=duration())comparisonRace=race;
@@ -71,6 +72,11 @@ if(!ctx||!chart||!geneCanvas){
   $('adapt-impact-note').textContent='24 个基因一个没动。只改变了路障：'+difference(a.oldRun,a.newRun)+'。';
   $('adapt-reason').textContent='中间与右边都在新路况下跑：当前最佳相对不改基因的旧冠军，'+difference(a.newRun,shown.best)+'。';
   const generations=shown.generation-a.generation;
+  $('adapt-pit-rerun').textContent=result(a.oldRun)+' → '+result(a.newRun);
+  $('adapt-pit-count').textContent=a.oldFinished+' → '+a.initialFinished+' 辆完赛 · 都是第 '+a.generation+' 代';
+  $('adapt-pit-verdict').textContent=generations===0?'还没繁衍，只把原来的 48 辆车重新排位。':
+   '第 '+shown.generation+' 代：'+result(shown.best)+'。比刚重排时的最佳，'+difference(a.initialBest,shown.best)+'。';
+  $('adapt-current-step').textContent=generations===0?'03 同批车重新排位':'03 继续繁衍后的本代最佳';
   $('adapt-evolution-note').textContent=generations===0?'还没有繁衍新一代。右边只是原来的 48 辆车重新评分后的最佳；如果冠军换了，这是排名变了，不是已经学会绕路。':
    '在相同新路况下又繁衍了 '+generations+' 代。与“刚重新评分时的最佳”相比，'+difference(a.initialBest,shown.best)+'。先按新成绩选父母，再交叉、变异，最后用同一规则实跑检验；没有变好也如实保留。';
   comparisonScene('adapt-old-scene',a.oldRun,a.oldObstacles);
@@ -144,6 +150,7 @@ if(!ctx||!chart||!geneCanvas){
   gesture=null;
  }
  function pause(message){
+  if(batchLeft&&race.adaptation)$('adapt-feedback').textContent='快进已暂停 · 已完成 '+(10-batchLeft)+' / 10 代。';
   playing=false;batchLeft=0;token++;if(raf!==null)cancelAnimationFrame(raf);raf=null;last=null;cancelGesture();
   if(message)$('status').textContent=message;controls();draw();
  }
@@ -163,15 +170,21 @@ if(!ctx||!chart||!geneCanvas){
  }
  function reset(track,obstacles,name,message){
   pause();race=createRace(track,{mutation:race.mutation,obstacles});preset=name;elapsed=0;baseline=race.best;baselineKnown=false;comparisonRace=null;renderedComparison=null;
+  $('adapt-feedback').textContent='';
   $('status').textContent=message;controls();draw();
+ }
+ function batchStatus(message,local=message){
+  $('status').textContent=message;
+  if(race.adaptation)$('adapt-feedback').textContent=local;
  }
  function beginBatch(){
   pause();mode='watch';batchLeft=10;const version=token;
-  $('status').textContent='正在快进 · 已完成 0 / 10 代。可以随时暂停。';
+  const progressMessage=()=> '正在快进 · 已完成 '+(10-batchLeft)+' / 10 代。可以随时暂停。';
+  batchStatus(progressMessage());
   const tick=()=>{
    if(version!==token||document.hidden)return;raf=null;advance();batchLeft--;elapsed=duration();draw();controls();
-   if(batchLeft){$('status').textContent='正在快进 · 已完成 '+(10-batchLeft)+' / 10 代。可以随时暂停。';raf=requestAnimationFrame(tick);}
-   else{$('status').textContent='已完成 10 代完整模拟。可以继续比赛，也可以加个路障考考它们。';}
+   if(batchLeft){batchStatus(progressMessage());raf=requestAnimationFrame(tick);}
+   else batchStatus('已完成 10 代完整模拟。可以继续比赛，也可以加个路障考考它们。','这次快进完成 10 代，跑到第 '+race.generation+' 代。');
   };
   controls();draw();raf=requestAnimationFrame(tick);
  }
@@ -179,9 +192,10 @@ if(!ctx||!chart||!geneCanvas){
   const b=field.getBoundingClientRect();return {x:clamp((e.clientX-b.left)/b.width*WIDTH,45,WIDTH-45),y:clamp((e.clientY-b.top)/b.height*HEIGHT,45,HEIGHT-45)};
  }
  function announceCursor(){ $('cursor-status').textContent='路障光标：横向 '+Math.round(cursor.x/WIDTH*100)+'%，纵向 '+Math.round(cursor.y/HEIGHT*100)+'%。'; }
- function applyObstacles(obstacles,message){
+ function applyObstacles(obstacles,message,local=message){
   const partial=elapsed<duration();pause();
   race=changeObstacles(race,obstacles);elapsed=duration();comparisonRace=race;
+  $('adapt-feedback').textContent=local+'，第 '+race.generation+' 代已重新评分。';
   $('status').textContent=(partial?'先补算完改动前本代的完整模拟。':'')+message+'；第 '+race.generation+' 代的 48 条基因全部保留，已在新路况重新评分，尚未繁衍。下方可看前后对照。';
   controls();draw();
  }
@@ -239,11 +253,17 @@ if(!ctx||!chart||!geneCanvas){
  });
  $('next').addEventListener('click',()=>{pause();mode='watch';advance();$('status').textContent='上一代已完整计算，新一代等待出发。点继续看比赛。';controls();draw();});
  $('evolve').addEventListener('click',beginBatch);
- $('adapt-evolve').addEventListener('click',()=>{if(race.adaptation)beginBatch();});
+ $('adapt-evolve').addEventListener('click',()=>{
+  if(!race.adaptation)return;
+  if(batchLeft)pause('已暂停快进，保留已经完成的比赛。');else beginBatch();
+ });
  $('challenge-obstacle').addEventListener('click',()=>{
   const proposed=suggestRoadblock(race);
-  if(!proposed){pause('暂时没有合适的放置位置：可能路障已满、路线未走到中段，或附近已被占据。可以自由放置、移除路障，或继续进化。');return;}
-  mode='watch';applyObstacles([...race.obstacles,proposed],'已在旧冠军实际走过的路上添加路障');
+  if(!proposed){
+   const message=race.obstacles.length>=12?'路障已满。先回赛道移除一个，才能再放。':'没找到合适的放置位置。可以回赛道调整路障，或让车继续进化。';
+   pause(message);$('adapt-feedback').textContent=message;return;
+  }
+  mode='watch';applyObstacles([...race.obstacles,proposed],'已在旧冠军实际走过的路上添加路障','已放路障');
  });
  $('mutation').addEventListener('input',()=>{race={...race,mutation:Number($('mutation').value)/100};controls();$('status').textContent='变异设置将在下一代生效，不改写本代的成绩。';});
  $('ghost').addEventListener('change',draw);

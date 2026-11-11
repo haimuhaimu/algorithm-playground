@@ -3,7 +3,7 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="让飞船从试飞中学会预测，再在脑中挑选路线。改变风力，亲手发现世界模型何时会出错。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><link rel="stylesheet" href="./world-model.css?v=planning-1&amp;art=heim-receipt-v1">
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css?v=mobile-learning-v1"><link rel="stylesheet" href="./world-model.css?v=planning-1&amp;art=heim-receipt-v1">
  <script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script><script type="module" src="./world-model.mjs?v=planning-1&amp;art=heim-receipt-v1"></script>
  <title>算法游乐场 · 脑内预演室</title>
  <link rel="stylesheet" href="./space-theme.css">
@@ -85,7 +85,7 @@
     <article><span class="recap-number">03 / 目标改变了</span><h3>不一定要重学，也能换条路。</h3><svg id="recap-choice-scene" viewBox="0 0 140 90" role="img" aria-label="最后一次独立选择的真实结果"><circle id="recap-choice-target" r="5" class="recap-target"/><polyline id="recap-choice-predicted" class="prediction-path"/><polyline id="recap-choice-actual" class="actual-path"/></svg><p id="recap-decision"></p></article>
    </div>
    <p class="recap-note">前两张图保留同一趟训练经历的学习后预测与真实轨迹，不代表泛化能力；最后一张是独立选择时出发前的预测与实飞。选中一次合适的方法，也不等于已经掌握世界模型。</p>
-   <div class="ending-actions"><button id="free-experiment" class="primary">带着这个发现，自由实验 ↗</button><a href="./">返回算法游乐场 →</a></div>
+   <div class="ending-actions"><button id="free-experiment" class="primary">带着这个发现，自由实验 ↗</button><a href="./#learning-routes">回到学习路线 →</a></div>
   </section>
   <details id="advanced-controls" class="advanced-controls"><summary>想自己试？展开方向、推力和分步控制</summary><div class="pilot-panel" aria-labelledby="pilot-title">
     <div class="pilot-title"><h2 id="pilot-title">自由试飞</h2><p class="pilot-note">操作下方控制会离开引导，保留当前模型。想再走一轮完整实验，可以点页尾“重新开始”。</p></div>
@@ -104,5 +104,6 @@
   <section class="world-explanation" id="how-it-works"><h2>刚才，你教会了它什么？</h2><p>它把试飞的经历变成一套“世界会怎样变化”的猜测，再用这套猜测提前选路线。这就是这里的<strong>世界模型</strong>。风变了，旧猜测就可能失灵，需要新经历来纠正。</p></section>
   <details class="world-boundaries"><summary>它和 Dreamer、RSI 有什么区别？算法与诚实边界</summary><div><p>这是「学习环境 → 模型中规划 → 真实执行」的教学实验。学习器是带微小正则的线性回归（每轴速度、推力、偏置三个参数），不是大型神经网络；规划器枚举方向与力度，并非训练神经策略。没有复现 Dreamer 的潜在状态、奖励学习或想象中的策略训练。可继续阅读 <a href="https://www.nature.com/articles/s41586-025-08744-2" target="_blank" rel="noopener noreferrer">Dreamer 研究 ↗</a>。</p><p>真实环境是确定性的二维简化动力学，没有碰撞和随机测量噪声。学习器的线性假设恰好能表达它，因此这个小世界比真实问题容易得多。目标是第 60 拍在半径 5 的圆环内，并不代表完成物理着陆。</p><p>「轨迹偏差」是预测与完整实际轨迹的位置均方根距离。出发时的成绩使用当时锁定的预测，学习不会改写。学习对照用同一起点、整段推力序列和实际记录重新预测，是训练经历回看，不是泛化能力；新路线仍需实飞验证。不同推力、方向、风况的成绩不构成严格算法排名。</p><p>这里没有递归自我改进（RSI）：飞船只更新动力学参数，不修改自身代码或学习算法。纯浏览器本地计算，无上传、API、追踪或自动保存。刷新会重新开始；后台会暂停，回来不会自动继续。系统选择减少动态效果时直接展示完整轨迹和结果。</p></div></details>
   <footer class="world-footer"><button id="reset">重新开始 · 忘掉已学经验</button><span>MADE BY CHEN QUAN</span></footer>
+  <p class="learning-route-exit"><a href="./#learning-routes">← 回到学习路线，看看下一步</a></p>
  </main><noscript><p>请开启 JavaScript 后体验脑内预演室。</p></noscript>
 </body></html>

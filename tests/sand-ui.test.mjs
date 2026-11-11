@@ -10,7 +10,7 @@ test('near-canvas brush hint follows material, radius, keyboard and pause withou
   constructor(){super();this.dataset={};this.width=864;this.height=576;this.value='2';this.attributes=new Map();}
   set textContent(value){this.text=value;this.textUpdates=(this.textUpdates||0)+1;}
   get textContent(){return this.text;}
-  getContext(){return context;}setAttribute(k,v){this.attributes.set(k,v);}
+  getContext(){return context;}setAttribute(k,v){this.attributes.set(k,v);}focus(){}
   getBoundingClientRect(){return {left:0,top:0,width:864,height:576};}
  }
  const els=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([,id])=>[id,new Element()]));

@@ -153,6 +153,69 @@ test('comparison shows only completed generations, keeps its old route fixed, an
   assert.match(ui.elements.get('adapt-evolution-note').textContent,/11 代/);
  }finally{ui.restore();}
 });
+test('the pit report distinguishes a re-run, a re-rank, and a completed new generation',async()=>{
+ const u=await boot({reduced:true});try{
+  const e=id=>u.elements.get(id),value=id=>e(id)?.textContent??'';
+  assert.equal(e('adapt-pit')?.hidden,true,'no pit report before changing the road');
+  u.click('challenge-obstacle');
+  assert.equal(e('adapt-pit').hidden,false);
+  assert.match(value('adapt-pit-rerun'),/21\.09.*未完成.*48\.4%/);
+  assert.match(value('adapt-pit-count'),/48.*5.*第 1 代/);
+  assert.match(value('adapt-pit-verdict'),/还没繁衍/);
+  assert.match(value('adapt-current-step'),/同批车重新排位/);
+  assert.match(value('adapt-feedback'),/已放路障.*重新评分/);
+  const verdict=value('adapt-pit-verdict');
+  u.click('next');
+  assert.equal(value('adapt-pit-verdict'),verdict,'an unrun generation cannot appear in the report');
+  assert.match(value('adapt-current-step'),/同批车重新排位/);
+  assert.match(value('adapt-pending'),/第 2 代尚未跑完/);
+ }finally{u.restore();}
+});
+test('roadblock fast-forward reports local progress, pauses locally and compares against the first blocked ranking',async()=>{
+ const u=await boot({reduced:true});try{
+  const e=id=>u.elements.get(id),value=id=>e(id)?.textContent??'';
+  u.click('challenge-obstacle');const rerun=value('adapt-pit-rerun');
+  u.click('adapt-evolve');assert.match(value('adapt-feedback'),/正在快进.*0 \/ 10/);
+  u.frame();assert.match(value('adapt-feedback'),/1 \/ 10/);
+  const stale=[...u.frames.values()][0];
+  u.click('adapt-evolve');stale(500);
+  assert.match(value('adapt-feedback'),/已暂停.*1 \/ 10/);
+  assert.match(value('adapt-pit-verdict'),/第 2 代.*24\.05/);
+  assert.equal(u.frames.size,0);
+  u.click('adapt-evolve');for(let i=0;i<10;i++)u.frame();
+  assert.match(value('adapt-feedback'),/完成 10 代/);
+  assert.equal(value('adapt-pit-rerun'),rerun);
+  assert.match(value('adapt-pit-count'),/48.*5.*第 1 代/);
+  assert.match(value('adapt-pit-verdict'),/第 12 代.*比刚重排时.*秒/);
+  assert.match(value('adapt-current-step'),/继续繁衍后的本代最佳/);
+  u.click('reset');assert.equal(e('adapt-pit').hidden,true);assert.equal(value('adapt-feedback'),'');
+ }finally{u.restore();}
+});
+test('fast-forward completion describes the finished batch, not a later comparison',async()=>{
+ const u=await boot({reduced:true});try{
+  const value=id=>u.elements.get(id).textContent;
+  u.click('challenge-obstacle');u.click('adapt-evolve');
+  for(let i=0;i<10;i++)u.frame();
+  const completed=value('adapt-feedback');
+  assert.match(value('adapt-current-generation'),/第 11 代/);
+  u.click('next');u.click('next');
+  assert.match(value('adapt-current-generation'),/第 12 代/);
+  assert.equal(value('adapt-feedback'),completed,'the note should refer to the completed fast-forward');
+  assert.match(completed,/完成 10 代.*第 11 代/);
+  assert.doesNotMatch(completed,/下方.*第 11 代/,'the later comparison is no longer from generation 11');
+ }finally{u.restore();}
+});
+test('a rejected guided placement explains itself beside the control without changing the report',async()=>{
+ const u=await boot({reduced:true});try{
+  const value=id=>u.elements.get(id)?.textContent??'';
+  for(let i=0;i<8;i++)u.click('challenge-obstacle');
+  const saved=['adapt-pit-rerun','adapt-pit-count','adapt-pit-verdict','adapt-checkpoint'].map(value);
+  assert.match(saved[3],/路况 8/);
+  u.click('challenge-obstacle');
+  assert.match(value('adapt-feedback'),/没找到.*位置/);
+  assert.deepEqual(['adapt-pit-rerun','adapt-pit-count','adapt-pit-verdict','adapt-checkpoint'].map(value),saved);
+ }finally{u.restore();}
+});
 test('roadblock edit cancels stale batches, repeat edits replace checkpoint, reset alone starts over',async()=>{
  const ui=await boot({reduced:true}),field=ui.elements.get('race');try{
   assert.ok(ui.elements.has('challenge-obstacle'));

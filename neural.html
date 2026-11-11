@@ -4,10 +4,10 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="画两种点，现场训练一个小神经网络。比较直线与弯曲的分界，看看坏样本会怎样改变它的判断。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./neural.css">
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./neural.css?v=step-verdict-v1">
  <link rel="stylesheet" href="./neural-lesson.css"><script type="module" src="./neural-lesson-ui.mjs?v=neural-learning-20261026"></script>
- <script type="module" src="./neural.mjs?v=neural-learning-20261026"></script><title>算法游乐场 · 涂鸦训练场</title>
- <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
+ <script type="module" src="./neural.mjs?v=step-verdict-v2"></script><title>算法游乐场 · 涂鸦训练场</title>
+ <link rel="stylesheet" href="./navigation.css?v=mobile-learning-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./neural-guide.css"><script type="module" src="./neural-guide-ui.mjs"></script>
  <script type="module" src="./neural-gradient-ui.mjs"></script>
  <link rel="stylesheet" href="./neural-residual.css"><script type="module" src="./neural-residual-ui.mjs"></script>
@@ -15,6 +15,7 @@
  <link rel="stylesheet" href="./neural-cat-lesson.css?v=cat-label-evidence-v1"><script type="module" src="./neural-cat-lesson-ui.mjs"></script>
  <script type="module" src="./neural-cat-coach-ui.mjs"></script>
  <script type="module" src="./neural-cat-quick-ui.mjs?v=cat-label-evidence-v1"></script>
+ <script type="module" src="./learning-route-return-ui.mjs?v=route-return-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
@@ -362,6 +363,8 @@
       <label for="rate">每次改多少<select id="rate"><option value="0.03">慢慢来 · 0.03</option><option value="0.15" selected>稳着走 · 0.15</option><option value="0.6">迈大步 · 0.60</option></select><small>步子大不一定学得更好。</small></label>
      </div>
      <div class="training-actions"><button class="primary" id="play" aria-pressed="false">开始训练</button><button id="step">走一步</button><button id="fast">快进 500 步</button><button id="undo" disabled title="撤销画点、清空或换题；恢复题目并从头训练">撤销上一步</button></div>
+     <p class="neural-status" id="status" role="status" aria-atomic="true" tabindex="-1">按「开始训练」，让分界线慢慢长出来。</p>
+     <p class="learning-return-link"><a data-learning-return href="./#learning-routes">← 回到学习路线</a></p>
      <section class="step-lab" id="step-lab" aria-labelledby="step-title">
       <header><div><span class="step-eyebrow">把「走一步」拆开看</span><h2 id="step-title">走一步，它到底改了什么？</h2><p>用当前画布、当前模型。先猜两个位置，再做一次真实更新。</p></div><button id="step-capture" type="button">留住当前状态，开始猜</button></header>
       <p id="step-note" role="status">不换题、不重置模型。先留档，才能退回这个起点。</p>
@@ -372,26 +375,43 @@
         <figure><figcaption><b id="step-after-title">走之后 · 等你先猜</b><span id="step-after-epoch"></span></figcaption><canvas id="step-after-canvas" width="560" height="350" role="img" aria-label="训练一步之后的分界，虚线保留原分界" aria-describedby="step-A-result step-B-result"></canvas></figure>
        </div>
        <p class="step-legend">● 圆　■ 方　实线：当前 50% 分界 · 虚线：走之前。颜色是模型倾向，不是正确率。</p>
+       <div class="step-rate-control" id="step-rate-control" hidden>
+        <label for="step-rate">这一步的步子</label><select id="step-rate"><option value="0.03">慢慢来 · 0.03</option><option value="0.15" selected>稳着走 · 0.15</option><option value="0.6">迈大步 · 0.60</option></select>
+        <p id="step-rate-note" role="status"></p>
+       </div>
        <div class="step-guesses">
         <fieldset><legend id="step-A-label">A · 一个训练样本</legend><p id="step-A-before"></p><div><button id="step-A-up" type="button" aria-pressed="false">更像方 ↑</button><button id="step-A-down" type="button" aria-pressed="false">更像圆 ↓</button><button id="step-A-steady" type="button" aria-pressed="false">几乎不变 ≈</button></div></fieldset>
         <fieldset><legend>B · 没参加训练的探针</legend><p id="step-B-before"></p><div><button id="step-B-up" type="button" aria-pressed="false">更像方 ↑</button><button id="step-B-down" type="button" aria-pressed="false">更像圆 ↓</button><button id="step-B-steady" type="button" aria-pressed="false">几乎不变 ≈</button></div></fieldset>
        </div>
-       <div class="step-actions"><button id="step-run" type="button" disabled>猜完 A 和 B，再走一步</button><button id="step-rewind" type="button" disabled>退回留档，再试一次</button><p id="step-rate-note"></p></div>
+       <div class="step-actions"><button id="step-run" type="button" disabled>猜完 A 和 B，再走一步</button></div>
        <p class="step-precision">“几乎不变”指倾向变化不足 0.01 个百分点，不表示数学上完全不变。</p>
-       <section id="step-result" class="step-result" tabindex="-1" aria-labelledby="step-result-title" hidden>
+       <section id="step-result" class="step-result" tabindex="-1" aria-labelledby="step-result-title" aria-describedby="step-takeaway" hidden>
         <h3 id="step-result-title">不是背下一个点，而是调整整套判断。</h3>
+        <p id="step-takeaway" class="step-takeaway"></p>
+        <div id="step-attempts" class="step-attempts" hidden>
+         <table aria-describedby="step-compare-note">
+          <caption id="step-compare-origin"></caption>
+          <thead><tr><th scope="col">指标 / 起点</th><th scope="col">上次<small>步长 <span id="step-last-rate"></span></small></th><th scope="col">这次<small>步长 <span id="step-current-rate"></span></small></th></tr></thead>
+          <tbody>
+           <tr><th scope="row">训练误差<small id="step-compare-loss-base"></small></th><td><strong id="step-compare-loss-last"></strong><small id="step-compare-loss-last-delta"></small></td><td><strong id="step-compare-loss-current"></strong><small id="step-compare-loss-current-delta"></small></td></tr>
+           <tr><th scope="row">A 方倾向<small id="step-compare-A-base"></small></th><td><strong id="step-compare-A-last"></strong><small id="step-compare-A-last-delta"></small></td><td><strong id="step-compare-A-current"></strong><small id="step-compare-A-current-delta"></small></td></tr>
+           <tr><th scope="row">B 方倾向<small id="step-compare-B-base"></small></th><td><strong id="step-compare-B-last"></strong><small id="step-compare-B-last-delta"></small></td><td><strong id="step-compare-B-current"></strong><small id="step-compare-B-current-delta"></small></td></tr>
+          </tbody>
+         </table>
+         <p id="step-compare-note">方倾向按原值达到 50% 判方。小字是相对起点的变化，A、B 用百分点；误差不是错误率。</p>
+        </div>
+        <p id="step-loss-result"></p>
+        <div class="step-result-actions"><button id="step-rewind" type="button" disabled>退回起点，换个步子</button></div>
         <div class="step-probe-results"><p id="step-A-result"></p><p id="step-B-result"></p></div>
-        <p id="step-loss-result"></p><p id="step-explanation"></p>
-        <p class="step-takeaway">你刚看见了：所有位置共享参数，所以没参加训练的地方也可能变；整体犯错代价下降，也不保证每个点都立刻改对。</p>
+        <p id="step-explanation"></p>
        </section>
-       <div id="step-attempts" class="step-attempts" hidden><h3>同一个起点，换步子再比</h3><p id="step-last-result"></p><p id="step-current-result"></p><small>只比较这一次更新，不代表长期效果；大步不保证更好。</small></div>
+       <p id="step-last-result" class="step-retry-preview" hidden></p>
       </div>
      </section>
      <div class="prediction"><div class="prediction-question"><h2>先猜一下 <small>可跳过</small></h2><p><span id="prediction-model">会拐弯 · 8 个神经元</span>，能分开这两类吗？</p></div><div class="guess-options" role="group" aria-label="训练前预测"><button data-guess="yes" aria-pressed="false">我猜能</button><button data-guess="no" aria-pressed="false">可能分不开</button></div><p id="prediction-result">可跳过。先留一个判断，再看实验。</p></div>
     </div>
     <div class="training-stats" aria-label="实际计算结果"><div><span>训练步数</span><strong id="epoch">0</strong></div><div><span>练习题正确率</span><strong id="accuracy">尚未计算</strong></div><div><span>新题正确率 <small>120 道</small></span><strong id="test-accuracy">尚未计算</strong></div><div class="loss-chart"><span>犯错代价 <b id="loss">待计算</b></span><canvas id="history" width="320" height="80" aria-label="本轮真实训练损失曲线"></canvas></div></div>
-    <p class="neural-status" id="status" role="status">按「开始训练」，让分界线慢慢长出来。</p>
-    <div class="compare-action"><div><strong>同一道题，换个脑袋。</strong><p>把上轮成绩留在下面，不用靠记忆比较。</p></div><button id="compare-model" disabled>换直线模型试试 ↗</button></div>
+    <div class="compare-action"><div><strong>同一道题，换个脑袋。</strong><p id="compare-model-hint">先训练一次，再保留这轮成绩换个模型。</p></div><button id="compare-model" aria-describedby="compare-model-hint" disabled>换直线模型试试 ↗</button></div>
     <section class="model-comparison" id="model-comparison" aria-labelledby="comparison-title" hidden>
      <header><h2 id="comparison-title">同题对照</h2><p id="comparison-question"></p></header>
      <div class="comparison-columns">
@@ -411,6 +431,7 @@
   <details class="neural-notes"><summary>这里的神经网络，是真的在学习吗？</summary><div><p>是。每个点的位置是两个输入，你画的圆或方是标签。线性模型使用一条直线；神经网络用 8 个 tanh 隐藏神经元和 1 个 sigmoid 输出。每一步计算全部练习题的二元交叉熵，再用反向传播与梯度下降更新参数。背景颜色是各位置的模型输出，不是预画的分区。</p><p>预设有 48 个训练样本和另外生成的 120 个固定测验样本，测验不参与参数更新。改动画布后，原题答案不再适用，因此清空新题成绩。正确率不等于真实世界能力；探针显示的是模型的倾向，不是校准过的可靠度。</p><p>相同预设、结构和步子会复现同样过程。每轮上限 4000 步，不保证学会任意涂鸦或找到最优答案。画点、清空和换预设都可撤销，最多保留 30 步；撤销只找回题目，训练从头开始。取消手势保留之前的数据与成绩。</p><p>灵感来自陈全的 GenAI Learning OS，算法与界面在此独立实现。纯浏览器本地计算，没有大模型接口、上传或账号。本地草稿保留题目、模型与撤销记录；暂停或正常离开时保存训练进度。刷新后恢复为暂停，仍需手动继续。仅限此浏览器、此站点，不是云备份。</p></div></details>
   </details>
   <footer class="bottom-note"><span>它学到的世界，是你画给它的。</span><span class="signature">MADE BY CHEN QUAN</span></footer>
+  <p class="learning-route-exit"><a data-learning-return href="./#learning-routes">← 回到学习路线，看看下一步</a></p>
  </main>
  <dialog id="guide" aria-labelledby="help-title"><form method="dialog"><button class="dialog-close" aria-label="关闭玩法说明">×</button></form><h2 id="help-title">看线怎样学会分组。</h2><ol><li>先找两个“错”点：圆点落在方区，方点落在圆区。</li><li>点「看它怎样调整这条线」。点不会移动，只有实线和它两侧的分组在变化；虚线保留原来的分法。</li><li>出现一个问号新点，沿着学到的实线，判断它该归圆区还是方区。</li><li>最后回顾：训练时调整分界线，使用时按同一条线给新位置分组。算法细节可以另外展开看。</li></ol><p>新手小题不改动你的草稿。自由模式保留画点、换题、模型对照和单步训练；关闭进阶区会暂停训练，重新打开不会自动继续。</p></dialog>
  <noscript><p>请开启 JavaScript 后体验涂鸦训练场。</p></noscript>

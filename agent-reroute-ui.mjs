@@ -15,6 +15,16 @@ const EVENTS={
 };
 const OUTCOMES={misattributed:'结案错配 · 08 未核验',unverified:'已停止 · 08 未核验',verified:'08 签收已核验'};
 
+function responseTo({workflowComplete,evidence:{outcome,dispatched08,newReceipt}}){
+ if(!workflowComplete)return '';
+ if(outcome==='verified'&&newReceipt)return `「单号 ${newReceipt.orderId} 和 ${newReceipt.station} 号站都对上了，这单可以结案。」`;
+ if(outcome==='misattributed')return '「这张是 07 的回执。我改要的 08，还没核验。」';
+ if(outcome==='unverified')return dispatched08
+  ?'「08 的单已经派出，但还没核对签收。先别算送到了。」'
+  :'「08 还没派单，不能算送到。」';
+ return '';
+}
+
 function describe({stage,evidence:{dispatched08,outcome}},lastEvent){
  switch(stage){
   case 'original': return ['原单在途','07 原单已经发出。继续看用户怎么说。'];
@@ -59,6 +69,9 @@ export function mountAgentReroute({document,window}){
   set('new-receipt',newReceipt?`${newReceipt.orderId} · ${newReceipt.station} 号站签收`:dispatched08?'已派单，未核验':'未派单');
   e('old-receipt').dataset.tone=oldReceipt?'old':'waiting';
   e('new-receipt').dataset.tone=newReceipt?'success':'waiting';
+  const response=responseTo(result);
+  set('response-text',response);
+  show('response',Boolean(response));
   set('feedback',feedback);
   set('advance',stage==='await-old'?'查看迟到回执':'继续字幕');
   for(const [name,action] of Object.entries(CONTROLS)){
@@ -71,6 +84,7 @@ export function mountAgentReroute({document,window}){
   show('return',canReturn);
   show('os-manual',!canReturn);
   show('replay-controls',replaying);
+  set('review-title',replaying?'已回放的操作':'本轮操作');
   if(replaying){
    set('replay-position',`回放 ${replayAt} / ${run.actions.length} 步`);
    e('replay-prev').disabled=replayAt===0;
@@ -78,7 +92,7 @@ export function mountAgentReroute({document,window}){
   }
   // The reducer emits a fixed set of event IDs. All rendered item text is local copy.
   const row=(index,event,label)=>`<li data-event="${event}"${index===steps.length?' aria-current="step"':''}><span>${label}</span></li>`;
-  e('timeline').innerHTML=row(0,'start','07 原单发出 · 等待签收')+run.steps.map(({event},i)=>row(i+1,event,EVENTS[event])).join('');
+  e('timeline').innerHTML=row(0,'start','07 原单发出 · 等待签收')+steps.map(({event},i)=>row(i+1,event,EVENTS[event])).join('');
  }
 
  function act(name,action){
@@ -87,6 +101,12 @@ export function mountAgentReroute({document,window}){
   catch{set('feedback','操作没有执行成功，已有记录仍在。请重试。');return;}
   render();
   if(run.result.workflowComplete||e(name).hidden)focus('status');
+  if(run.result.workflowComplete){
+   const status=e('status'),response=e('response');
+   if(status.getBoundingClientRect().top<8||response.getBoundingClientRect().bottom>window.innerHeight-12){
+    status.scrollIntoView({block:'start',behavior:'instant'});
+   }
+  }
  }
 
  for(const [name,action] of Object.entries(CONTROLS))e(name).addEventListener('click',()=>act(name,action));

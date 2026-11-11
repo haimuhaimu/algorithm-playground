@@ -1,50 +1,51 @@
 # 算法游乐场
 
-首页 `index.html` 是十个实验的展示入口：大幅立体像素画面由现有 A* 核心的真实搜索轨迹驱动，可暂停，并尊重减少动态效果偏好。离屏与后台停止播放。十个互动实验保留原有逻辑；原推荐首页完整移至 `recommendation.html`，旧根路径的常用实验锚点会保留查询参数与锚点跳转过去。
+**和三猫一起，把算法玩一遍。** 改一格路障，寄一封像素明信片，或给模型教一次分类。亲手做出一个改变，再看结果为什么不同。
 
-`home-preview-*.jpg` 是本项目默认、合成场景的浏览器截图，不含用户草稿、外部素材或 Apple 图片。首页采用独立的 `home.css`，不改动实验的算法与草稿存储键。无 JavaScript 时十个链接仍可访问；互动和动态演示需要 JavaScript。
+[在线试玩 ↗](https://haimuhaimu.github.io/algorithm-playground/) · [从第一条学习路线开始 ↗](https://haimuhaimu.github.io/algorithm-playground/learn.html#route-task) · [AI 工具指南](AI_USAGE.md)
 
-**把算法变成能玩的实验。** 由陈全（Chen Quan）创作。
+<a href="https://haimuhaimu.github.io/algorithm-playground/pixel.html#first-letter"><img src="./home-preview-pixel.jpg" alt="像素邮局里的三猫明信片预览" width="232"></a>
 
-[直接试玩 →](https://haimuhaimu.github.io/algorithm-playground/) · [构建与部署状态](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml)
+我是陈全。我学分类时，先画点、看分界，再去理解公式。这里把这样的学习过程做成小游戏：先猜，亲手试一次，再拿结果或一道新题核对。三猫有时是样本，有时和你一起跑图、寄信、探矿。
 
-新增独立小课「分布观察台」：让正态、指数和帕累托三台机器各抽一些随机数，先多抽一点，再用同一批数把红线从 4 挪到 16，看看还剩多少大数字。保留前后次数、原来的图形和图外读数，最后想一想“没抽到，是不是就不可能”；对数正态可以在结束后选看。全部在浏览器里计算，不上传、不新增保存记录；已知模型的类别与这次抽到的结果分开解释，不凭一张图给现实数据定性。[试玩分布观察台 →](https://haimuhaimu.github.io/algorithm-playground/distributions.html)
+## 第一次来，玩哪个？
 
-Interactive algorithm experiments: recommendation tradeoffs, an editable BFS vs A* pathfinding arena, a falling-sand cellular automaton sandbox, a firefly phase-synchronization playground, a genetic racing route optimizer, a neural doodle classifier you can train in your browser, a blind-box mining game about exploration vs exploitation, a pixel postcard editor with real lossless Huffman encoding, a tiny learned world-model flight lab, and an AI art studio about editing one poster, testing reusable rules, and choosing whether to keep or roll them back. No account required.
+- **想快速玩一局：** [寄一张三猫明信片](https://haimuhaimu.github.io/algorithm-playground/pixel.html#first-letter)，看看真实字节怎样还原成 256 格，再亲手读回 8 格。
+- **想系统学一点：** [AI 怎么从例子里学会？](https://haimuhaimu.github.io/algorithm-playground/learn.html#route-task) 看分界、走一步梯度、拿新题检验；途中去自由涂鸦，再回来接着做。
+- **想学 Agent：** [从一次可疑的「成功」开始](https://haimuhaimu.github.io/algorithm-playground/agent-mission.html#mission)。亲手作决定，再把实际操作带回 [GenAI Learning OS](https://haimuhaimu.github.io/genai-learning-os/) 复盘。
 
-调节点击、多样性和新人机会，让同一批内容排出不一样的首页。这里没有真实平台接口、账号、追踪服务或第三方素材；全部 48 条内容与作者都是虚构的。
+## 十个主实验
 
-「给首页排一次座位」会冻结当前口味与规则，让你逐席猜谁入选，再查看赢家、最接近的落选者与全部候选的得分。六席排完后，只关掉多样性重排一次，保留前后对照；猜测不改变算法结果，也不会修改原有首页、反馈对照或自由调参。这是逐席选最高分的简化教学规则，不代表真实平台或整页全局最优。[亲手排六席 →](https://haimuhaimu.github.io/algorithm-playground/recommendation.html#seat-lesson)
+| 试玩入口 | 动手看什么 |
+| --- | --- |
+| [推荐系统](https://haimuhaimu.github.io/algorithm-playground/recommendation.html#seat-lesson) | 给首页排座；看同一张猫片为什么换一席就可能落选。 |
+| [寻路竞技场](https://haimuhaimu.github.io/algorithm-playground/pathfinding.html#cat-route-lab) | 为三猫改一格路，比较路线；也能用 BFS 和 A* 单步找路。 |
+| [落沙实验室](https://haimuhaimu.github.io/algorithm-playground/sand.html#grain-lab) | 看沙遇到水会怎样，再给臭臭的水碗开口，逐拍观察。 |
+| [萤火虫合奏](https://haimuhaimu.github.io/algorithm-playground/firefly.html#firefly-pond) | 让波比拍一下，看看哪一片听见了，以及两群如何合拍。 |
+| [遗传赛车](https://haimuhaimu.github.io/algorithm-playground/evolution.html#roadblock-lab) | 给旧冠军加路障，分开看同批车重排与继续繁衍的结果。 |
+| [涂鸦训练场](https://haimuhaimu.github.io/algorithm-playground/neural.html#cat-lesson) | 用特征分辨波比和臭臭，再试分类分界、梯度、残差与新题。 |
+| [盲盒探矿](https://haimuhaimu.github.io/algorithm-playground/mining.html#mining-flight) | 让三猫飞一趟，区分本次收获、累计样本和下一趟的选择。 |
+| [像素邮局](https://haimuhaimu.github.io/algorithm-playground/pixel.html#first-letter) | 寄出真实 Huffman 字节包，看收件端逐位、无损地还原。 |
+| [脑内预演室](https://haimuhaimu.github.io/algorithm-playground/world-model.html#flight-guide) | 让飞船先预测再实飞；分开看模型学到了什么、规划改变了什么。 |
+| [AI 创作室](https://haimuhaimu.github.io/algorithm-playground/rsi.html#workshop) | 为波比修海报，拿新委托复测，再决定保留或撤回改法。 |
 
-第二个实验是「寻路竞技场」：亲手画墙、移动起终点，让两种真实算法在同一张地图上找路。可暂停、单步、重放，比较探索格数与最短路长。
+想继续探索：去 [贝叶斯小课](https://haimuhaimu.github.io/algorithm-playground/mining.html#bayes-start) 比较同一条新证据怎样改变两份记录的判断，或去 [分布观察台](https://haimuhaimu.github.io/algorithm-playground/distributions.html#observation-title) 用同一条红线比较正态、指数和帕累托样本。
 
-第三个实验是「落沙实验室」：倒沙、放水、画墙、挖开堤坝。在分流器、沙漏或空白画布上，观察简单规则如何产生流动和堆积。支持暂停、逐拍观察和可调笔刷。[直接玩落沙实验室 →](https://haimuhaimu.github.io/algorithm-playground/sand.html)
+## Agent 实战三关
 
-第四个实验是「萤火虫合奏」：点乱或点亮一片节拍，调节相互影响和可见范围，看看 80 个各有节奏的亮点如何逐渐合拍。试试「两群对唱」，再把两群连起来。[直接玩萤火虫合奏 →](https://haimuhaimu.github.io/algorithm-playground/firefly.html)
+1. [显示成功，补给真的到了吗？](https://haimuhaimu.github.io/algorithm-playground/agent-mission.html#mission) 查签收、重试或停止，区分工具回复和真实结果。
+2. [新指令来了，旧任务还该继续吗？](https://haimuhaimu.github.io/algorithm-playground/agent-reroute.html#mission) 处理改派，判断迟到的旧回执还能证明什么。
+3. [只留三帧，你会留下哪一帧？](https://haimuhaimu.github.io/algorithm-playground/agent-frames.html#mission) 用同一段画面、同样三帧预算，比较保留了哪些证据。
 
-第五个实验是「遗传赛车」：画一条赛道、放几个路障，让 48 辆小车的路线基因不断交叉和变异。可以快进 10 代，对照第一代的最佳路线。[直接玩遗传赛车 →](https://haimuhaimu.github.io/algorithm-playground/evolution.html)
+三关用固定场景模拟，不接摄像头、麦克风或付费模型。可主动将实操记录带回 GenAI Learning OS；完成实验不等于已掌握。
 
-第六个实验是「涂鸦训练场」：画两类样本，让一个小神经网络现场学习。可比较直线与弯曲分界、添加反例、看新题正确率；学习方式借鉴 [GenAI Learning OS](https://haimuhaimu.github.io/genai-learning-os/)，实现与文案独立创作。[直接玩涂鸦训练场 →](https://haimuhaimu.github.io/algorithm-playground/neural.html)
+## 让自己的 AI 参与
 
-第七个实验是「盲盒探矿」：30 次探测、5 颗未知星球，玩完再和 greedy、ε-greedy、UCB1 比一比。开局预生成同一套潜在结果，不安排算法必胜；复盘局明确标记，不冒充首次盲测。原生 CSS 插画，无新依赖或第三方素材。[直接玩盲盒探矿 →](https://haimuhaimu.github.io/algorithm-playground/mining.html)
-
-第八个实验是「像素邮局」：在 16×16 四色画纸上涂画，以真实 Huffman 字节包模拟寄送并逐格解码。灵感连接学习页的熵与信息量；支持触摸、键盘、30 次撤销与减少动画。包大小包含编码树和补齐，不冒充 PNG 文件体积；相同颜色频率的不同图案大小相同。[直接玩像素邮局 →](https://haimuhaimu.github.io/algorithm-playground/pixel.html)
-
-「当一次收件员」会从当前画纸冻结一份副本，展示其中 8 格怎样变成真实字节包里的暗号，再让你逐位读取、亲手还原颜色。选错可重试，完成后对照原图与还原结果，并解释为什么码字不需要分隔符。练习片段不是单独压缩的小图；码表来自整张画纸，大小仍包含整张图的编码树与补齐。练习不改写画纸、草稿或上一封收件，也保留原有打乱对照。
-
-第九个实验是「脑内预演室」：教小飞船从试飞经历中预测运动。先在同一趟记录上对照学习前后的预测，再另选路线、真实试飞；方向、推力、风和橙色真实轨迹不变，让学习和规划各自看得见。最后面对“只换目标，要不要重新学习”的独立选择，回顾这轮实验学到了什么。[直接玩脑内预演室 →](https://haimuhaimu.github.io/algorithm-playground/world-model.html)
-
-第十个实验是「会进化的 AI 创作室」：波比的花园海报贯穿到底。先修好一张绿色围巾海报，再看“以后都固定绿色”为什么会弄错珊瑚色新委托。你可以只改围巾的取色方式，用同样两份委托复测，再保留或撤回；最初修好的成品仍可展开回看。它演示验证候选规则，不会改变助手寻找改法的方法。十个实验可从导航切换。[直接玩 AI 创作室 →](https://haimuhaimu.github.io/algorithm-playground/rsi.html#workshop)
-
-## 让自己的 AI 陪你玩
-
-有本地执行能力的 AI 可以按 [使用指南](AI_USAGE.md) 发现工具、试跑固定案例，再重算一份真实实验记录。目前覆盖三站模型学习路线、像素解码、贝叶斯小课和 Agent 三关；完整能力与动作以 `list` / `describe` 返回值为准。[静态 manifest](learning-tool-manifest.json) 只用于发现，不是在线执行服务。
-
-其余网页实验仍需浏览器操作，不能把它们当作已支持的执行接口。无需付费模型或密钥，不读取私有画纸和草稿；AI 代跑与某个人实际操作、完成流程与掌握概念，都必须分开。
+有本地执行能力的 AI 可以用 [工具指南](AI_USAGE.md) 和 [能力清单](learning-tool-manifest.json) 发现工具、运行固定案例，或重算一份实际导出的实验记录。目前支持学习路线、像素解码、贝叶斯小课和 Agent 三关。其他实验仍需在浏览器里玩；清单不是在线执行服务，工具也不会读取你的画纸和草稿。
 
 ## 本地运行
 
-需要 Node.js 24 或更新版本。没有第三方运行依赖，无需安装包。
+需要 Node.js 24+，没有第三方运行依赖。
 
 ```sh
 git clone https://github.com/haimuhaimu/algorithm-playground.git
@@ -52,159 +53,10 @@ cd algorithm-playground
 npm start
 ```
 
-打开 http://127.0.0.1:3040/ 。服务仅监听本机，端口可用 `PORT=3041 npm start` 修改。
+打开 [http://127.0.0.1:3040/](http://127.0.0.1:3040/)。运行 `npm run verify` 会检查语法、跑测试并构建 `dist/`。[GitHub Actions](https://github.com/haimuhaimu/algorithm-playground/actions/workflows/pages.yml) 对 PR 执行相同验证；只从通过验证的 `main` 部署白名单产物。
 
-```sh
-npm run verify
-```
+## 边界与素材
 
-此命令执行语法检查、算法/服务/打包测试，再生成 `dist/`。测试会短暂绑定本机随机端口。`dist/` 只包含白名单中的运行文件，可放在静态站点的子目录中。推荐实验入口为 `recommendation.html`，寻路入口为 `pathfinding.html`，落沙入口为 `sand.html`，萤火入口为 `firefly.html`，赛车入口为 `evolution.html`，涂鸦入口为 `neural.html`，探矿入口为 `mining.html`，像素入口为 `pixel.html`，脑内预演室入口为 `world-model.html`，AI 创作室入口为 `rsi.html`。
+互动在浏览器中运行，无需账号。画纸和草稿只保存在当前浏览器，学习路线往返使用同标签页的临时记录。操作记录不会自动上传或同步；要带去 GenAI Learning OS 复盘，由你主动发起。所有模型都是教学简化版；[实验与实现说明](EXPERIMENTS.md) 保留具体算法假设、源码入口和验收边界。
 
-## 在线演示与更新
-
-演示使用 GitHub Pages。提交到 `main` 后，GitHub Actions 先运行完整验证，通过后只部署 `dist/`；Pull Request 只验证，不部署。无需配置第三方服务密钥。
-
-没有应用内账号、分析追踪或内容上传功能。涂鸦训练场与像素邮局会将已完成的操作保留为此浏览器、此站点的本地草稿；其他实验刷新后重置。静态托管由 GitHub Pages 提供。
-
-## 试着玩一轮
-
-1. 从「只追点击」开始，看看猫猫如何占据首页。
-2. 切到「多看一点」，观察新增的主题与点击预测之间的取舍。
-3. 试试「新人上场」，或自己调权重，完成右侧的挑战。
-4. 对第一张卡点「少一点」，再查看反馈对照：保留前后六张卡，标清进入、退出和换位；看懂反馈作用在主题兴趣，而不是屏蔽单张卡。
-5. 跑一轮规则对照：固定同一份口味，只比较两套规则。它不是反馈前后的对照；规则相同时会明确说明结果为何相同。
-6. 继续调参不会覆盖已保留的反馈对照。点「记录下一次反馈」后，再给卡片反馈，才会替换。对照仅在本页保留，刷新或重置后清空。
-
-## 模型边界
-
-### 会进化的 AI 创作室
-
-- 使用三猫工作室可公开的波比原画，独立围巾层只改颜色，不重画脸、毛色或姿势。绿色旧委托与珊瑚色新委托使用同一张参考图、同一角色、姿势和场景；判断只检查是否符合要求，不评价审美。没有真实生图服务或大模型调用。
-- 手动返修只改变眼前这张作品，不改变规则；按旧办法重画仍使用参考图的珊瑚色。原图与本轮手动修好的成品分别保留。
-- “固定绿色”在旧委托通过、在新委托失败。玩家先猜再看真实出图，猜测不改变输出，也不改变首次失败证据。
-- 之后可以只把围巾取色改成“读取当前委托”，显式用原来两份要求复测。新选择尚未实跑时不能保留；匹配的实际试验记录才允许安装。保留或撤回都由玩家决定，不会自动将通过的候选当作已安装。
-- 保留后按实际选定规则重画；撤回继续旧办法，不是只更换结尾文案。返回选择点保留本轮证据和成品，可以再试另一条路；从头重玩或刷新会清空本轮。成品卡读取真实返修快照，不根据新委托重建。
-- 这是 RSI 相关概念中“验证候选改进、保留或回退”的有限模拟，不是开放式自主 RSI，也没有改进诊断或寻找改法的方法。任务和取色规则预设，两份委托通过不证明普遍有效或能无限变强。
-- 全部本地计算，无上传、追踪或自动保存。已做桌面及窄屏/横屏浏览器验收，不等于实体手机、读屏器或学习效果验证。
-
-### 脑内预演室
-
-- 学习器仅使用已完成试飞的状态转移，通过带微小正则的线性回归拟合每轴的速度、推力和偏置参数；不导入真实环境，也不读取其隐藏参数。规划器只在当前模型里枚举 2009 条路线，再由用户确认真实试飞。
-- 每趟先推 36 拍、再滑行 24 拍，以第 60 拍落在目标半径 5 内为抵达，不要求刹停。环境是无碰撞、无测量噪声的确定性二维简化动力学；学习器的假设恰好能表达它，远比真实问题简单。
-- 预测在出发前锁定，真实轨迹与本趟目标单独记录；学习不会改写旧成绩。“轨迹偏差”是预测与实际位置的均方根距离，不是训练集拟合分数；不同条件的试飞不构成严格算法排名。
-- 学习对照在同一起点、同一段推力序列和同一条实际记录上，用更新后的模型重新预测。切换重点不改坐标或数据；保留的对照可在规划、换风和后续试飞后回看。它是训练经历回放，不是新试飞或泛化能力证据；学习、规划与起飞是三个独立动作。
-- 引导依次呈现首次失误、学习后验证、风向改变、重新学习后验证，再让用户在目标移动但风不变时独立选择。沿用路线、重新规划与只重新学习会执行不同的实际操作；每次重试从同一份基线经验出发，不暗中累积优势。
-- 实验结尾显示本轮真实轨迹和结果。选中一次合适的方法不等于已经掌握世界模型；可以带着当前模型进入自由实验，也可以重新开始。后台暂停且不自动继续，减少动画时直接展示完整轨迹。
-- 这是“学习环境 → 模型中规划 → 真实执行”的教学模型，不是 Dreamer 复现，没有潜在状态、奖励学习或想象中的策略训练；也不是递归自我改进（RSI），不会修改自身代码或学习算法。无第三方运行依赖、上传、API、追踪或自动保存，刷新后重置。
-
-### 盲盒探矿
-
-- 「同一份线索，你会怎么选？」：先根据共同的 20 次探测记录选星球，再查看贪心与 UCB1 的选择依据，最后从同一轮分别模拟并保留前后记录。无需先玩完自由探索。
-- 共同线索来自固定星域 265 的可复现航行记录；这个教学案例特意呈现贪心空手、UCB 有矿，不能当作策略优劣的统计证据。重试不重抽结果，原游戏成绩不受影响。UCB 的探索加分不是产矿概率。
-- 5 颗星球、30 次探测；每次产出 0 或 1 块矿石。每局先生成固定的成功率与 30 × 5 潜在结果表，同一轮、同一颗星球在所有策略中得到相同结果。
-- 比较纯贪心、ε-greedy（ε = 0.2）和 UCB1；算法只使用已观测记录，不读取隐藏成功率。30 轮的小样本不保证任何策略必胜。
-- 直到游戏完成才揭示成功率与算法成绩。重玩同一矿区会标记为复盘局；新矿区重置世界与记录。
-- 鼠标、触屏按钮与 Tab / Enter 均可选择星球；数字键 1–5 仅在自由探索的星球获得焦点时出发，避免误触其他区域。取消或中断飞行不扣次数；减少动画模式立即结算。
-- 无网络、存储或上传。页面刷新后重置；这是本地教学游戏，不提供防作弊或真实采矿预测。
-
-### 遗传赛车
-
-- 48 条候选路线，24 个局部左右偏移基因。固定种子可重放；保留两个精英，用锦标赛选择、均匀交叉和有界随机变异产生后代。
-- 路线按实际长度和转弯幅度计算用时。碰撞检查沿线最多每 2 个世界单位采样，并留 1 单位保守余量；路障和道路边界都是实测约束。
-- 优先完成，再比较用时；未完成则比较按顺序走过的路线段比例。不是神经网络、自动驾驶或物理车辆模型；可能陷入局部最优，不保证每代更快。
-- 普通播放只展示已经到达的车辆与用时；快进计算完整比赛。基因条显示当前领跑车，不提前指定赢家。第一代对照只在这一代完整计算后可见。
-- 自画赛道、路障编辑会清空旧比赛证据；无效、取消的笔画保留原赛道。路障最多 12 个，起终点周围留空。变异概率在下一代生效。
-- 画赛道独占画布手势；看比赛/放路障允许纵向滚动，路障拖动不落笔。预设按钮和路障编辑支持键盘。隐藏与减少动画状态暂停，返回不自动开始。
-- 无第三方素材、依赖、上传或保存。
-
-### 萤火虫合奏
-
-- 80 个位置固定的相位振子；在有限距离内按相位差的正弦相互影响。这是局部邻居版本的 Kuramoto 模型，使用同时更新的 Euler 积分，每步 1/60 秒。无邻居或影响为 0 时各走各的节拍。
-- 合拍度是单位圆上的平均相位向量长度，不是已经同步的个体占比，不保证一直上升。两群对唱可以局部同步而全局不同步。
-- 萤火只是数学模型的视觉比喻，不是生物学模拟。没有声音或全屏闪光；减少动画偏好下初始暂停，页面隐藏后暂停，返回不自动播放。
-- 点按打乱或对齐局部相位；画布可纵向滚动，拖动/取消不干预。键盘方向键移动光标、空格/Enter 点按、1/2 切换动作。
-- 不保存作品。切换场景恢复默认参数；重置保留参数回到初始节拍；重新散开保留位置和参数、换一组确定性种子生成的相位。无新依赖或第三方素材。
-- 参考：[Strogatz, From Kuramoto to Crawford (2000)](https://web.mit.edu/~jadbabai/www/ESE680/Strogatz_Kuramoto.pdf)。邻居半径、场景和交互是本项目的教学改编。
-
-### 涂鸦训练场
-
-- 真实的线性分类器 / 2-8-1 tanh 神经网络，BCE 与全批量梯度下降，固定种子可复现。
-- 48 个预设训练点、120 个独立测验点。测验从不参与训练；编辑后不再显示原题测验分数。
-- 最多 160 个点、每轮 4000 步。可画点、擦除、撤销、探针、单步、暂停及分帧快进 500 步。
-- 背景与成绩来自当前模型，不是预渲染效果。倾向不是校准概率，玩具模型不代表真实 AI 能力。
-- 切换已训练模型时保留上轮的同题对照卡，分别显示练习题、新题、损失、训练步数和实际用过的学习率。不同步数或学习率不判胜负；改题与撤销会清空旧对照。尚未训练新模型时切回会恢复上轮模型，曲线从恢复点继续记录。
-- 画布支持键盘和指针；取消手势保留旧题目和成绩。本地草稿保留题目、模型参数与步数、学习设置、曲线和最多 30 笔撤销；暂停或正常离开时保存训练进度，恢复后不自动训练。无上传。
-- `neural-core.mjs` 是纯模型，`neural.mjs` 是交互控制；数值梯度、训练表现和控制器生命周期有回归测试。
-
-### 落沙实验
-
-- 72 × 48 有限网格，只有空、沙、水、墙四种状态。沙向下或斜下移动，也可与水交换；水向下、斜下或横向流动；墙不动。斜向移动还要检查同侧相邻格不是墙，不能穿过墙角。
-- 每拍从下向上扫描，横向扫描方向交替；每个粒子一拍最多移动一次。固定初始状态和操作顺序可完全重放。没有绘画操作时，各种材料数量守恒。
-- 这是元胞自动机，不是物理流体求解器：没有压力、惯性和真实刚体碰撞，也不完整模拟连通器。动画速度不是性能测试。
-- 按住持续添加沙或水，拖动画墙或擦除。沙和水只填空格；墙可替换已有材料。暂停仍可绘画。切换场景、重置和刷新会替换当前作品，没有自动保存。
-- 键盘 Tab 进入画布，方向键移动光标，空格 / Enter 落笔，1–4 切换材料。后台自动暂停；系统偏好减少动画时初始暂停，仍可手动播放或单步。
-- 画布外正常滚动；未测真实手机硬件或设备性能。所有场景与像素均由代码生成。
-
-### 寻路实验
-
-- 15 × 11 网格，只允许上下左右移动，每步成本为 1。墙不可穿越。
-- BFS 按层展开；A* 使用 `已走步数 + 曼哈顿距离`。A* 分数相同先取预计余程更短的节点，再按入队顺序。两者均保证本模型的最短路线。
-- 「已探索」指已出队展开的唯一格子，包括起点和找到的终点，不包含仅入队的格子。路径长度是移动次数。
-- 每拍两边各展开一个格子，先找到终点的一方独立停止。动画速度可调，不代表计算耗时；探索少也不能直接证明运行更快，A* 需要维护排序。
-- 编辑任一张地图会同步另一张，并清除过期结果。起终点不会被画墙覆盖，也不能重合；移动端点会清除落点上的墙。
-- 挑战要求亲手编辑地图、留有通路，并让 A* 的探索格数不超过 BFS 一半。这是玩法目标，不是对 A* 在任意地图上的承诺。
-- 触屏可直接画墙；键盘 Tab 进入网格，方向键移动，空格或 Enter 应用工具。页面后台自动暂停；系统偏好减少动画时，开始按钮直接显示结果，单步仍可使用。
-
-### 推荐实验
-
-这是透明、确定性的教学模型，不是训练好的推荐系统。
-
-- 点击概率：`0.05 + 0.50 × appeal + 0.36 × interest[topic]`。
-- 点击分：`clickWeight / 100 × probability`。
-- 多样性分：`diversityWeight / 100 × 0.5 / (1 + 已选同主题数)`。
-- 新人分：新作者获得 `newcomerWeight / 100 × 0.45`。
-- 每轮从剩余候选中选择总分最高的内容；分数并列按编号排序。三个权重相互独立，不要求总和为 100。
-- 喜欢 / 少一点会将相应主题兴趣加 / 减 0.12，限制在 0–1。
-- 反馈对照保留独立的前后首页、兴趣和不变的规则。兴趣已到边界、点击权重为零或分差不足时，可能不换卡；解释使用同一选位轮次的真实候选得分，不把不同席位的多样性分混比。
-- 每组模拟 100 位具有相同兴趣的虚拟访客，各看 6 条内容。每个曝光按点击概率采样；两组共享同一组随机数（LCG，种子 42），所以同一设置必得相同结果。
-- 当前规则与保存的对照规则使用同一份当前兴趣。保存对照仅保存权重，不冻结兴趣；已完成结果保存自己的权重、兴趣和指标快照。
-- 合成内容中，新作者的吸引力参数被设得稍低，用来暴露模型权衡，**不是关于真实新作者的结论**。内容质量参数独立于点击，但未纳入排序或展示；不应据此推断内容价值。
-- 不模拟真实用户差异、平台流量、长期留存或统计显著性。40% / 4 主题 / 2 新人只是游戏挑战阈值。
-
-## 文件
-
-- `core.mjs`：纯算法与实验函数。
-- `data.mjs`：合成内容、主题和初始口味。
-- `app.mjs`：交互状态与渲染。
-- `feedback-story.mjs`：不可变的单次反馈证据；`feedback-story-ui.mjs` / `feedback-story.css`：前后卡片对照、变化原因与独立判断。
-- `recommendation.html` / `style.css`：原生、响应式界面，含深浅色与减少动画支持。
-- `pathfinding-core.mjs`：寻路、地图编辑与重放快照的纯函数。
-- `pathfinding.html` / `pathfinding.css` / `pathfinding.mjs`：寻路竞技场界面与交互。
-- `sand-core.mjs`：落沙规则、连续笔刷、材料计数和场景的纯函数。
-- `firefly-core.mjs`：确定性相位同步、局部干预和合拍度的纯函数。
-- `firefly.html` / `firefly.css` / `firefly.mjs`：萤火虫合奏与观察视图。
-- `sand.html` / `sand.css` / `sand.mjs`：落沙实验室画布与交互。
-- `evolution-core.mjs`：可重放的遗传路线优化、碰撞和比赛采样。
-- `evolution.html` / `evolution.css` / `evolution.mjs`：遗传赛车、赛道绘画与进化观察。
-- `neural-core.mjs`：确定性分类器、反向传播、梯度下降与独立测验数据。
-- `neural.html` / `neural.css` / `neural.mjs`：涂鸦训练场、画布编辑、模型对照与学习入口。
-- `mining-core.mjs`：可复现的多臂老虎机环境、探矿记录与三种对照策略。
-- `mining.html` / `mining.css` / `mining.mjs`：盲盒探矿界面、探测动画与复盘。
-- `scripts/`：只提供白名单静态文件的本地服务和打包流程。
-- `pixel-core.mjs`：确定性 Huffman 编码、独立字节解码、像素预设与线段绘画。
-- `pixel.html` / `pixel.css` / `pixel.mjs`：像素邮局、画纸编辑、打包解释与无损收件校验。
-- `world-model-core.mjs`：仅依赖观测的模型学习、预测、路线搜索与误差计算。
-- `world-model-environment.mjs` / `world-model-session.mjs`：独立真实环境、试飞快照和学习生命周期。
-- `world-model-lesson.mjs`：引导、独立判断、同基线重试和实验结尾的状态流程。
-- `world-model.html` / `world-model.css` / `world-model.mjs`：脑内预演室、轨迹可视化、分步控制与学习回顾。
-- `rsi-core.mjs` / `rsi-session.mjs`：有限插画解释器、返修、候选评估与学习流程。
-- `rsi.html` / `rsi.css` / `rsi.mjs`：AI 创作室、作品前后对照与基于实际选择的实验结尾。
-- `tests/`：Node 内置测试，无外部测试依赖。
-
-已验证桌面浏览器及响应式窗口模拟，未完成真实手机/原生容器验收。只有涂鸦与像素邮局保留本地草稿：不跨浏览器、设备或站点同步，也不是云备份。禁用存储、空间不足或损坏的旧草稿会显示提示但不阻止游玩；删除本地草稿不改变当前画面，下一次操作会重新保存。清理站点数据会移除草稿；异常退出可能丢失尚未暂停的训练进度。
-
-## 素材与发布
-
-文案、数据与程序化卡片封面在本项目中生成，无远程图片、字体或素材请求。虚构名称不指代真实账号。
-
-© 2026 Chen Quan / 陈全。当前未授予额外开源许可，详见 [COPYRIGHT](COPYRIGHT)。欢迎直接使用在线演示；需要复用或分发代码时请联系仓库作者确认授权。
+三猫角色与漫画来自三猫工作室；README 预览图是项目合成场景，不包含用户草稿。© 2026 陈全 / Chen Quan。代码和素材的复用规则见 [COPYRIGHT](COPYRIGHT)。
