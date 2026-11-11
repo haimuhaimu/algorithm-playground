@@ -1,3 +1,37 @@
+/* Top-left wordmark only; the footer keeps its original four-pixel mark.
+   Sprite columns: Bobby, Heim, Chouchou. Rows: idle, running. */
+:is(.home-header .home-brand>.pixel-mark,.site-header .brand>.brand-mark) {
+ position:relative;display:block;flex:0 0 60px;width:60px;height:36px;
+ padding:0;border:0;border-radius:0;background:none;transform:none;pointer-events:none;
+}
+:is(.home-header .home-brand>.pixel-mark,.site-header .brand>.brand-mark)::after,
+:is(.home-header .home-brand>.pixel-mark,.site-header .brand>.brand-mark)>i::before {content:none}
+:is(.home-header .home-brand>.pixel-mark,.site-header .brand>.brand-mark)>i {
+ position:absolute;top:var(--cat-y);left:var(--cat-x);width:26px;height:26px;
+ border-radius:0;opacity:1;background: url('./studio-brand-cats.png') var(--cat-column) 0%/300% 200% no-repeat;
+}
+:is(.home-header .home-brand>.pixel-mark,.site-header .brand>.brand-mark)>i:nth-child(1) {
+ --cat-column:0%;--cat-x:3px;--cat-y:8px;--cat-dx:-7px;--cat-dy:-3px;
+}
+:is(.home-header .home-brand>.pixel-mark,.site-header .brand>.brand-mark)>i:nth-child(2) {
+ --cat-column:50%;--cat-x:17px;--cat-y:-1px;--cat-dx:1px;--cat-dy:-6px;
+}
+:is(.home-header .home-brand>.pixel-mark,.site-header .brand>.brand-mark)>i:nth-child(3) {
+ --cat-column:100%;--cat-x:33px;--cat-y:9px;--cat-dx:8px;--cat-dy:1px;
+}
+:root[data-theme=dark] :is(.home-header .home-brand>.pixel-mark,.site-header .brand>.brand-mark)>i:nth-child(2) {
+ filter:drop-shadow(0 0 1px #fff9);
+}
+:is(.home-header .home-brand>.pixel-mark,.site-header .brand>.brand-mark)>i:nth-child(n+4) {display:none}
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+ :is(.home-header .home-brand>.pixel-mark,.site-header .brand>.brand-mark)>i {
+  transition:transform 300ms steps(5,end);
+ }
+ :is(.home-header .home-brand:hover>.pixel-mark,.site-header .brand:hover>.brand-mark)>i {
+  background-position-y:100%;transform:translate(var(--cat-dx),var(--cat-dy));
+ }
+}
+
 /* Shared by every experiment; loaded after each page's styles. */
 .learning-route-exit{margin:24px 0 0;padding-top:16px;border-top:1px solid var(--line)}
 .learning-route-exit a{display:inline-flex;align-items:center;min-height:44px;max-width:100%;font-size:13px;line-height:1.7;color:var(--ink);text-decoration:none}

@@ -77,6 +77,31 @@ test('a player can dispatch in review, then verify the correct order independent
  assert.match(e('status').textContent,/08.*已核验/);
 });
 
+test('the result offers Level 03 without navigating away or gating on successful verification',()=>{
+ const firstResultAction=html.match(/<div\b[^>]*\bid="reroute-share"[^>]*>\s*(<a\b[^>]*>[^<]*<\/a>)/)?.[1];
+ assert.ok(firstResultAction,'the result must start with a real next-level link');
+ assert.match(firstResultAction,/\bid="reroute-next-level"/);
+ assert.match(firstResultAction,/\bhref="\.\/agent-frames\.html#mission"/);
+ assert.match(firstResultAction,/>[^<]*第三关[^<]*只留三帧/);
+ for(const decisions of [
+  ['dispatch','advance','verify-new'],
+  ['dispatch','advance','accept-old'],
+  ['keep-old','advance','stop'],
+ ]){
+  const {e,click,sends}=open();
+  assert.equal(e('share').hidden,true);
+  click('advance','advance',...decisions.slice(0,-1));
+  assert.equal(e('share').hidden,true);
+  click(decisions.at(-1));
+  assert.equal(e('share').hidden,false);
+  assert.equal(e('status').focused,true);
+  assert.deepEqual(sends,[]);
+  click('replay');assert.equal(e('share').hidden,true);
+  click('replay-exit');assert.equal(e('share').hidden,false);
+  click('restart');assert.equal(e('share').hidden,true);
+ }
+});
+
 test('replay shows the player’s own sequence, including stopping without verification',()=>{
  const {e,click}=open();click('advance','advance','keep-old','advance','dispatch','stop');
  assert.match(e('timeline').innerHTML,/kept-old[\s\S]*old-receipt[\s\S]*reroute-accepted[\s\S]*stopped-unverified/);

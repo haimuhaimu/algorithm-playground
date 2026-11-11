@@ -6,7 +6,7 @@ const pages=['recommendation','neural','mining','pathfinding','firefly','pixel',
 for(const page of pages)test(`${page} has a non-scripted, touch-sized exit back to the learning routes`,async()=>{
  const html=await readFile(new URL(`../${page}.html`,import.meta.url),'utf8');
  assert.match(html,/<p class="learning-route-exit"><a(?: data-learning-return)? href="\.\/#learning-routes">← 回到学习路线[^<]*<\/a><\/p>\s*<\/main>/);
- assert.match(html,/navigation\.css\?v=mobile-learning-v1/);
+ assert.match(html,/navigation\.css\?v=/);
 });
 test('the shared learning exit remains a real link with a visible keyboard focus and a 44px target',async()=>{
  const css=await readFile(new URL('../navigation.css',import.meta.url),'utf8');

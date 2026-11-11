@@ -90,6 +90,7 @@ for(const name of ['cat-album.mjs','cat-album-episodes.mjs'])TYPES[name]='text/j
 for(const name of ['cat-album-cover.jpg',...episodes.map(episode=>episode.file)])TYPES[name]='image/jpeg';
 TYPES['studio-cat-assets.mjs']='text/javascript; charset=utf-8';
 for(const name of [
+ 'studio-brand-cats.png',
  'studio-heim-portrait.png','studio-heim-idle.png','studio-heim-run.png',
  'studio-bobby-portrait.png','studio-bobby-idle.png','studio-bobby-run.png',
  'studio-chouchou-portrait.png','studio-chouchou-idle.png','studio-chouchou-run.png',
