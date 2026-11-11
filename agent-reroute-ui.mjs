@@ -1,5 +1,6 @@
 import {runAgentReroute} from './agent-reroute-tool.mjs?v=agent-reroute-v1';
 import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=handoff-trust-v1';
+import {createAgentResultStore} from './agent-last-result.mjs?v=last-result-v1';
 
 const SOURCE={producer:'browser-session'};
 const CONTROLS={advance:'advance',dispatch:'reroute','keep-old':'keep-old','verify-new':'verify-new','accept-old':'accept-old',stop:'stop'};
@@ -49,7 +50,18 @@ export function mountAgentReroute({document,window}){
  const handoff=readGenaiHandoffContext(window.location,'agent-reroute');
  const canReturn=!!handoff;
  let run=runAgentReroute([],SOURCE),replayAt=null;
+ const store=createAgentResultStore(window,'agent-reroute');
+ let previous=store.read(),archived=false,dismissed=false,saveStatus='';
  if(canReturn)e('os-fallback').href=handoff.returnURL;
+
+ function renderPrevious(){
+  show('last-result',(!dismissed&&run.actions.length===0&&previous.status!=='empty')||archived);
+  show('view-last',previous.status==='saved'&&!archived);
+  set('last-title',archived?'正在看上次结果':previous.status==='saved'?'上次的改派结果还在':'本机记录提示');
+  set('last-message',archived?'这是上次的操作，可逐步重放或导出 JSON。它不会作为这次新任务的操作带回 GenAI OS。':previous.status==='saved'
+   ?'只留最近完成的一局。你可以回看，也可以从同一起点重新玩；未完成的新局不会覆盖它。'
+   :previous.status==='invalid'?'上次的记录暂时无法核对，没有载入。仍可开始新局，其他学习记录没有改动。':'此浏览器暂时无法保留本机结果。仍可正常玩，结束后请先导出 JSON 再离开。');
+ }
 
  function render(){
   const replaying=replayAt!==null;
@@ -81,10 +93,11 @@ export function mountAgentReroute({document,window}){
   }
   show('actions',!replaying&&!workflowComplete);
   show('share',!replaying&&workflowComplete);
-  show('return',canReturn);
-  show('os-manual',!canReturn);
+  show('return',canReturn&&!archived);
+  show('os-manual',!canReturn||archived);
+  set('save-status',archived?'正在回看本机上次结果；没有记成新的学习进度。':saveStatus);
   show('replay-controls',replaying);
-  set('review-title',replaying?'已回放的操作':'本轮操作');
+  set('review-title',replaying?'已回放的操作':archived?'上次操作':'本轮操作');
   if(replaying){
    set('replay-position',`回放 ${replayAt} / ${run.actions.length} 步`);
    e('replay-prev').disabled=replayAt===0;
@@ -93,12 +106,19 @@ export function mountAgentReroute({document,window}){
   // The reducer emits a fixed set of event IDs. All rendered item text is local copy.
   const row=(index,event,label)=>`<li data-event="${event}"${index===steps.length?' aria-current="step"':''}><span>${label}</span></li>`;
   e('timeline').innerHTML=row(0,'start','07 原单发出 · 等待签收')+steps.map(({event},i)=>row(i+1,event,EVENTS[event])).join('');
+  renderPrevious();
  }
 
  function act(name,action){
-  if(document.hidden||replayAt!==null||!run.result.availableActions.some(entry=>entry.action===action))return;
+  if(document.hidden||archived||replayAt!==null||!run.result.availableActions.some(entry=>entry.action===action))return;
   try{run=runAgentReroute([...run.actions,{action}],SOURCE);}
   catch{set('feedback','操作没有执行成功，已有记录仍在。请重试。');return;}
+  dismissed=true;
+  if(run.result.workflowComplete){
+   const saved=store.save(run);
+   if(saved.status==='saved')previous={status:'saved',receipt:run};
+   saveStatus=saved.status==='saved'?'已保留在本机，续关或刷新后可回来查看。这不是学习进度。':'未能在本机保留这局。当前结果仍在，请先生成并复制 JSON 再离开。';
+  }
   render();
   if(run.result.workflowComplete||e(name).hidden)focus('status');
   if(run.result.workflowComplete){
@@ -111,14 +131,26 @@ export function mountAgentReroute({document,window}){
 
  for(const [name,action] of Object.entries(CONTROLS))e(name).addEventListener('click',()=>act(name,action));
  const onCompleted=()=>!document.hidden&&replayAt===null&&run.result.workflowComplete;
- e('restart').addEventListener('click',()=>{
-  if(!onCompleted())return;
+ function newRun(){
+  if(document.hidden||(!archived&&run.actions.length&&!onCompleted()))return;
   run=runAgentReroute([],SOURCE);
+  replayAt=null;archived=false;dismissed=true;saveStatus='';
   e('export-text').value='';
   show('export-record',false);
   show('os-fallback',false);
   set('share-status','');
-  render();focus('advance');
+  const note=previous.status==='saved'?'上一份完整结果会留到这局结束。':previous.status==='unavailable'?'本机暂不能保留结果，结束后请先导出 JSON。':'';
+  render();set('feedback','新一局开始：07 原单已经发出。'+note);e('advance').focus();
+ }
+ e('restart').addEventListener('click',()=>{if(onCompleted())newRun();});
+ e('new-run').addEventListener('click',newRun);
+ e('view-last').addEventListener('click',()=>{
+  if(document.hidden||run.actions.length||dismissed)return;
+  previous=store.read();
+  if(previous.status!=='saved'){renderPrevious();return;}
+  run=previous.receipt;archived=true;replayAt=null;
+  e('export-text').value='';show('export-record',false);show('os-fallback',false);set('share-status','');
+  render();e('status').focus();
  });
  e('replay').addEventListener('click',()=>{
   if(!onCompleted())return;
@@ -139,7 +171,7 @@ export function mountAgentReroute({document,window}){
   replayAt=null;render();focus('replay');
  });
  e('return').addEventListener('click',()=>{
-  if(!onCompleted()||!canReturn)return;
+  if(!onCompleted()||archived||!canReturn)return;
   try{
    window.location.assign(createGenaiReturnUrl(handoff,run,window.location));
   }catch{

@@ -1,5 +1,6 @@
 import {runAgentToolLoop} from './agent-tool.mjs?v=agent-tool-loop-v1';
 import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=handoff-trust-v1';
+import {createAgentResultStore} from './agent-last-result.mjs?v=last-result-v1';
 
 const SOURCE={producer:'browser-session'};
 const RECEIPT={unknown:'未核验','not-delivered':'未签收',delivered:'已签收'};
@@ -33,6 +34,18 @@ export function mountAgentMission({document,window}){
  const isPublished=page.origin==='https://haimuhaimu.github.io'&&page.pathname==='/algorithm-playground/agent-mission.html';
  if(canReturn)el('os-fallback').href=handoff.returnURL;
  let receipt=runAgentToolLoop([],SOURCE);
+ const store=createAgentResultStore(window,'agent-tool-loop');
+ let previous=store.read(),archived=false,dismissed=false,saveStatus='';
+
+ function renderPrevious(){
+  const offered=!dismissed&&receipt.actions.length===0&&previous.status!=='empty';
+  show('last-result',offered||archived);
+  show('view-last',previous.status==='saved'&&!archived);
+  set('last-title',archived?'正在看上次结果':previous.status==='saved'?'上次的两轮结果还在':'本机记录提示');
+  set('last-message',archived?'这是上次的两轮操作，可导出 JSON。它不会作为这次新任务的操作带回 GenAI OS。':previous.status==='saved'
+   ?'只留最近完成的一局。你可以回看，也可以从同一起点重新玩；未完成的新局不会覆盖它。'
+   :previous.status==='invalid'?'上次的记录暂时无法核对，没有载入。仍可开始新局，其他学习记录没有改动。':'此浏览器暂时无法保留本机结果。仍可正常玩，结束后请先导出 JSON 再离开。');
+ }
 
  function render(){
   const {result,fixture,steps}=receipt,trials=result.evidence.trials,current=trials[trials.length-1],last=steps[steps.length-1];
@@ -40,7 +53,7 @@ export function mountAgentMission({document,window}){
   const lastTool=steps.findLast(step=>step.trial===current.number&&(step.action==='check'||step.action==='retry'));
   const toolReply=lastTool?OBSERVATION[lastTool.observation][0]:'已受理';
   const exhausted=current.outcome==='budget-exhausted';
-  set('current',`第 ${current.number} 轮`);
+  set('current',archived?'上次结果 · 第 2 轮':`第 ${current.number} 轮`);
   set('budget',`${fixture.toolBudget-current.toolCalls} / ${fixture.toolBudget}`);
   set('tool',toolReply);
   el('tool').dataset.tone=['已受理','备用单已受理'].includes(toolReply)?'success':'neutral';
@@ -55,28 +68,52 @@ export function mountAgentMission({document,window}){
   show('cost',current.outcome==='in-progress');
   show('restart',legal('restart'));
   show('share',result.workflowComplete);
-  show('return',canReturn);
-  show('os-fallback',!canReturn&&isPublished);
-  show('os-manual',!canReturn&&!isPublished);
+  show('return',canReturn&&!archived);
+  show('os-fallback',(!canReturn||archived)&&isPublished);
+  show('os-manual',(!canReturn||archived)&&!isPublished);
+  set('save-status',archived?'正在回看本机上次结果；没有记成新的学习进度。':saveStatus);
+  set('share-title',archived?'上次两轮已结束':'两轮已结束');
   set('comparison',describeComparison(trials));
+  if(trials.length<2)el('trial-2').innerHTML='<p>首轮结束后，可回到同一起点再试。</p>';
   for(const trial of trials){
    const items=steps.filter(step=>step.trial===trial.number).map(step=>`<li><span>${STEP[step.observation]}</span><small>余 ${step.remaining} 次</small></li>`).join('');
    el(`trial-${trial.number}`).innerHTML=`<p class="mission-trial-summary"><strong>${OUTCOME[trial.outcome]}</strong><span>${RECEIPT[trial.receipt]} · 用了 ${trial.toolCalls} 次</span></p><ol class="mission-timeline"><li><span>起点 · 已受理，未核验</span><small>余 ${fixture.toolBudget} 次</small></li>${items}</ol>`;
   }
+  renderPrevious();
  }
  function act(action){
-  if(document.hidden||!legal(action))return;
+  if(document.hidden||archived||!legal(action))return;
   try{
    receipt=runAgentToolLoop([...receipt.actions,{action}],SOURCE);
   }catch{set('feedback','这次没有执行成功，原操作记录仍在。请重试。');return;}
+  dismissed=true;
+  if(receipt.result.workflowComplete){
+   const saved=store.save(receipt);
+   if(saved.status==='saved')previous={status:'saved',receipt};
+   saveStatus=saved.status==='saved'?'已保留在本机，续关或刷新后可回来查看。这不是学习进度。':'未能在本机保留这局。当前结果仍在，请先生成并复制 JSON 再离开。';
+  }
   render();
   if(legal('restart'))el('restart').focus();
   else if(receipt.result.workflowComplete)el('share-title').focus();
   else if(action==='restart'||!legal(action))el('current').focus();
  }
  for(const action of ['check','retry','stop','restart'])el(action).addEventListener('click',()=>act(action));
+ function clearExport(){el('export-text').value='';show('export-record',false);set('share-status','');}
+ function newRun(){
+  if(document.hidden||(!archived&&receipt.actions.length&&!receipt.result.workflowComplete))return;
+  receipt=runAgentToolLoop([],SOURCE);archived=false;dismissed=true;saveStatus='';clearExport();
+  const note=previous.status==='saved'?'上一份完整结果会留到这局结束。':previous.status==='unavailable'?'本机暂不能保留结果，结束后请先导出 JSON。':'';
+  render();set('feedback','新一局开始：同一张补给单、同样 3 次机会。'+note);el('current').focus();
+ }
+ for(const name of ['new-run','fresh'])el(name).addEventListener('click',newRun);
+ el('view-last').addEventListener('click',()=>{
+  if(document.hidden||receipt.actions.length||dismissed)return;
+  previous=store.read();
+  if(previous.status!=='saved'){renderPrevious();return;}
+  receipt=previous.receipt;archived=true;clearExport();render();el('share-title').focus();
+ });
  el('return').addEventListener('click',()=>{
-  if(document.hidden||!receipt.result.workflowComplete||!canReturn)return;
+  if(document.hidden||archived||!receipt.result.workflowComplete||!canReturn)return;
   try{
    window.location.assign(createGenaiReturnUrl(handoff,receipt,window.location));
   }catch{
@@ -92,12 +129,14 @@ export function mountAgentMission({document,window}){
   set('share-status','JSON 已生成，仍在本页，没有上传。');
  });
  el('copy').addEventListener('click',async()=>{
-  const text=el('export-text').value;
+  const snapshot=receipt,text=el('export-text').value;
   if(document.hidden||!text)return;
   try{
    await window.navigator.clipboard.writeText(text);
+   if(receipt!==snapshot||document.hidden)return;
    set('share-status','已复制。请自行选择是否分享或导入。');
   }catch{
+   if(receipt!==snapshot||document.hidden)return;
    el('export-text').focus();el('export-text').select();
    set('share-status','浏览器没有允许自动复制。已选中 JSON，请手动复制。');
   }

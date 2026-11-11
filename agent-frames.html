@@ -5,9 +5,9 @@
  <meta name="description" content="算法游乐场 Agent 第三关：在 08 号站的 9 帧画面里，只能留 3 帧。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./home.css?v=agent-frames-v1">
- <link rel="stylesheet" href="./agent-frames.css?v=monitor-controls-v1">
+ <link rel="stylesheet" href="./agent-frames.css?v=round-feedback-v1">
  <link rel="stylesheet" href="./navigation.css?v=three-cat-brand-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
- <script type="module" src="./agent-frames-ui.mjs?v=monitor-controls-v1"></script>
+ <script type="module" src="./agent-frames-ui.mjs?v=round-feedback-v1"></script>
  <title>只留三帧，你会留下哪一帧？ · 算法游乐场</title>
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
@@ -31,11 +31,16 @@
      <p id="frames-announcement" class="frames-sr" role="status"></p>
      <figcaption class="frames-transcript"><span>现场字幕</span><p id="frames-caption" aria-live="polite"></p></figcaption>
     </figure>
+    <div class="frames-baseline-result" id="frames-baseline-result" hidden>
+     <span>这一轮，Agent 给嘿姆的判断</span>
+     <strong id="frames-baseline-verdict"></strong>
+     <p>留下的 3 帧都没拍清门牌。没看清，不等于禁止卸货。下一轮换中间一帧，再看判断会不会变。</p>
+    </div>
     <div class="frames-controls" id="frames-controls" role="group" aria-label="画面控制" tabindex="-1">
      <button class="frames-button frames-primary" id="frames-advance" type="button" disabled>下一帧</button>
      <button class="frames-button" id="frames-play" type="button" disabled>播放</button>
      <button class="frames-button frames-primary frames-wide" id="frames-pin" type="button" hidden>保留当前帧</button>
-     <button class="frames-button frames-primary frames-wide" id="frames-start-manual" type="button" hidden>开始第二轮</button>
+     <button class="frames-button frames-primary frames-wide" id="frames-start-manual" type="button" aria-describedby="frames-baseline-result" hidden>开始第二轮</button>
      <button class="frames-button frames-primary frames-wide" id="frames-retry-empty" type="button" hidden>重做第二轮</button>
     </div>
    </div>
@@ -51,6 +56,10 @@
      <ol id="frames-slots" aria-label="交给 Agent 的三帧"></ol>
     </div>
     <p class="frames-tip" id="frames-tip">可以逐帧查看，不用拼反应速度。</p>
+    <div class="frames-last-entry" id="frames-last-entry" hidden>
+     <p id="frames-last-summary"></p>
+     <button class="frames-button" id="frames-review" type="button">看上次完整结果</button>
+    </div>
    </section>
   </div>
   <section class="frames-compare" id="frames-compare" aria-labelledby="frames-compare-title" hidden>
@@ -58,7 +67,17 @@
     <p class="frames-mono frames-recipient"><img src="./studio-heim-portrait.png" width="28" height="28" alt="" draggable="false">嘿姆收到的画面 / 同一段原片</p>
     <h2 id="frames-compare-title" tabindex="-1">同一段画面，Agent 看到了什么？</h2>
     <p id="frames-comparison-summary"></p>
+    <button class="frames-button frames-primary" id="frames-resume" type="button" hidden>继续这次尝试</button>
    </header>
+   <section class="frames-retry-compare" id="frames-retry-compare" aria-labelledby="frames-retry-title" hidden>
+    <h3 id="frames-retry-title" tabindex="-1">换一帧，结论变了吗？</h3>
+    <p id="frames-retry-summary"></p>
+    <div class="frames-attempt-grid">
+     <article><h4>上次选的</h4><div id="frames-previous-pick"></div><strong id="frames-previous-result"></strong></article>
+     <article><h4>这次选的</h4><div id="frames-current-pick"></div><strong id="frames-current-result"></strong></article>
+    </div>
+    <p class="frames-retry-fixed">首帧 #00、末帧 #08 没变；每次仍只交 3 帧。下面保留本次与固定抽帧的完整对照。</p>
+   </section>
    <div class="frames-comparison-grid">
     <article class="frames-cut" aria-labelledby="frames-fixed-title">
      <h3 id="frames-fixed-title">01 固定抽帧</h3>
@@ -92,10 +111,11 @@
    <div class="frames-share-actions">
     <button class="frames-button frames-primary" id="frames-return" type="button" hidden>带回 GenAI OS 复盘</button>
     <button class="frames-button" id="frames-export" type="button">生成实验 JSON</button>
+    <a class="frames-button" id="frames-os-link" href="https://haimuhaimu.github.io/genai-learning-os/?page=routes&amp;section=agent-frames-journey" target="_blank" rel="noopener" hidden>去 GenAI OS 第三关复盘 ↗</a>
     <button class="frames-button" id="frames-redo" type="button" aria-describedby="frames-redo-note">重做第二轮</button>
    </div>
-   <p id="frames-redo-note">重做会丢弃本页的第二轮记录，第一轮不变。</p>
-   <p id="frames-os-manual">可把 JSON 复制到 GenAI OS 第三关手动导入。</p>
+   <p id="frames-redo-note">重做时，上次完整结果仍可回看。新一轮完成后，可以比较两次选帧；第一轮不变。</p>
+   <p id="frames-os-manual">先生成并复制 JSON，再去第三关手动导入。复盘入口在新标签打开，不会自动上传记录。</p>
    <a id="frames-os-fallback" hidden>回 GenAI OS 手动导入</a>
    <div class="frames-export-record" id="frames-export-record" hidden>
     <label for="frames-export-text">可重放的实验 JSON</label>
@@ -103,6 +123,10 @@
     <button class="frames-button" id="frames-copy" type="button">复制 JSON</button>
    </div>
    <p id="frames-share-status" role="status"></p>
+   <div class="frames-resume-footer" id="frames-resume-footer" hidden>
+    <p id="frames-resume-state"></p>
+    <button class="frames-button frames-primary" id="frames-resume-bottom" type="button" aria-describedby="frames-resume-state">继续这次尝试</button>
+   </div>
   </section>
   <p class="frames-boundary">这是用固定画面和字幕做的模拟，不读取摄像头或麦克风，也不调用模型。记录在本页，刷新会清空；复盘不代表能力认证。</p>
  </main>

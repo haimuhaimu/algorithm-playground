@@ -75,6 +75,7 @@ TYPES['home.css']='text/css; charset=utf-8';
 TYPES['learn.html']='text/html; charset=utf-8';TYPES['learning-route.css']='text/css; charset=utf-8';
 TYPES['learning-tool.mjs']='text/javascript; charset=utf-8';TYPES['learning-tool-manifest.json']='application/json; charset=utf-8';TYPES['AI_USAGE.md']='text/plain; charset=utf-8';
 TYPES['genai-handoff.mjs']='text/javascript; charset=utf-8';
+TYPES['agent-last-result.mjs']='text/javascript; charset=utf-8';
 TYPES['bayes-tool.mjs']='text/javascript; charset=utf-8';
 TYPES['agent-mission.html']='text/html; charset=utf-8';TYPES['agent-mission.css']='text/css; charset=utf-8';
 for(const name of ['agent-mission.mjs','agent-tool.mjs'])TYPES[name]='text/javascript; charset=utf-8';

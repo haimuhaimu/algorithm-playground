@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
+import {memoryStorage} from './storage-helper.mjs';
 
 const source=new URL('../agent-mission.html',import.meta.url);
 const html=existsSync(source)?readFileSync(source,'utf8'):'';
@@ -13,7 +14,7 @@ test('the live homepage links to the first mission and both levels link to each 
  assert.match(html, /href="\.\/agent-reroute\.html#mission"/);
  assert.match(next, /href="\.\/agent-mission\.html#mission"/);
 });
-function setup({handoff=false,clipboard}={}){
+function setup({handoff=false,clipboard,storage}={}){
  assert.equal(typeof api.mountAgentMission,'function','the actual mission controller is required');
  class Element extends EventTarget{
   constructor(){super();this.hidden=false;this.disabled=false;this.dataset={};this.textContent='';this.innerHTML='';this.value='';}
@@ -29,7 +30,8 @@ function setup({handoff=false,clipboard}={}){
  const document={hidden:false,documentElement:{dataset:{}},getElementById:e};
  const sends=[],location={href:page.href,assign:url=>sends.push(url)};
  const window={location,navigator:{clipboard},matchMedia:()=>Object.assign(new EventTarget(),{matches:false})};
- for(const context of [window,document])Object.defineProperty(context,'localStorage',{get(){throw Error('must not access old progress or drafts');}});
+ Object.defineProperty(window,'localStorage',{get(){if(storage)return storage;throw Error('storage blocked');}});
+ Object.defineProperty(document,'localStorage',{get(){throw Error('must not access document storage');}});
  api.mountAgentMission({document,window});
  return {e,sends,location,document,click:(...names)=>names.forEach(name=>e(`mission-${name}`).click())};
 }
@@ -48,6 +50,81 @@ test('acceptance and retry show tool feedback without claiming actual delivery',
  assert.equal(r.e('mission-receipt').textContent,'已签收');
  assert.equal(r.e('mission-scene').dataset.receipt,'delivered');
  assert.equal(r.e('mission-restart').hidden,false);
+});
+
+test('two stopped rounds survive a page exit and only an explicit view restores their exact JSON',()=>{
+ const storage=memoryStorage(),first=setup({storage});
+ first.click('stop');assert.equal(storage.writes,0,'one round is not a completed pair');
+ first.click('restart','stop','export');
+ const original=first.e('mission-export-text').value;
+ assert.match(first.e('mission-save-status').textContent,/已保留.*本机/);
+ const next=setup({storage});
+ assert.equal(next.e('mission-current').textContent,'第 1 轮','do not resume silently');
+ assert.equal(next.e('mission-last-result').hidden,false);
+ assert.equal(next.e('mission-share').hidden,true);
+ next.click('view-last','export');
+ assert.equal(next.e('mission-export-text').value,original);
+ assert.match(next.e('mission-current').textContent,/上次/);
+ assert.equal(next.e('mission-share').hidden,false);
+ assert.deepEqual(next.sends,[]);
+});
+
+test('starting a new pair clears old visible evidence but retains the completed archive until a new completion',()=>{
+ const storage=memoryStorage(),first=setup({storage});first.click('stop','restart','stop');
+ const snapshot=[...storage.records];
+ const r=setup({storage});r.click('view-last','export','new-run');
+ assert.equal(r.e('mission-current').textContent,'第 1 轮');
+ assert.equal(r.e('mission-export-text').value,'');
+ assert.equal(r.e('mission-export-record').hidden,true);
+ assert.doesNotMatch(r.e('mission-trial-2').innerHTML,/主动停止/);
+ r.click('retry');assert.deepEqual([...storage.records],snapshot);
+ r.click('check','restart','retry','check');
+ const returned=setup({storage});returned.click('view-last','export');
+ assert.deepEqual(JSON.parse(returned.e('mission-export-text').value).result.evidence.trials.map(t=>t.outcome),['verified','verified']);
+});
+
+test('archived results cannot bind to a new GenAI request but newly played results can',()=>{
+ const storage=memoryStorage(),first=setup({storage});first.click('stop','restart','stop');
+ const r=setup({storage,handoff:true});
+ assert.equal(r.e('mission-share').hidden,true);
+ r.click('view-last');assert.equal(r.e('mission-return').hidden,true);
+ r.e('mission-return').dispatchEvent(new Event('click'));assert.deepEqual(r.sends,[]);
+ r.click('new-run','stop','restart','retry','check','return');
+ assert.equal(r.sends.length,1);
+ const wire=JSON.parse(Buffer.from(new URL(r.sends[0]).hash.slice('#playground='.length),'base64url').toString('utf8'));
+ assert.deepEqual(wire.receipt.actions.map(a=>a.action),['stop','restart','retry','check']);
+});
+
+test('a corrupt archive is explained without importing it or clearing unrelated records',()=>{
+ const storage=memoryStorage(),r=setup({storage});r.click('stop','restart','stop');
+ const [key]=storage.records.keys();storage.records.set(key,'{broken');storage.records.set('existing-progress','keep');
+ const before=[...storage.records],fresh=setup({storage});
+ assert.equal(fresh.e('mission-view-last').hidden,true);
+ assert.match(fresh.e('mission-last-message').textContent,/无法核对/);
+ assert.equal(fresh.e('mission-share').hidden,true);
+ assert.deepEqual([...storage.records],before);
+ fresh.click('new-run','stop');assert.deepEqual([...storage.records],before);
+});
+
+test('late clipboard completion cannot put old export feedback back into a fresh pair',async()=>{
+ for(const reject of [false,true]){
+  let settle;const pending=new Promise((resolve,fail)=>{settle=()=>reject?fail(Error('denied')):resolve();});
+  const r=setup({clipboard:{writeText:()=>pending}});r.click('stop','restart','stop','export','copy','fresh');
+  settle();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(r.e('mission-share-status').textContent,'');
+  assert.equal(r.e('mission-export-text').value,'');
+  assert.equal(r.e('mission-export-record').hidden,true);
+ }
+});
+
+test('blocked saving leaves the completed result exportable and truthfully reports the failure',()=>{
+ const r=setup();r.click('new-run');
+ assert.doesNotMatch(r.e('mission-feedback').textContent,/上一份.*留到/,'no archive is promised when storage cannot be read');
+ r.click('stop','restart','stop');
+ assert.match(r.e('mission-save-status').textContent,/未能.*保留|无法.*保存/);
+ assert.doesNotMatch(r.e('mission-save-status').textContent,/已保留/);
+ assert.equal(r.e('mission-share').hidden,false);
+ r.click('export');assert.equal(JSON.parse(r.e('mission-export-text').value).result.workflowComplete,true);
 });
 
 test('stopping ends the round without replacing the last tool reply',()=>{
