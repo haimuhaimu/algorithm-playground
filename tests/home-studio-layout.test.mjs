@@ -29,6 +29,24 @@ test('the demo opens the cats’ editable map while the catalog and old search l
   assert.match(search, /id="arena"/);
 });
 
+test('the sticky search toolbar is bounded by the regular boards and comparison, not the cats’ lesson', async () => {
+  const search = await readFile(new URL('../pathfinding.html', import.meta.url), 'utf8');
+  const start = search.indexOf('<div class="path-play-area">');
+  assert.notEqual(start, -1, 'the regular search needs its own block to contain the sticky toolbar');
+  let depth = 0, end = -1;
+  for (const tag of search.slice(start).matchAll(/<(\/?)div\b[^>]*>/g)) {
+    depth += tag[1] ? -1 : 1;
+    if (depth === 0) {
+      end = start + tag.index;
+      break;
+    }
+  }
+  assert.ok(end > start);
+  const regular = search.slice(start, end);
+  for (const id of ['path-lab', 'arena', 'comparison']) assert.ok(regular.includes(`id="${id}"`), id);
+  assert.ok(search.indexOf('id="cat-route-lab"') > end, 'the cat title and controls must not share the sticky block');
+});
+
 test('the doodle card opens the cat-label exercise without removing the circle/square entry', async () => {
   const home = await homepage();
   const neural = await readFile(new URL('../neural.html', import.meta.url), 'utf8');

@@ -29,6 +29,7 @@ export function poster(art){
 
 const NEXT={mistake:'fix',repaired:'redraw',repeat:'propose',trial:'challenge'};
 const RULE_NAMES={'fixed-green':'固定绿色',brief:'读取当前委托'};
+const verdict=report=>report.after.passed?'通过':'未通过';
 function storyCopy(s,v){
  const kept=s.decision==='keep',readsBrief=s.workflow.outfit==='locked';
  const pages={
@@ -82,11 +83,11 @@ export function initStudio(doc=document,win=window){
   $('keep-rule-copy').textContent=s.selectedRule==='brief'?'以后读取当前委托的颜色':'以后都固定绿色';
   $('rule-test-status').textContent=v.pendingRule
    ?'新选择还没试，暂时不能保留。画面和试跑记录仍是上次“'+RULE_NAMES[v.ruleTrial.rule]+'”的结果。'
-   :s.retest?'已用原来两份委托试过“'+RULE_NAMES[s.retest.rule]+'”，尚未安装。现在由你决定。':'固定绿色已经试过两份委托。换个取色办法后，先复测，再保留。';
+   :s.retest?`“${RULE_NAMES[s.retest.rule]}”复测：旧委托${verdict(s.retest.first)}，新委托${verdict(s.retest.second)}。尚未安装。`:'固定绿色已经试过两份委托。换个取色办法后，先复测，再保留。';
   $('rule-retest-results').hidden=!s.retest;
   for(const [part,report] of [['first',s.retest?.first],['second',s.retest?.second]]){
    $('rule-'+part+'-art').innerHTML=report?poster(report.after.art[0]):'';
-   $('rule-'+part+'-result').textContent=report?'实际'+(report.after.art[0].coat==='green'?'绿色':'珊瑚色')+' · '+(report.after.passed?'通过':'未通过'):'';
+   $('rule-'+part+'-result').textContent=report?'实际'+(report.after.art[0].coat==='green'?'绿色':'珊瑚色')+' · '+verdict(report):'';
   }
   $('ending-controls').hidden=s.stage!=='ending';
   const saved=s.stage==='ending'?s.repairRecord:null;
@@ -122,9 +123,11 @@ export function initStudio(doc=document,win=window){
  function act(type,extra={}){
   const old=state,next=posterStoryAction(state,{type,...extra});if(next===state)return;
   state=next;render();
-  if(old.stage!==state.stage||type==='retest'){
+  if(old.stage!==state.stage){
    $('guide-title').focus({preventScroll:true});
    $('guide-title').scrollIntoView({block:'start',behavior:'instant'});
+  }else if(type==='retest'){
+   $('rule-retest-feedback').scrollIntoView({block:'nearest',behavior:'instant'});
   }
  }
  $('story-next').addEventListener('click',()=>act(NEXT[state.stage]));

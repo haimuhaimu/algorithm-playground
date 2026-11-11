@@ -129,6 +129,53 @@ test('the cat case keeps only one edit and never rewrites the original arena or 
  }finally{u.restore();}
 });
 
+test('the status above the cat map reports actual route effects, even for an unselected cat',async()=>{
+ const u=await boot();try{
+  const {mountCatRoutes}=await import('../pathfinding-cats-ui.mjs');mountCatRoutes(u.doc);
+  const grid=u.els.get('cat-route-after'),notice=u.els.get('cat-route-edit');
+  const position=u.els.get('cat-route-edit-position');
+  const edit=index=>u.fire(grid.children[index],'click');
+  assert.match(notice.textContent,/虚线/);
+  edit(31);
+  assert.match(notice.textContent,/拆墙.*波比.*11.*7.*少走 4 步/);
+  assert.match(position.textContent,/第 4 行第 5 列/);
+  edit(11);
+  assert.match(notice.textContent,/加墙.*嘿姆.*9.*11.*多走 2 步/);
+  assert.equal(u.els.get('cat-route-bobby').getAttribute('aria-pressed'),'true');
+  assert.doesNotMatch(notice.textContent,/少走 4 步/);
+  edit(44);
+  assert.match(notice.textContent,/波比.*仍走 11 步.*臭臭.*仍走 9 步/);
+  edit(0);
+  assert.match(notice.textContent,/路线和步数都没变/);
+  edit(0);
+  assert.match(notice.textContent,/已恢复原图/);
+  assert.equal(position.textContent,'');
+  edit(31);u.click('cat-route-reset');
+  assert.match(notice.textContent,/已恢复原图/);
+  assert.doesNotMatch(notice.textContent,/少走 4 步/);
+ }finally{u.restore();}
+});
+
+test('a short-screen cat edit reveals the clipped receipt without losing the edited square',async()=>{
+ const u=await boot();try{
+  const {mountCatRoutes}=await import('../pathfinding-cats-ui.mjs');mountCatRoutes(u.doc);
+  const receipt=u.els.get('cat-route-edit');
+  let scroll=0;
+  const notice=u.els.get('cat-route-notice');
+  notice.getBoundingClientRect=()=>({top:-28-scroll,bottom:14-scroll});
+  u.doc.defaultView={innerHeight:375,scrollBy:({top})=>{scroll+=top;}};
+  const cell=u.els.get('cat-route-after').children[31];
+  cell.getBoundingClientRect=()=>({top:169-scroll,bottom:207-scroll});
+  cell.focus();u.fire(cell,'click');
+  assert.match(receipt.textContent,/波比.*11.*7/);
+  assert.ok(notice.getBoundingClientRect().top>=0,'the complete receipt must be visible');
+  assert.ok(cell.getBoundingClientRect().bottom<=375,'keep the edited square on screen');
+  assert.equal(u.doc.activeElement,cell);
+  const settled=scroll;u.fire(cell,'click');
+  assert.equal(scroll,settled,'do not scroll again when both are already visible');
+ }finally{u.restore();}
+});
+
 test('a complete wall stroke undoes and redoes as one edit on both maps',async()=>{
  const u=await boot();try{
   const before=u.map();u.pointer('pointerdown',0);u.pointer('pointermove',4);u.pointer('pointerup',6);

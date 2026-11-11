@@ -90,6 +90,27 @@ test('first action appends one equal batch and retains the initial thirty-draw e
   assert.equal(u.doc.activeElement,u.get('step-title'),'new step focus must not remain on a retargeted action button');
  }finally{u.restore();}
 });
+test('the button-side receipt compares all three sample counts at the same red line, including after a new seed',async()=>{
+ const u=await boot();try{
+  const result=u.get('observation-result');
+  assert.equal(result.textContent,'');
+  u.click('next-step');
+  assert.match(u.get('step-title').textContent,/样本多了.*红线没动/);
+  assert.match(result.textContent,/红线仍是 4.*30 → 3,030/);
+  assert.match(result.textContent,/超线次数.*嘿姆 0 → 11.*波比 2 → 166.*臭臭 4 → 352/);
+  u.click('next-step');
+  assert.match(result.textContent,/红线从 4 挪到 16/);
+  assert.match(result.textContent,/11 → 0.*166 → 0.*352 → 88/);
+  u.click('reset-sample');
+  assert.equal(result.textContent,'');
+  u.click('next-step');
+  assert.match(result.textContent,/嘿姆 0 → 11.*波比 2 → 166.*臭臭 4 → 352/);
+  u.click('next-step');u.click('answer-sample');u.click('new-sample');
+  assert.equal(result.textContent,'');
+  u.click('next-step');
+  assert.match(result.textContent,/嘿姆 0 → 9.*波比 0 → 164.*臭臭 6 → 344/);
+ }finally{u.restore();}
+});
 test('zero observed exceedances remain a zero sample frequency, not a numerical-underflow explanation',async()=>{
  const u=await boot();try{
   assert.equal(u.get('tail-normal').textContent,'0 次');
