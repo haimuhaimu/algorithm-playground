@@ -1,4 +1,4 @@
-import {createBeatLesson,selectBeatCase,guessBeat,runBeat,retryBeat,createCatBeatScene,runCatBeat} from './firefly-beat.mjs?v=scope-legend-v1';
+import {createBeatLesson,selectBeatCase,guessBeat,runBeat,retryBeat,createCatBeatScene,runCatBeat} from './firefly-beat.mjs?v=pond-bobby-v1';
 
 const names={faster:'加快追上',slower:'放慢等一等',same:'照自己的节拍走'};
 const contexts={ahead:'三只邻居此刻领先 ¼ 圈。它们和金色这只的天生步速完全相同。',behind:'三只邻居此刻落后 ¼ 圈。它们和金色这只的天生步速完全相同。',out:'邻居仍领先 ¼ 圈，但距离在听见范围外。这只还会追上去吗？'};

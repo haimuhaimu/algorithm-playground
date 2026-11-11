@@ -49,7 +49,7 @@ files.push('neural-gradient.mjs','neural-gradient-ui.mjs');
 files.push('neural-residual-core.mjs','neural-residual.mjs','neural-residual-ui.mjs','neural-residual-view.mjs','neural-residual.css');
 files.push('neural-generalization.mjs','neural-generalization-ui.mjs','neural-generalization-view.mjs','neural-generalization.css');
 files.push('space-theme.css','experiment-showcase.css');
-files.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css','learning-route-trials.mjs');
+files.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css','learning-route-trials.mjs','learning-route-return.mjs','learning-route-return-ui.mjs');
 files.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
 files.push('genai-handoff.mjs','bayes-tool.mjs');
 files.push('agent-mission.html','agent-mission.css','agent-mission.mjs','agent-tool.mjs');

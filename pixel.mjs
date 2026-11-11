@@ -18,6 +18,15 @@ let lastParcel = null, deliveryView = null, pixelToolExport = null;
 let deliveredParcel = null, firstLetter = { source: null, restored: 0, answer: null };
 const deliveryContext = $('delivery-preview').getContext('2d');
 const equal = (a, b) => a.length === b.length && a.every((value, i) => value === b[i]);
+const postcardPatterns = Object.entries({...STUDIO_POSTCARD_NAMES,heart:'爱心',noise:'杂色',blank:'空白纸'})
+  .map(([id,name])=>[preset(id),name]);
+const postcardName = snapshot => postcardPatterns.find(([pattern])=>equal(snapshot,pattern))?.[1] ?? '自定图案';
+const deliveryClerks = {
+  tree:['heim','嘿姆 · 读暗号表'],
+  pixel:['bobby','波比 · 逐格还原'],
+  verify:['chouchou','臭臭 · 核对邮包'],
+  replay:['chouchou','臭臭 · 核对回放'],
+};
 const available = () => context && receivedContext && !document.hidden && !$('guide').open;
 function saveDraft(){
   const ok=writeDraft(DRAFT_KEYS.pixel,{pixels,color,history,received:received?.pixels??null},validatePixelDraft);
@@ -44,6 +53,7 @@ function draw(ctx, data, showCursor = false) {
   }
 }
 function receipt() {
+  $('received-postcard-name').textContent = received ? postcardName(received.pixels) : '等待来信';
   if (job && !job.replay) $('receipt').textContent = '寄送中… 上次来信会保留到新信送达';
   else if (!received) $('receipt').textContent = '还没有来信';
   else $('receipt').textContent = equal(received.pixels, pixels) ? `完整收到 · 256 / 256 格一致 · ${received.bytes} B` : `上次收到 ${received.bytes} B · 画纸已改，待重新寄出`;
@@ -117,7 +127,7 @@ function renderFirstLetter() {
   $('first-letter-read').textContent = readLabel;
   $('first-letter-resume').textContent = readLabel;
   $('first-letter-note').textContent = deliveredParcel
-    ? `成功来信 ${deliveredParcel.bytes} B · ${equal(pixels,deliveredParcel.snapshot) ? '用刚才那封信，不另换一张图。' : '画纸已改，仍读上一封成功来信；新画纸不会被覆盖。'}只在本页保留这条实操，不写学习进度。`
+    ? `${postcardName(deliveredParcel.snapshot)} · ${deliveredParcel.bytes} B。${equal(pixels,deliveredParcel.snapshot) ? '读的是刚签收的信。' : '画纸已改，仍读上一封成功来信。'}`
     : '完整收齐并核验后，这个入口才会开放。原来的单独练习也保留。';
 }
 function readSuccessfulLetter() {
@@ -314,7 +324,7 @@ $('undo').addEventListener('click', () => {
   render(); saveDraft();
 });
 function renderDelivery(current) {
-  const state = deliveryAt(current.trace, current.sent), {bits, treeBits, payloadEnd} = current.trace;
+  const state = deliveryAt(current.trace, current.sent), {bits, treeBits} = current.trace;
   const focus = current.replay && current.sent === current.sample.startBit ? current.sample : state.focus;
   const prefix = focus ? bits.slice(focus.startBit,Math.min(state.sent,focus.endBit)) : '';
   $('delivery-panel').hidden = false;
@@ -328,12 +338,18 @@ function renderDelivery(current) {
   $('delivery-count').textContent = `${state.sent} / ${bits.length} bit`;
   $('delivery-decoded').textContent = `已还原 ${state.decoded} / 256 格`;
   $('delivery-track').style.width = `${state.sent / bits.length * 100}%`;
+  const heading = current.verifiedParcel ? '这封信已签收' : current.replay && state.complete ? '这次回放读完了' : '暗号收齐，这一格才出现。';
+  if ($('delivery-title').textContent !== heading) $('delivery-title').textContent = heading;
+  $('delivery-controls').hidden = state.complete;
+  $('delivery-skipped').hidden = state.complete;
   $('delivery-toggle').textContent = state.complete ? '已读完' : motion.matches ? '逐位模式' : current.paused ? '继续播放' : '暂停';
   $('delivery-toggle').disabled = state.complete || motion.matches;
   $('delivery-bit').disabled = state.complete;
-  $('delivery-note').textContent = current.replay || state.complete
-    ? `慢拆刚才封存的同一封信，不重新寄送、不覆盖画纸或草稿。${equal(current.parcel.snapshot,pixels)?'':'画纸已改，这里仍保留旧图。'}`
-    : '本次还原中 · 灰格尚未收到；下方成功来信在送达前不变。动画速度不代表运算速度。';
+  const oldPicture = equal(current.parcel.snapshot,pixels) ? '' : '画纸已改，这里仍是封存的旧图。';
+  const parcelLabel = `${current.pattern} · ${bits.length/8} B`;
+  $('delivery-note').textContent = current.replay
+    ? `逐位回放 · ${parcelLabel}。不重新寄送，也不改成功来信。${oldPicture}`
+    : current.verifiedParcel ? `已送达 · ${parcelLabel}。${oldPicture}` : `寄送中 · ${parcelLabel}。灰格尚未收到，上次来信保留。`;
   $('delivery-cell').textContent = focus ? `第 ${Math.floor(focus.index/16)+1} 行 · 第 ${focus.index%16+1} 列` : '先读这封信的暗号表';
   $('delivery-prefix').textContent = focus ? (prefix || '—') : `${state.sent} / ${treeBits} 位`;
   $('delivery-prefix').dataset.complete = String(!!focus && state.sent >= focus.endBit);
@@ -341,9 +357,16 @@ function renderDelivery(current) {
   result.dataset.ready = String(ready);
   result.style.backgroundColor = ready ? colors[focus.color] : '';
   result.setAttribute('aria-label',`放大后的这一格：${ready?names[focus.color]:'暗号未收齐'}`);
-  const explanation = state.phase === 'tree' ? '先收到编码树，才能知道每种颜色用什么暗号。现在还不能还原像素。'
-    : state.phase === 'padding' ? `256 格已经齐了。还要收齐 ${bits.length-payloadEnd} 位字节补零，邮包才算送达；补零不会多出像素。`
-    : state.complete ? '一格没删：同一份字节包还原出全部 256 格。常见颜色用短暗号，不是提前猜出颜色。'
+  const [portrait,clerk] = deliveryClerks[state.phase==='tree'||state.phase==='pixel'?state.phase:current.replay?'replay':'verify'];
+  if ($('delivery-clerk').textContent !== clerk) {
+    $('delivery-clerk').textContent = clerk;
+    $('delivery-clerk-art').setAttribute('src',`./studio-${portrait}-portrait.png`);
+  }
+  const explanation = state.phase === 'tree' ? '先读完整暗号表，才知道每种颜色怎么写。这时还不能还原像素。'
+    : state.phase === 'padding' ? `256 格已经齐了。剩 ${bits.length-state.sent} 位补零凑整字节，不会多出像素。${current.replay?'这是回放，不是新寄送。':'邮包还没签收。'}`
+    : state.complete ? current.replay ? '回放读完了，256 格都已还原。没有重新寄送，也没有改上次来信。'
+      : current.verifiedParcel ? '已签收。核对了 256 / 256 格，一格没删。接下来，轮到你亲手读回 8 格。'
+        : '已收齐位流，正在核对像素。'
     : state.sent >= focus.endBit ? `「${focus.code}」完整了 → ${names[focus.color]}。这一格现在才出现；下一位从新的暗号开始。`
     : `「${prefix || '尚未开始'}」还不是完整暗号，这一格继续留灰。再读一位，看看它是否对应表里的一种颜色。`;
   const output = $('delivery-explanation');
@@ -392,7 +415,7 @@ function openDelivery(parcel,replay=false) {
   const trace = createDelivery(parcel.encoded.packet,256);
   // Skip only a clearly labelled prefix when replaying, to reach a multi-bit color.
   const sample = trace.entries.find(entry=>entry.color!==trace.pixels[0] && entry.code.length>1) ?? trace.entries[0];
-  const current = {parcel,trace,replay,sample,sent:replay?sample.startBit:0,paused:true,epoch:0,aiActions:[],aiSent:replay?sample.startBit:0};
+  const current = {parcel,trace,replay,sample,pattern:postcardName(parcel.snapshot),sent:replay?sample.startBit:0,paused:true,epoch:0,aiActions:[],aiSent:replay?sample.startBit:0};
   deliveryView = current;
   job = current;
   $('delivery-codebook').innerHTML = names.map((name,i)=>`<div><i class="color-${i}" aria-hidden="true"></i><span>${name}</span><code>${trace.entries.find(entry=>entry.color===i)?.code??'未使用'}</code></div>`).join('');

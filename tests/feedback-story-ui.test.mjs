@@ -24,12 +24,27 @@ test('first feedback renders both six-card snapshots and keeps the action-specif
  assert.equal((e['feedback-before'].innerHTML.match(/<li /g)||[]).length,6);
  assert.equal((e['feedback-after'].innerHTML.match(/<li /g)||[]).length,6);
  assert.match(e['feedback-action'].textContent,/少一点/);
+ assert.match(e['feedback-action'].textContent,/波比出镜/);
  assert.match(e['feedback-interest'].textContent,/100 → 88/);
- assert.match(e['feedback-reason'].textContent,/仍在第 1/);
+ assert.match(e['feedback-card-fate']?.textContent??'',/这张卡仍在第 1 位.*第 4 席/);
+ for(const side of ['before','after']){
+  const bobby=e['feedback-'+side].innerHTML.match(/<li[^>]*data-post="0-0"[\s\S]*?<\/li>/)?.[0];
+  assert.match(bobby??'',/出镜：波比/);
+  assert.match(bobby??'',/猫薄荷电台/);
+ }
  assert.match(e['feedback-reason'].textContent,/第 4.*席位|第 4.*席/);
  assert.match(e['feedback-reason'].textContent,/0\.7983/);
  assert.match(e['feedback-reason'].textContent,/0\.7763/);
  assert.match(e['feedback-after'].innerHTML,/新进入/);
+});
+test('the receipt distinguishes leaving the six seats from blocking a character',async()=>{
+ const {story,elements:e}=await setup();
+ story.record(captureFeedback(POSTS,PRESETS.click.weights,INITIAL_PROFILE,'1-0',-1));
+ assert.match(e['feedback-card-fate']?.textContent??'',/离开.*六席.*仍在候选池.*第 5 席/);
+ assert.match(e['feedback-action'].textContent,/嘿姆出镜/);
+ assert.doesNotMatch(e['feedback-after'].innerHTML,/data-post="1-0"/);
+ story.reset();story.record(captureFeedback(POSTS,PRESETS.click.weights,INITIAL_PROFILE,'0-2',-1));
+ assert.doesNotMatch(e['feedback-action'].textContent,/出镜/,'the cat topic itself does not imply a known cat');
 });
 test('an illustrated food post keeps its title, image and creator on both sides of feedback',async()=>{
  const {story,elements:e}=await setup();
@@ -68,6 +83,7 @@ test('no-op and zero weight feedback are explained without claiming a ranking ch
  const {story,elements:e}=await setup();
  story.record(captureFeedback(POSTS,PRESETS.click.weights,INITIAL_PROFILE,'0-0',1));
  assert.match(e['feedback-cause'].textContent,/上限/);assert.match(e['feedback-summary'].textContent,/名次都没变/);
+ assert.match(e['feedback-card-fate']?.textContent??'',/六席都没换卡/);
  story.reset();story.record(captureFeedback(POSTS,{click:0,diversity:100,newcomer:100},INITIAL_PROFILE,'0-0',-1));
  assert.match(e['feedback-cause'].textContent,/点击优先为 0/);assert.match(e['feedback-summary'].textContent,/名次都没变/);
  story.reset();assert.equal(story.shouldRecord(),true);assert.equal(e['feedback-story-content'].hidden,true);

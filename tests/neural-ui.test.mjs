@@ -4,6 +4,69 @@ import {readFile} from 'node:fs/promises';
 import {memoryStorage} from './storage-helper.mjs';
 import {DRAFT_KEYS} from '../local-drafts.mjs';
 let serial=0;
+test('one ordinary step reports its actual change beside training without interrupting another action',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  window.innerHeight=844;u.elements.get('status').getBoundingClientRect=()=>({top:500,bottom:570});
+  u.click('step');
+  assert.equal(u.elements.get('epoch').textContent,'1');
+  assert.equal(JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value.model.epoch,1);
+  assert.match(u.elements.get('status').textContent,/第 0 → 1 步/);
+  assert.match(u.elements.get('status').textContent,/0\.717 → 0\.711/);
+  assert.match(u.elements.get('status').textContent,/点.*没动|不移动/);
+  assert.equal(u.elements.get('status').scrolled,undefined,'ordinary training feedback should stay nearby, not jump away from the button');
+ }finally{u.restore();}
+});
+test('short-screen training nudges an offscreen message into view without stealing keyboard focus',async()=>{
+ const u=await boot();try{
+  window.innerHeight=390;
+  const status=u.elements.get('status');status.getBoundingClientRect=()=>({top:400,bottom:470});
+  u.click('step');assert.equal(u.elements.get('epoch').textContent,'1');
+  assert.equal(status.scrolled,true);assert.equal(status.scrollOptions.block,'nearest');
+  assert.equal(status.focused,undefined,'ordinary updates keep keyboard focus on the clicked control');
+ }finally{u.restore();}
+});
+test('inspected-step transitions reveal the next real control and the computed result, then restore the same draft',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});const saved=()=>JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value;
+ try{
+  u.click('step');const before=saved();u.click('step-capture');
+  assert.ok(document.activeElement===u.elements.get('step-rate'),'the first run starts at its own step size');
+  u.elements.get('step-rate').scrolled=false;
+  u.click('step-A-up');u.click('step-B-down');u.click('step-run');
+  assert.equal(u.elements.get('step-result').hidden,false);assert.equal(u.elements.get('step-result').scrolled,true);
+  assert.equal(saved().model.epoch,2);
+  u.click('step-rewind');assert.deepEqual(saved(),before);
+  assert.ok(document.activeElement===u.elements.get('step-rate'),'rewind focuses the step size inside this experiment');
+  assert.equal(u.elements.get('step-rate').scrolled,true);
+  assert.equal(u.elements.get('rate').scrolled,undefined,'rewind does not send the learner out of the experiment');
+  assert.match(u.elements.get('status').textContent,/退回.*第 1 步/);
+ }finally{u.restore();}
+});
+test('resetting and clearing from remote settings reveal the actual outcome rather than silently changing a distant canvas',async()=>{
+ const u=await boot();try{
+  u.click('play');u.frame();u.click('reset');
+  assert.equal(u.elements.get('epoch').textContent,'0');assert.equal(u.frames.size,0);
+  assert.equal(u.elements.get('point-count').textContent,'48 / 160 个点');
+  assert.equal(u.elements.get('status').focused,true);assert.equal(u.elements.get('status').scrolled,true);
+  u.click('clear');assert.equal(u.elements.get('point-count').textContent,'0 / 160 个点');
+  assert.equal(u.elements.get('undo').disabled,false);
+  assert.match(u.elements.get('status').textContent,/空白.*圆点.*方点/);
+ }finally{u.restore();}
+});
+test('the model-comparison disabled reason follows initial, running, paused and reset conditions',async()=>{
+ const u=await boot();try{
+  const button=u.elements.get('compare-model'),hint=u.elements.get('compare-model-hint');
+  assert.ok(hint,'comparison has a local explanation');
+  assert.equal(button.disabled,true);assert.match(hint.textContent,/先.*训练/);
+  u.click('play');u.frame();assert.equal(button.disabled,true);assert.match(hint.textContent,/先.*暂停/);
+  u.click('play');assert.equal(button.disabled,false);assert.match(hint.textContent,/可.*比较/);
+  u.click('reset');assert.equal(button.disabled,true);assert.match(hint.textContent,/先.*训练/);
+  u.click('clear');assert.equal(button.disabled,true);assert.match(hint.textContent,/先.*圆点.*方点.*训练/);
+ }finally{u.restore();}
+ const v=await boot({noCanvas:true});try{
+  assert.equal(v.elements.get('compare-model').disabled,true);
+  assert.match(v.elements.get('compare-model-hint').textContent,/浏览器.*无法|浏览器.*不能/);
+ }finally{v.restore();}
+});
 test('a perfect training batch invites a new test rather than looking for nonexistent mistakes',async()=>{
  const u=await boot();try{u.click('fast');for(let i=0;i<20;i++)u.frame();
   assert.equal(u.elements.get('accuracy').textContent,'100%');assert.doesNotMatch(u.elements.get('status').textContent,/看看分错/);
@@ -16,6 +79,32 @@ test('returning to the newcomer flow checkpoints and stops free-drawing training
   window.dispatchEvent(new Event('neural-guide-pause'));stale();
   assert.equal(u.elements.get('epoch').textContent,'8');assert.equal(u.frames.size,0);
   assert.equal(JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value.model.epoch,8);
+ }finally{u.restore();}
+});
+for(const [label,interrupt] of [
+ ['opening help',u=>u.click('about')],
+ ['hiding the page',u=>{u.hide();u.show();}],
+ ['leaving the page',()=>window.dispatchEvent(new Event('pagehide'))],
+ ['closing advanced drawing',()=>window.dispatchEvent(new Event('neural-guide-pause'))],
+])test(`${label} reports a real pause without overwriting an already-paused result`,async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  const status=u.elements.get('status'),draft=()=>storage.getItem(DRAFT_KEYS.neural);
+  u.click('play');u.frame();const stale=[...u.frames.values()][0],writes=storage.writes;
+  interrupt(u);stale();
+  assert.equal(u.frames.size,0);
+  assert.equal(u.elements.get('play').getAttribute('aria-pressed'),'false');
+  assert.equal(JSON.parse(draft()).value.model.epoch,8);
+  assert.equal(storage.writes,writes+1,'only the existing pause checkpoint is saved');
+  assert.match(status.textContent,/已暂停.*第 8 步/);
+  assert.equal(status.focused,undefined);
+  assert.equal(status.scrolled,undefined);
+  u.click('step');
+  const priorStatus=status.textContent,priorDraft=draft(),priorWrites=storage.writes;
+  assert.match(priorStatus,/第 8 → 9 步/);
+  interrupt(u);
+  assert.equal(status.textContent,priorStatus);
+  assert.equal(draft(),priorDraft);
+  assert.equal(storage.writes,priorWrites);
  }finally{u.restore();}
 });
 test('a newer ordinary prediction cannot be overwritten by an older one-step checkpoint',async()=>{
@@ -37,11 +126,76 @@ test('inspected step requires guesses, trains once, rewinds exact draft state an
   u.click('step-A-up');assert.equal(u.elements.get('step-run').disabled,true);u.click('step-B-down');assert.equal(u.elements.get('step-run').disabled,false);
   u.click('step-run');const first=saved();assert.equal(first.model.epoch,2);u.click('step-run');assert.deepEqual(saved(),first);
   assert.equal(u.elements.get('step-result').hidden,false);assert.match(u.elements.get('step-A-result').textContent,/方倾向/);
+  assert.equal(u.elements.get('step-attempts').hidden,true,'one result is not yet a comparison');
   u.click('step-rewind');assert.deepEqual(saved(),before);assert.equal(u.elements.get('step-run').disabled,true);
-  u.change('rate','0.6');assert.equal(saved().model.epoch,1);u.click('step-A-up');u.click('step-B-down');u.click('step-run');
+  assert.equal(u.elements.get('step-attempts').hidden,true,'rewinding must not show a stale current result');
+  assert.match(u.elements.get('step-last-result').textContent,/0\.15.*尚未再走/);
+  assert.ok(u.elements.get('step-rate'),'retry has a local step size control');
+  u.click('step-A-up');u.click('step-B-down');
+  window.innerHeight=390;u.elements.get('status').getBoundingClientRect=()=>({top:-600,bottom:-550});
+  u.change('step-rate','0.6');
+  assert.deepEqual(saved(),{...before,rate:0.6},'choosing a different size does not train or alter the checkpoint');
+  assert.equal(u.elements.get('rate').value,'0.6');
+  assert.equal(u.elements.get('step-run').disabled,true,'old guesses cannot be used for the new step size');
+  assert.equal(u.elements.get('status').scrolled,undefined,'selecting a size does not scroll to general training feedback');
+  u.click('step-A-up');u.click('step-B-down');u.click('step-run');
   assert.equal(saved().model.epoch,2);assert.notDeepEqual(saved().model.weights,first.model.weights);assert.deepEqual(saved().points,before.points);
-  assert.equal(u.elements.get('step-attempts').hidden,false);assert.match(u.elements.get('step-last-result').textContent,/0.15/);assert.match(u.elements.get('step-current-result').textContent,/0.6/);
+  assert.equal(u.elements.get('step-attempts').hidden,false);
+  assert.equal(u.elements.get('step-last-rate').textContent,'0.15');
+  assert.equal(u.elements.get('step-current-rate').textContent,'0.60');
   assert.equal(u.elements.get('step-run').disabled,true);assert.equal(u.frames.size,0);
+ }finally{u.restore();}
+});
+test('the comparison shows each real outcome and signed change from the same checkpoint',async()=>{
+ const u=await boot();try{
+  u.click('step');u.click('step-capture');u.click('step-A-up');u.click('step-B-down');u.click('step-run');
+  u.click('step-rewind');u.change('step-rate','0.6');u.click('step-A-up');u.click('step-B-down');u.click('step-run');
+  const shown=id=>u.elements.get(id)?.textContent;
+  assert.equal(document.activeElement,u.elements.get('step-result'));
+  assert.match(shown('step-compare-origin')??'',/第 1.*2 步/);
+  const fields=['base','last','last-delta','current','current-delta'];
+  // Default islands, a single ordinary 0.15 update before capture.
+  assert.deepEqual(fields.map(key=>shown('step-compare-loss-'+key)),['0.710972','0.705827','−0.005145','0.691920','−0.019052']);
+  assert.deepEqual(fields.map(key=>shown('step-compare-A-'+key)),['53.951%','54.535%','+0.584','56.253%','+2.302']);
+  assert.deepEqual(fields.map(key=>shown('step-compare-B-'+key)),['61.369%','60.863%','−0.506','59.335%','−2.034']);
+  u.change('rate','0.03');
+  assert.equal(shown('step-current-rate'),'0.60','the future setting is not an executed step');
+  u.click('step-capture');
+  assert.equal(u.elements.get('step-attempts').hidden,true,'a new checkpoint cannot compare the old runs');
+  assert.equal(u.elements.get('step-last-result').hidden,true);
+ }finally{u.restore();}
+});
+test('the revealed result separates a changed tendency from a changed class',async()=>{
+ const u=await boot();try{
+  u.click('step');u.click('step-capture');u.click('step-A-up');u.click('step-B-down');u.click('step-run');
+  const takeaway=()=>u.elements.get('step-takeaway')?.textContent??'';
+  assert.match(takeaway(),/A、B 都没换类.*B 没参加训练.*方倾向也变了/);
+  u.click('step-rewind');u.change('step-rate','0.6');u.click('step-A-up');u.click('step-B-down');u.click('step-run');
+  assert.match(takeaway(),/两次 A、B 都没换类.*B 没参加训练.*两次的方倾向都变了/);
+ }finally{u.restore();}
+});
+test('the comparison identifies which real step crossed the decision boundary',async()=>{
+ const u=await boot();try{
+  for(let i=0;i<5;i++)u.click('step');
+  u.click('step-capture');u.click('step-A-down');u.click('step-B-down');u.click('step-run');
+  u.click('step-rewind');u.change('step-rate','0.6');u.click('step-A-down');u.click('step-B-down');u.click('step-run');
+  assert.match(u.elements.get('step-takeaway')?.textContent??'',/上次都没换类；这次 A 从方改判为圆/);
+  assert.equal(u.elements.get('step-compare-A-current').textContent,'49.943%');
+  assert.equal(u.elements.get('step-compare-A-last').textContent,'52.037%');
+ }finally{u.restore();}
+});
+test('changing the future step size after a result keeps the actual result and carries the new setting into retry',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});const saved=()=>JSON.parse(storage.getItem(DRAFT_KEYS.neural)).value;
+ try{
+  u.click('step-capture');u.click('step-A-up');u.click('step-B-down');u.click('step-run');
+  const result=u.elements.get('step-loss-result').textContent,trained=saved();
+  u.change('rate','0.03');
+  assert.deepEqual(saved(),{...trained,rate:0.03});
+  assert.equal(u.elements.get('step-loss-result').textContent,result);
+  u.click('step-rewind');
+  assert.equal(saved().model.epoch,0);
+  assert.equal(u.elements.get('step-rate')?.value,'0.03');
+  assert.match(u.elements.get('step-last-result').textContent,/0\.15/);
  }finally{u.restore();}
 });
 test('ordinary edits and training invalidate rewind, but a cancelled stroke preserves the comparison',async()=>{
@@ -99,7 +253,7 @@ async function boot({noCanvas=false,hidden=false,storage=memoryStorage()}={}){
   set value(v){this._value=this.options&&!this.options.includes(v)?'':v;}get value(){return this._value;}
   setAttribute(k,v){this.attributes.set(k,v);}getAttribute(k){return this.attributes.get(k);}
   getContext(){return noCanvas?null:ctx;}getBoundingClientRect(){return {left:0,top:0,width:900,height:560};}
-  setPointerCapture(){}releasePointerCapture(){}focus(){}showModal(){}close(){}
+  setPointerCapture(){}releasePointerCapture(){}focus(options){this.focused=true;this.focusOptions=options;doc.activeElement=this;}scrollIntoView(options){this.scrolled=true;this.scrollOptions=options;}showModal(){}close(){}
  }
  const elements=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([,id])=>[id,new Element()]));
  for(const [,id,options]of html.matchAll(/<select id="([^"]+)">([\s\S]*?)<\/select>/g))elements.get(id).options=[...options.matchAll(/value="([^"]+)"/g)].map(([,v])=>v);
@@ -111,7 +265,7 @@ async function boot({noCanvas=false,hidden=false,storage=memoryStorage()}={}){
  const restore=()=>{for(const[k,d]of old)if(d)Object.defineProperty(globalThis,k,d);else delete globalThis[k];};
  Object.assign(globalThis,globals);
  try{await import(new URL('../neural.mjs?test='+ ++serial,import.meta.url));}catch(e){restore();throw e;}
- const fire=(el,type,props={})=>el.dispatchEvent(Object.assign(new Event(type,{cancelable:true}),props));
+ const fire=(el,type,props={})=>type==='click'&&el.disabled?false:el.dispatchEvent(Object.assign(new Event(type,{cancelable:true}),props));
  return {elements,frames,restore,fire,click:id=>fire(elements.get(id),'click'),choose:(key,value)=>fire(groups[key].find(e=>e.dataset[key]===value),'click'),
   change(id,value){elements.get(id).value=value;fire(elements.get(id),'change');},
   pointer(type,x=450,y=280,extra={}){fire(elements.get('field'),type,{pointerId:1,isPrimary:true,button:0,clientX:x,clientY:y,...extra});},

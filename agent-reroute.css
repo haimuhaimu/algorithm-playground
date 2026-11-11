@@ -65,6 +65,10 @@
 .reroute-evidence > div:has(dd[data-tone=old]) { background: var(--reroute-old-fill); border-color: var(--reroute-key-line); }
 .reroute-evidence > div:has(dd[data-tone=success]) { background: var(--mission-green-fill); border-color: var(--mission-green); }
 .reroute-feedback { margin-bottom: 10px; min-height: 0; font-size: 14px; }
+.reroute-response { margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--reroute-key-line); border-inline-start: 3px solid var(--reroute-old); border-radius: 7px; background: var(--reroute-old-fill); }
+.reroute-response span { color: var(--reroute-old-ink); font-size: 12px; font-weight: 650; }
+.reroute-response p { margin: 3px 0 0; color: var(--home-ink); font-size: 14px; font-weight: 650; line-height: 1.55; }
+#reroute-status { scroll-margin-top: 12px; }
 .reroute-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .reroute-actions > button { flex: 1 1 115px; min-width: 0; }
 .reroute-share:not([hidden]) { margin-top: 10px; }

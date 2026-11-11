@@ -47,6 +47,15 @@ test('the feed displays the new title and art without replacing creator or newco
  assert.match(card,/data-feedback="1" data-post="1-4" aria-label="喜欢：波比试吃外婆的豆腐"/);
 });
 
+test('the visible cover credit names the illustrated cat, not the creator or topic',()=>{
+ for(const [id,cat] of [['0-0','波比'],['0-1','嘿姆'],['2-0','臭臭']]){
+  const card=render(POSTS.find(post=>post.id===id));
+  assert.match(card,new RegExp(`<span class="post-cast">出镜：${cat}</span>`));
+  assert.match(card,/<div class="creator">/);
+ }
+ assert.doesNotMatch(render(POSTS.find(post=>post.id==='0-2')),/class="post-cast"/);
+});
+
 test('visual remapping leaves the original candidate data and preset order intact',()=>{
  // Baseline of the original 48 candidate records, including numeric inputs and creator identities.
  assert.equal(createHash('sha256').update(JSON.stringify(POSTS)).digest('hex'),

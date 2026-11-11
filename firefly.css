@@ -5,6 +5,7 @@
 @media(max-height:520px) and (min-width:761px){.firefly-intro{padding:16px 0}.firefly-intro h1{font-size:27px}.chorus-lab{grid-template-columns:minmax(0,1fr) 230px}.habitat-column{max-width:650px}.chorus-transport label{margin-left:0}}
 /* Direct interventions belong with the canvas, not below the settings panel. */
 .habitat .touch-modes{margin:0;padding:10px 14px 0;border:0}
+#firefly-pond{scroll-margin-top:10px}
 .habitat .touch-modes h2{display:none}
 .habitat .touch-modes>div{display:flex;gap:8px;margin:0}
 .habitat .touch-modes button{flex:1;min-height:44px;border:1px solid #78836c;background:transparent;color:#e8eddb;border-radius:6px;font-size:12px}

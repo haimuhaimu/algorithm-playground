@@ -20,11 +20,16 @@ function renderCrewReceipt(){
  $('crew-receipt-label').textContent=hasRecord?(pending!==null?'上一趟已带回':'这一趟已带回'):'等待第一条线索';
  $('crew-receipt-empty').textContent=pending!==null?'三猫正在探测，结果还没带回来。':'还没有完成的探测。先选一颗星球。';
  $('crew-receipt-pending').hidden=pending===null;
- $('crew-receipt-pending').textContent=pending!==null?`第 ${round+1} 趟正前往${names[pending]}，新结果尚未计入。`:'';
- if(!hasRecord){for(const id of ['trip','before','after','before-rate','after-rate'])$('crew-receipt-'+id).textContent='';return;}
+ $('crew-receipt-pending').textContent=pending!==null?`波比：第 ${round+1} 趟正前往${names[pending]}，新结果尚未计入。`:'';
+ if(!hasRecord){for(const id of ['trip','haul','change','before','after','before-rate','after-rate'])$('crew-receipt-'+id).textContent='';return;}
  const n=record.counts[move.arm],wins=record.wins[move.arm],beforeN=n-1,beforeWins=wins-move.reward;
+ const planet=names[move.arm],change=wins*beforeN-beforeWins*n;
  const rate=(w,n)=>`实测 ${Number((w/n*100).toFixed(1))}%`;
- $('crew-receipt-trip').textContent=`第 ${round} 趟 · ${names[move.arm]} · ${move.reward?'带回 1 块矿':'空手而归'}`;
+ $('crew-receipt-trip').textContent=`第 ${round} 趟 · ${planet}`;
+ $('crew-receipt-haul').textContent=move.reward?'带回 1 块矿':'空手归 · 0 块';
+ $('crew-receipt-change').textContent=beforeN
+  ?`${planet}多了一条记录，样本比例${change>0?'上升':change<0?'下降':'没变'}。`
+  :`${planet}有了第 1 条记录，还不能比涨跌。`;
  $('crew-receipt-before').textContent=beforeN?`${beforeWins} 矿 / ${beforeN} 次`:'还没探过';
  $('crew-receipt-before-rate').textContent=beforeN?rate(beforeWins,beforeN):'暂无样本比例';
  $('crew-receipt-after').textContent=`${wins} 矿 / ${n} 次`;

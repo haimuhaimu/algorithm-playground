@@ -1,6 +1,6 @@
-import {EMPTY,SAND,WATER,WALL,createWorld,stepWorld,paintStroke,countMaterials} from './sand-core.mjs?v=background-pause-v1';
-import {createHistory,snapshot,recordChange,undoChange,redoChange,discardFuture} from './sand-history.mjs?v=background-pause-v1';
-import {openBowl,observeBowl} from './sand-bowl.mjs?v=background-pause-v1';
+import {EMPTY,SAND,WATER,WALL,createWorld,stepWorld,paintStroke,countMaterials} from './sand-core.mjs?v=chouchou-bowl-v1';
+import {createHistory,snapshot,recordChange,undoChange,redoChange,discardFuture} from './sand-history.mjs?v=chouchou-bowl-v1';
+import {openBowl,observeBowl} from './sand-bowl.mjs?v=chouchou-bowl-v1';
 const $=id=>document.getElementById(id),canvas=$('sandbox'),ctx=canvas.getContext('2d');
 const names=['橡皮','沙子','水','墙'],sizes=['细','小','中','大','很大'];
 const tips={splitter:'往屋顶尖端倒水，再擦掉一小段斜坡。两边的去向会怎么变？',hourglass:'在沙漏的细口补一堵墙，让时间停住；再挖开它，让沙继续走。',empty:'造一只杯子，装点水，再撒一把沙。也可以在杯底开一道口。','cat-bowl':'臭臭的碗里有水。可以撒一把沙，也可以擦开碗底，看水往哪流。'};
@@ -55,7 +55,13 @@ function render(){
  if(scene==='cat-bowl'){
   const bowl=observeBowl(world);
   $('bowl-open').disabled=bowl.openingOpen;
-  $('bowl-status').textContent=`碗底下 ${bowl.waterBelow} 格水 · 整幅画布 ${counts.water} 格水`;
+  const buttonText=bowl.openingOpen?'碗底已开口':'给碗底开个口';
+  if($('bowl-open').textContent!==buttonText)$('bowl-open').textContent=buttonText;
+  const report=bowl.openingOpen
+   ?(bowl.waterBelow?'我看到碗下有水了！':counts.water?'碗底的墙擦开了，碗下还没看到水。':'碗底的墙擦开了，画布里没水了。')
+   :(bowl.waterBelow?'碗底还有墙，碗下已经有水。':'碗底还有墙，先开个口吧。');
+  if($('bowl-report').textContent!==report)$('bowl-report').textContent=report;
+  $('bowl-status').textContent=`第 ${world.tick} 拍 · 碗底下 ${bowl.waterBelow} 格水 · 总水 ${counts.water} 格`;
  }
  for(const key of ['sand','water','wall'])$(key+'-count').textContent=counts[key];
  $('tick-count').textContent='第 '+world.tick+' 拍';
@@ -149,18 +155,43 @@ function reset(nextScene){
  scene=nextScene;world=createWorld(scene);history=recordChange(history,before,currentState(),label);lastTick=performance.now();showCursor=false;
  $('scene-tip').textContent=tips[scene];controls('场景已重置 · '+(playing?'正在演化':'已暂停'));render();schedule();
 }
-document.querySelectorAll('[data-scene]').forEach(b=>b.addEventListener('click',()=>reset(b.dataset.scene)));
+function keepBowlVisible(control){
+ const height=window.innerHeight;
+ if(!Number.isFinite(height))return;
+ const bowl=$('bowl-tools'),top=bowl.getBoundingClientRect().top,bottom=$('step').getBoundingClientRect().bottom;
+ if(bottom-top<=height-16){
+  if(top<8||bottom>height-8)bowl.scrollIntoView({block:'start',behavior:'instant'});
+  return;
+ }
+ // If the canvas and report cannot fit together, keep the focused action
+ // and its nearby result in view instead of aligning the distant bowl.
+ const target=$(control),rect=target.getBoundingClientRect();
+ const resultBottom=control==='step'?$('lab-status').getBoundingClientRect().bottom:rect.bottom;
+ if(rect.top<8||Math.max(rect.bottom,resultBottom)>height-8)target.scrollIntoView({block:'center',behavior:'instant'});
+}
+function revealBowl(control){
+ $(control).focus({preventScroll:true});keepBowlVisible(control);
+}
+document.querySelectorAll('[data-scene]').forEach(b=>b.addEventListener('click',()=>{
+ reset(b.dataset.scene);
+ if(scene==='cat-bowl')revealBowl('bowl-open');
+}));
 $('bowl-open').addEventListener('click',()=>{
  if(scene!=='cat-bowl'||document.hidden)return;
  endStroke();stop();
  const before=currentState(),walls=observeBowl(world).wallsRemaining,next=openBowl(world);
  if(next===world)return;
  world=next;history=recordChange(history,before,currentState(),'打开碗底小口');
- controls(`已暂停 · 只擦开 ${walls} 格墙，水还没动。点「继续」或「走一拍」看水流。`);render();
+ controls(`已暂停 · 擦开 ${walls} 格墙，没有推进这一拍。点「走一拍」或「继续」观察。`);render();revealBowl('step');
 });
 $('reset').addEventListener('click',()=>reset(scene));
 $('play').addEventListener('click',()=>{endStroke();if(playing)stop();else{playing=true;lastTick=performance.now();controls();schedule();}});
-$('step').addEventListener('click',()=>{endStroke();stop();simulate();controls('已走一拍 · 第 '+world.tick+' 拍');render();});
+$('step').addEventListener('click',()=>{
+ endStroke();stop();simulate();
+ const bowl=scene==='cat-bowl'?observeBowl(world):null;
+ controls('已走一拍 · 第 '+world.tick+' 拍'+(bowl?' · 碗底下 '+bowl.waterBelow+' 格水':''));render();
+ if(bowl)keepBowlVisible('step');
+});
 function moveHistory(direction){
  endStroke();const result=(direction==='undo'?undoChange:redoChange)(history,currentState());
  if(!result)return;

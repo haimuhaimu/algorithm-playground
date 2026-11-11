@@ -386,6 +386,42 @@ test('paused delivery reads one bit, guards queued frames, and resumes without c
   u.advance(30000);assert.deepEqual(u.pixels('receiver'),u.pixels('editor'));
  }finally{u.restore();}
 });
+test('the delivery clerk reads the tree first and reports only the pixel whose code has arrived',async()=>{
+ const u=await boot();try{
+  const e=id=>u.els.get(id),line=id=>e(id)?.textContent??'';
+  u.click('send');u.advance(0);u.click('delivery-toggle');
+  assert.match(line('delivery-clerk'),/嘿姆.*暗号表/);
+  assert.match(line('delivery-decoded'),/0 \/ 256/);
+  for(let n=0;n<14;n++)u.click('delivery-bit');
+  assert.match(line('delivery-clerk'),/嘿姆.*暗号表/);
+  u.click('delivery-bit');assert.match(line('delivery-clerk'),/波比/);
+  assert.equal(e('delivery-cell-result').dataset.ready,'false');
+  u.click('delivery-bit');assert.equal(e('delivery-cell-result').dataset.ready,'false');
+  u.click('delivery-bit');assert.match(line('delivery-decoded'),/1 \/ 256/);
+  assert.equal(e('delivery-cell-result').dataset.ready,'true');
+ }finally{u.restore();}
+});
+test('an edited drawing, a frozen replay, and a previous successful cat letter keep their own identities',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  const e=id=>u.els.get(id),line=id=>e(id)?.textContent??'';
+  u.click('send');u.finish();
+  assert.match(line('delivery-note'),/已送达.*嘿姆/);
+  assert.match(line('delivery-title'),/已签收/);
+  assert.equal(e('delivery-skipped').hidden,true,'a finished parcel cannot invite the player to pause it');
+  assert.match(line('received-postcard-name'),/嘿姆/);
+  u.click('preset-bobby');u.click('send');
+  assert.match(line('delivery-note'),/寄送中.*波比/);
+  assert.match(line('received-postcard-name'),/嘿姆/);
+  u.click('preset-noise');
+  const writes=storage.writes;
+  u.click('delivery-replay');
+  assert.match(line('delivery-note'),/逐位回放.*波比/);assert.doesNotMatch(line('delivery-note'),/杂色/);
+  assert.match(line('delivery-title'),/暗号/);assert.equal(e('delivery-skipped').hidden,false);
+  assert.match(line('received-postcard-name'),/嘿姆/);assert.equal(storage.writes,writes);
+  u.click('first-letter-resume');
+  assert.match(line('first-letter-note'),/嘿姆/);
+ }finally{u.restore();}
+});
 test('slow replay uses the last fixed parcel without changing a drawing or successful mail',async()=>{
  const storage=memoryStorage(),u=await boot({storage,reduced:true});try{
   assert.ok(u.els.has('delivery-replay'));
@@ -432,6 +468,9 @@ test('switching an in-flight parcel to replay does not claim it was delivered or
   assert.equal(u.frames.size,0);
   for(let n=0;n<500;n++)u.click('delivery-bit');
   assert.match(u.els.get('status').textContent,/回放完成/);
+  assert.match(u.els.get('delivery-explanation').textContent,/回放读完.*没有重新寄送/);
+  assert.doesNotMatch(u.els.get('delivery-explanation').textContent,/已签收|已送达/);
+  assert.equal(u.els.get('first-letter-next').hidden,true);
   assert.match(u.els.get('receipt').textContent,/没有来信/);
   assert.equal(storage.writes,0);
  }finally{u.restore();}
@@ -440,10 +479,12 @@ test('all legacy cat pixels can be decoded before padding but successful mail an
  const storage=legacyStorage(),u=await boot({storage});try{
   u.click('send');u.advance(0);u.advance(5950);
   assert.equal(u.els.get('delivery-preview').dataset.decoded,'256');
-  assert.match(u.els.get('delivery-explanation').textContent,/补零/);
+  assert.match(u.els.get('delivery-clerk')?.textContent??'',/臭臭/);
+  assert.match(u.els.get('delivery-explanation').textContent,/补零.*还没签收/);
   assert.match(u.els.get('receipt').textContent,/寄送中/);assert.equal(storage.writes,0);
   for(let n=0;n<3;n++)u.click('delivery-bit');assert.equal(storage.writes,0);
   u.click('delivery-bit');assert.match(u.els.get('receipt').textContent,/256.*256/);
+  assert.match(u.els.get('delivery-explanation').textContent,/已签收.*256 \/ 256/);
   const writes=storage.writes;u.click('delivery-bit');assert.equal(storage.writes,writes);
  }finally{u.restore();}
 });

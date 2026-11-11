@@ -1,5 +1,5 @@
-import {SAND,WATER,WALL} from './sand-core.mjs?v=background-pause-v1';
-import {SAND_ORIGIN,SAND_OUTCOMES,createSandLesson,canEditSandCell,predictSandLesson,runSandLesson,editSandLesson,describeSandAttempt,summarizeSandLesson,createMaterialLesson,selectMaterialLesson,predictMaterialLesson,runMaterialLesson,retryMaterialLesson} from './sand-lesson.mjs?v=background-pause-v1';
+import {SAND,WATER,WALL} from './sand-core.mjs?v=chouchou-bowl-v1';
+import {SAND_ORIGIN,SAND_OUTCOMES,createSandLesson,canEditSandCell,predictSandLesson,runSandLesson,editSandLesson,describeSandAttempt,summarizeSandLesson,createMaterialLesson,selectMaterialLesson,predictMaterialLesson,runMaterialLesson,retryMaterialLesson} from './sand-lesson.mjs?v=chouchou-bowl-v1';
 
 const $=id=>document.getElementById(id),root=$('grain-lab');
 let state=createSandLesson(),materialState=createMaterialLesson(),mode='material',beforeFrame=false;

@@ -70,17 +70,29 @@
 .step-guesses button[aria-pressed=true]:disabled{opacity:1}
 .step-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;align-items:center}
 #step-run{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.step-rate-control{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:14px 0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--soft)}
+.step-rate-control[hidden]{display:none}
+.step-rate-control label{font-size:12px;font-weight:600}
+#step-rate{min-height:44px;max-width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:7px;color:var(--ink);background:var(--paper);font:inherit;font-size:12px;scroll-margin-top:54px}
 #step-rate-note{flex-basis:100%;font-size:11px;color:var(--muted);line-height:1.8;margin:0}
+.step-result-actions{margin-bottom:12px}
+#step-rewind{min-height:44px}
 .step-result{border-top:1px solid var(--line);margin-top:14px;padding-top:16px;outline-offset:-3px}
-.step-result h3,.step-attempts h3{font-size:14px;line-height:1.7;margin:0 0 10px}
+.step-result h3{font-size:14px;line-height:1.7;margin:0 0 8px}
 .step-probe-results{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.step-result p,.step-attempts p{font-size:12px;line-height:1.9;margin:0 0 10px}
+.step-result p{font-size:12px;line-height:1.9;margin:0 0 10px}
 .step-probe-results p{padding:12px;background:var(--soft);border-radius:7px}
 #step-loss-result{font-family:ui-monospace,monospace;font-size:12px}
 #step-explanation{color:var(--muted)}
-.step-takeaway{border-left:3px solid var(--good);padding:8px 12px;background:var(--soft)}
-.step-attempts{border-top:1px solid var(--line);padding-top:15px;margin-top:14px}
-.step-attempts small{font-size:10px;color:var(--muted);line-height:1.8}
+.step-result .step-takeaway{border-left:2px solid var(--accent);padding:5px 8px;line-height:1.6;margin-bottom:8px;background:var(--soft)}
+.step-attempts table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px;line-height:1.45;font-variant-numeric:tabular-nums}
+.step-attempts caption{text-align:left;color:var(--muted);font-size:11px;margin-bottom:8px}
+.step-attempts th,.step-attempts td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:6px;overflow-wrap:anywhere}
+.step-attempts th:first-child{width:34%}
+.step-attempts thead{background:var(--soft)}
+.step-attempts td:last-child{background:var(--soft)}
+.step-attempts small{display:block;color:var(--muted);font-size:11px;margin-top:2px;font-weight:400}
+.step-attempts p,.step-retry-preview{font-size:11px;color:var(--muted);line-height:1.7;margin:8px 0 12px}
 @media(max-width:1050px){.step-guesses{grid-template-columns:1fr}.step-lab header{align-items:flex-start}.step-lab h2{font-size:18px}}
 @media(max-width:760px){
  .step-lab{padding:16px 11px}.step-lab header{display:block}#step-capture{max-width:none;width:100%;margin-top:12px}
@@ -96,3 +108,6 @@
 .comparison-columns dl{margin:14px 0 0;display:grid;gap:10px}.comparison-columns dl>div{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.comparison-columns dt{font-size:10px;color:var(--muted)}.comparison-columns dd{font:14px ui-monospace,monospace;margin:0;text-align:right;overflow-wrap:anywhere}
 .comparison-note{font-size:10px;color:var(--muted);line-height:1.8;margin:0;padding:12px 16px;border-top:1px solid var(--line)}
 @media(max-width:760px){.comparison-columns article{padding:13px 12px}.comparison-columns h3{font-size:14px}.comparison-columns dl>div{display:block}.comparison-columns dd{text-align:left;margin-top:3px;font-size:15px}.comparison-columns dl{grid-template-columns:1fr 1fr;gap:12px 6px}.comparison-columns dl>div:last-child{grid-column:1/-1}}
+.learning-return-link{margin:12px 0;padding:0 10px}.learning-return-link a{display:inline-flex;align-items:center;min-height:44px;padding:8px 4px;color:inherit;font-size:13px;font-weight:600;line-height:1.6;text-underline-offset:5px}.learning-return-link a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.drawing-board>.neural-status{margin:0 14px 10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--soft);color:var(--ink);font-size:12px;line-height:1.8;min-height:44px;scroll-margin-block:20px}
+.drawing-board>.neural-status:focus-visible{outline:2px solid var(--ink);outline-offset:3px}

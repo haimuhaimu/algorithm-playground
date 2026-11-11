@@ -5,9 +5,9 @@
  <meta name="description" content="接管推荐首页，调一调算法，看见点击、多样性和新作者之间的取舍。一个使用合成数据的可玩实验。">
  <meta name="color-scheme" content="light dark">
  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e3ed78'/%3E%3Cpath d='M16 22h32M16 42h32M25 15v14M39 35v14' stroke='%2321231c' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
- <link rel="stylesheet" href="./style.css?v=feedback-focus-v1"><link rel="stylesheet" href="./feedback-story.css?v=feedback-focus-v1"><link rel="stylesheet" href="./seat-lesson.css?v=feedback-focus-v1"><script type="module" src="./app.mjs?v=feedback-focus-v1"></script>
+ <link rel="stylesheet" href="./style.css?v=cat-feedback-v1"><link rel="stylesheet" href="./feedback-story.css?v=cat-feedback-v1"><link rel="stylesheet" href="./seat-lesson.css?v=cat-feedback-v1"><script type="module" src="./app.mjs?v=cat-feedback-v1"></script>
  <title>算法游乐场 · 首页，交给你了</title>
- <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
+ <link rel="stylesheet" href="./navigation.css?v=mobile-learning-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
@@ -47,7 +47,7 @@
     <div class="section-heading"><span class="step">02</span><h2 id="feed-title">你的推荐首页</h2><span class="live-label">即时重排</span><a class="return-controls" href="#controls-title">调整规则 ↑</a></div>
     <div class="feed-context"><span id="strategy-name">只追点击</span><span>48 条候选 → 6 个席位</span></div>
     <div class="feedback-entry-note"><p><strong>给首页排一次座位</strong>不只看谁入选：猜下一席，再查它赢过谁、为什么。</p><a href="#seat-lesson">亲手排六席 ↓</a></div>
-    <div class="feedback-entry-note"><p><strong>点一次反馈，看懂首页为什么变</strong>先试试第一张的「少一点」，留住变化前后的六张卡。</p><a id="feedback-entry" href="#feedback-story">看反馈前后对照 ↓</a></div>
+    <div class="feedback-entry-note"><p><strong>点一次反馈，看懂首页为什么变</strong>默认第一张是波比。点「少一点」，猜猜这张卡还会不会留在首页。</p><a id="feedback-entry" href="#feedback-story">看反馈前后对照 ↓</a></div>
     <div class="feed-grid" id="feed"></div>
     <div class="taste"><div><strong>你的模拟口味</strong><span id="feedback-note">试试卡片上的「喜欢」和「少一点」。</span></div><div id="taste-bars" class="taste-bars"></div><p>反馈只改变这一位模拟用户的兴趣，不代表真实用户行为。</p></div>
    </section>
@@ -96,7 +96,7 @@
    <div class="feedback-story-header"><div><p class="eyebrow">反馈对照 / 规则不变，只看一次反馈</p><h2 id="feedback-story-title">点一次反馈，看懂首页为什么变。</h2><p id="feedback-record-state" role="status" aria-live="polite"></p></div><button id="feedback-arm" type="button">记录下一次反馈</button></div>
    <div class="feedback-story-empty" id="feedback-story-empty">先回到首页，对第一张卡点「少一点」。这里会保留两份首页，告诉你谁进来了、谁离开了，以及为什么。<br><a href="#feed-section">去给一张卡片反馈 ↑</a></div>
    <div id="feedback-story-content" hidden>
-    <div class="feedback-action-line"><h3 id="feedback-action"></h3><strong class="feedback-interest" id="feedback-interest"></strong></div><p class="feedback-fixed-rules" id="feedback-fixed-rules"></p>
+    <div class="feedback-action-line"><h3 id="feedback-action"></h3><strong class="feedback-interest" id="feedback-interest"></strong></div><p class="feedback-card-fate" id="feedback-card-fate"></p><p class="feedback-fixed-rules" id="feedback-fixed-rules"></p>
     <p class="feedback-summary" id="feedback-summary"></p>
     <div class="feedback-explanation"><div><h3>01 / 你的反馈改了什么？</h3><p id="feedback-cause"></p></div><div><h3 id="feedback-decision-title">02 / 哪一席先变了？</h3><p id="feedback-reason"></p></div><div id="feedback-score-comparison" class="feedback-score-comparison"></div><small class="feedback-score-boundary">这里的入选/未选只指这一席，不是整页去留。按本次记录的两份口味计算，规则与已占主题相同；不混比不同轮次的分数。</small></div>
     <div class="feedback-snapshots"><section aria-label="反馈前的六张卡片"><div class="feedback-snapshot-heading"><h3>反馈前</h3><span>点下按钮的前一刻</span></div><ol id="feedback-before"></ol></section><section aria-label="反馈后的六张卡片"><div class="feedback-snapshot-heading"><h3>反馈后</h3><span>同一套规则重新选六张</span></div><ol id="feedback-after"></ol></section></div>
@@ -105,6 +105,7 @@
    <div class="feedback-story-footer"><p>这份对照不会被后续操作覆盖；点「记录下一次反馈」才会替换。仅在本页保留，刷新或重置后清空。<br>合成内容 + 人为设定的简化算法，不代表真实推荐平台。</p><a href="#feed-section">回到首页继续试 ↑</a></div>
   </section>
   <section class="bottom-note"><span>实验，不是结论。</span><p>全部内容、作者与行为均为合成数据。简化模型用来观察权衡，不代表真实平台，也不证明某种策略更好。</p><span class="signature">MADE BY CHEN QUAN</span></section>
+  <p class="learning-route-exit"><a href="./#learning-routes">← 回到学习路线，看看下一步</a></p>
  </main>
  <div id="announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div><div id="toast" class="toast" role="status" hidden></div>
  <dialog id="guide" aria-labelledby="guide-title">
