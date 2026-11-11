@@ -3,19 +3,19 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="让飞船从试飞中学会预测，再在脑中挑选路线。改变风力，亲手发现世界模型何时会出错。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css?v=mobile-learning-v1"><link rel="stylesheet" href="./world-model.css?v=planning-1&amp;art=heim-receipt-v1">
- <script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script><script type="module" src="./world-model.mjs?v=planning-1&amp;art=heim-receipt-v1"></script>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./navigation.css?v=mobile-learning-v1"><link rel="stylesheet" href="./world-model.css?v=planning-1&amp;art=heim-cockpit-v1">
+ <script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script><script type="module" src="./world-model.mjs?v=planning-1&amp;art=heim-cockpit-v1"></script>
  <title>算法游乐场 · 脑内预演室</title>
  <link rel="stylesheet" href="./space-theme.css">
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head><body class="play-showcase">
- <a class="skip-link" href="#flight-guide">跳到试飞控制</a>
+ <a class="skip-link" href="#flight-controls">跳到试飞控制</a>
  <header class="site-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>算法游乐场<small>ALGORITHM PLAYGROUND</small></span></a><div class="header-actions"><a class="quiet-button" href="#how-it-works">这算世界模型吗 ↘</a><button class="theme-button" id="theme" aria-label="切换深色模式">◐</button></div></header>
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./recommendation.html">01 推荐系统</a><a href="./pathfinding.html">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html" aria-current="page">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="world-main">
   <section class="world-intro"><p class="eyebrow">09 / 脑内预演室</p><h1>教小飞船，<span>飞进圆环。</span></h1><p>先跟着试，再独立判断一次。最后，带走关于“世界模型”的三个发现。</p></section>
   <div class="world-layout">
-   <section class="flight-deck" aria-labelledby="scene-heading">
+   <section class="flight-deck" id="flight-guide" tabindex="-1" aria-labelledby="scene-heading">
     <div class="deck-heading"><div class="flight-deck-topic"><h2 id="scene-heading">目标：最后落在圆环里</h2><span class="flight-pilot">嘿姆试飞</span></div><span class="wind-chip" id="wind-label"></span></div>
     <div class="scene-wrap" id="scene-wrap">
      <div class="scene-top"><div class="pilot-identity"><img src="./studio-heim-portrait.png" alt="嘿姆，本趟试飞驾驶员" width="48" height="48" draggable="false"><div><strong id="pilot-state">嘿姆待命 · 尚未起飞</strong><span id="scene-label">下一趟预演 · 尚未试飞</span></div></div><span id="progress">0 / 60 拍</span></div>
@@ -34,17 +34,12 @@
      </svg>
      <div class="scene-legend"><span><i class="dash-key"></i><span id="prediction-key">它以为的路线</span></span><span id="learned-key" hidden><i class="learned-key"></i>学习后预测</span><span><i class="solid-key"></i>真正飞过的路</span></div>
      <dl class="pilot-readout" id="pilot-readout" aria-label="这趟飞行的预演与实跑回执"><div><dt id="pilot-expect-label">出发前的预演</dt><dd id="pilot-expect">尚未验证</dd></div><div><dt id="pilot-actual-label">真实试飞</dt><dd id="pilot-actual">尚未试飞</dd></div></dl>
-     <div id="learning-comparison" class="learning-comparison" hidden>
-      <p id="comparison-conditions" class="comparison-conditions"></p>
-      <div class="comparison-tabs" role="group" aria-label="突出显示哪一次预测">
-       <button id="compare-before" aria-pressed="false"><span id="comparison-before-label">学习前</span><strong id="comparison-before-error"></strong></button>
-       <button id="compare-after" aria-pressed="true"><span id="comparison-after-label">学习后</span><strong id="comparison-after-error"></strong></button>
-      </div>
-      <p class="comparison-hint" id="comparison-hint">点上方切换重点。橙色实线始终是同一趟真实轨迹。</p>
-      <p class="comparison-boundary">这是对刚才训练经历的回看，不是新试飞。预测更贴近这条记录，不代表下一趟一定准确。</p>
+     <div id="prediction-focus" class="comparison-tabs" role="group" aria-label="突出显示哪一次预测" hidden>
+      <button id="compare-before" aria-pressed="false"><span id="comparison-before-label">学习前</span><strong id="comparison-before-error"></strong></button>
+      <button id="compare-after" aria-pressed="true"><span id="comparison-after-label">学习后</span><strong id="comparison-after-error"></strong></button>
      </div>
     </div>
-    <section id="flight-guide" class="flight-guide" tabindex="-1" aria-labelledby="guide-title">
+    <section id="flight-controls" class="flight-guide" tabindex="-1" aria-labelledby="guide-title">
      <p class="guide-stage" id="guide-stage">第一步 · 试一试</p><h2 id="guide-title">先看看，它会飞到哪？</h2><p id="guide-copy">点一下出发，不用调参数。虚线是它的猜测，橙色是实际路线。</p>
      <div class="flight-toolbar"><button id="next" class="primary">先试飞一次 ↗</button><button id="pause" disabled hidden>暂停</button><button id="step" disabled hidden>走一拍</button></div>
      <div id="choices" class="lesson-choices" role="group" aria-label="选择下一步操作" hidden><button id="choice-reuse"><span>沿用原路线</span><small>方向、推力都不改</small></button><button id="choice-plan"><span>重新规划路线</span><small>用已有模型，选新的方向和推力</small></button><button id="choice-learn"><span>只重新学习</span><small>再学刚才的经历，先不改路线</small></button></div>
@@ -52,6 +47,11 @@
      <a id="planning-entry" class="planning-entry" href="#planning-lab" hidden>它为什么选这条路线？看三种改法 ↓</a>
      <p class="flight-status" id="status" role="status" aria-atomic="true">准备好了，点「先试飞一次」。</p>
     </section>
+    <div id="learning-comparison" class="learning-comparison" hidden>
+     <p id="comparison-conditions" class="comparison-conditions"></p>
+     <p class="comparison-hint" id="comparison-hint">点上方切换重点。橙色实线始终是同一趟真实轨迹。</p>
+     <p class="comparison-boundary">这是对刚才训练经历的回看，不是新试飞。预测更贴近这条记录，不代表下一趟一定准确。</p>
+    </div>
    </section>
   </div>
   <section id="planning-lab" class="planning-lab" aria-labelledby="planning-title" hidden>

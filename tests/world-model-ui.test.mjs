@@ -11,16 +11,16 @@ test('Heim sits inside the one real ship and is introduced outside the trajector
  assert.match(html.replace(plot,''),/嘿姆[^<]*试飞/,'crew introduction must not be painted on top of evidence');
 });
 let serial=0;
-async function boot({reduced=false}={}){
+async function boot({reduced=false,height=568}={}){
  const html=await readFile(new URL('../world-model.html',import.meta.url),'utf8');
  class Element extends EventTarget{
-  constructor(){super();this.dataset={};this.attrs={};this.value='';this.textContent='';this.hidden=false;this.disabled=false;this.style={setProperty(){}};}
-  setAttribute(k,v){this.attrs[k]=String(v);}getAttribute(k){return this.attrs[k];}scrollIntoView(){}focus(){doc.activeElement=this;}
+  constructor(){super();this.dataset={};this.attrs={};this.value='';this.textContent='';this.hidden=false;this.disabled=false;this.style={setProperty(){}};this.bounds={top:0,bottom:0};this.scrolls=[];}
+  setAttribute(k,v){this.attrs[k]=String(v);}getAttribute(k){return this.attrs[k];}getBoundingClientRect(){return this.bounds;}scrollIntoView(options){this.scrolls.push(options);}focus(){doc.activeElement=this;}
  }
  const els=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(([,id])=>[id,new Element()]));
  const doc=Object.assign(new EventTarget(),{hidden:false,documentElement:new Element(),getElementById:id=>els.get(id)});
  const media=Object.assign(new EventTarget(),{matches:reduced}),frames=new Map();let seq=0;
- const win=new EventTarget();const globals={document:doc,window:win,matchMedia:()=>media,requestAnimationFrame:fn=>{frames.set(++seq,fn);return seq;},cancelAnimationFrame:id=>frames.delete(id)};
+ const win=Object.assign(new EventTarget(),{innerHeight:height});const globals={document:doc,window:win,matchMedia:()=>media,requestAnimationFrame:fn=>{frames.set(++seq,fn);return seq;},cancelAnimationFrame:id=>frames.delete(id)};
  const old=new Map(Object.keys(globals).map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
  const restore=()=>{for(const[k,d]of old)d?Object.defineProperty(globalThis,k,d):delete globalThis[k];};
  for(const[k,value]of Object.entries(globals))Object.defineProperty(globalThis,k,{value,writable:true,configurable:true});
@@ -50,6 +50,53 @@ test('Heim reports only the displayed flight stage and waits for actual completi
   u.click('next');u.tick(0);u.tick(6000);
   assert.equal(e('pilot-readout').dataset.mode,'complete');assert.match(e('pilot-expect').textContent,/16\.6/);
   assert.match(e('pilot-actual').textContent,/未进圈.*14\.1/);
+ }finally{u.restore();}
+});
+
+test('the flight deep link contains the real plot and the primary action before optional comparison details',async()=>{
+ const html=await readFile(new URL('../world-model.html',import.meta.url),'utf8');
+ const cockpit=html.match(/<section\b[^>]*\bid="flight-guide"[^>]*>/)?.index;
+ assert.ok(cockpit<html.indexOf('id="scene"'),'the existing flight link must land before the plot');
+ const action=html.indexOf('id="next"'),detail=html.indexOf('id="learning-comparison"');
+ assert.ok(action>cockpit&&detail>action,'players encounter the action before the detailed learning controls');
+ const comparisonSwitch=html.indexOf('id="compare-before"');
+ assert.ok(comparisonSwitch>html.indexOf('id="pilot-readout"')&&comparisonSwitch<action,'the comparison switch stays beside the plot, before the separate action');
+ assert.match(html,/<a class="skip-link" href="#flight-controls"/);
+});
+
+test('the cockpit returns to the plot only when a guided action would otherwise leave it out of view',async()=>{
+ const u=await boot();try{
+  const scene=u.els.get('scene-wrap'),next=u.els.get('next'),pause=u.els.get('pause');
+  scene.bounds={top:-290,bottom:-10};next.bounds={top:133,bottom:177};pause.bounds={top:133,bottom:177};
+  next.focus();u.click('next');
+  assert.equal(scene.scrolls.length,1,'starting an offscreen flight must show the plot');
+  assert.equal(u.doc.activeElement,next);
+  u.finish();
+  assert.equal(scene.scrolls.length,1,'completion must not take over the viewport');
+  const actual=u.els.get('actual-path').getAttribute('points');
+  scene.bounds={top:12,bottom:285};next.bounds={top:466,bottom:510};
+  u.click('next');
+  assert.equal(scene.scrolls.length,1,'do not jump when the learning result and next action already fit');
+  assert.equal(u.els.get('actual-path').getAttribute('points'),actual);
+  assert.match(u.els.get('pilot-expect').textContent,/16\.6.*→.*0\.1/);
+  scene.bounds={top:-270,bottom:-20};next.bounds={top:180,bottom:224};
+  u.click('next');
+  assert.equal(scene.scrolls.length,2,'planning brings back the new preview');
+  assert.match(u.els.get('pilot-actual').textContent,/尚未试飞/);
+  assert.equal(u.els.get('learning-record').hidden,false);
+ }finally{u.restore();}
+});
+
+test('switching a comparison offscreen makes room for its plot without moving focus',async()=>{
+ const u=await boot({reduced:true});try{
+  u.click('next');u.click('next');
+  const scene=u.els.get('scene-wrap'),before=u.els.get('compare-before');
+  const actual=u.els.get('actual-path').getAttribute('points');
+  scene.bounds={top:-450,bottom:-170};before.bounds={top:260,bottom:310};
+  before.focus();u.click('compare-before');
+  assert.equal(before.scrolls.at(-1)?.block,'end','use the screen above the focused switch for the plot');
+  assert.equal(u.doc.activeElement,before);
+  assert.equal(u.els.get('actual-path').getAttribute('points'),actual);
  }finally{u.restore();}
 });
 
@@ -250,6 +297,21 @@ test('guided controls retain keyboard focus when starting, pausing and completin
   assert.equal(u.doc.activeElement,next,'a disappearing pause button hands focus to Continue');
   u.click('next');u.els.get('pause').focus();u.finish();
   assert.equal(u.doc.activeElement,next,'completion does not strand focus on hidden Pause');
+ }finally{u.restore();}
+});
+
+test('pausing and stepping bring an offscreen plot back without losing the active flight',async()=>{
+ const u=await boot();try{
+  const scene=u.els.get('scene-wrap'),step=u.els.get('step'),pause=u.els.get('pause');
+  u.click('next');u.tick(0);u.tick(500);
+  scene.bounds={top:-130,bottom:140};step.bounds={top:285,bottom:329};
+  pause.focus();u.click('pause');
+  assert.equal(scene.scrolls.length,1,'manual pause must show the frozen plot');
+  assert.equal(u.els.get('progress').textContent,'5 / 60 拍');
+  step.focus();u.click('step');
+  assert.equal(scene.scrolls.length,2,'stepping can reveal the new position');
+  assert.equal(u.doc.activeElement,step);
+  assert.equal(u.els.get('progress').textContent,'6 / 60 拍');
  }finally{u.restore();}
 });
 

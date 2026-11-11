@@ -96,7 +96,7 @@
 button:focus-visible,summary:focus-visible{outline:2px solid var(--good);outline-offset:4px}
 @media(max-width:1000px){.rsi-main{padding:24px}.studio-layout{gap:24px;grid-template-columns:minmax(0,1.15fr) minmax(280px,1fr)}.art-desk{padding:12px}.guide-copy{font-size:14px}.reference-stamp{display:none}.desk-heading>span:last-child{font-size:8px}}
 @media(max-width:700px){
- html{scroll-padding-top:var(--pinned-art-height,280px)}
+ /* Leave the workshop's own entry unpadded. Only instructions and controls need to clear the pinned poster. */
  .rsi-main{padding:16px 14px 12px}.rsi-intro .eyebrow{font-size:10px;gap:12px}
  .rsi-intro h1{font-size:28px}.rsi-intro>p:last-child{font-size:12px}
  .chapter-track{gap:0;justify-content:space-between;margin:16px 0}
@@ -109,7 +109,8 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--good);outline
  .art-pair[data-single=true] figure{max-width:150px}
  .art-pair figcaption{font-size:11px;min-height:22px;padding-bottom:6px}
  .art-status{font-size:11px;line-height:1.6;margin-top:10px;min-height:17px}
- .director{padding:21px 3px 0}.director h2{font-size:23px;scroll-margin-top:0;margin:9px 0}
+ .director{padding:21px 3px 0}.director h2{font-size:23px;margin:9px 0}
+ .director :is(h2,button,summary,#rule-retest-feedback){scroll-margin-top:var(--pinned-art-height,280px)}
  .guide-copy{font-size:14px;line-height:1.8;margin-bottom:16px}
  .assistant-note{padding:11px 13px;margin:14px 0}.assistant-note p{font-size:12px}
  .choice-hint{margin-top:15px}.decision-buttons button{padding:12px 6px;min-height:71px}

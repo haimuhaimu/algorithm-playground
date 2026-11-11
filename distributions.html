@@ -2,9 +2,9 @@
 <html lang="zh-CN"><head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
  <meta name="description" content="让三台机器各抽一些数，看看谁更容易冒出大数字。亲手认识正态、长尾和重尾。"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./space-theme.css"><link rel="stylesheet" href="./distributions.css?v=question-evidence-v1">
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./space-theme.css"><link rel="stylesheet" href="./distributions.css?v=draw-receipt-v1">
  <link rel="stylesheet" href="./navigation.css?v=mobile-learning-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
- <script type="module" src="./distributions.mjs?v=question-evidence-v1"></script><title>分布观察台 · 算法游乐场</title>
+ <script type="module" src="./distributions.mjs?v=draw-receipt-v1"></script><title>分布观察台 · 算法游乐场</title>
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head><body class="play-showcase">
  <a class="skip-link" href="#observation-title">跳到观察台</a>
@@ -15,7 +15,7 @@
    <div class="workbench-top"><h2 id="observation-title">分布观察台</h2><button id="reset-sample" class="text-button" type="button">从头重玩 ↻</button></div>
    <ol class="lesson-progress" aria-label="怎么玩"><li id="step-1" aria-current="step"><span>1</span>多抽一些</li><li id="step-2"><span>2</span>挪一下线</li><li id="step-3"><span>3</span>想一想</li></ol>
    <div class="step-panel">
-    <div class="step-content"><p id="step-label" class="step-label"></p><h3 id="step-title" tabindex="-1"></h3><p id="step-copy"></p><p id="observation-result" class="observation-result" role="status" aria-live="polite"></p></div>
+    <div class="step-content"><p id="step-label" class="step-label"></p><h3 id="step-title" tabindex="-1"></h3><p id="step-copy"></p><p id="observation-result" class="observation-result" role="status" aria-live="polite" aria-atomic="true"></p></div>
     <button id="next-step" class="distribution-primary" type="button">每台再抽 3,000 次 →</button>
     <fieldset id="answer-panel" class="answer-panel" aria-describedby="answer-evidence" hidden><legend id="answer-question"></legend><p id="answer-evidence" class="answer-evidence"></p><button id="answer-sample" type="button">不一定，只是这次没碰上</button><button id="answer-zero" type="button">对，没抽到就是不可能</button><p id="answer-feedback" role="status"></p></fieldset>
    </div>

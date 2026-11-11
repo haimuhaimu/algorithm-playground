@@ -8,9 +8,9 @@
  <script type="module" src="./pathfinding.mjs?v=cancel-results-v1"></script>
  <title>算法游乐场 · 寻路竞技场</title>
  <link rel="stylesheet" href="./navigation.css?v=mobile-learning-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
- <link rel="stylesheet" href="./pathfinding-cats.css?v=snack-routes-v1">
+ <link rel="stylesheet" href="./pathfinding-cats.css?v=snack-landing-v1">
  <link rel="stylesheet" href="./space-theme.css">
- <script type="module" src="./pathfinding-cats-ui.mjs?v=snack-routes-v1"></script>
+ <script type="module" src="./pathfinding-cats-ui.mjs?v=snack-feedback-v2"></script>
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
 <body class="play-showcase">
@@ -22,6 +22,8 @@
  <nav class="experiment-nav" aria-label="选择算法实验"><button class="experiment-toggle" type="button" aria-expanded="false" aria-controls="experiment-links" hidden><span class="experiment-current"></span><span class="experiment-switch">切换实验<i aria-hidden="true">⌄</i></span></button><div class="experiment-links" id="experiment-links"><a href="./recommendation.html">01 推荐系统</a><a href="./pathfinding.html" aria-current="page">02 寻路竞技场</a><a href="./sand.html">03 落沙实验室</a><a href="./firefly.html">04 萤火虫合奏</a><a href="./evolution.html">05 遗传赛车</a><a href="./neural.html">06 涂鸦训练场</a><a href="./mining.html">07 盲盒探矿</a><a href="./pixel.html">08 像素邮局</a><a href="./world-model.html">09 脑内预演室</a><a href="./rsi.html">10 AI 创作室</a></div></nav>
  <main class="path-main">
   <section class="path-intro"><p class="eyebrow">同一张地图，两种找路的直觉</p><h1>你出题，<span>算法找路。</span></h1><p class="intro-copy" id="path-intro-copy">先跑完这张图，留住地图和结果。再改一格墙，再跑一次看变化。</p><a class="cat-route-entry" href="#cat-route-lab">三猫去同一个零食点 <span aria-hidden="true">↓</span></a></section>
+  <!-- Keep the mobile sticky toolbar within the regular search activity. -->
+  <div class="path-play-area">
   <section class="map-toolbar" id="path-lab" aria-label="地图与播放工具">
    <details class="map-editing" id="map-editing" open><summary>改地图与画笔 <span id="editing-label">画墙</span></summary><div class="tool-row">
     <div class="map-presets" role="group" aria-label="选择地图"><button data-map="empty" aria-pressed="false">空白地图</button><button data-map="detour" aria-pressed="true">绕个远路</button><button data-map="maze" aria-pressed="false">曲折迷宫</button></div>
@@ -104,6 +106,7 @@
     </div>
    </div>
   </section>
+  </div>
   <section class="cat-route-lab" id="cat-route-lab" aria-labelledby="cat-route-title">
    <header class="cat-route-header"><p class="eyebrow">三猫小场景 · 只改一格</p><h2 id="cat-route-title">同一个零食点，谁的路更短？</h2><p>嘿姆、波比、臭臭从不同的地方出发。点一格就能加墙或拆墙，看看谁要绕路、谁捡到了近路。</p></header>
    <div class="cat-route-controls">
@@ -115,7 +118,7 @@
     <button class="cat-route-reset" id="cat-route-reset" type="button" disabled>恢复原图</button>
    </div>
    <p class="cat-route-instructions" id="cat-route-help">每次只改一格，不叠加。可以先拆掉地图中间那格墙，再看看步数。键盘用方向键移动，空格或 Enter 改一格。</p>
-   <div class="cat-route-notice" role="status" aria-atomic="true"><p id="cat-route-winner"></p><p id="cat-route-edit"></p></div>
+   <div class="cat-route-notice" id="cat-route-notice" role="status" aria-atomic="true"><p id="cat-route-winner"></p><p id="cat-route-edit"></p><span class="sr-only" id="cat-route-edit-position"></span></div>
    <div class="cat-route-workspace">
     <figure class="cat-route-current"><figcaption>改后 <span>在这张图点一格</span></figcaption>
      <div class="cat-route-board"><div class="cat-route-grid" id="cat-route-after" role="group" aria-label="可编辑的三猫地图" aria-describedby="cat-route-help"></div><div class="cat-route-track" id="cat-route-after-track" aria-hidden="true"></div></div>

@@ -104,6 +104,20 @@ test('mobile transitions focus instructions; guessing does not steal focus from 
  b.nodes.get('predict-green').focus();b.click('predict-green');assert.equal(b.doc.activeElement.id,'predict-green');
  b.click('run-trial');assert.equal(b.doc.activeElement.id,'guide-title');
 });
+test('a mobile retest reports both outcomes beside the button without returning focus to the chapter title',()=>{
+ const b=boot(320,568);reachDecision(b);
+ const title=b.nodes.get('guide-title'),button=b.nodes.get('retest-rule'),status=b.nodes.get('rule-test-status');
+ const scrolls=title.scrolls.length;
+ b.click('rule-brief');button.focus();b.click('retest-rule');
+ assert.equal(b.doc.activeElement,button);
+ assert.equal(title.scrolls.length,scrolls);
+ assert.match(status.textContent,/旧委托通过.*新委托通过.*尚未安装/);
+ assert.equal(b.nodes.get('rule-retest-feedback').scrolls.at(-1)?.block,'nearest');
+ assert.equal(b.ui.state.workflow.outfit,'mixed','previewing cannot install the rule');
+ b.click('rule-fixed-green');button.focus();b.click('retest-rule');
+ assert.equal(b.doc.activeElement,button);
+ assert.match(status.textContent,/旧委托通过.*新委托未通过.*尚未安装/);
+});
 test('short landscape endings and replay bring the current instruction into view',()=>{
  const b=boot(844,390);reachDecision(b);b.click('withdraw-rule');b.click('revisit');
  assert.equal(b.doc.activeElement.id,'guide-title');assert.equal(b.nodes.get('guide-title').scrolls.at(-1)?.block,'start');

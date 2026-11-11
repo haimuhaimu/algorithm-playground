@@ -10,6 +10,13 @@ const changeText=(before,after)=>{
  if(before===null||after===null)return before===after?'仍无路':after===null?'断开':'接通';
  const delta=after-before;return delta===0?'不变':`${delta>0?'+':'−'}${Math.abs(delta)} 步`;
 };
+const samePath=(before,after)=>before.length===after.length&&before.every((cell,i)=>cell===after[i]);
+function routeImpact(name,before,after){
+ const a=before.distance,b=after.distance;
+ if(a===b)return samePath(before.path,after.path)?'':`${name}改道，仍走 ${steps(b)}`;
+ if(a===null||b===null)return `${name} ${steps(a)} → ${steps(b)}`;
+ return `${name} ${a} → ${steps(b)}（${b<a?'少':'多'}走 ${Math.abs(b-a)} 步）`;
+}
 function routeReason(cat,before,after,change){
  if(!change)return `现在看的是${cat.name}的路线。点改后图的一格，比较它走哪儿、要几步。`;
  const name=cat.name;
@@ -17,7 +24,7 @@ function routeReason(cat,before,after,change){
  if(after.distance===null)return `这格墙让${name}到不了零食点了。`;
  if(after.distance<before.distance)return `${name}从拆开的这一格抄近路，少走 ${before.distance-after.distance} 步。`;
  if(after.distance>before.distance)return `这格墙堵住了${name}原来的最短路，只能多绕 ${after.distance-before.distance} 步。`;
- if(before.path.every((cell,i)=>cell===after.path[i]))return `${name}原来的这条路还在，步数不变。`;
+ if(samePath(before.path,after.path))return `${name}原来的这条路还在，步数不变。`;
  return `${name}换了一条走法，但一样是 ${after.distance} 步。换路不一定要走更远。`;
 }
 
@@ -38,6 +45,7 @@ export function mountCatRoutes(doc=globalThis.document){
     el.addEventListener('click',()=>{
      if(cat||index===goal)return;
      moveFocus(index);setEdit(state.change?.index===index?null:index);
+     revealEditNotice(el);
     });
     el.addEventListener('keydown',event=>{
      if(event.altKey||event.ctrlKey||event.metaKey||!Object.hasOwn(arrows,event.key))return;
@@ -86,12 +94,16 @@ export function mountCatRoutes(doc=globalThis.document){
   choices.forEach((button,index)=>button.setAttribute('aria-pressed',String(selected===index)));
   $('cat-route-reason').textContent=routeReason(cat,old,current,state.change);
  }
- function renderResults(){
+ function renderResults(restored=false){
   const winners=state.after.routes.filter(route=>route.distance!==null);
   const min=Math.min(...winners.map(route=>route.distance));
   const names=winners.filter(route=>route.distance===min).map(route=>cats.find(cat=>cat.id===route.id).name);
   $('cat-route-winner').textContent=names.length?`${state.change?'改后':'原图'}最短：${names.join('、')}${names.length>1?'并列':''} · ${steps(min)}`:'改后三只猫都到不了零食点。';
-  $('cat-route-edit').textContent=state.change?`${state.change.kind==='added'?'加墙':'拆墙'}：${coordinates(state.change.index)}。`:'试试拆掉「改后」图里带虚线的墙。';
+  const impacts=state.change?cats.map((cat,i)=>routeImpact(cat.name,baseline.routes[i],state.after.routes[i])).filter(Boolean):[];
+  $('cat-route-edit').textContent=state.change
+   ?`${state.change.kind==='added'?'加墙':'拆墙'} · ${impacts.join('；')||'三只猫图上的路线和步数都没变'}。`
+   :restored?'已恢复原图，可以再试一格。':'试试拆掉「改后」图里带虚线的墙。';
+  $('cat-route-edit-position').textContent=state.change?`改动位置：${coordinates(state.change.index)}。`:'';
   const body=$('cat-route-results');
   body.replaceChildren(...cats.map((cat,i)=>{
    const row=create('tr'),name=create('th'),a=baseline.routes[i].distance,b=state.after.routes[i].distance;
@@ -101,7 +113,16 @@ export function mountCatRoutes(doc=globalThis.document){
   }));
   reset.disabled=!state.change;
  }
- function setEdit(index){state=compareCatRoutes(index);renderMaps();renderResults();}
+ function setEdit(index){state=compareCatRoutes(index);renderMaps();renderResults(index===null);}
+ function revealEditNotice(cell){
+  const view=doc.defaultView;
+  if(!view?.scrollBy)return;
+  const {top}=$('cat-route-notice').getBoundingClientRect();
+  if(top>=0)return;
+  const square=cell.getBoundingClientRect(),shift=Math.ceil(8-top);
+  // Only nudge the viewport when the receipt and the edited square can both stay in view.
+  if(square.top>=0&&square.bottom+shift<=view.innerHeight)view.scrollBy({top:-shift,behavior:'instant'});
+ }
  choices.forEach((button,index)=>button.addEventListener('click',()=>{selected=index;renderMaps();}));
  reset.addEventListener('click',()=>{moveFocus(suggested,true);setEdit(null);});
  // Main arena owns its global history only when working outside this case.

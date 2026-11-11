@@ -12,12 +12,25 @@ const errorText=value=>value>0&&value<.05?'< 0.1':value.toFixed(1);
 const comparisonConditions=c=>`第 ${c.number} 趟 · ${windText(c.wind)} · 方向 ${c.controls.angle}° · 推力 ${c.controls.power.toFixed(2)}×`;
 function stop(){running=false;token++;if(frame!==null)cancelAnimationFrame(frame);frame=null;lastTime=null;remainder=0;}
 function message(text){$('status').textContent=text;}
+function showCockpit(control=$('next')){
+ const scene=$('scene-wrap'),plot=scene.getBoundingClientRect(),action=control.getBoundingClientRect();
+ const top=Math.min(plot.top,action.top),bottom=Math.max(plot.bottom,action.bottom),height=window.innerHeight;
+ if(top>=0&&bottom<=height)return;
+ if(action.top>=plot.top&&bottom-top<=height-12){
+  scene.scrollIntoView({block:'start',behavior:'instant'});
+ }else if(plot.top<0&&action.top>=plot.top){
+  // If the complete deck won't fit, give the plot the space above the action.
+  control.scrollIntoView({block:'end',behavior:'instant'});
+ }else if(action.top<0||action.bottom>height){
+  control.scrollIntoView({block:'nearest',behavior:'instant'});
+ }
+}
 function freeGuidance(){
  const s=session,f=s.flight;
  if(f&&!f.done)return {action:'resume',stage:'试飞中 · 看两条线的区别',title:running?'它正在真实世界里飞。':'暂停了，可以慢慢看。',copy:'虚线不会跟着飞船改。两条线分开，就说明它猜错了。',label:running?'正在试飞…':'继续试飞 ↗'};
  if(view==='comparison'&&s.comparison){
   const c=s.comparison,improved=c.afterError<c.beforeError;
-  return {action:'replan',stage:'只学习了，还没规划',title:improved?'同一趟飞行，它现在猜得更近了。':'这次学习，没有让回看偏差变小。',copy:`起点、方向、推力和风都没动，只更新了模型。${improved?'新的预测更贴近橙色记录，但飞船并没有重新飞，真实落点也没改变。':'比较两次预测，不能把“学过”直接当成“学好了”。'}下一步才用新模型选路线。`,label:'再用新模型，选一条路线 →'};
+  return {action:'replan',stage:'只学习了，还没规划',title:improved?'同一趟，预测更贴近了。':'这次，预测没变得更准。',copy:improved?'起点、方向、推力和风都没动。只更新了模型，真实落点不变。下一步才选路线。':'只更新了模型，真实落点不变。这次预测没有更贴近原记录。下一步才选路线。',label:'再用新模型，选一条路线 →'};
  }
  if(view==='preview'){
   if(s.model.source&&s.model.source.worldVersion!==s.worldVersion)return {action:'fly',stage:'第三步 · 换风挑战',title:'风变了，它还记着旧经验。',copy:'它不知道自己可能猜错了。用同一个模型再飞一次，看看会发生什么。',label:'用旧经验试飞 ↗'};
@@ -76,6 +89,7 @@ function renderEnding(){
 }
 function renderComparison(c){
  $('learning-comparison').hidden=!c;
+ $('prediction-focus').hidden=!c;
  $('learned-key').hidden=!c;
  $('prediction-key').textContent=c?'学习前预测':'出发前预测';
  $('scene').setAttribute('data-comparison',String(Boolean(c)));
@@ -180,7 +194,7 @@ function render(){
  $('next').hidden=lesson.stage==='choose';$('choices').hidden=lesson.stage!=='choose';
  for(const choice of Object.keys(CHOICES))$(`choice-${choice}`).disabled=lesson.stage!=='choose';
  $('finish-lesson').hidden=lesson.stage!=='result';
- if(focusedControl?.hidden)$('next').focus();
+ if(focusedControl?.hidden)$('next').focus({preventScroll:true});
  const learnable=f?.done&&f.worldVersion===s.worldVersion&&s.learnedFlight!==f.number;
  $('learn').disabled=!learnable;
  $('learn-note').textContent=learnable?'60 条真实观测准备好了。学习不会改写这趟的分数。':s.learnedFlight===f?.number?'这趟已经学过。下一步：让模型选一条新路线。':'完整试飞后，才会得到 60 条观测。';
@@ -232,6 +246,7 @@ function play(){
 function fly(){
  if(session.flight&&!session.flight.done)return;
  stop();session=startFlight(session);view='flight';message('出发了。看橙色路线，会不会和虚线重合？');play();
+ showCockpit($('pause').hidden?$('next'):$('pause'));
 }
 function enterFree(){lesson={...lesson,stage:'free'};}
 function advanceGuide(){
@@ -240,33 +255,38 @@ function advanceGuide(){
  if(['learningComparison','relearningComparison'].includes(lesson.stage)){view='comparison';comparisonEmphasis='after';}
  else if(!['ending','free'].includes(lesson.stage))view='preview';
  render();message(`${$('guide-title').textContent} ${$('guide-copy').textContent}`);
- if(lesson.stage==='choose')$('choice-reuse').focus();
- if(view==='comparison')$('scene-wrap').scrollIntoView({block:'start',behavior:'instant'});
- if(lesson.stage==='ending'){$('ending-title').focus();$('lesson-ending').scrollIntoView({block:'start',behavior:'instant'});}
- if(lesson.stage==='free'){$('advanced-controls').open=true;$('next').focus();$('scene-wrap').scrollIntoView({block:'start',behavior:'instant'});}
+ if(lesson.stage==='choose'){
+  const first=$('choice-reuse');first.focus({preventScroll:true});showCockpit(first);
+ }
+ else if(lesson.stage==='ending'){$('ending-title').focus();$('lesson-ending').scrollIntoView({block:'start',behavior:'instant'});}
+ else{
+  if(lesson.stage==='free'){$('advanced-controls').open=true;$('next').focus({preventScroll:true});}
+  showCockpit();
+ }
 }
-$('fly').addEventListener('click',()=>{enterFree();fly();$('scene-wrap').scrollIntoView({block:'nearest',behavior:'instant'});});
+$('fly').addEventListener('click',()=>{
+ enterFree();fly();($('pause').hidden?$('next'):$('pause')).focus({preventScroll:true});
+});
 $('next').addEventListener('click',()=>{
  const action=guidance().action;
- if(action==='resume'){if(!running){message('继续试飞。沿着刚才的位置往前飞。');play();}return;}
+ if(action==='resume'){if(!running){message('继续试飞。沿着刚才的位置往前飞。');play();showCockpit($('pause').hidden?$('next'):$('pause'));}return;}
  if(lesson.stage!=='free'){advanceGuide();return;}
  if(action==='fly'){fly();return;}
  if(action==='replan'){
-  session=selectPlan(session);view='preview';render();message('保留现有模型，只重新规划了路线。还没有实际出发。');return;
+  session=selectPlan(session);view='preview';render();message('保留现有模型，只重新规划了路线。还没有实际出发。');showCockpit();return;
  }
  if(action==='learn'){
   session=learnLatest(session);view='comparison';comparisonEmphasis='after';render();
-  message('只更新了模型。现在对照同一趟的两次预测，真实记录和方向推力都没变。');$('scene-wrap').scrollIntoView({block:'start',behavior:'instant'});return;
+  message('只更新了模型。现在对照同一趟的两次预测，真实记录和方向推力都没变。');showCockpit();return;
  }
  if(action==='wind'){
   stop();session=selectPlan(changeWind(session,session.wind>0?-1:0.6));view='preview';render();
-  message('风变了，模型没有自动更新。点「用旧经验试飞」看结果。');
+  message('风变了，模型没有自动更新。点「用旧经验试飞」看结果。');showCockpit();
  }
 });
 for(const choice of Object.keys(CHOICES))$(`choice-${choice}`).addEventListener('click',()=>{
  const next=chooseLesson(lesson,choice);if(!next)return;
- lesson=next.lesson;session=next.session;render();$('next').focus();fly();
- $('scene-wrap').scrollIntoView({block:'nearest',behavior:'instant'});
+ lesson=next.lesson;session=next.session;render();$('next').focus({preventScroll:true});fly();
 });
 $('finish-lesson').addEventListener('click',()=>{
  if(lesson.stage!=='result')return;
@@ -277,21 +297,26 @@ $('free-experiment').addEventListener('click',()=>{if(lesson.stage==='ending')ad
 $('pause').addEventListener('click',()=>{
  if(!session.flight||session.flight.done)return;
  if(running){stop();message('已暂停。可以走一拍，细看真实位置与预演的差别。');render();}else{message('继续试飞。预测仍是出发前锁定的那一条，不会追着真实路线改。');play();}
+ showCockpit(running?$('pause'):$('step').hidden?$('next'):$('step'));
 });
-$('step').addEventListener('click',()=>{if(running||!session.flight||session.flight.done)return;session=advanceFlight(session);if(session.flight.done)complete();else render();});
+$('step').addEventListener('click',()=>{
+ if(running||!session.flight||session.flight.done)return;
+ session=advanceFlight(session);if(session.flight.done)complete();else render();
+ showCockpit($('step').hidden?$('next'):$('step'));
+});
 $('learn').addEventListener('click',()=>{
  const next=learnLatest(session);if(next===session)return;enterFree();session=next;view='comparison';comparisonEmphasis='after';
  message(`模型更新为 M${session.model.version}。现在对照同一趟的学习前后预测，旧预测与分数原样保留。还没有规划新路线。`);render();
- $('next').focus();$('scene-wrap').scrollIntoView({block:'start',behavior:'instant'});
+ $('next').focus({preventScroll:true});showCockpit();
 });
 for(const key of ['before','after'])$(`compare-${key}`).addEventListener('click',()=>{
  if(view!=='comparison'||!session.comparison)return;
- comparisonEmphasis=key;render();message($('comparison-hint').textContent);
+ comparisonEmphasis=key;render();message($('comparison-hint').textContent);showCockpit($(`compare-${key}`));
 });
 $('plan').addEventListener('click',()=>{
  if(session.flight&&!session.flight.done)return;
  enterFree();session=selectPlan(session);view='preview';message(`只用 M${session.model.version} 预演了 ${session.plan.candidates} 条路线。虚线不是保证，试飞才知道。`);render();
- $('scene-wrap').scrollIntoView({block:'nearest',behavior:'instant'});
+ $('next').focus({preventScroll:true});showCockpit();
 });
 for(const key of Object.keys(routeNames))$(`planning-${key}`).addEventListener('click',()=>{
  if(!session.plan||session.flight&&!session.flight.done)return;
@@ -300,8 +325,7 @@ for(const key of Object.keys(routeNames))$(`planning-${key}`).addEventListener('
 $('planning-launch').addEventListener('click',()=>{
  if(document.hidden||!session.plan||session.flight&&!session.flight.done)return;
  session=usePlanningRoute(session,inspectedRoute);enterFree();fly();
- ($('pause').hidden?$('next'):$('pause')).focus();
- $('scene-wrap').scrollIntoView({block:'start',behavior:'instant'});
+ ($('pause').hidden?$('next'):$('pause')).focus({preventScroll:true});
 });
 for(const id of ['angle','power'])$(id).addEventListener('input',()=>{
  if(session.flight&&!session.flight.done)return;

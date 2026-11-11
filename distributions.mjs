@@ -7,7 +7,14 @@ const numbers=value=>value===null?'—':Math.abs(value)>=10000?value.toExponenti
 const probability=value=>value===0?'小于当前数值精度':value<.00001?(value*100).toExponential(2).replace('e-','e−')+'%':(value*100).toFixed(value<.001?3:2)+'%';
 const frequency=value=>value===0?'0%':probability(value);
 const classifications={normal:'大多挤在中间',exponential:'往右拖着一条尾巴',pareto:'大数没那么罕见'};
-const countString=rows=>rows.map(r=>`${machineName(r.id)} ${r.stats.tailCount} 次`).join('，');
+
+function growReceipt(e){
+ const pairs=e.rows.map(({id,stats})=>{
+  const before=e.baseline.find(row=>row.id===id).stats.tailCount;
+  return `${operators[id]} ${numbers(before)} → ${numbers(stats.tailCount)}`;
+ });
+ return `红线仍是 ${numbers(e.threshold)}，每台抽样 ${numbers(e.baseline[0].stats.n)} → ${numbers(e.count)} 次。\n超线次数：${pairs.join('；')}。`;
+}
 
 export function observatoryQuestion(row,threshold){
  const cat=operators[row.id],n=numbers(row.stats.n),limit=numbers(threshold),count=numbers(row.stats.tailCount);
@@ -73,9 +80,9 @@ export function initDistributions(){
   $('sample-count').textContent=String(e.count);$('seed-value').textContent=String(e.seed);
   for(const n of [1,2,3])$('step-'+n).setAttribute('aria-current',!done&&n===step?'step':'false');
   $('step-label').textContent=done?'这一轮看完了':`第 ${step} 步 / 共 3 步`;
-  $('step-title').textContent={ready:'才抽了 30 次，再多抽一点呢？',grown:'数不变，只把红线挪远一点呢？',pushed:'还是刚才那批数，结果变了。',done:'这一轮，就看到这里。'}[e.phase];
-  $('step-copy').textContent={ready:'下面已经各抽了 30 次。点一下，每台再抽 3,000 次，看看会多碰到多少大数字。',grown:'现在每台抽了 3,030 次。这些数都留着，不再抽新的。把红线从 4 挪到 16，只数比 16 还大的。',pushed:'刚才数的是大于 4 的，现在只数大于 16 的。下方两边放着前后的次数，看看还剩多少。',done:'刚才的数和前后对比都在下面。你可以回头看看，也可以从头再玩一次。'}[e.phase];
-  $('observation-result').textContent=e.phase==='ready'?'':!pushed?`这次比 4 大的数：${countString(e.rows)}。`:`红线从 4 挪到 16 后：${e.rows.map((r,i)=>`${machineName(r.id)} ${e.comparison[i].stats.tailCount} → ${r.stats.tailCount}`).join('；')} 次。`;
+  $('step-title').textContent={ready:'才抽了 30 次，再多抽一点呢？',grown:'样本多了，红线没动。',pushed:'还是刚才那批数，结果变了。',done:'这一轮，就看到这里。'}[e.phase];
+  $('step-copy').textContent={ready:'下面已经各抽了 30 次。点一下，每台再抽 3,000 次，看看会多碰到多少大数字。',grown:'下一步保留每台的 3,030 个样本，只把红线挪到 16。',pushed:'刚才数的是大于 4 的，现在只数大于 16 的。下方两边放着前后的次数，看看还剩多少。',done:'刚才的数和前后对比都在下面。你可以回头看看，也可以从头再玩一次。'}[e.phase];
+  $('observation-result').textContent=e.phase==='ready'?'':!pushed?growReceipt(e):`红线从 4 挪到 16 后：${e.rows.map((r,i)=>`${machineName(r.id)} ${e.comparison[i].stats.tailCount} → ${r.stats.tailCount}`).join('；')} 次。`;
   $('next-step').hidden=pushed;$('next-step').textContent=step===1?'每台再抽 3,000 次 →':'把红线挪到 16 →';
   $('answer-panel').hidden=!pushed||done;
   const question=observatoryQuestion(e.rows.find(row=>row.id==='normal'),e.threshold);
