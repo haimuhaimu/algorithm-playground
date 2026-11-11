@@ -76,6 +76,9 @@ export function mountAgentFrames({document, window}) {
  const canReturn = Boolean(handoff);
  let run = runAgentFrames([], SOURCE), baseline = null, playing = false, timeout = null, generation = 0;
  let inspected = null, comparison = null, retryNotice = false;
+ let previous = null, reviewing = false, exportEpoch = 0;
+ const visibleRun = () => reviewing ? previous : run;
+ const resultText = outcome => outcome.conclusion === 'clear-to-unload' ? '允许卸货' : '证据不足，不能确认';
 
  if (canReturn) e('os-fallback').href = handoff.returnURL;
 
@@ -90,15 +93,16 @@ export function mountAgentFrames({document, window}) {
  function drawRound(name, outcome) {
   e(`${name}-ids`).innerHTML = outcome.frameIds.map(id => `<li>${packetArt(id)}<strong>${frameId(id)}</strong></li>`).join('');
   set(`${name}-evidence`, outcome.signFrame === null ? '这三帧没拍清门牌。' : `${frameId(outcome.signFrame)} 拍清了「允许卸货」的门牌。`);
-  set(`${name}-result`, outcome.conclusion === 'clear-to-unload' ? '允许卸货' : '证据不足，不能确认');
+  set(`${name}-result`, resultText(outcome));
  }
 
  function inspect(id) {
-  if (run.result.stage !== 'done') return;
+  const shown = visibleRun();
+  if (shown?.result.stage !== 'done') return;
   const frame = AGENT_FRAME_CLIP[id];
   if (!frame) return;
   inspected = id;
-  const {fixed, manual} = run.result.evidence;
+  const {fixed, manual} = shown.result.evidence;
   const inFixed = fixed.frameIds.includes(id), inManual = manual.frameIds.includes(id);
   for (const button of e('timeline').querySelectorAll?.('button') ?? []) {
    button.setAttribute('aria-pressed', String(Number(button.dataset.inspectFrame) === id));
@@ -110,9 +114,10 @@ export function mountAgentFrames({document, window}) {
  }
 
  function drawComparison() {
-  if (comparison === run) return;
-  comparison = run;
-  const {fixed, manual} = run.result.evidence;
+  const shown = visibleRun();
+  if (comparison === shown) return;
+  comparison = shown;
+  const {fixed, manual} = shown.result.evidence;
   drawRound('fixed', fixed);
   drawRound('manual', manual);
   set('comparison-summary', manual.signFrame === null
@@ -126,6 +131,18 @@ export function mountAgentFrames({document, window}) {
    </button></li>`;
   }).join('');
   inspect(inspected ?? fixed.frameIds[1]);
+ }
+
+ function drawRetryComparison() {
+  const before = previous.result.evidence, after = run.result.evidence;
+  for (const [name, evidence] of [['previous', before], ['current', after]]) {
+   e(`${name}-pick`).innerHTML = packetArt(evidence.manualPick) + `<b class="frames-mono">${frameId(evidence.manualPick)}</b>`;
+   set(`${name}-result`, resultText(evidence.manual));
+  }
+  const changed = before.manual.conclusion !== after.manual.conclusion;
+  set('retry-summary', `第 ${before.manualPick} 帧 → 第 ${after.manualPick} 帧。` + (changed
+   ? after.manual.signFrame === null ? '这次没有留下清楚的门牌，所以从能确认变回了证据不足。' : '这次留下了清楚的门牌，所以从证据不足变成了能确认。'
+   : before.manualPick === after.manualPick ? '选的还是同一帧，证据和结论都没变。' : '换了画面，但都没拍清门牌：结论仍是证据不足，不会为了重试就变好。'));
  }
 
  const available = action => run.result.availableActions.some(entry => entry.action === action);
@@ -143,7 +160,7 @@ export function mountAgentFrames({document, window}) {
    baseline: '第一轮：固定抽帧', 'baseline-done': '第一轮已完成', manual: '第二轮：换掉中间一帧',
    'manual-empty': '这轮没有保留中间帧', done: '两轮已完成',
   }[stage]);
-  set('feedback', retryNotice ? '已丢弃上次第二轮，第一轮固定抽帧记录仍保留。' : {
+  set('feedback', retryNotice ? (previous ? '第一轮保持不变。上次完整结果已保留，可以边回看边重试。' : '第一轮保持不变。这次重新选一帧。') : {
    baseline: '系统按固定间隔取第 0、4、8 帧。',
    'baseline-done': 'Agent 只拿到了第 0、4、8 帧。第二轮可以自己选中间那一帧。',
    manual: manualPick === null ? '第 0 帧和第 8 帧不变。在第 1–7 帧里选一次，选定后继续到末帧。' : `已保留第 ${manualPick} 帧。继续看完原片，就能比较两轮的结果。`,
@@ -165,14 +182,31 @@ export function mountAgentFrames({document, window}) {
   e('pin').disabled = !available('pin');
   set('pin', manualPick === null ? '保留当前帧' : `已保留第 ${manualPick} 帧`);
   show('start-manual', available('start-manual'));
+  show('baseline-result', stage === 'baseline-done');
+  if (stage === 'baseline-done') set('baseline-verdict', resultText(evidence.fixed));
   show('retry-empty', stage === 'manual-empty');
   show('tip', available('advance'));
-  show('workbench', !done);
-  show('compare', done);
-  show('share', done);
-  show('return', canReturn);
-  show('os-manual', !canReturn);
-  if (done) drawComparison();
+  show('workbench', !done && !reviewing);
+  show('last-entry', Boolean(previous) && !done);
+  if (previous) set('last-summary', `上次选第 ${previous.result.evidence.manualPick} 帧 · ${resultText(previous.result.evidence.manual)}`);
+  show('compare', done || reviewing);
+  show('share', done || reviewing);
+  show('resume', reviewing);
+  show('resume-footer', reviewing);
+  if (reviewing) set('resume-state', stage === 'manual-empty'
+   ? '这次已看到末帧，但没有保留中间帧。回去后可以重做第二轮。'
+   : `这次停在第 ${id} 帧，${manualPick === null ? '还没保留中间帧' : `已保留第 ${manualPick} 帧`}。继续后仍暂停，不会自动播放。`);
+  show('redo', done && !reviewing);
+  show('redo-note', !reviewing);
+  show('return', canReturn && !reviewing);
+  show('os-manual', !canReturn || reviewing);
+  show('os-link', !canReturn || reviewing);
+  set('compare-title', reviewing ? '上次完整结果 · 这次尝试已暂停' : '同一段画面，Agent 看到了什么？');
+  set('share-title', reviewing ? '带走上次完整记录' : '带走这次对照');
+  set('export', reviewing ? '生成上次记录 JSON' : '生成实验 JSON');
+  show('retry-compare', done && Boolean(previous) && !reviewing);
+  if (done || reviewing) drawComparison();
+  if (done && previous && !reviewing) drawRetryComparison();
  }
 
  function stop() {
@@ -193,14 +227,14 @@ export function mountAgentFrames({document, window}) {
  }
 
  function act(action) {
-  if (document.hidden || !available(action)) return;
+  if (document.hidden || reviewing || !available(action)) return;
   try { run = runAgentFrames([...run.actions, {action}], SOURCE); }
   catch { stop(); render(); set('feedback', '操作未完成，已有记录仍在。请重试。'); return; }
   retryNotice = false;
   if (run.result.stage === 'baseline-done') baseline = run;
   if (!available('advance')) stop();
   render();
-  if (run.result.stage === 'done') focus('compare-title');
+  if (run.result.stage === 'done') focus(previous ? 'retry-title' : 'compare-title');
   else if (run.result.stage === 'baseline-done') focus('start-manual');
   else if (run.result.stage === 'manual-empty') focus('retry-empty');
   else if (action === 'start-manual' || action === 'pin') focus('advance');
@@ -218,35 +252,52 @@ export function mountAgentFrames({document, window}) {
  }
 
  function operate(action) {
-  if (document.hidden || !available(action)) return;
+  if (document.hidden || reviewing || !available(action)) return;
   stop(); act(action); revealPlayer();
  }
  e('advance').addEventListener('click', () => operate('advance'));
  e('play').addEventListener('click', () => {
-  if (document.hidden || !available('advance')) return;
+  if (document.hidden || reviewing || !available('advance')) return;
   if (playing) stop();
   else { playing = true; queue(); }
   render(); revealPlayer();
  });
  for (const name of ['pin', 'start-manual']) e(name).addEventListener('click', () => operate(name));
- document.addEventListener('visibilitychange', () => { if (document.hidden) { stop(); render(); } });
- window.addEventListener('pagehide', () => { stop(); render(); });
+ document.addEventListener('visibilitychange', () => { if (document.hidden) { exportEpoch++; stop(); render(); } });
+ window.addEventListener('pagehide', () => { exportEpoch++; stop(); render(); });
  e('timeline').addEventListener('click', event => {
   const button = event.target.closest?.('[data-inspect-frame]');
   if (button) inspect(Number(button.dataset.inspectFrame));
  });
 
- const completed = () => !document.hidden && run.result.stage === 'done' && run.result.workflowComplete;
- function redo() {
-  if (!baseline || document.hidden || !['done', 'manual-empty'].includes(run.result.stage)) return;
-  stop();
-  run = runAgentFrames([...baseline.actions, {action: 'start-manual'}], SOURCE);
-  inspected = comparison = null;
-  e('timeline').innerHTML = '';
+ const completed = () => !document.hidden && !reviewing && run.result.stage === 'done' && run.result.workflowComplete;
+ const exportable = () => !document.hidden && visibleRun()?.result.stage === 'done' && visibleRun().result.workflowComplete;
+ function clearExport() {
+  exportEpoch++;
   e('export-text').value = '';
   show('export-record', false);
   show('os-fallback', false);
   set('share-status', '');
+ }
+ e('review').addEventListener('click', () => {
+  if (document.hidden || !previous || reviewing || run.result.stage === 'done') return;
+  stop(); clearExport(); reviewing = true; inspected = comparison = null;
+  render(); focus('compare-title');
+ });
+ function resume() {
+  if (document.hidden || !reviewing) return;
+  clearExport(); reviewing = false; inspected = comparison = null;
+  render(); focus(available('advance') ? 'advance' : 'retry-empty'); revealPlayer();
+ }
+ for (const name of ['resume', 'resume-bottom']) e(name).addEventListener('click', resume);
+ function redo() {
+  if (!baseline || document.hidden || reviewing || !['done', 'manual-empty'].includes(run.result.stage)) return;
+  stop();
+  if (run.result.stage === 'done') previous = run;
+  run = runAgentFrames([...baseline.actions, {action: 'start-manual'}], SOURCE);
+  inspected = comparison = null;
+  e('timeline').innerHTML = '';
+  clearExport();
   retryNotice = true;
   render();
   focus('advance'); revealPlayer();
@@ -263,20 +314,22 @@ export function mountAgentFrames({document, window}) {
   }
  });
  e('export').addEventListener('click', () => {
-  if (!completed()) return;
-  e('export-text').value = JSON.stringify(run, null, 2);
+  if (!exportable()) return;
+  exportEpoch++;
+  e('export-text').value = JSON.stringify(visibleRun(), null, 2);
   show('export-record', true);
   focus('export-text');
-  set('share-status', 'JSON 已在本页生成，没有上传。');
+  set('share-status', reviewing ? '上次完整记录的 JSON 已生成，不包含这次尚未完成的尝试。没有上传。' : 'JSON 已在本页生成，没有上传。');
  });
  e('copy').addEventListener('click', async () => {
-  const snapshot = run, text = e('export-text').value;
-  if (!completed() || !text) return;
+  const snapshot = visibleRun(), text = e('export-text').value, ticket = ++exportEpoch;
+  if (!exportable() || !text) return;
+  const stillCurrent = () => ticket === exportEpoch && snapshot === visibleRun() && exportable() && text === e('export-text').value;
   try {
    await window.navigator.clipboard.writeText(text);
-   if (snapshot === run && completed()) set('share-status', '已复制，可到 GenAI OS 第三关手动导入。');
+   if (stillCurrent()) set('share-status', reviewing ? '已复制上次完整记录，可到 GenAI OS 第三关手动导入。' : '已复制，可到 GenAI OS 第三关手动导入。');
   } catch {
-   if (snapshot !== run || !completed()) return;
+   if (!stillCurrent()) return;
    focus('export-text');
    e('export-text').select();
    set('share-status', '浏览器未允许自动复制，已选中 JSON，请手动复制。');

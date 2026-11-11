@@ -14,11 +14,12 @@ function open(journey) {
   hidden = false; disabled = false; dataset = {}; textContent = ''; innerHTML = ''; value = '';
   click() { if (!this.hidden && !this.disabled) this.dispatchEvent(new Event('click')); }
   setAttribute(key, value) { this[key] = String(value); }
+  getAttribute(key) { return this[key] ?? null; }
   focus() { focused = this; }
   select() {}
  }
  const nodes = new Map([...html.matchAll(/<[a-z][\w:-]*\b[^>]*\bid="([\w-]+)"[^>]*>/g)].map(([tag, id]) => [
-  id, Object.assign(new Element(), {hidden: /\shidden(?:\s|>)/.test(tag), disabled: /\sdisabled(?:\s|>)/.test(tag)})
+  id, Object.assign(new Element(), Object.fromEntries([...tag.matchAll(/\s(href|target|rel)="([^"]*)"/g)].map(([,key,value])=>[key,value.replaceAll('&amp;','&')])), {hidden: /\shidden(?:\s|>)/.test(tag), disabled: /\sdisabled(?:\s|>)/.test(tag)})
  ]));
  const getElementById = id => nodes.get(id) ?? null;
  const page = new URL('http://127.0.0.1:3157/agent-frames.html#mission');
@@ -100,6 +101,63 @@ test('playback is opt-in; pause and a hidden page stop it without consuming futu
  assert.equal(e('scene').dataset.frame, '2');
 });
 
+test('the fixed round reports its actual uncertain verdict before asking for a manual frame', () => {
+ const {e, click, step} = open();
+ assert.equal(e('baseline-result').hidden, true);
+ step(7);
+ assert.equal(e('baseline-result').hidden, true);
+ step(1);
+ assert.equal(e('baseline-result').hidden, false);
+ assert.match(e('baseline-verdict').textContent, /证据不足/);
+ assert.equal(e('compare').hidden, true, 'the full comparison still waits for round two');
+ assert.doesNotMatch(e('baseline-verdict').textContent, /禁止|第 5 帧/);
+ click('start-manual');
+ assert.equal(e('baseline-result').hidden, true);
+ step(5); click('pin'); step(3); click('export');
+ assert.equal(JSON.parse(e('export-text').value).result.evidence.fixed.conclusion, 'insufficient-evidence');
+});
+
+test('both review exits resume the same paused frame and pick without adding actions', () => {
+ for (const exit of ['resume', 'resume-bottom']) {
+  const {e, click, step, tick, timers, focused, document} = open();
+  assert.equal(e('resume-footer').hidden, true);
+  step(8); click('start-manual'); step(3); click('pin'); step(5); click('export');
+  const oldJSON = e('export-text').value;
+  click('redo'); step(2); click('pin'); click('play'); tick(); click('review');
+  assert.equal(e('resume-footer').hidden, false);
+  assert.match(e('resume-state').textContent, /第 3 帧.*第 2 帧/);
+  click('export'); assert.equal(e('export-text').value, oldJSON);
+  document.hidden = true; e(exit).dispatchEvent(new Event('click'));
+  assert.equal(e('workbench').hidden, true, 'background clicks cannot resume');
+  document.hidden = false; click(exit);
+  assert.equal(e('resume-footer').hidden, true);
+  assert.equal(e('workbench').hidden, false);
+  assert.equal(e('scene').dataset.frame, '3');
+  assert.match(e('pin').textContent, /第 2 帧/);
+  assert.equal(e('export-text').value, '');
+  assert.equal(timers.size, 0);
+  assert.equal(focused(), e('advance'));
+  step(5); click('export');
+  const receipt = JSON.parse(e('export-text').value);
+  assert.equal(receipt.actions.length, 18);
+  assert.equal(receipt.actions.filter(x => x.action === 'pin').length, 1);
+  assert.equal(receipt.result.evidence.manualPick, 2);
+ }
+});
+
+test('the bottom review exit preserves an empty finished attempt and its previous result', () => {
+ const {e, click, step, focused} = open();
+ step(8); click('start-manual'); step(5); click('pin'); step(3);
+ click('redo'); step(8); click('review');
+ assert.equal(e('resume-footer').hidden, false);
+ assert.match(e('resume-state').textContent, /没有.*中间帧/);
+ click('resume-bottom');
+ assert.equal(e('retry-empty').hidden, false);
+ assert.equal(focused(), e('retry-empty'));
+ click('review'); click('export');
+ assert.equal(JSON.parse(e('export-text').value).result.evidence.manualPick, 5);
+});
+
 test('the door evidence appears in the current frame only; comparison is not visible until both attempts finish', () => {
  const {e, click, step} = open();
  for (let id = 0; id < 9; id++) {
@@ -153,7 +211,7 @@ test('a manual action brings a clipped player back into view without moving focu
  assert.equal(scrolls, 1, 'pinning an already visible player must not scroll');
 });
 
-test('redo discards the unsent second attempt and its export while preserving the fixed baseline', () => {
+test('redo keeps the last complete result reviewable without changing the new attempt', () => {
  const {e, click, step} = open();
  step(8); click('start-manual'); step(3); click('pin'); step(5); click('export');
  const before = JSON.parse(e('export-text').value);
@@ -163,6 +221,17 @@ test('redo discards the unsent second attempt and its export while preserving th
  assert.equal(e('export-text').value, '');
  assert.equal(e('scene').dataset.frame, '0');
  assert.match(e('feedback').textContent, /第一轮.*保留|保留.*第一轮/);
+ assert.equal(e('last-entry').hidden, false);
+ click('review');
+ assert.equal(e('compare').hidden, false);
+ assert.equal(e('workbench').hidden, true);
+ assert.match(e('manual-result').textContent, /证据不足/);
+ click('export');
+ assert.deepEqual(JSON.parse(e('export-text').value), before);
+ click('resume');
+ assert.equal(e('scene').dataset.frame, '0');
+ assert.equal(e('compare').hidden, true);
+ assert.equal(e('export-text').value, '');
  step(5); click('pin'); step(3); click('export');
  const after = JSON.parse(e('export-text').value);
  assert.deepEqual(after.result.evidence.fixed, before.result.evidence.fixed);
@@ -171,6 +240,99 @@ test('redo discards the unsent second attempt and its export while preserving th
  assert.deepEqual(after.result.evidence.manual.frameIds, [0, 5, 8]);
  assert.equal(after.result.evidence.manual.signFrame, 5);
  assert.match(e('manual-result').textContent, /允许卸货/);
+ assert.equal(e('retry-compare').hidden, false);
+ assert.match(e('previous-pick').innerHTML, /data-packet-frame="3"/);
+ assert.match(e('current-pick').innerHTML, /data-packet-frame="5"/);
+ assert.match(e('previous-result').textContent, /证据不足/);
+ assert.match(e('current-result').textContent, /允许卸货/);
+ assert.match(e('retry-summary').textContent, /3.*5/);
+});
+
+test('an empty retry cannot replace the previous complete attempt; later completions compare the latest pair only', () => {
+ const {e, click, step} = open();
+ step(8); click('start-manual'); step(3); click('pin'); step(5);
+ click('redo'); step(8);
+ assert.equal(e('share').hidden, true);
+ click('review'); click('export');
+ assert.equal(JSON.parse(e('export-text').value).result.evidence.manualPick, 3);
+ click('resume');
+ assert.equal(e('retry-empty').hidden, false);
+ click('retry-empty'); step(5); click('pin'); step(3);
+ assert.match(e('previous-pick').innerHTML, /data-packet-frame="3"/);
+ click('redo'); step(2); click('pin'); step(6);
+ assert.match(e('previous-pick').innerHTML, /data-packet-frame="5"/);
+ assert.match(e('current-pick').innerHTML, /data-packet-frame="2"/);
+ assert.match(e('previous-result').textContent, /允许卸货/);
+ assert.match(e('current-result').textContent, /证据不足/);
+ click('export');
+ const receipt = JSON.parse(e('export-text').value);
+ assert.deepEqual(receipt.result.evidence.fixed.frameIds, [0,4,8]);
+ assert.equal(receipt.actions.filter(x=>x.action==='pin').length, 1);
+ assert.equal(receipt.result.evidence.manualPick, 2);
+});
+
+test('review pauses playback and resumes the same frame and pick without carrying over timers', () => {
+ const {e, click, step, timers, tick, focused} = open();
+ step(8); click('start-manual'); step(3); click('pin'); step(5);
+ click('redo'); step(2); click('pin'); click('play'); tick();
+ assert.equal(e('scene').dataset.frame, '3');
+ click('review'); assert.equal(timers.size, 0);
+ click('resume');
+ assert.equal(e('scene').dataset.frame, '3');
+ assert.equal(timers.size, 0);
+ assert.match(e('pin').textContent, /已保留第 2 帧/);
+ assert.equal(focused(), e('advance'));
+ step(5); click('export');
+ assert.equal(JSON.parse(e('export-text').value).result.evidence.manualPick, 2);
+});
+
+test('a historical view cannot automatically return under the current request, but the current completed run can', () => {
+ const {e, click, step, sends} = open('agent-frames');
+ step(8); click('start-manual'); step(3); click('pin'); step(5);
+ click('redo'); click('review');
+ assert.equal(e('return').hidden, true);
+ e('return').dispatchEvent(new Event('click'));
+ assert.deepEqual(sends, []);
+ assert.equal(e('os-link').hidden, false);
+ click('export'); assert.equal(JSON.parse(e('export-text').value).result.evidence.manualPick, 3);
+ click('resume'); step(5); click('pin'); step(3); click('return');
+ assert.equal(sends.length, 1);
+ const target = new URL(sends[0]);
+ const envelope = JSON.parse(Buffer.from(target.hash.slice('#playground='.length), 'base64url').toString());
+ assert.equal(envelope.receipt.result.evidence.manualPick, 5);
+ assert.equal(envelope.requestId, 'agent-frames-0123456789');
+});
+
+test('direct and invalid-journey entries offer a new-tab manual review route with no request or receipt', () => {
+ for (const journey of [undefined, 'agent-tool-loop']) {
+  const {e, click, step, sends} = open(journey);
+  step(8); click('start-manual'); step(3); click('pin'); step(5);
+  assert.equal(e('return').hidden, true);
+  assert.equal(e('os-link').hidden, false);
+  const link = new URL(e('os-link').href);
+  assert.equal(link.href, 'https://haimuhaimu.github.io/genai-learning-os/?page=routes&section=agent-frames-journey');
+  assert.equal(link.hash, '');
+  assert.equal(e('os-link').target, '_blank');
+  assert.match(e('os-link').rel, /noopener/);
+  assert.deepEqual(sends, []);
+ }
+});
+
+test('stale copy completion cannot affect a restored view of the same historical receipt', async () => {
+ for (const failure of [false,true]) {
+  const {e, click, step, window, focused} = open();
+  let resolve, reject;
+  window.navigator.clipboard = {writeText:()=>new Promise((a,b)=>{resolve=a;reject=b;})};
+  step(8); click('start-manual'); step(3); click('pin'); step(5);
+  click('redo'); click('review'); click('export'); click('copy');
+  click('resume'); click('review'); click('export');
+  e('compare-title').focus();
+  const message = e('share-status').textContent;
+  if (failure) reject(Error('denied')); else resolve();
+  await Promise.resolve(); await Promise.resolve();
+  assert.equal(e('share-status').textContent, message);
+  assert.equal(focused(), e('compare-title'));
+ }
 });
 
 test('an unpinned attempt is not shareable and can restart from the same baseline', () => {
@@ -180,7 +342,7 @@ test('an unpinned attempt is not shareable and can restart from the same baselin
  assert.equal(e('share').hidden, true);
  assert.equal(e('export-text').value, '');
  assert.deepEqual(sends, []);
- click('redo'); step(5); click('pin'); step(3);
+ click('retry-empty'); step(5); click('pin'); step(3);
  assert.equal(e('share').hidden, false);
 });
 

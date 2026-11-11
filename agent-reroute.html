@@ -4,8 +4,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="算法游乐场 Agent 第二关：新指令来了，旧任务还该继续吗？">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./home.css?v=agent-reroute-v1"><link rel="stylesheet" href="./agent-mission.css?v=agent-reroute-v1"><link rel="stylesheet" href="./agent-reroute.css?v=chouchou-reroute-v2">
- <script type="module" src="./agent-reroute-ui.mjs?v=chouchou-reroute-v1"></script>
+ <link rel="stylesheet" href="./home.css?v=agent-reroute-v1"><link rel="stylesheet" href="./agent-mission.css?v=last-result-v1"><link rel="stylesheet" href="./agent-reroute.css?v=chouchou-reroute-v2">
+ <script type="module" src="./agent-reroute-ui.mjs?v=last-result-v1"></script>
  <link rel="stylesheet" href="./navigation.css?v=three-cat-brand-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <title>新指令来了，旧任务还该继续吗？ · 算法游乐场</title>
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
@@ -22,6 +22,14 @@
    <h1 id="reroute-title">新指令来了，<span>旧任务还该继续吗？</span></h1>
    <p>补给单已经发出，用户中途改了目的地。跟着字幕决定怎么派单，再判断迟到的签收算不算数。</p>
   </header>
+  <section class="mission-last-result" id="reroute-last-result" aria-labelledby="reroute-last-title" hidden>
+   <h2 id="reroute-last-title">上次的改派结果还在</h2>
+   <p id="reroute-last-message" role="status"></p>
+   <div class="mission-share-actions">
+    <button class="mission-button mission-primary" id="reroute-view-last" type="button">看上次结果</button>
+    <button class="mission-button" id="reroute-new-run" type="button">开始新一局</button>
+   </div>
+  </section>
   <div class="mission-workbench reroute-workbench">
    <figure class="mission-scene reroute-scene" id="reroute-scene" data-target="07" data-dispatched="false" data-old-receipt="false" data-new-receipt="false" data-outcome="in-progress">
     <div class="reroute-map-head"><span class="pixel-label">SUPPLY MAP</span><strong id="reroute-active-target">当前目标 · 07 号站</strong></div>
@@ -113,6 +121,7 @@
       <button class="mission-button" id="reroute-restart" type="button">重新挑战</button>
      </div>
      <p>记录标注来源为「浏览器」，可用来重放操作，不认证身份或掌握情况。</p>
+     <p id="reroute-save-status" role="status"></p>
      <p id="reroute-os-manual">可生成 JSON，再到配对的 GenAI OS 第二关手动导入。</p>
      <a class="mission-text-link" id="reroute-os-fallback" hidden>回 GenAI OS 手动导入</a>
      <div class="reroute-export-record" id="reroute-export-record" hidden>
@@ -127,7 +136,7 @@
   <section class="mission-review reroute-review" aria-labelledby="reroute-review-title">
    <div class="reroute-review-head"><h2 id="reroute-review-title">本轮操作</h2><span class="pixel-label">EVENT LOG</span></div>
    <ol class="mission-timeline reroute-timeline" id="reroute-timeline"><li><span>07 原单发出 · 等待签收</span></li></ol>
-   <p class="mission-boundary">固定字幕和模拟回执，不会使用麦克风、调用模型或实际派单。记录只保留在本页，重新挑战或刷新会清空；只有主动带回或复制时才会离开这里。</p>
+   <p class="mission-boundary">固定字幕和模拟回执，不会使用麦克风、调用模型或实际派单。结束后在本机保留最近一局，开始新局不会抹掉它；新局结束后才替换。未完成的操作刷新后会清空，清理浏览器数据或换设备后无法找回，可先导出 JSON。只有主动带回或复制时才会离开这里，不会自动写入学习进度。</p>
   </section>
  </main>
  <footer class="home-footer"><a href="./#learning-routes">返回学习路线</a><a href="./agent-frames.html#mission">继续第三关 →</a><span>MADE BY CHEN QUAN</span></footer>

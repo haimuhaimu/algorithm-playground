@@ -70,6 +70,7 @@ files.push('space-theme.css','experiment-showcase.css');
 files.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css','learning-route-trials.mjs','learning-route-return.mjs','learning-route-return-ui.mjs');
 files.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
 files.push('genai-handoff.mjs','bayes-tool.mjs');
+files.push('agent-last-result.mjs');
 files.push('agent-mission.html','agent-mission.css','agent-mission.mjs','agent-tool.mjs');
 files.push('agent-reroute.html','agent-reroute.css','agent-reroute-ui.mjs','agent-reroute-tool.mjs');
 files.push('agent-frames.html','agent-frames.css','agent-frames-ui.mjs','agent-frames-tool.mjs');

@@ -4,8 +4,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="算法游乐场 Agent 实战首关：对照两轮操作，分清工具回执和任务完成。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./home.css?v=home-learning-v2"><link rel="stylesheet" href="./agent-mission.css?v=next-level-v1">
- <script type="module" src="./agent-mission.mjs?v=next-level-v1"></script>
+ <link rel="stylesheet" href="./home.css?v=home-learning-v2"><link rel="stylesheet" href="./agent-mission.css?v=last-result-v1">
+ <script type="module" src="./agent-mission.mjs?v=last-result-v1"></script>
  <link rel="stylesheet" href="./navigation.css?v=three-cat-brand-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <title>显示成功，补给真的到了吗？ · 算法游乐场</title>
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
@@ -22,6 +22,14 @@
    <h1 id="mission-title">显示成功，<span>补给真的到了吗？</span></h1>
    <p>给 07 号站送一箱补给。系统说「已受理」，你的任务是确认对方真的收到了。 <a class="mission-text-link" href="./agent-reroute.html#mission">下一关：新指令来了 <span aria-hidden="true">→</span></a></p>
   </header>
+  <section class="mission-last-result" id="mission-last-result" aria-labelledby="mission-last-title" hidden>
+   <h2 id="mission-last-title">上次的两轮结果还在</h2>
+   <p id="mission-last-message" role="status"></p>
+   <div class="mission-share-actions">
+    <button class="mission-button mission-primary" id="mission-view-last" type="button">看上次结果</button>
+    <button class="mission-button" id="mission-new-run" type="button">开始新一局</button>
+   </div>
+  </section>
   <div class="mission-workbench">
    <figure class="mission-scene" id="mission-scene" data-receipt="unknown" data-backup="false">
     <svg viewBox="0 0 576 274" aria-hidden="true" focusable="false">
@@ -80,10 +88,12 @@
     <div class="mission-share" id="mission-share" hidden>
      <h3 id="mission-share-title" tabindex="-1">两轮已结束</h3>
      <p>带回的是这两轮操作，不是「已掌握」认证。</p>
+     <p id="mission-save-status" role="status"></p>
      <div class="mission-share-actions">
       <a class="mission-button mission-primary" id="mission-next-level" href="./agent-reroute.html#mission">继续第二关：新指令来了 →</a>
       <button class="mission-button mission-primary" id="mission-return" type="button" hidden>带回 GenAI OS 复盘</button>
       <button class="mission-button" id="mission-export" type="button">生成实验 JSON</button>
+      <button class="mission-button" id="mission-fresh" type="button">开始新一局</button>
      </div>
      <a class="mission-text-link" id="mission-os-fallback" href="https://haimuhaimu.github.io/genai-learning-os/?page=routes&amp;section=agent-journey" target="_blank" rel="noopener noreferrer" hidden>打开 GenAI OS，手动导入（新窗口）</a>
      <p id="mission-os-manual" hidden>本地预览：生成 JSON 后，回到配对的 GenAI OS 预览，在 Agent 路线里手动导入。</p>
@@ -104,7 +114,7 @@
     <article class="mission-trial"><h3>第 2 轮记录</h3><div id="mission-trial-2"><p>首轮结束后，可回到同一起点再试。</p></div></article>
    </div>
    <details class="mission-notes"><summary>为什么不把「已受理」算作成功？</summary><p>工具成功说明调用有回音，任务成功要对照用户的目标。这关的目标是拿到签收证据。重试可能让事情往前走，但它不是签收；停止也可以是合理决定，只要说明哪些事还没有核实。</p></details>
-   <p class="mission-boundary">这是固定条件的模拟任务，没有真实派单或外部工具调用。两轮记录只留在当前页面，刷新会清空；只有你主动带回或复制，记录才会离开这里。</p>
+   <p class="mission-boundary">这是固定条件的模拟任务，没有真实派单或外部工具调用。两轮结束后，在本机保留最近一局；未完成的操作刷新后会清空。清理浏览器数据或换设备后无法找回，可先导出 JSON。只有主动带回或复制，记录才会离开这里，不会自动写入学习进度。</p>
   </section>
  </main>
  <footer class="home-footer"><a href="./#learning-routes">返回学习路线</a><span>MADE BY CHEN QUAN</span></footer>

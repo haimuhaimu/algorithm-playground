@@ -28,6 +28,7 @@ FILES.push('space-theme.css','experiment-showcase.css');
 FILES.push('learn.html','learning-route.mjs','learning-route-ui.mjs','learning-route.css','learning-route-trials.mjs','learning-route-return.mjs','learning-route-return-ui.mjs');
 FILES.push('learning-tool.mjs','learning-tool-manifest.json','AI_USAGE.md');
 FILES.push('genai-handoff.mjs','bayes-tool.mjs');
+FILES.push('agent-last-result.mjs');
 FILES.push('agent-mission.html','agent-mission.css','agent-mission.mjs','agent-tool.mjs');
 FILES.push('agent-reroute.html','agent-reroute.css','agent-reroute-ui.mjs','agent-reroute-tool.mjs');
 FILES.push('agent-frames.html','agent-frames.css','agent-frames-ui.mjs','agent-frames-tool.mjs');
