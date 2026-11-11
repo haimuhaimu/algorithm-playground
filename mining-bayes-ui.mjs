@@ -1,6 +1,6 @@
-import {createBayesLesson,actBayesLesson,bayesLessonEvidence} from './mining-bayes.mjs?v=station-cat-v1';
-import {runBayesTool} from './bayes-tool.mjs?v=station-cat-v1';
-import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=station-cat-v1';
+import {createBayesLesson,actBayesLesson,bayesLessonEvidence} from './mining-bayes.mjs?v=transfer-feedback-v1';
+import {runBayesTool} from './bayes-tool.mjs?v=transfer-feedback-v1';
+import {readGenaiHandoffContext,createGenaiReturnUrl} from './genai-handoff.mjs?v=transfer-feedback-v1';
 
 const percent=value=>(value*100).toFixed(1)+'%';
 const interval=belief=>`真实成功率的 90% 可信区间：${percent(belief.interval[0])}–${percent(belief.interval[1])}`;
@@ -28,6 +28,7 @@ export function initBayesLesson({onEnter=()=>{}}={}){
   $('bayes-lesson').hidden=!opened;$('bayes-start').setAttribute('aria-expanded',String(opened));
   $('bayes-comparison').hidden=!compared;$('bayes-updated').hidden=!e.after;
   $('bayes-transfer-results').hidden=!e.transfer;$('bayes-ending').hidden=!e.ending;
+  $('bayes-try-again').hidden=!e.transfer||Boolean(e.ending);
   $('bayes-genai-return').hidden=!e.ending||!handoff;
   $('bayes-export').hidden=!e.ending;$('bayes-export-generate').disabled=!e.ending;
   for(const value of ['little','many','same']){
@@ -54,8 +55,12 @@ export function initBayesLesson({onEnter=()=>{}}={}){
   }
   $('bayes-update-feedback').textContent=e.after?(e.changeGuess==='little'?'你猜中了变化更大的 A。':'结果是 A 下降更多。')+' 同样一次空手，在少样本日志里占比更大；B 还有更多旧观察，新反馈并不会抹掉它们。':'';
   const last=state.attempts.at(-1);
-  $('bayes-answer-feedback').textContent=!last?'':last==='evidence'?'对，没挖到不等于永远没有；0/10 比 0/1 更支持低概率，但仍保留不确定性。':last==='never'?'不能从有限次空手断言永远没矿。看看下面两份判断，再选一次。':'更多空手不是“下一趟该中奖”的保证。下面是模型更新后的预测，可以修正你的选择。';
-  $('bayes-transfer-results').textContent=e.transfer?e.transfer.map(row=>`${row.id==='one'?'0/1':'0/10'}：下一次命中预测 ${percent(row.belief.mean)}；${interval(row.belief)}。`).join('\n'):'';
+  $('bayes-answer-feedback').textContent=!last?'':last==='evidence'?'对。和只空手一次相比，连着十次没挖到，更支持产矿概率偏低。但偏低不等于零。':last==='never'?'没挖到不等于永远没有。两边的预测都不是零，看完数字再选一次。':'更多空手不代表下一趟就该中奖。这两份日志里，空手更多的那颗，预测反而更低。';
+  for(const id of ['one','ten']){
+   const belief=e.transfer?.find(row=>row.id===id)?.belief;
+   $('bayes-transfer-prediction-'+id).textContent=belief?percent(belief.mean):'';
+   $('bayes-transfer-interval-'+id).textContent=belief?interval(belief):'';
+  }
   $('bayes-ending-evidence').textContent=e.ending?(e.ending.firstAttemptCorrect?`你第一次就选择了「${answerLabels.evidence}」。`:`第一次，你选了「${answerLabels[state.attempts[0]]}」。看到对照后，你修正为「${answerLabels.evidence}」。`)+' 这记录的是本次选择，不代表已经掌握或通过测验。':'';
  }
  function open(){if(doc.hidden||$('guide').open)return;onEnter();opened=true;render();focus('bayes-title');}
@@ -65,6 +70,7 @@ export function initBayesLesson({onEnter=()=>{}}={}){
   clearExport();
   const before=state.phase;state=actBayesLesson(state,action);render();
   if(heading&&state.phase!==before)focus(heading);
+  return true;
  }
  function clearExport(){exportGeneration++;$('bayes-export-text').value='';$('bayes-export-record').hidden=true;$('bayes-export-status').textContent='';$('bayes-genai-status').textContent='';$('bayes-new-record').hidden=journal.length<=256;}
  $('bayes-export-generate').addEventListener('click',()=>{
@@ -92,7 +98,12 @@ export function initBayesLesson({onEnter=()=>{}}={}){
  }
  $('bayes-reveal').addEventListener('click',()=>act({type:'reveal'},'bayes-comparison-title'));
  $('bayes-update').addEventListener('click',()=>act({type:'update'},'bayes-updated-title'));
- for(const value of ['never','evidence','guarantee'])$('bayes-answer-'+value).addEventListener('click',()=>act({type:'answer',value},'bayes-ending-title'));
+ for(const value of ['never','evidence','guarantee'])$('bayes-answer-'+value).addEventListener('click',()=>{
+  if(state.phase==='updated'&&act({type:'answer',value}))focus('bayes-transfer-title');
+ });
+ $('bayes-try-again').addEventListener('click',()=>{
+  if(available()&&state.phase==='updated'&&state.attempts.length)focus('bayes-transfer-question');
+ });
  win.addEventListener('hashchange',()=>{if(win.location?.hash==='#bayes-lesson')open();});
  clearExport();render();if(handoff||win.location?.hash==='#bayes-lesson')open();
 }

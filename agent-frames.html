@@ -5,14 +5,14 @@
  <meta name="description" content="算法游乐场 Agent 第三关：在 08 号站的 9 帧画面里，只能留 3 帧。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
  <link rel="stylesheet" href="./home.css?v=agent-frames-v1">
- <link rel="stylesheet" href="./agent-frames.css?v=heim-packet-v1">
+ <link rel="stylesheet" href="./agent-frames.css?v=monitor-controls-v1">
  <link rel="stylesheet" href="./navigation.css?v=cats-in-scenes-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
- <script type="module" src="./agent-frames-ui.mjs?v=heim-packet-v1"></script>
+ <script type="module" src="./agent-frames-ui.mjs?v=monitor-controls-v1"></script>
  <title>只留三帧，你会留下哪一帧？ · 算法游乐场</title>
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
 <body class="play-showcase">
- <a class="skip-link" href="#frames-controls">跳到操作</a>
+ <a class="skip-link" href="#frames-player">跳到监看台与操作</a>
  <header class="home-header">
   <a class="home-brand" href="./"><span class="pixel-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>算法游乐场</span></a>
   <nav aria-label="任务导航"><a href="./agent-reroute.html#mission">第二关</a><button id="home-theme" type="button" aria-label="切换深色模式" hidden>◐</button></nav>
@@ -24,12 +24,21 @@
    <p>嘿姆在监看台等着核验 08 号站。现场有 9 帧画面，但你只能交给 Agent 3 帧。先看固定抽帧，再亲手换中间一帧，让 Agent 把有依据的判断带给嘿姆。</p>
   </header>
   <div class="frames-workbench" id="frames-workbench">
-   <figure class="frames-monitor">
-    <div class="frames-monitor-head"><span class="frames-monitor-desk"><span class="frames-mono">CAM 08</span><span>嘿姆监看台</span></span><span id="frames-position">第 0 帧 / 共 9 帧</span><img class="frames-monitor-cat" src="./studio-heim-idle.png" width="360" height="184" alt="" aria-hidden="true" decoding="async"></div>
-    <div id="frames-scene" class="frames-scene" role="img" aria-label="08 号站远景"></div>
-    <p id="frames-announcement" class="frames-sr" role="status"></p>
-    <figcaption class="frames-transcript"><span>现场字幕</span><p id="frames-caption" aria-live="polite"></p></figcaption>
-   </figure>
+   <div class="frames-player" id="frames-player" role="group" aria-label="嘿姆监看台与操作" tabindex="-1">
+    <figure class="frames-monitor">
+     <div class="frames-monitor-head"><span class="frames-monitor-desk"><span class="frames-mono">CAM 08</span><span>嘿姆监看台</span></span><span id="frames-position">第 0 / 9 帧</span><img class="frames-monitor-cat" src="./studio-heim-idle.png" width="360" height="184" alt="" aria-hidden="true" decoding="async"></div>
+     <div id="frames-scene" class="frames-scene" role="img" aria-label="08 号站远景"></div>
+     <p id="frames-announcement" class="frames-sr" role="status"></p>
+     <figcaption class="frames-transcript"><span>现场字幕</span><p id="frames-caption" aria-live="polite"></p></figcaption>
+    </figure>
+    <div class="frames-controls" id="frames-controls" role="group" aria-label="画面控制" tabindex="-1">
+     <button class="frames-button frames-primary" id="frames-advance" type="button" disabled>下一帧</button>
+     <button class="frames-button" id="frames-play" type="button" disabled>播放</button>
+     <button class="frames-button frames-primary frames-wide" id="frames-pin" type="button" hidden>保留当前帧</button>
+     <button class="frames-button frames-primary frames-wide" id="frames-start-manual" type="button" hidden>开始第二轮</button>
+     <button class="frames-button frames-primary frames-wide" id="frames-retry-empty" type="button" hidden>重做第二轮</button>
+    </div>
+   </div>
    <section class="frames-console" aria-labelledby="frames-status">
     <ol class="frames-rounds" aria-label="两轮进度">
      <li id="frames-round-one" aria-current="step">01 固定抽帧</li>
@@ -40,13 +49,6 @@
     <div class="frames-budget">
      <span>交给 Agent，带给嘿姆的 3 帧</span>
      <ol id="frames-slots" aria-label="交给 Agent 的三帧"></ol>
-    </div>
-    <div class="frames-controls" id="frames-controls" role="group" aria-label="画面控制" tabindex="-1">
-     <button class="frames-button frames-primary" id="frames-advance" type="button" disabled>下一帧</button>
-     <button class="frames-button" id="frames-play" type="button" disabled>播放</button>
-     <button class="frames-button frames-primary frames-wide" id="frames-pin" type="button" hidden>保留当前帧</button>
-     <button class="frames-button frames-primary frames-wide" id="frames-start-manual" type="button" hidden>开始第二轮</button>
-     <button class="frames-button frames-primary frames-wide" id="frames-retry-empty" type="button" hidden>重做第二轮</button>
     </div>
     <p class="frames-tip" id="frames-tip">可以逐帧查看，不用拼反应速度。</p>
    </section>

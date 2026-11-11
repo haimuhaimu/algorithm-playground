@@ -3,8 +3,8 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <meta name="description" content="30 次探测，5 颗未知星球。继续挖刚才赚到的，还是去试没挖过的？亲手体验多臂老虎机的探索与利用。">
  <meta name="color-scheme" content="light dark"><link rel="icon" href="data:,">
- <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=station-cat-v1&amp;art=crew-roles-v1"><link rel="stylesheet" href="./mining-bayes.css?v=station-cat-v1">
- <script type="module" src="./mining.mjs?v=station-cat-v1&amp;art=crew-roles-v1"></script><title>算法游乐场 · 盲盒探矿</title>
+ <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mining.css?v=transfer-feedback-v1&amp;art=crew-roles-v1"><link rel="stylesheet" href="./mining-bayes.css?v=transfer-feedback-v1">
+ <script type="module" src="./mining.mjs?v=transfer-feedback-v1&amp;art=crew-roles-v1"></script><title>算法游乐场 · 盲盒探矿</title>
  <link rel="stylesheet" href="./navigation.css?v=mobile-learning-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
@@ -33,8 +33,13 @@
      <h3 id="bayes-updated-title" tabindex="-1">新证据要和旧证据一起看。</h3><p id="bayes-update-feedback" class="bayes-feedback" role="status"></p>
      <div class="bayes-after-grid"><article class="bayes-little"><h4>A · 3/5 → 3/6</h4><strong id="bayes-change-summary-little"></strong><div id="bayes-after-chart-little" class="bayes-chart" role="img" aria-label="少样本日志更新前后曲线"></div><div class="bayes-axis"><span>0%</span><span>50%</span><span>100%</span></div><p id="bayes-after-interval-little"></p></article><article class="bayes-many"><h4>B · 18/30 → 18/31</h4><strong id="bayes-change-summary-many"></strong><div id="bayes-after-chart-many" class="bayes-chart" role="img" aria-label="多样本日志更新前后曲线"></div><div class="bayes-axis"><span>0%</span><span>50%</span><span>100%</span></div><p id="bayes-after-interval-many"></p></article></div>
      <p class="bayes-caption">虚线＝更新前，实线＝更新后。所有图都固定横轴 0–100%、密度纵轴 0–6，没有用缩放制造“大变化”。这两条空手反馈是明示的教学条件，不重抽，也不消耗自由探索次数。</p>
-     <fieldset class="bayes-choices bayes-transfer"><legend>03 · 换两份新日志：0/1 与 0/10。能断言两颗星球永远没矿吗？</legend><button id="bayes-answer-never" type="button">能，命中率都是 0%</button><button id="bayes-answer-evidence" type="button">不能；0/10 更支持低概率，但不是证明为零</button><button id="bayes-answer-guarantee" type="button">样本更多，下一趟就一定挖得到</button></fieldset>
-     <p id="bayes-answer-feedback" class="bayes-feedback" role="status"></p><div id="bayes-transfer-results" class="bayes-transfer-results" hidden></div>
+     <fieldset class="bayes-choices bayes-transfer"><legend id="bayes-transfer-question" tabindex="-1">03 · 换两份新日志：0/1 与 0/10。能断言两颗星球永远没矿吗？</legend><button id="bayes-answer-never" type="button">能，命中率都是 0%</button><button id="bayes-answer-evidence" type="button">不能；0/10 更支持低概率，但不是证明为零</button><button id="bayes-answer-guarantee" type="button">样本更多，下一趟就一定挖得到</button></fieldset>
+     <section id="bayes-transfer-results" class="bayes-transfer-receipt" hidden aria-labelledby="bayes-transfer-title">
+      <h3 id="bayes-transfer-title" tabindex="-1">实测都是 0%，下一趟预测不同。</h3>
+      <p id="bayes-answer-feedback" class="bayes-feedback" role="status"></p>
+      <div class="bayes-readouts"><article class="bayes-little"><span>0/1 · 下一次命中预测</span><strong id="bayes-transfer-prediction-one"></strong><p id="bayes-transfer-interval-one"></p></article><article class="bayes-many"><span>0/10 · 下一次命中预测</span><strong id="bayes-transfer-prediction-ten"></strong><p id="bayes-transfer-interval-ten"></p></article></div>
+      <button id="bayes-try-again" type="button" hidden>回到题目，再选一次 ↑</button>
+     </section>
      <section id="bayes-ending" class="bayes-ending" hidden aria-labelledby="bayes-ending-title"><p class="eyebrow">本次对照已完成 / NOT A MASTERY CERTIFICATE</p><h3 id="bayes-ending-title" tabindex="-1">这趟，你带走了什么？</h3><p id="bayes-ending-evidence"></p><ol><li>同样的样本比例，不代表同样的证据强度。</li><li>新反馈与原来的相信、旧观察共同决定下一步判断。</li><li>曲线是模型里的不确定性，不是“真相已被保证”。</li></ol><a href="https://haimuhaimu.github.io/genai-learning-os/?page=strategy-case&case=bayes-rollout" target="_blank" rel="noopener">回到 GenAI OS：把贝叶斯判断用于放量决策 ↗</a></section>
      <section id="bayes-genai-return" class="bayes-ending" hidden aria-labelledby="bayes-genai-title"><h3 id="bayes-genai-title" tabindex="-1">把这次判断，带回学习路线</h3><p>带回的只是本课选择与计算。回到 GenAI OS 后还需核对、由你确认保存，再复盘；不会自动给能力加分。</p><button id="bayes-genai-send" class="bayes-primary" type="button">带回 GenAI OS 复盘 →</button><p id="bayes-genai-status" class="bayes-feedback" role="status"></p></section>
      <section id="bayes-export" class="bayes-ending" hidden aria-labelledby="bayes-export-title"><h3 id="bayes-export-title">留下这轮真实记录</h3><p>只导出固定小课，不读取原探索、草稿或个人资料。可以自己保留，也可以主动交给自己的 AI 陪练。</p><button id="bayes-export-generate" type="button">生成本次实验记录 JSON</button><p id="bayes-export-status" class="bayes-feedback" role="status"></p><button id="bayes-new-record" type="button" hidden>开始新记录（清空本轮小课）</button><div id="bayes-export-record" hidden><label for="bayes-export-text">本次贝叶斯实验记录（可手动全选复制）</label><textarea id="bayes-export-text" class="bayes-transfer-results" readonly rows="8" cols="20" spellcheck="false"></textarea><button id="bayes-export-copy" type="button">复制实验记录</button></div></section>
