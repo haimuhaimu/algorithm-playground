@@ -1,0 +1,42 @@
+name: 功能问题 / Bug report
+description: 按钮没反应、页面报错、结果或记录不对 / Something does not work.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        谢谢你帮忙。中文、英文都可以；不确定是不是 bug 也欢迎描述。
+        这里的反馈会公开。请用内置示例复现，不要附凭证、浏览器存储或私密学习记录。
+        This report is public. Do not attach credentials, browser storage or private learning records. Prefer a built-in example.
+  - type: input
+    id: page
+    attributes:
+      label: 哪一页 / Page
+      description: 实验名称或去除个人参数后的 URL / Experiment name or a URL without private parameters.
+      placeholder: "像素邮局 / pixel.html"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 怎样遇到的 / Steps to reproduce
+      description: 从哪个入口开始，依次点了什么？/ Where did you start, and what did you do?
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 预期与实际 / Expected and actual result
+      description: 你以为会怎样，实际看见了什么？可以附相关截图。/ What did you expect, and what happened? A relevant screenshot helps.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 设备与浏览器 / Device and browser
+      placeholder: "例如 iPhone / Safari，或电脑 / Chrome；知道版本也请注明。"
+  - type: textarea
+    id: checks
+    attributes:
+      label: 还有什么线索 / Optional context
+      description: 是否能重复？刷新前后是否不同？本地版本可附 commit。不要为复现而清除自己的学习记录。/ Repeatability, reload behavior or local commit; do not delete your records to reproduce.

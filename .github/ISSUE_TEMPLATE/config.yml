@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 先玩一局 / Play the demo
+    url: https://haimuhaimu.github.io/algorithm-playground/
+    about: 不用注册，也不用模型密钥 / No account or API key required.
+  - name: 开发与贡献指南 / Contribution guide
+    url: https://github.com/haimuhaimu/algorithm-playground/blob/main/CONTRIBUTING.md
+    about: 本地运行、测试、范围与许可边界 / Setup, tests, scope and rights.

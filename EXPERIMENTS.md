@@ -125,7 +125,7 @@
 - `neural.html` / `neural.css` / `neural.mjs`：涂鸦训练场、画布编辑、模型对照与学习入口。
 - `mining-core.mjs`：可复现的多臂老虎机环境、探矿记录与三种对照策略。
 - `mining.html` / `mining.css` / `mining.mjs`：盲盒探矿界面、探测动画与复盘。
-- `scripts/`：只提供白名单静态文件的本地服务和打包流程。
+- `scripts/serve.mjs` / `scripts/build.mjs`：白名单静态文件的本地服务与构建；`scripts/learning-tool.mjs`：AI 工具 CLI。贡献入口与开发命令见 [CONTRIBUTING](CONTRIBUTING.md)。
 - `pixel-core.mjs`：确定性 Huffman 编码、独立字节解码、像素预设与线段绘画。
 - `pixel.html` / `pixel.css` / `pixel.mjs`：像素邮局、画纸编辑、打包解释与无损收件校验。
 - `world-model-core.mjs`：仅依赖观测的模型学习、预测、路线搜索与误差计算。
