@@ -5,7 +5,7 @@
  <meta name="description" content="接管推荐首页，调一调算法，看见点击、多样性和新作者之间的取舍。一个使用合成数据的可玩实验。">
  <meta name="color-scheme" content="light dark">
  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23e3ed78'/%3E%3Cpath d='M16 22h32M16 42h32M25 15v14M39 35v14' stroke='%2321231c' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
- <link rel="stylesheet" href="./style.css?v=cat-feedback-v1"><link rel="stylesheet" href="./feedback-story.css?v=cat-feedback-v1"><link rel="stylesheet" href="./seat-lesson.css?v=cat-feedback-v1"><script type="module" src="./app.mjs?v=cat-feedback-v1"></script>
+ <link rel="stylesheet" href="./style.css?v=feedback-prediction-v1"><link rel="stylesheet" href="./feedback-story.css?v=feedback-prediction-v1"><link rel="stylesheet" href="./seat-lesson.css?v=feedback-prediction-v1"><script type="module" src="./app.mjs?v=feedback-prediction-v1"></script>
  <title>算法游乐场 · 首页，交给你了</title>
  <link rel="stylesheet" href="./navigation.css?v=three-cat-brand-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
  <link rel="stylesheet" href="./space-theme.css">
@@ -47,7 +47,23 @@
     <div class="section-heading"><span class="step">02</span><h2 id="feed-title">你的推荐首页</h2><span class="live-label">即时重排</span><a class="return-controls" href="#controls-title">调整规则 ↑</a></div>
     <div class="feed-context"><span id="strategy-name">只追点击</span><span>48 条候选 → 6 个席位</span></div>
     <div class="feedback-entry-note"><p><strong>给首页排一次座位</strong>不只看谁入选：猜下一席，再查它赢过谁、为什么。</p><a href="#seat-lesson">亲手排六席 ↓</a></div>
-    <div class="feedback-entry-note"><p><strong>点一次反馈，看懂首页为什么变</strong>默认第一张是波比。点「少一点」，猜猜这张卡还会不会留在首页。</p><a id="feedback-entry" href="#feedback-story">看反馈前后对照 ↓</a></div>
+    <div class="feedback-entry-note"><p><strong>点一次反馈，看懂首页为什么变</strong>默认第一张是波比。少看一点，不一定会让这张卡离开首页。</p><a id="feedback-entry" href="#feedback-story">看反馈前后对照 ↓</a></div>
+    <div class="feedback-prediction">
+     <div class="feedback-prediction-start"><button id="feedback-prediction-mode" type="button" aria-pressed="false">先猜再反馈</button><p id="feedback-prediction-status" role="status" aria-live="polite">可选小挑战：先开启，再点一张卡的反馈。不开启也能照常玩。</p></div>
+     <section class="feedback-prediction-panel" id="feedback-prediction-panel" aria-labelledby="feedback-prediction-title" hidden>
+      <h3 id="feedback-prediction-title" tabindex="-1"></h3>
+      <div id="feedback-prediction-card" class="feedback-prediction-card"></div>
+      <div id="feedback-prediction-choices">
+       <div class="feedback-prediction-answers" role="group" aria-label="猜这张卡的去留"><button id="feedback-prediction-stays" type="button" aria-pressed="false">仍在首页六席</button><button id="feedback-prediction-leaves" type="button" aria-pressed="false">离开首页六席</button></div>
+       <div class="feedback-prediction-actions"><button id="feedback-prediction-apply" class="feedback-prediction-primary" type="button" disabled>检验这次反馈</button><button id="feedback-prediction-cancel" type="button">取消，不发送</button></div>
+      </div>
+      <div id="feedback-prediction-result" hidden>
+       <h4 id="feedback-prediction-result-state" tabindex="-1"></h4><p id="feedback-prediction-verdict"></p>
+       <dl class="feedback-prediction-numbers"><div><dt>这张卡的席位</dt><dd id="feedback-prediction-position"></dd></div><div><dt id="feedback-prediction-interest-label">主题兴趣</dt><dd id="feedback-prediction-interest"></dd></div></dl>
+       <p id="feedback-prediction-reason"></p>
+      </div>
+     </section>
+    </div>
     <div class="feed-grid" id="feed"></div>
     <div class="taste"><div><strong>你的模拟口味</strong><span id="feedback-note">试试卡片上的「喜欢」和「少一点」。</span></div><div id="taste-bars" class="taste-bars"></div><p>反馈只改变这一位模拟用户的兴趣，不代表真实用户行为。</p></div>
    </section>

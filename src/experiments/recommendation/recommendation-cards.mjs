@@ -1,5 +1,5 @@
-import {TOPICS} from './data.mjs?v=cat-feedback-v1';
-import {probability} from './core.mjs?v=cat-feedback-v1';
+import {TOPICS} from './data.mjs?v=feedback-prediction-v1';
+import {probability} from './core.mjs?v=feedback-prediction-v1';
 
 // Display-only remapping. The same post IDs and original data still go to the scorer.
 const studioPosts={

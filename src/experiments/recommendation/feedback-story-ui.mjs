@@ -1,6 +1,6 @@
-import {TOPICS} from './data.mjs?v=cat-feedback-v1';
-import {recordMatches} from './feedback-story.mjs?v=cat-feedback-v1';
-import {escapeCardText as escape,recommendationTitle as title,recommendationArt as art,recommendationCharacter as character} from './recommendation-cards.mjs?v=cat-feedback-v1';
+import {TOPICS} from './data.mjs?v=feedback-prediction-v1';
+import {recordMatches} from './feedback-story.mjs?v=feedback-prediction-v1';
+import {escapeCardText as escape,recommendationTitle as title,recommendationArt as art,recommendationCharacter as character} from './recommendation-cards.mjs?v=feedback-prediction-v1';
 
 const interest=value=>Math.round(value*100);
 const cast=post=>{const name=character(post);return name?`<span class="feedback-cast">出镜：${escape(name)}</span>`:'';};

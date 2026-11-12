@@ -33,6 +33,7 @@ const groups = {
     "app.mjs",
     "core.mjs",
     "data.mjs",
+    "feedback-prediction-ui.mjs",
     "feedback-story-ui.mjs",
     "feedback-story.css",
     "feedback-story.mjs",

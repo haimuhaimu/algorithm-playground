@@ -1,15 +1,20 @@
-import {POSTS,TOPICS,PRESETS,INITIAL_PROFILE} from './data.mjs?v=cat-feedback-v1';
-import {rankPosts,metrics,feedback,challenge,experiment} from './core.mjs?v=cat-feedback-v1';
-import {captureFeedback} from './feedback-story.mjs?v=cat-feedback-v1';
-import {mountFeedbackStory} from './feedback-story-ui.mjs?v=cat-feedback-v1';
-import {mountSeatLesson} from './seat-lesson-ui.mjs?v=cat-feedback-v1';
-import {renderRecommendationCard} from './recommendation-cards.mjs?v=cat-feedback-v1';
+import {POSTS,TOPICS,PRESETS,INITIAL_PROFILE} from './data.mjs?v=feedback-prediction-v1';
+import {rankPosts,metrics,feedback,challenge,experiment} from './core.mjs?v=feedback-prediction-v1';
+import {captureFeedback} from './feedback-story.mjs?v=feedback-prediction-v1';
+import {mountFeedbackStory} from './feedback-story-ui.mjs?v=feedback-prediction-v1';
+import {mountSeatLesson} from './seat-lesson-ui.mjs?v=feedback-prediction-v1';
+import {renderRecommendationCard} from './recommendation-cards.mjs?v=feedback-prediction-v1';
+import {mountFeedbackPrediction} from './feedback-prediction-ui.mjs?v=feedback-prediction-v1';
 
 const $=id=>document.getElementById(id);
 const feedbackStory=mountFeedbackStory({document});
 let weights={...PRESETS.click.weights},baseline={...PRESETS.click.weights},profile={...INITIAL_PROFILE};
 const seatLesson=mountSeatLesson({document,getInputs:()=>({posts:POSTS,weights,profile})});
 let completed=null,runCount=0,toastTimer;
+const feedbackPrediction=mountFeedbackPrediction({document,getInputs:()=>({posts:POSTS,weights,profile}),
+ applyFeedback:evidence=>applyPostFeedback(evidence.action.post.id,evidence.action.direction,{evidence,guided:true}),
+ returnToCard:({postId,direction})=>focusFeedback(postId,direction),
+ reducedMotion:()=>matchMedia('(prefers-reduced-motion:reduce)').matches});
 const keyOrder=['click','diversity','newcomer'];
 const same=(a,b)=>keyOrder.every(k=>a[k]===b[k]);
 const strategy=w=>Object.values(PRESETS).find(p=>same(p.weights,w))?.name||'你的自定义规则';
@@ -36,7 +41,7 @@ function render(){
  $('challenge-checks').innerHTML=[[goal.click,'预测点击率 ≥ 40%'],[goal.diversity,'至少 4 种主题'],[goal.newcomer,'至少 2 个新人席位']].map(([ok,label])=>`<li class="${ok?'done':''}"><span class="check-icon" aria-hidden="true">${ok?'✓':''}</span>${label}<span class="sr-only">${ok?'，已达成':'，未达成'}</span></li>`).join('');
  $('challenge-status').textContent=goal.won?'挑战达成！再跑一轮，看看代价。':'还差一点，试着调调看。';$('challenge-status').classList.toggle('won',goal.won);
  $('taste-bars').innerHTML=Object.entries(TOPICS).map(([key,topic])=>`<div class="taste-item" title="${topic.short}兴趣 ${Math.round(profile[key]*100)}"><div class="taste-track"><div class="taste-fill" style="width:${profile[key]*100}%"></div></div><span>${topic.short} ${Math.round(profile[key]*100)}</span></div>`).join('');
- $('baseline-caption').textContent=`对照组：${strategy(baseline)}`;renderComparison();feedbackStory.sync(weights,profile);seatLesson.sync();return m;
+ $('baseline-caption').textContent=`对照组：${strategy(baseline)}`;renderComparison();feedbackStory.sync(weights,profile);seatLesson.sync();feedbackPrediction.sync();return m;
 }
 
 function renderComparison(){
@@ -55,18 +60,25 @@ function renderComparison(){
 function changeWeights(next){weights={...next};const m=render();announce(`首页已更新：${m.topics} 种主题，${m.newcomers} 个新人席位，预测点击率 ${pct(m.ctr)}%。`);}
 document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>changeWeights(PRESETS[button.dataset.preset].weights)));
 for(const key of keyOrder) $(key).addEventListener('input',event=>changeWeights({...weights,[key]:Number(event.target.value)}));
-$('feed').addEventListener('click',event=>{
- const button=event.target.closest('[data-feedback]');if(!button)return;
- const post=POSTS.find(p=>p.id===button.dataset.post),direction=Number(button.dataset.feedback);
- const evidence=feedbackStory.shouldRecord()?captureFeedback(POSTS,weights,profile,post.id,direction):null;
+function focusFeedback(postId,direction,slot=0){
+ const retained=[...$('feed').querySelectorAll('[data-feedback]')].find(b=>b.dataset.post===postId&&Number(b.dataset.feedback)===direction);
+ (retained||$('feed').children[Math.max(0,slot)]?.querySelector(`[data-feedback="${direction}"]`))?.focus({preventScroll:true});
+}
+function applyPostFeedback(postId,direction,{evidence=null,guided=false}={}){
+ const post=POSTS.find(p=>p.id===postId),recording=feedbackStory.shouldRecord();
+ evidence=evidence||(recording?captureFeedback(POSTS,weights,profile,post.id,direction):null);
+ const slot=[...$('feed').children].findIndex(card=>card.dataset.id===post.id);
  const before=profile[post.topic];profile=feedback(profile,post.topic,direction);
  const note=before===profile[post.topic]?`${TOPICS[post.topic].short}兴趣已${direction>0?'达到上限':'降到下限'}。`:`${direction>0?'多看一点':'少看一点'}${TOPICS[post.topic].short}，首页已重新排序。`;
- const slot=[...$('feed').children].indexOf(button.closest('.post-card'));
- if(evidence)feedbackStory.record(evidence);
- render();$('feedback-note').textContent=note;announce(note+(evidence?' 已保留反馈前后对照，可通过首页上方链接查看。':''));toast(note);
+ if(recording&&evidence)feedbackStory.record(evidence);
+ render();$('feedback-note').textContent=note;announce(note+(recording&&evidence?' 已保留反馈前后对照，可通过首页上方链接查看。':''));toast(note);
  // Reranking replaces cards; keep keyboard focus on the same action when possible.
- const retained=[...$('feed').querySelectorAll('[data-feedback]')].find(b=>b.dataset.post===post.id&&Number(b.dataset.feedback)===direction);
- (retained||$('feed').children[Math.max(0,slot)]?.querySelector(`[data-feedback="${direction}"]`))?.focus({preventScroll:true});
+ if(!guided)focusFeedback(post.id,direction,slot);
+}
+$('feed').addEventListener('click',event=>{
+ const button=event.target.closest('[data-feedback]');if(!button)return;
+ const postId=button.dataset.post,direction=Number(button.dataset.feedback);
+ if(!feedbackPrediction.request(postId,direction))applyPostFeedback(postId,direction);
 });
 $('run').addEventListener('click',()=>{
  completed={result:experiment(POSTS,weights,baseline,profile),number:++runCount};
@@ -80,6 +92,7 @@ const emptyComparison=$('comparison-result').innerHTML;
 $('reset').addEventListener('click',()=>{
  weights={...PRESETS.click.weights};baseline={...PRESETS.click.weights};profile={...INITIAL_PROFILE};completed=null;runCount=0;
  feedbackStory.reset();
+ feedbackPrediction.reset();
  seatLesson.reset();
  $('comparison-result').innerHTML=emptyComparison;$('run-number').textContent='未运行';$('feedback-note').textContent='试试卡片上的「喜欢」和「少一点」。';
  $('feed').innerHTML='';render();toast('已回到实验起点');announce('全部规则、口味和实验记录已重置。');
