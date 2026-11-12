@@ -6,7 +6,7 @@ const pageFile = new URL('../agent-frames.html', import.meta.url);
 const uiFile = new URL('../agent-frames-ui.mjs', import.meta.url);
 const mount = existsSync(uiFile) ? (await import(uiFile)).mountAgentFrames : null;
 
-function open(journey) {
+function open(journey, {storage} = {}) {
  assert.equal(typeof mount, 'function', 'Level 03 needs an interactive player');
  const html = readFileSync(pageFile, 'utf8');
  let focused = null;
@@ -38,7 +38,10 @@ function open(journey) {
   clearTimeout(id) { timers.delete(id); }
  });
  for (const context of [document, window]) for (const key of ['localStorage', 'sessionStorage']) {
-  Object.defineProperty(context, key, {get() { throw Error('The experiment must not touch storage'); }});
+  Object.defineProperty(context, key, {get() {
+   if (context === window && key === 'localStorage' && storage) return storage;
+   throw Error('Storage unavailable');
+  }});
  }
  mount({document, window});
  const e = name => {
@@ -54,6 +57,89 @@ function open(journey) {
  };
  return {e, click, step, sends, location, document, window, timers, tick, focused: () => focused};
 }
+
+function savedBrowser() {
+ const key='algorithm-playground:agent-last-result:agent-frames:v1';
+ const data=new Map([['learning-progress','untouched']]),access=[];
+ const storage={
+  getItem(k){access.push(['get',k]);assert.equal(k,key);return data.get(k)??null;},
+  setItem(k,value){access.push(['set',k]);assert.equal(k,key);data.set(k,value);},
+ };
+ return {key,data,access,storage};
+}
+function finishFrames(ui,pick=3) {
+ ui.step(8);ui.click('start-manual');ui.step(pick);ui.click('pin');ui.step(8-pick);ui.click('export');
+ return ui.e('export-text').value;
+}
+
+test('reopening offers the last full result without restoring it into a new run or GenAI request',()=>{
+ const f=savedBrowser(),first=open(undefined,f),json=finishFrames(first);
+ assert.match(first.e('save-status').textContent,/已保存.*浏览器/);
+ const second=open('agent-frames',f);
+ assert.equal(second.e('scene').dataset.frame,'0');
+ assert.equal(second.e('compare').hidden,true);
+ assert.equal(second.e('last-entry').hidden,false);
+ second.click('review','export');
+ assert.equal(second.e('export-text').value,json);
+ assert.equal(second.e('return').hidden,true);
+ second.e('return').dispatchEvent(new Event('click'));
+ assert.deepEqual(second.sends,[]);
+ assert.match(second.e('save-status').textContent,/上次.*不是.*这次/);
+ second.click('resume-bottom');
+ assert.equal(second.e('scene').dataset.frame,'0');
+ assert.equal(second.e('workbench').hidden,false);
+ assert.equal(second.timers.size,0);
+ assert.equal(f.data.get('learning-progress'),'untouched');
+});
+
+test('unfinished new rounds never replace saved results; a later full pair replaces them exactly',()=>{
+ const f=savedBrowser(),json=finishFrames(open(undefined,f));
+ const raw=f.data.get(f.key),second=open(undefined,f);
+ second.step(8);second.click('start-manual');second.step(8);
+ assert.equal(f.data.get(f.key),raw);
+ const third=open(undefined,f);third.click('review','export');
+ assert.equal(third.e('export-text').value,json);
+ third.click('resume');const latest=finishFrames(third,5);
+ assert.match(third.e('previous-pick').innerHTML,/data-packet-frame="3"/);
+ assert.match(third.e('current-pick').innerHTML,/data-packet-frame="5"/);
+ const fourth=open(undefined,f);fourth.click('review','export');
+ assert.equal(fourth.e('export-text').value,latest);
+ assert.equal(JSON.parse(latest).result.evidence.manual.conclusion,'clear-to-unload');
+});
+
+test('leaving saved review at the baseline boundary focuses the visible second-round action',()=>{
+ const f=savedBrowser();finishFrames(open(undefined,f));
+ for(const exit of ['resume','resume-bottom']){
+  const ui=open(undefined,f);ui.step(8);ui.click('review',exit);
+  assert.equal(ui.e('start-manual').hidden,false);
+  assert.equal(ui.focused(),ui.e('start-manual'));
+  assert.equal(ui.focused().hidden,false);
+  ui.click('start-manual');assert.equal(ui.e('scene').dataset.frame,'0');
+ }
+});
+
+test('corrupt saved results are explained but not loaded, repaired or deleted',()=>{
+ const f=savedBrowser();f.data.set(f.key,'broken-json');
+ const ui=open(undefined,f);
+ assert.equal(ui.e('last-entry').hidden,false);
+ assert.equal(ui.e('review').hidden,true);
+ assert.match(ui.e('last-summary').textContent,/未通过核验/);
+ assert.equal(ui.e('compare').hidden,true);
+ assert.equal(f.data.get(f.key),'broken-json');
+ assert.equal(f.access.some(([op])=>op==='set'),false);
+});
+
+test('unavailable or discarded persistence still permits full play and JSON without claiming a save',()=>{
+ for(const storage of [undefined,{getItem(){return null;},setItem(){throw Error('quota');}},{getItem(){return null;},setItem(){}}]){
+  const ui=open(undefined,{storage});
+  const json=finishFrames(ui,5);
+  assert.equal(JSON.parse(json).result.workflowComplete,true);
+  assert.match(ui.e('save-status').textContent,/未能确认.*保存/);
+  assert.doesNotMatch(ui.e('save-status').textContent,/已保存/);
+  ui.click('redo','review','export');
+  assert.equal(ui.e('export-text').value,json,'memory-only review still works');
+ }
+});
 
 test('the received packet shows only frames already captured, never future footage',()=>{
  const {e,click,step}=open();

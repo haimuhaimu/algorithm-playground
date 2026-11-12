@@ -1,5 +1,6 @@
 import {AGENT_FRAME_CLIP, runAgentFrames} from './agent-frames-tool.mjs?v=agent-frames-v1';
 import {createGenaiReturnUrl, readGenaiHandoffContext} from './genai-handoff.mjs?v=handoff-trust-v1';
+import {createAgentResultStore} from './agent-last-result.mjs?v=frames-saved-v1';
 
 const SOURCE = {producer: 'browser-session'};
 const SCENE = {
@@ -74,9 +75,10 @@ export function mountAgentFrames({document, window}) {
  const focus = name => e(name).focus({preventScroll: false});
  const handoff = readGenaiHandoffContext(window.location, 'agent-frames');
  const canReturn = Boolean(handoff);
+ const store = createAgentResultStore(window, 'agent-frames'), saved = store.read();
  let run = runAgentFrames([], SOURCE), baseline = null, playing = false, timeout = null, generation = 0;
  let inspected = null, comparison = null, retryNotice = false;
- let previous = null, reviewing = false, exportEpoch = 0;
+ let previous = saved.status === 'saved' ? saved.receipt : null, reviewing = false, exportEpoch = 0, saveStatus = '';
  const visibleRun = () => reviewing ? previous : run;
  const resultText = outcome => outcome.conclusion === 'clear-to-unload' ? '允许卸货' : '证据不足，不能确认';
 
@@ -187,8 +189,11 @@ export function mountAgentFrames({document, window}) {
   show('retry-empty', stage === 'manual-empty');
   show('tip', available('advance'));
   show('workbench', !done && !reviewing);
-  show('last-entry', Boolean(previous) && !done);
-  if (previous) set('last-summary', `上次选第 ${previous.result.evidence.manualPick} 帧 · ${resultText(previous.result.evidence.manual)}`);
+  show('last-entry', !reviewing && !done && (Boolean(previous) || ['invalid', 'unavailable'].includes(saved.status)));
+  show('review', Boolean(previous));
+  set('last-summary', previous ? `上次选第 ${previous.result.evidence.manualPick} 帧 · ${resultText(previous.result.evidence.manual)}。可以先回看，也可以直接开始这次尝试。`
+   : saved.status === 'invalid' ? '本机旧记录未通过核验，没有载入或删除。可以开始新一轮。'
+   : saved.status === 'unavailable' ? '当前浏览器不能读取本机结果。仍可开始新一轮，完成后生成 JSON 留存。' : '');
   show('compare', done || reviewing);
   show('share', done || reviewing);
   show('resume', reviewing);
@@ -203,6 +208,8 @@ export function mountAgentFrames({document, window}) {
   show('os-link', !canReturn || reviewing);
   set('compare-title', reviewing ? '上次完整结果 · 这次尝试已暂停' : '同一段画面，Agent 看到了什么？');
   set('share-title', reviewing ? '带走上次完整记录' : '带走这次对照');
+  set('save-status', reviewing ? '正在回看上次完整结果，不是这次任务的新操作；没有记成新的课程进度。' : saveStatus);
+  for (const name of ['resume', 'resume-bottom']) set(name, run.actions.length ? '继续这次尝试' : '开始这次尝试');
   set('export', reviewing ? '生成上次记录 JSON' : '生成实验 JSON');
   show('retry-compare', done && Boolean(previous) && !reviewing);
   if (done || reviewing) drawComparison();
@@ -232,6 +239,12 @@ export function mountAgentFrames({document, window}) {
   catch { stop(); render(); set('feedback', '操作未完成，已有记录仍在。请重试。'); return; }
   retryNotice = false;
   if (run.result.stage === 'baseline-done') baseline = run;
+  if (run.result.workflowComplete) {
+   const stored = store.save(run);
+   saveStatus = stored.status === 'saved'
+    ? '本次两轮已保存在此浏览器。刷新后可回看；未完成的新尝试不会覆盖它。未上传，也未记为课程进度。'
+    : '未能确认本机保存。当前结果仍在，离开前请生成 JSON 留存。';
+  }
   if (!available('advance')) stop();
   render();
   if (run.result.stage === 'done') focus(previous ? 'retry-title' : 'compare-title');
@@ -287,7 +300,7 @@ export function mountAgentFrames({document, window}) {
  function resume() {
   if (document.hidden || !reviewing) return;
   clearExport(); reviewing = false; inspected = comparison = null;
-  render(); focus(available('advance') ? 'advance' : 'retry-empty'); revealPlayer();
+  render(); focus(available('advance') ? 'advance' : available('start-manual') ? 'start-manual' : 'retry-empty'); revealPlayer();
  }
  for (const name of ['resume', 'resume-bottom']) e(name).addEventListener('click', resume);
  function redo() {

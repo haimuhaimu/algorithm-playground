@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {runAgentToolLoop} from '../agent-tool.mjs';
 import {runAgentReroute} from '../agent-reroute-tool.mjs';
+import {runAgentFrames} from '../agent-frames-tool.mjs';
 
 // The store is loaded inside the assertion so the initial TDD run reports
 // the absent capability as an assertion failure rather than a loader crash.
@@ -12,9 +13,12 @@ test.before(async()=>{
  },'the completed-result storage module must be available');
 });
 
-const l1='agent-tool-loop',l2='agent-reroute';
+const l1='agent-tool-loop',l2='agent-reroute',l3='agent-frames';
 const run1=(names=['stop','restart','stop'],producer='browser-session')=>runAgentToolLoop(names.map(action=>({action})),{producer});
 const run2=(names=['advance','advance','reroute','advance','verify-new'],producer='browser-session')=>runAgentReroute(names.map(action=>({action})),{producer});
+const run3=(pick=3,producer='browser-session')=>runAgentFrames([
+ ...Array(8).fill('advance'),'start-manual',...Array(pick).fill('advance'),'pin',...Array(8-pick).fill('advance'),
+].map(action=>({action})),{producer});
 const clone=structuredClone;
 function storageFixture(entries=[]){
  const data=new Map(entries),calls=[];
@@ -40,6 +44,30 @@ test('an untouched experiment has no saved result and creates no record',()=>{
  assert.deepEqual(store.read(),{status:'empty'});
  assert.equal(f.data.size,0);
  assert.equal(f.calls.some(([action])=>action!=='get'),false);
+});
+
+for(const [pick,conclusion] of [[3,'insufficient-evidence'],[5,'clear-to-unload']])test(`level 3 reopens both rounds and actual conclusion for pick ${pick}`,()=>{
+ const f=storageFixture(),receipt=run3(pick);
+ assert.deepEqual(createAgentResultStore(f.window,l3).save(receipt),{status:'saved'});
+ const restored=createAgentResultStore(f.window,l3).read();
+ assert.deepEqual(restored,{status:'saved',receipt});
+ assert.deepEqual(restored.receipt.result.evidence.fixed.frameIds,[0,4,8]);
+ assert.deepEqual(restored.receipt.result.evidence.manual.frameIds,[0,pick,8]);
+ assert.equal(restored.receipt.result.evidence.manual.conclusion,conclusion);
+});
+
+test('level 3 incomplete, tampered, wrong-version and non-browser records cannot overwrite a full result',()=>{
+ const f=seeded(l3,run3()),forged=run3();
+ forged.result.evidence.manual.conclusion='clear-to-unload';
+ const stale=run3();stale.engineVersion='agent-frames-v0';
+ const extra=run3();extra.genaiRequest='must not persist';
+ for(const receipt of [runAgentFrames([{action:'advance'}],{producer:'browser-session'}),run3(5,'agent'),run1(),forged,stale,extra]){
+  assert.deepEqual(f.store.save(receipt),{status:'invalid'});
+  assert.equal(f.data.get(f.key),f.raw);
+  f.data.set(f.key,JSON.stringify({version:1,receipt}));
+  assert.deepEqual(f.store.read(),{status:'invalid'});
+  f.data.set(f.key,f.raw);
+ }
 });
 
 const endings=[
@@ -77,14 +105,17 @@ for(const [name,names,outcome] of [
 
 test('experiments use independent versioned keys and leave existing progress and drafts untouched',()=>{
  const existing=[['algorithm-playground:progress:v1','progress sentinel'],['algorithm-playground:neural:v1','neural sentinel'],['algorithm-playground:pixel:v1','pixel sentinel']];
- const f=storageFixture(existing),one=createAgentResultStore(f.window,l1),two=createAgentResultStore(f.window,l2);
+ const f=storageFixture(existing),one=createAgentResultStore(f.window,l1),two=createAgentResultStore(f.window,l2),three=createAgentResultStore(f.window,l3);
  assert.deepEqual(one.save(run1()),{status:'saved'});
  assert.deepEqual(two.read(),{status:'empty'});
  assert.deepEqual(two.save(run2()),{status:'saved'});
+ assert.deepEqual(three.read(),{status:'empty'});
+ assert.deepEqual(three.save(run3()),{status:'saved'});
  assert.equal(one.read().receipt.experimentId,l1);
  assert.equal(two.read().receipt.experimentId,l2);
+ assert.equal(three.read().receipt.experimentId,l3);
  const keys=[...f.data.keys()].filter(key=>!existing.some(([other])=>key===other));
- assert.equal(keys.length,2);
+ assert.equal(keys.length,3);
  assert.ok(keys.every(key=>key.includes('last-result')&&key.includes('v1')));
  assert.ok(keys.some(key=>key.includes(l1))&&keys.some(key=>key.includes(l2)));
  assert.ok(f.calls.every(([operation,key])=>['get','set'].includes(operation)&&keys.includes(key)));
@@ -157,7 +188,7 @@ test('stored tampering, experiment mismatches, incomplete records and agent rece
 
 test('unsupported experiment IDs do not inspect or mutate storage',()=>{
  const f=storageFixture();
- for(const id of ['agent-learning','agent-frames','__proto__',null,{},undefined]){
+ for(const id of ['agent-learning','unknown','__proto__',null,{},undefined]){
   const store=createAgentResultStore(f.window,id);
   assert.deepEqual(store.read(),{status:'invalid'});
   assert.deepEqual(store.save(run1()),{status:'invalid'});
