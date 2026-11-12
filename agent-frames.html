@@ -7,7 +7,7 @@
  <link rel="stylesheet" href="./home.css?v=agent-frames-v1">
  <link rel="stylesheet" href="./agent-frames.css?v=round-feedback-v1">
  <link rel="stylesheet" href="./navigation.css?v=three-cat-brand-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
- <script type="module" src="./agent-frames-ui.mjs?v=round-feedback-v1"></script>
+ <script type="module" src="./agent-frames-ui.mjs?v=frames-saved-v1"></script>
  <title>只留三帧，你会留下哪一帧？ · 算法游乐场</title>
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
@@ -23,6 +23,10 @@
    <h1 id="frames-title">只留三帧，<span>你会留下哪一帧？</span></h1>
    <p>嘿姆在监看台等着核验 08 号站。现场有 9 帧画面，但你只能交给 Agent 3 帧。先看固定抽帧，再亲手换中间一帧，让 Agent 把有依据的判断带给嘿姆。</p>
   </header>
+  <div class="frames-last-entry" id="frames-last-entry" hidden>
+   <p id="frames-last-summary" role="status"></p>
+   <button class="frames-button" id="frames-review" type="button">看上次完整结果</button>
+  </div>
   <div class="frames-workbench" id="frames-workbench">
    <div class="frames-player" id="frames-player" role="group" aria-label="嘿姆监看台与操作" tabindex="-1">
     <figure class="frames-monitor">
@@ -56,10 +60,6 @@
      <ol id="frames-slots" aria-label="交给 Agent 的三帧"></ol>
     </div>
     <p class="frames-tip" id="frames-tip">可以逐帧查看，不用拼反应速度。</p>
-    <div class="frames-last-entry" id="frames-last-entry" hidden>
-     <p id="frames-last-summary"></p>
-     <button class="frames-button" id="frames-review" type="button">看上次完整结果</button>
-    </div>
    </section>
   </div>
   <section class="frames-compare" id="frames-compare" aria-labelledby="frames-compare-title" hidden>
@@ -108,6 +108,7 @@
   <section class="frames-share" id="frames-share" aria-labelledby="frames-share-title" hidden>
    <h2 id="frames-share-title">带走这次对照</h2>
    <p>选到或错过都可以带回。GenAI OS 会重放两轮记录，再换一个场景让你判断。</p>
+   <p id="frames-save-status" role="status"></p>
    <div class="frames-share-actions">
     <button class="frames-button frames-primary" id="frames-return" type="button" hidden>带回 GenAI OS 复盘</button>
     <button class="frames-button" id="frames-export" type="button">生成实验 JSON</button>
@@ -128,7 +129,7 @@
     <button class="frames-button frames-primary" id="frames-resume-bottom" type="button" aria-describedby="frames-resume-state">继续这次尝试</button>
    </div>
   </section>
-  <p class="frames-boundary">这是用固定画面和字幕做的模拟，不读取摄像头或麦克风，也不调用模型。记录在本页，刷新会清空；复盘不代表能力认证。</p>
+  <p class="frames-boundary">这是用固定画面和字幕做的模拟，不读取摄像头或麦克风，也不调用模型。仅在此浏览器保留最近一次完整的两轮结果；未完成的尝试刷新后会重来。不能保存时会明确提示，可用 JSON 自己留存。复盘不代表能力认证。</p>
  </main>
  <footer class="home-footer"><a href="./#learning-routes">返回学习路线</a><span>MADE BY CHEN QUAN</span></footer>
  <noscript><p>启用 JavaScript 后才能操作这关。<a href="./agent-reroute.html#mission">返回第二关</a>。</p></noscript>

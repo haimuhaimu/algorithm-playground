@@ -1,5 +1,6 @@
 import {replayAgentToolReceipt} from './agent-tool.mjs';
 import {replayAgentRerouteReceipt} from './agent-reroute-tool.mjs';
+import {replayAgentFramesReceipt} from './agent-frames-tool.mjs';
 
 const VERSION=1,MAX_RAW_LENGTH=32768;
 const isRecord=value=>Boolean(value&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value)));
@@ -18,7 +19,7 @@ function sameWireData(actual,provided){
 }
 
 export function createAgentResultStore(window,experimentId){
- const replay=experimentId==='agent-tool-loop'?replayAgentToolReceipt:experimentId==='agent-reroute'?replayAgentRerouteReceipt:null;
+ const replay=experimentId==='agent-tool-loop'?replayAgentToolReceipt:experimentId==='agent-reroute'?replayAgentRerouteReceipt:experimentId==='agent-frames'?replayAgentFramesReceipt:null;
  const key=replay?`algorithm-playground:agent-last-result:${experimentId}:v1`:null;
 
  function verify(receipt){
