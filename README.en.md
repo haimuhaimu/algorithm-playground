@@ -28,22 +28,23 @@ Agent missions continue with [rerouting and stale receipts](https://haimuhaimu.g
 
 ## Run locally
 
-Node.js 24+. There are no third-party runtime dependencies and no install step.
+Node.js 24+. The browser has no third-party runtime dependencies. Local preview and builds use one pinned development dependency, `es-module-lexer`, to parse module references.
 
 ```sh
 git clone https://github.com/haimuhaimu/algorithm-playground.git
 cd algorithm-playground
+npm ci --ignore-scripts
 npm start
 ```
 
-Open [http://127.0.0.1:3040/](http://127.0.0.1:3040/).
+Open [http://127.0.0.1:3040/](http://127.0.0.1:3040/). Do not open source HTML directly with `file://`.
 
 ```sh
-npm test         # Node's built-in test runner
+npm test         # Builds test artifacts, then runs Node's built-in test runner
 npm run verify   # Syntax checks, all tests, and the static build
 ```
 
-The build copies an explicit runtime allowlist into `dist/`. GitHub Actions verifies pull requests and deploys the verified `main` branch to Pages.
+Source lives in feature directories under `src/`; artwork and fonts live in `assets/`. A single explicit allowlist maps those files to the existing flat public URLs. Preview and build rewrite module import paths for that public namespace; they do not bundle browser dependencies. See [Architecture](docs/ARCHITECTURE.md) for the directory map. `dist/` is generated: do not edit or commit it. GitHub Actions verifies pull requests and deploys the verified `main` branch to Pages.
 
 ## Help make it easier to learn
 
@@ -65,12 +66,12 @@ node scripts/learning-tool.mjs list
 node scripts/learning-tool.mjs describe agent-frames
 ```
 
-See [AI_USAGE](AI_USAGE.md) and the [machine-readable manifest](learning-tool-manifest.json) for supported actions, limits and JSON examples. Only six fixed lessons currently have execution adapters; other games are browser-only. This is not a hosted API or a chatbot. A matching replay does not authenticate a person or prove that they mastered a concept.
+See [AI_USAGE](docs/AI_USAGE.md) and the [machine-readable manifest](src/integrations/learning-tool-manifest.json) for supported actions, limits and JSON examples. Only six fixed lessons currently have execution adapters; other games are browser-only. This is not a hosted API or a chatbot. A matching replay does not authenticate a person or prove that they mastered a concept.
 
 ## Scope and rights
 
 These are simplified teaching models, not production AI benchmarks. Drafts and saved results stay in browser storage where supported; they are not cloud backups. Export and GenAI OS handoff are explicit user actions. Existing tests do not establish acceptance on every physical device. [EXPERIMENTS](EXPERIMENTS.md) documents the assumptions and implementation.
 
-**This public repository does not currently carry an open-source license.** Code reuse or redistribution requires permission from the author; see [COPYRIGHT](COPYRIGHT). Three Cats Studio artwork and comics are not freely licensed for reuse. The bundled font retains its [SIL Open Font License](Silkscreen-OFL.txt).
+**This public repository does not currently carry an open-source license.** Code reuse or redistribution requires permission from the author; see [COPYRIGHT](COPYRIGHT). Three Cats Studio artwork and comics are not freely licensed for reuse. The bundled font retains its [SIL Open Font License](assets/fonts/Silkscreen-OFL.txt).
 
 The preview above is a screenshot of the live homepage. © 2026 Chen Quan / 陈全.
