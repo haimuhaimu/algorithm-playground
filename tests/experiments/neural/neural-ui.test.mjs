@@ -4,6 +4,24 @@ import {readFile} from 'node:fs/promises';
 import {memoryStorage} from '../../helpers/storage-helper.mjs';
 import {DRAFT_KEYS} from '../../../dist/local-drafts.mjs';
 let serial=0;
+test('drawing previews reuse the unchanged model field and preserve the saved world on cancellation',async()=>{
+ const storage=memoryStorage(),u=await boot({storage,source:true});
+ const originalTanh=Math.tanh;let calls=0;
+ Math.tanh=value=>{calls++;return originalTanh(value);};
+ try{
+  u.click('step');
+  u.choose('tool','0');
+  const saved=storage.getItem(DRAFT_KEYS.neural),writes=storage.writes;
+  u.pointer('pointerdown',200,100);calls=0;
+  for(let i=0;i<60;i++)u.pointer('pointermove',205+i*5,110+i*2);
+  assert.equal(calls,0,'moving a draft point must not repeat the unchanged background network');
+  assert.equal(storage.getItem(DRAFT_KEYS.neural),saved);
+  assert.equal(storage.writes,writes);
+  u.pointer('pointercancel');
+  assert.equal(storage.getItem(DRAFT_KEYS.neural),saved);
+  assert.equal(u.elements.get('epoch').textContent,'1');
+ }finally{Math.tanh=originalTanh;u.restore();}
+});
 test('one ordinary step reports its actual change beside training without interrupting another action',async()=>{
  const storage=memoryStorage(),u=await boot({storage});try{
   window.innerHeight=844;u.elements.get('status').getBoundingClientRect=()=>({top:500,bottom:570});
@@ -243,8 +261,9 @@ test('model and learning-rate controls occur once beside the canvas, before trai
  }
  assert.ok(actions<html.indexOf('class="prediction"'),'optional guess must not separate settings from training');
 });
-async function boot({noCanvas=false,hidden=false,storage=memoryStorage()}={}){
- const html=await readFile(new URL('../../../dist/neural.html',import.meta.url),'utf8').catch(()=>'');
+async function boot({noCanvas=false,hidden=false,storage=memoryStorage(),source=false}={}){
+ const base=source?'../../../src/experiments/neural/':'../../../dist/';
+ const html=await readFile(new URL(base+'neural.html',import.meta.url),'utf8').catch(()=>'');
  assert.ok(html.includes('id="field"'),'new playable page must exist');
  const frames=new Map();let next=0;
  const ctx=new Proxy({},{get:(o,k)=>o[k]??(()=>{})});
@@ -264,7 +283,7 @@ async function boot({noCanvas=false,hidden=false,storage=memoryStorage()}={}){
  const old=new Map(Object.keys(globals).map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
  const restore=()=>{for(const[k,d]of old)if(d)Object.defineProperty(globalThis,k,d);else delete globalThis[k];};
  Object.assign(globalThis,globals);
- try{await import(new URL('../../../dist/neural.mjs?test='+ ++serial,import.meta.url));}catch(e){restore();throw e;}
+ try{await import(new URL(base+'neural.mjs?test='+ ++serial,import.meta.url));}catch(e){restore();throw e;}
  const fire=(el,type,props={})=>type==='click'&&el.disabled?false:el.dispatchEvent(Object.assign(new Event(type,{cancelable:true}),props));
  return {elements,frames,restore,fire,click:id=>fire(elements.get(id),'click'),choose:(key,value)=>fire(groups[key].find(e=>e.dataset[key]===value),'click'),
   change(id,value){elements.get(id).value=value;fire(elements.get(id),'change');},

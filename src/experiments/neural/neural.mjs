@@ -2,10 +2,12 @@ import {createModel,predict,metrics,train,makeDataset,editPoints,MAX_POINTS,MAX_
 import {DRAFT_KEYS,readDraft,writeDraft,clearDraft,validateNeuralDraft,draftMessage,questionKey} from '../../shared/local-drafts.mjs';
 import {createStepTrial,guessStep,runStepTrial,rewindStepTrial,stepEvidence} from './neural-step.mjs';
 import {paintStep} from './neural-step-view.mjs';
+import {createPredictionField} from './neural-field.mjs';
 const $=id=>document.getElementById(id),field=$('field'),ctx=field.getContext('2d'),chart=$('history').getContext('2d');
 const tools=[...document.querySelectorAll('[data-tool]')],presets=[...document.querySelectorAll('[data-preset]')],guesses=[...document.querySelectorAll('[data-guess]')];
 const names={diagonal:'一分为二',islands:'四个小岛',ring:'甜甜圈',custom:'我的涂鸦'};
 const W=900,H=560,percent=v=>(v*100).toFixed(0)+'%';
+const fieldCols=75,fieldRows=46,readField=createPredictionField(fieldCols,fieldRows);
 let dataset=makeDataset('islands'),points=dataset.train,testPoints=dataset.test,preset='islands';
 let model=createModel(),rate=.15,tool='probe',guess=null,history=[],undo=[],gesture=null;
 let running=false,remaining=0,raf=null,token=0,cursor={x:0,y:0},showCursor=false,probeActive=false;
@@ -190,9 +192,9 @@ function switchModel(kind){
 function path(context,pts){context.beginPath();pts.forEach((p,i)=>i?context.lineTo(p.x,p.y):context.moveTo(p.x,p.y));}
 function draw(){
  ctx.fillStyle=paper;ctx.fillRect(0,0,W,H);
- const cols=75,rows=46;
+ const cols=fieldCols,rows=fieldRows,probabilities=readField(model);
  for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
-  const x=(col+.5)/cols*2-1,y=1-(row+.5)/rows*2,p=predict(model,x,y);
+  const p=probabilities[row*cols+col];
   // Neutral at 0.5; saturation represents model tendency, not calibrated certainty.
   const strength=Math.abs(p-.5)*2;
   ctx.globalAlpha=(dark?.42:.52)*strength;

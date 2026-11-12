@@ -55,6 +55,7 @@ const files=['app.mjs','core.mjs','data.mjs','evolution-core.mjs','evolution.css
 files.push('neural-lesson.mjs','neural-lesson-ui.mjs','neural-lesson.css');
 files.push('pathfinding-cats.mjs','pathfinding-cats-ui.mjs','pathfinding-cats.css');
 files.push('neural-step.mjs','neural-step-view.mjs');
+files.push('neural-field.mjs');
 files.push('neural-guide.mjs','neural-guide-ui.mjs','neural-guide-view.mjs','neural-guide.css');
 files.push('neural-cat-lesson.mjs','neural-cat-lesson-ui.mjs','neural-cat-lesson.css',
  'neural-cat-01.jpg','neural-cat-02.jpg','neural-cat-03.jpg','neural-cat-04.jpg',
