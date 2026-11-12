@@ -1,6 +1,6 @@
 # 实验与实现说明
 
-[回到项目首页](README.md) · [在线试玩](https://haimuhaimu.github.io/algorithm-playground/) · [AI 工具指南](AI_USAGE.md)
+[回到项目首页](README.md) · [在线试玩](https://haimuhaimu.github.io/algorithm-playground/) · [AI 工具指南](docs/AI_USAGE.md) · [目录与发布映射](docs/ARCHITECTURE.md)
 
 这里记录算法假设、交互约束和源码入口。想先动手，可以从 [十个实验](README.md#十个主实验) 选一个。
 
@@ -69,7 +69,7 @@
 - 背景与成绩来自当前模型，不是预渲染效果。倾向不是校准概率，玩具模型不代表真实 AI 能力。
 - 切换已训练模型时保留上轮的同题对照卡，分别显示练习题、新题、损失、训练步数和实际用过的学习率。不同步数或学习率不判胜负；改题与撤销会清空旧对照。尚未训练新模型时切回会恢复上轮模型，曲线从恢复点继续记录。
 - 画布支持键盘和指针；取消手势保留旧题目和成绩。本地草稿保留题目、模型参数与步数、学习设置、曲线和最多 30 笔撤销；暂停或正常离开时保存训练进度，恢复后不自动训练。无上传。
-- `neural-core.mjs` 是纯模型，`neural.mjs` 是交互控制；数值梯度、训练表现和控制器生命周期有回归测试。
+- `src/experiments/neural/` 中的 `neural-core.mjs` 是纯模型，`neural.mjs` 是交互控制；数值梯度、训练表现和控制器生命周期有回归测试。
 
 ### 落沙实验
 
@@ -108,33 +108,72 @@
 
 ## 文件
 
+源码按功能归类；以下各小节中的文件名相对于标题所列目录。公开网址仍保持原有平面文件名，不随源码目录改变。完整目录分工与兼容入口见 [架构说明](docs/ARCHITECTURE.md)。
+
+### 推荐系统 · `src/experiments/recommendation/`
+
 - `core.mjs`：纯算法与实验函数。
 - `data.mjs`：合成内容、主题和初始口味。
 - `app.mjs`：交互状态与渲染。
 - `feedback-story.mjs`：不可变的单次反馈证据；`feedback-story-ui.mjs` / `feedback-story.css`：前后卡片对照、变化原因与独立判断。
 - `recommendation.html` / `style.css`：原生、响应式界面，含深浅色与减少动画支持。
+
+### 寻路 · `src/experiments/pathfinding/`
+
 - `pathfinding-core.mjs`：寻路、地图编辑与重放快照的纯函数。
 - `pathfinding.html` / `pathfinding.css` / `pathfinding.mjs`：寻路竞技场界面与交互。
+
+### 落沙 · `src/experiments/sand/`
+
 - `sand-core.mjs`：落沙规则、连续笔刷、材料计数和场景的纯函数。
+- `sand.html` / `sand.css` / `sand.mjs`：落沙实验室画布与交互。
+
+### 萤火虫 · `src/experiments/firefly/`
+
 - `firefly-core.mjs`：确定性相位同步、局部干预和合拍度的纯函数。
 - `firefly.html` / `firefly.css` / `firefly.mjs`：萤火虫合奏与观察视图。
-- `sand.html` / `sand.css` / `sand.mjs`：落沙实验室画布与交互。
+
+### 遗传赛车 · `src/experiments/evolution/`
+
 - `evolution-core.mjs`：可重放的遗传路线优化、碰撞和比赛采样。
 - `evolution.html` / `evolution.css` / `evolution.mjs`：遗传赛车、赛道绘画与进化观察。
+
+### 涂鸦训练场 · `src/experiments/neural/`
+
 - `neural-core.mjs`：确定性分类器、反向传播、梯度下降与独立测验数据。
 - `neural.html` / `neural.css` / `neural.mjs`：涂鸦训练场、画布编辑、模型对照与学习入口。
+
+### 盲盒探矿 · `src/experiments/mining/`
+
 - `mining-core.mjs`：可复现的多臂老虎机环境、探矿记录与三种对照策略。
 - `mining.html` / `mining.css` / `mining.mjs`：盲盒探矿界面、探测动画与复盘。
-- `scripts/serve.mjs` / `scripts/build.mjs`：白名单静态文件的本地服务与构建；`scripts/learning-tool.mjs`：AI 工具 CLI。贡献入口与开发命令见 [CONTRIBUTING](CONTRIBUTING.md)。
+
+### 像素邮局 · `src/experiments/pixel/`
+
 - `pixel-core.mjs`：确定性 Huffman 编码、独立字节解码、像素预设与线段绘画。
 - `pixel.html` / `pixel.css` / `pixel.mjs`：像素邮局、画纸编辑、打包解释与无损收件校验。
+
+### 脑内预演室 · `src/experiments/world-model/`
+
 - `world-model-core.mjs`：仅依赖观测的模型学习、预测、路线搜索与误差计算。
 - `world-model-environment.mjs` / `world-model-session.mjs`：独立真实环境、试飞快照和学习生命周期。
 - `world-model-lesson.mjs`：引导、独立判断、同基线重试和实验结尾的状态流程。
 - `world-model.html` / `world-model.css` / `world-model.mjs`：脑内预演室、轨迹可视化、分步控制与学习回顾。
+
+### AI 创作室 · `src/experiments/rsi/`
+
 - `rsi-core.mjs` / `rsi-session.mjs`：有限插画解释器、返修、候选评估与学习流程。
 - `rsi.html` / `rsi.css` / `rsi.mjs`：AI 创作室、作品前后对照与基于实际选择的实验结尾。
-- `tests/`：Node 内置测试，无外部测试依赖。
+
+### 其他入口与开发工具
+
+- `src/experiments/distributions/`：分布观察台；`src/agents/`：Agent 三关及共同结果存储。
+- `src/home/`、`src/home/album/`：首页与小相册；`src/learning/`：学习路线与站内往返。
+- `src/integrations/`：AI 工具、能力清单与 GenAI OS 返程校验；`src/shared/`：共享导航、样式、猫素材索引与本地草稿。
+- `assets/cats/`、`assets/comics/`、`assets/previews/`、`assets/fonts/`：运行图片与字体。
+- `scripts/runtime-files.mjs`：唯一发布白名单；`scripts/runtime-content.mjs`：源码模块引用到公开路径的转换。
+- `scripts/serve.mjs` / `scripts/build.mjs`：白名单文件的本地服务与构建；`scripts/learning-tool.mjs`：AI 工具 CLI。贡献入口与开发命令见 [CONTRIBUTING](CONTRIBUTING.md)。
+- `tests/`：按实验、Agent、首页、学习、集成、共享和交付归类，使用 Node 内置测试；`tests/helpers/` 放测试辅助代码。测试前构建会使用锁定的开发解析器，没有外部测试框架。
 
 已验证桌面浏览器及响应式窗口模拟，未完成真实手机/原生容器验收。涂鸦与像素邮局保留本地草稿：不跨浏览器、设备或站点同步，也不是云备份。学习路线去完整涂鸦再返回时，另用同标签页的临时记录恢复本轮操作；不会写进自由涂鸦草稿。禁用存储、空间不足或损坏的旧草稿会显示提示但不阻止游玩；删除本地草稿不改变当前画面，下一次操作会重新保存。清理站点数据会移除草稿；异常退出可能丢失尚未暂停的训练进度。
 

@@ -29,15 +29,18 @@
 
 ## 本地运行
 
-需要 Node.js 24+，没有第三方运行依赖，无需 `npm install`。
+需要 Node.js 24+。浏览器运行不依赖第三方库；本地预览与构建使用一个锁定版本的开发依赖 `es-module-lexer`，用于解析模块引用。
 
 ```sh
 git clone https://github.com/haimuhaimu/algorithm-playground.git
 cd algorithm-playground
+npm ci --ignore-scripts
 npm start
 ```
 
-打开 [http://127.0.0.1:3040/](http://127.0.0.1:3040/)。运行 `npm run verify` 会检查语法、跑测试并构建 `dist/`。开发文件入口、定向测试和提交前检查见 [贡献指南](CONTRIBUTING.md)。
+打开 [http://127.0.0.1:3040/](http://127.0.0.1:3040/)，不要用 `file://` 直接打开源码 HTML。运行 `npm test` 会先构建测试所需产物，再跑测试；`npm run verify` 会检查语法、跑测试并构建 `dist/`。开发文件入口、定向测试和提交前检查见 [贡献指南](CONTRIBUTING.md)。
+
+源码按功能放在 `src/`，图片与字体放在 `assets/`；网站原有页面与资源网址保持不变。目录分工、源码到公开网址的映射见 [架构说明](docs/ARCHITECTURE.md)。`dist/` 是生成目录，不手改、不提交。
 
 ## 十个主实验
 
@@ -66,7 +69,7 @@ npm start
 
 ## 让自己的 AI 参与
 
-有本地执行能力的 AI 可以用 [工具指南](AI_USAGE.md) 和 [能力清单](learning-tool-manifest.json) 发现工具、运行固定案例，或重算一份实际导出的实验记录。目前支持学习路线、像素解码、贝叶斯小课和 Agent 三关。其他实验仍需在浏览器里玩；清单不是在线执行服务，工具也不会读取你的画纸和草稿。
+有本地执行能力的 AI 可以用 [工具指南](docs/AI_USAGE.md) 和 [能力清单](src/integrations/learning-tool-manifest.json) 发现工具、运行固定案例，或重算一份实际导出的实验记录。目前支持学习路线、像素解码、贝叶斯小课和 Agent 三关。其他实验仍需在浏览器里玩；清单不是在线执行服务，工具也不会读取你的画纸和草稿。
 
 先让 AI 读取能力，再运行；不要让它凭实验名字编造接口：
 
@@ -75,7 +78,7 @@ node scripts/learning-tool.mjs list
 node scripts/learning-tool.mjs describe agent-frames
 ```
 
-完整动作、JSON 示例和重放约束见 [AI 工具指南](AI_USAGE.md)。AI 可以核对一次实际操作，不能替学习者“刷完”后宣称已经学会。
+完整动作、JSON 示例和重放约束见 [AI 工具指南](docs/AI_USAGE.md)。AI 可以核对一次实际操作，不能替学习者“刷完”后宣称已经学会。
 
 ## 边界与素材
 
@@ -85,6 +88,6 @@ node scripts/learning-tool.mjs describe agent-frames
 
 ### 许可说明
 
-仓库公开可见，欢迎试玩、反馈和讨论贡献；**目前未采用开放源代码许可证**。代码复用或再分发请先联系作者确认，见 [COPYRIGHT](COPYRIGHT)。三猫原画、角色图和漫画可在本项目中展示，不代表已授权任意转载或商用。第三方字体仍按随附的 [SIL Open Font License](Silkscreen-OFL.txt) 使用。
+仓库公开可见，欢迎试玩、反馈和讨论贡献；**目前未采用开放源代码许可证**。代码复用或再分发请先联系作者确认，见 [COPYRIGHT](COPYRIGHT)。三猫原画、角色图和漫画可在本项目中展示，不代表已授权任意转载或商用。第三方字体仍按随附的 [SIL Open Font License](assets/fonts/Silkscreen-OFL.txt) 使用。
 
 README 顶图是在线首页的实际截图，不含用户草稿。© 2026 陈全 / Chen Quan。
