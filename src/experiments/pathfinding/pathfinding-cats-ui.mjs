@@ -1,6 +1,6 @@
-import {CAT_ROUTE_SCENE,compareCatRoutes} from './pathfinding-cats.mjs?v=snack-routes-v1';
+import {CAT_ROUTE_SCENE,compareCatRoutes} from './pathfinding-cats.mjs?v=snack-predict-v1';
 
-const {cols,rows,cats,goal,suggested}=CAT_ROUTE_SCENE;
+const {cols,rows,cats,goal}=CAT_ROUTE_SCENE;
 const count=cols*rows,starts=new Map(cats.map(cat=>[cat.start,cat]));
 const arrows={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
 const position=index=>[index%cols,Math.floor(index/cols)];
@@ -28,14 +28,26 @@ function routeReason(cat,before,after,change){
  return `${name}换了一条走法，但一样是 ${after.distance} 步。换路不一定要走更远。`;
 }
 
+function challengeResult(state,selected){
+ const routes=state.after.routes,bobby=routes[1].distance,old=state.before.routes[1].distance;
+ const others=routes.filter((_,i)=>i!==1).map(route=>route.distance).filter(distance=>distance!==null);
+ const best=Math.min(...others);
+ if(bobby!==null&&bobby<best)return `做到了：波比 ${old} → ${bobby} 步，比另外两只的路都短。换另一格试试：拆墙一定能抄近路吗？`;
+ if(bobby!==null&&bobby===best)return `这次只是并列最短：波比 ${old} → ${bobby} 步，另外也有猫只走 ${bobby} 步。变短了，不一定就比别人短。再换一格试试。`;
+ if(bobby===old)return `波比仍要走 ${old} 步，这一格没有缩短它的路。${selected===1?'看看波比原图的粉线':'先切到波比，看看它原图的粉线'}，再选另一格检验。`;
+ if(bobby===null)return '这次波比到不了零食点。改动的位置比“加墙还是拆墙”更重要，换一格再试。';
+ return `波比 ${old} → ${bobby} 步，还不是最短。看看它绕去了哪里，再选另一格检验。`;
+}
+
 export function mountCatRoutes(doc=globalThis.document){
  const $=id=>doc.getElementById(id),lab=$('cat-route-lab');
  if(!lab||lab.dataset.ready)return;
  lab.dataset.ready='true';
  const create=tag=>doc.createElement(tag);
- let selected=1,focusIndex=suggested,state=compareCatRoutes();
+ let selected=1,focusIndex=0,state=compareCatRoutes(),challenge=false,freeIndex=null;
  const baseline=state.before;
  const editGrid=$('cat-route-after'),baseGrid=$('cat-route-before'),reset=$('cat-route-reset');
+ const challengeButton=$('cat-route-challenge'),run=$('cat-route-run');
  const choices=cats.map(cat=>$('cat-route-'+cat.id));
  const cellSet=(grid,editable)=>{
   const list=Array.from({length:count},(_,index)=>{
@@ -76,10 +88,10 @@ export function mountCatRoutes(doc=globalThis.document){
   container.replaceChildren(svg);
  }
  function paint(cells,world,editable){
-  const walls=new Set(world.walls),path=new Set(world.routes[selected].path),change=state.change;
+  const walls=new Set(world.walls),path=new Set(world.routes?.[selected].path||[]),change=state.change;
   for(let i=0;i<cells.length;i++){
    const el=cells[i],cat=starts.get(i),locked=Boolean(cat||i===goal),wall=walls.has(i),changed=change?.index===i;
-   el.className=['cat-route-cell',wall?'wall':'',locked?'endpoint':'',i===goal?'snack':'',changed?'changed':'',editable&&!change&&i===suggested?'suggested':''].filter(Boolean).join(' ');
+   el.className=['cat-route-cell',wall?'wall':'',locked?'endpoint':'',i===goal?'snack':'',changed?'changed':''].filter(Boolean).join(' ');
    if(!editable)continue;
    const kind=cat?`${cat.name}的起点`:i===goal?'零食点':wall?'墙':'空地';
    el.setAttribute('aria-label',`${coordinates(i)}，${kind}${path.has(i)?'，选中的路线经过':''}${locked?'，不能改':changed?'，再点恢复原图':wall?'，点按拆墙':'，点按加墙'}`);
@@ -87,33 +99,47 @@ export function mountCatRoutes(doc=globalThis.document){
   }
  }
  function renderMaps(){
-  const cat=cats[selected],old=baseline.routes[selected],current=state.after.routes[selected];
+  const cat=cats[selected],old=baseline.routes[selected],current=state.after.routes?.[selected];
   paint(oldCells,baseline,false);paint(newCells,state.after,true);
-  drawPath($('cat-route-before-track'),old.path);drawPath($('cat-route-after-track'),current.path);
+  drawPath($('cat-route-before-track'),old.path);drawPath($('cat-route-after-track'),current?.path||[]);
   baseGrid.setAttribute('aria-label',`原图：${cat.name}走 ${steps(old.distance)}到零食点`);
   choices.forEach((button,index)=>button.setAttribute('aria-pressed',String(selected===index)));
-  $('cat-route-reason').textContent=routeReason(cat,old,current,state.change);
+  $('cat-route-reason').textContent=current?routeReason(cat,old,current,state.change):`原图里${cat.name}要走 ${old.distance} 步。改后会怎样？选好一格，再亲手检验。`;
+  $('cat-route-after-title').textContent=challenge?(current?'检验结果':'你选的改法'):'改后';
+  $('cat-route-after-hint').textContent=challenge?(current?'点另一格再试':'还没检验'):'在这张图点一格';
  }
  function renderResults(restored=false){
-  const winners=state.after.routes.filter(route=>route.distance!==null);
+  const pending=state.after.routes===null;
+  const winners=(state.after.routes||[]).filter(route=>route.distance!==null);
   const min=Math.min(...winners.map(route=>route.distance));
   const names=winners.filter(route=>route.distance===min).map(route=>cats.find(cat=>cat.id===route.id).name);
-  $('cat-route-winner').textContent=names.length?`${state.change?'改后':'原图'}最短：${names.join('、')}${names.length>1?'并列':''} · ${steps(min)}`:'改后三只猫都到不了零食点。';
-  const impacts=state.change?cats.map((cat,i)=>routeImpact(cat.name,baseline.routes[i],state.after.routes[i])).filter(Boolean):[];
-  $('cat-route-edit').textContent=state.change
+  $('cat-route-winner').textContent=pending?'目标：波比的路比另外两只都短':names.length?`${state.change?'改后':'原图'}最短：${names.join('、')}${names.length>1?'并列':''} · ${steps(min)}`:'改后三只猫都到不了零食点。';
+  const impacts=state.change&&!pending?cats.map((cat,i)=>routeImpact(cat.name,baseline.routes[i],state.after.routes[i])).filter(Boolean):[];
+  $('cat-route-edit').textContent=pending
+   ?state.change?`已选${state.change.kind==='added'?'加墙':'拆墙'}，还没有检验；换一格会替换这次选择。`:'原图波比要走 11 步，另外两只各 9 步。你会改哪一格？'
+   :state.change
    ?`${state.change.kind==='added'?'加墙':'拆墙'} · ${impacts.join('；')||'三只猫图上的路线和步数都没变'}。`
-   :restored?'已恢复原图，可以再试一格。':'试试拆掉「改后」图里带虚线的墙。';
+   :restored?'已恢复原图，可以再试一格。':'点「改后」图的一格，看看谁的路线会变。';
   $('cat-route-edit-position').textContent=state.change?`改动位置：${coordinates(state.change.index)}。`:'';
   const body=$('cat-route-results');
   body.replaceChildren(...cats.map((cat,i)=>{
-   const row=create('tr'),name=create('th'),a=baseline.routes[i].distance,b=state.after.routes[i].distance;
+   const row=create('tr'),name=create('th'),a=baseline.routes[i].distance,b=state.after.routes?.[i].distance;
    name.setAttribute('scope','row');name.textContent=cat.name;row.append(name);
-   for(const text of [steps(a),steps(b),changeText(a,b)]){const cell=create('td');cell.textContent=text;row.append(cell);}
+   for(const text of [steps(a),pending?'待检验':steps(b),pending?'—':changeText(a,b)]){const cell=create('td');cell.textContent=text;row.append(cell);}
    return row;
   }));
   reset.disabled=!state.change;
+  $('cat-route-trial').hidden=!challenge;
+  run.disabled=!state.change||!pending;
+  run.textContent=pending?'检验这一步':'已检验 · 换一格再试';
+  $('cat-route-trial-status').textContent=!challenge?'':pending
+   ?state.change?`${coordinates(state.change.index)}${state.change.kind==='added'?'加墙':'拆墙'}。选定了？点按钮看三只猫各走几步。`:'先点地图选一格，改后路线暂时不公布。'
+   :challengeResult(state,selected);
+  challengeButton.setAttribute('aria-pressed',String(challenge));
+  challengeButton.textContent=challenge?'退出挑战，回到自由改图':'挑战：帮波比找近路';
+  $('cat-route-help').textContent=challenge?'只改一格，让波比比另外两只都少走几步。每次从同一张原图出发，不叠加改动。方向键移动，空格或 Enter 选一格。':'每次只改一格，不叠加。点墙拆开，点空地加墙，再比较三只猫的路。键盘用方向键移动，空格或 Enter 改一格。';
  }
- function setEdit(index){state=compareCatRoutes(index);renderMaps();renderResults(index===null);}
+ function setEdit(index){state=compareCatRoutes(index,{reveal:!challenge});renderMaps();renderResults(index===null);}
  function revealEditNotice(cell){
   const view=doc.defaultView;
   if(!view?.scrollBy)return;
@@ -123,13 +149,22 @@ export function mountCatRoutes(doc=globalThis.document){
   // Only nudge the viewport when the receipt and the edited square can both stay in view.
   if(square.top>=0&&square.bottom+shift<=view.innerHeight)view.scrollBy({top:-shift,behavior:'instant'});
  }
- choices.forEach((button,index)=>button.addEventListener('click',()=>{selected=index;renderMaps();}));
- reset.addEventListener('click',()=>{moveFocus(suggested,true);setEdit(null);});
+ choices.forEach((button,index)=>button.addEventListener('click',()=>{selected=index;renderMaps();renderResults();}));
+ reset.addEventListener('click',()=>{moveFocus(0,true);setEdit(null);});
+ challengeButton.addEventListener('click',()=>{
+  if(!challenge)freeIndex=state.change?.index??null;
+  challenge=!challenge;
+  moveFocus(0);setEdit(challenge?null:freeIndex);
+ });
+ run.addEventListener('click',()=>{
+  if(!challenge||!state.change||state.after.routes)return;
+  state=compareCatRoutes(state.change.index);renderMaps();renderResults();
+ });
  // Main arena owns its global history only when working outside this case.
  lab.addEventListener('keydown',event=>{
   if(event.key==='Escape'||((event.ctrlKey||event.metaKey)&&['z','y'].includes(event.key.toLowerCase())))event.stopPropagation();
  });
- moveFocus(suggested);renderMaps();renderResults();
+ moveFocus(0);renderMaps();renderResults();
 }
 
 if(globalThis.document)mountCatRoutes();

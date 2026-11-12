@@ -111,7 +111,8 @@ test('the cat case keeps only one edit and never rewrites the original arena or 
   assert.ok(u.els.has('cat-route-lab'),'the standalone experiment is on the actual pathfinding page');
   const {mountCatRoutes}=await import('../../../dist/pathfinding-cats-ui.mjs');mountCatRoutes(u.doc);
   const get=id=>u.els.get(id),grid=get('cat-route-after'),cell=index=>grid.children[index];
-  assert.equal(cell(31).tabIndex,0,'the suggested wall is the initial keyboard entry');
+  assert.equal(cell(0).tabIndex,0,'the keyboard entry does not identify a winning edit');
+  assert.ok([...grid.children].every(el=>!el.className.includes('suggested')),'free play must not disclose the optional challenge answer in advance');
   assert.equal(cell(28).getAttribute('aria-disabled'),'true','Bobby’s start is protected');
   u.fire(cell(31),'click');
   assert.match(get('cat-route-winner').textContent,/波比.*7/);
@@ -123,7 +124,7 @@ test('the cat case keeps only one edit and never rewrites the original arena or 
   assert.match(get('cat-route-winner').textContent,/臭臭.*9/);
   u.fire(cell(28),'click');assert.match(get('cat-route-winner').textContent,/臭臭.*9/);
   u.click('cat-route-reset');assert.match(get('cat-route-winner').textContent,/嘿姆.*臭臭.*9/);
-  assert.equal(u.doc.activeElement,cell(31));
+  assert.equal(u.doc.activeElement,cell(0));
   assert.deepEqual(u.map(),arena);assert.equal(get('bfs-distance').textContent,beforeStatus);
   u.click('undo-map');assert.equal(u.map()[0],'空地');
  }finally{u.restore();}
@@ -135,7 +136,7 @@ test('the status above the cat map reports actual route effects, even for an uns
   const grid=u.els.get('cat-route-after'),notice=u.els.get('cat-route-edit');
   const position=u.els.get('cat-route-edit-position');
   const edit=index=>u.fire(grid.children[index],'click');
-  assert.match(notice.textContent,/虚线/);
+  assert.match(notice.textContent,/点.*一格/);
   edit(31);
   assert.match(notice.textContent,/拆墙.*波比.*11.*7.*少走 4 步/);
   assert.match(position.textContent,/第 4 行第 5 列/);
@@ -173,6 +174,81 @@ test('a short-screen cat edit reveals the clipped receipt without losing the edi
   assert.equal(u.doc.activeElement,cell);
   const settled=scroll;u.fire(cell,'click');
   assert.equal(scroll,settled,'do not scroll again when both are already visible');
+ }finally{u.restore();}
+});
+
+test('cat challenge stages the spatial prediction without leaking paths, distances or the suggested answer',async()=>{
+ const u=await boot();try{
+  const {mountCatRoutes}=await import('../../../dist/pathfinding-cats-ui.mjs');mountCatRoutes(u.doc);
+  const get=id=>u.els.get(id),cell=index=>get('cat-route-after').children[index];
+  u.click('cat-route-challenge');
+  assert.equal(get('cat-route-run').disabled,true);
+  assert.equal(cell(0).tabIndex,0,'challenge entry must not focus the winning wall');
+  assert.ok([...get('cat-route-after').children].every(el=>!el.className.includes('suggested')));
+  u.fire(cell(28),'click');assert.equal(get('cat-route-run').disabled,true);
+  u.fire(cell(31),'click');
+  assert.equal(get('cat-route-run').disabled,false);
+  assert.equal(cell(31).getAttribute('aria-pressed'),'true');
+  assert.doesNotMatch(cell(31).className,/wall/,'the proposed wall removal is visible');
+  assert.equal(get('cat-route-after-track').children[0].children.length,0);
+  assert.ok([...get('cat-route-after').children].every(el=>!el.getAttribute('aria-label').includes('路线经过')));
+  for(const row of get('cat-route-results').children)assert.equal(row.children[2].textContent,'待检验');
+  assert.doesNotMatch(get('cat-route-edit').textContent,/7 步|少走 4|近路/);
+  u.click('cat-route-heim');
+  assert.equal(get('cat-route-after-track').children[0].children.length,0,'observing another cat must not reveal the trial');
+  u.click('cat-route-run');
+  assert.equal(get('cat-route-run').disabled,true,'testing the same edit again is not another trial');
+  assert.equal(get('cat-route-after-track').children[0].children.length,1);
+  assert.match(get('cat-route-trial-status').textContent,/做到了.*波比.*11.*7/);
+  assert.deepEqual(get('cat-route-results').children.map(row=>row.children[2].textContent),['9 步','7 步','9 步']);
+ }finally{u.restore();}
+});
+
+test('cat challenge distinguishes a tie, a shorter unique route and an irrelevant edit using actual routes',async()=>{
+ const u=await boot();try{
+  const {mountCatRoutes}=await import('../../../dist/pathfinding-cats-ui.mjs');mountCatRoutes(u.doc);
+  const get=id=>u.els.get(id),cell=index=>get('cat-route-after').children[index];
+  u.click('cat-route-challenge');
+  u.fire(cell(22),'click');u.click('cat-route-run');
+  assert.match(get('cat-route-trial-status').textContent,/并列.*9/);
+  assert.doesNotMatch(get('cat-route-trial-status').textContent,/做到了/);
+  u.fire(cell(31),'click');
+  assert.match(cell(22).className,/wall/,'each trial starts from the same original map');
+  assert.doesNotMatch(get('cat-route-trial-status').textContent,/并列|做到了/,'old verdict is not the new edit’s result');
+  assert.equal(get('cat-route-after-track').children[0].children.length,0);
+  u.click('cat-route-run');assert.match(get('cat-route-trial-status').textContent,/做到了/);
+  u.fire(cell(4),'click');u.click('cat-route-run');
+  assert.match(get('cat-route-trial-status').textContent,/仍.*11.*没.*缩短/);
+  u.fire(cell(4),'click');assert.equal(get('cat-route-run').disabled,true,'deselect returns to an unchosen trial');
+  u.fire(cell(22),'click');u.click('cat-route-reset');
+  assert.equal(get('cat-route-run').disabled,true);assert.equal(u.doc.activeElement,cell(0));
+ }finally{u.restore();}
+});
+
+test('leaving the optional cat challenge restores free-play edit and keeps the main arena history intact',async()=>{
+ const u=await boot();try{
+  u.edit(0);u.click('finish');const arena=u.map();
+  const {mountCatRoutes}=await import('../../../dist/pathfinding-cats-ui.mjs');mountCatRoutes(u.doc);
+  const get=id=>u.els.get(id),cell=index=>get('cat-route-after').children[index];
+  u.fire(cell(13),'click');u.click('cat-route-challenge');
+  u.fire(cell(31),'click');u.click('cat-route-run');u.click('cat-route-challenge');
+  assert.equal(cell(13).getAttribute('aria-pressed'),'true');
+  assert.equal(cell(31).getAttribute('aria-pressed'),'false');
+  assert.deepEqual(get('cat-route-results').children.map(row=>row.children[2].textContent),['13 步','11 步','9 步']);
+  assert.equal(get('cat-route-trial').hidden,true);
+  assert.deepEqual(u.map(),arena);u.click('undo-map');assert.equal(u.map()[0],'空地');
+  u.click('cat-route-challenge');assert.equal(get('cat-route-run').disabled,true,'a fresh challenge has no stale submitted result');
+  u.fire(cell(0),'keydown',{key:'ArrowRight'});assert.equal(u.doc.activeElement,cell(1));
+ }finally{u.restore();}
+});
+
+test('no-change feedback identifies Bobby’s route when another cat is being observed',async()=>{
+ const u=await boot();try{
+  const {mountCatRoutes}=await import('../../../dist/pathfinding-cats-ui.mjs');mountCatRoutes(u.doc);
+  u.click('cat-route-challenge');u.click('cat-route-heim');
+  u.fire(u.els.get('cat-route-after').children[4],'click');u.click('cat-route-run');
+  assert.match(u.els.get('cat-route-trial-status').textContent,/切到波比/,'do not suggest the currently displayed Heim path is Bobby’s explanation');
+  assert.match(u.els.get('cat-route-reason').textContent,/嘿姆/);
  }finally{u.restore();}
 });
 

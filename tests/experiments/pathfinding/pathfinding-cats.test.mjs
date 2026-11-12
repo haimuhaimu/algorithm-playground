@@ -53,6 +53,19 @@ test('changing a returned snapshot cannot modify the scene or later comparisons'
   assert.equal(next.after.routes[1].path.length, 8);
 });
 
+test('a staged one-cell edit has a real changed map but does not disclose its route results', () => {
+  const pending = compareCatRoutes(31, { reveal: false });
+  assert.deepEqual(pending.change, { index: 31, kind: 'removed' });
+  assert.deepEqual(pending.after.walls, [4, 22, 40, 58]);
+  assert.equal(pending.after.routes, null, 'no route, distance or winner before the player tests the edit');
+  assert.deepEqual(pending.before.routes.map(route => route.distance), [9, 11, 9]);
+  assert.equal(compareCatRoutes(null, { reveal: false }).after.routes, null);
+  assert.equal(compareCatRoutes(28, { reveal: false }).change, null, 'cat starts remain protected');
+  const revealed = compareCatRoutes(31);
+  assert.deepEqual(revealed.after.routes.map(route => route.distance), [9, 7, 9]);
+  assert.equal(pending.after.routes, null, 'revealing a new snapshot cannot rewrite the pending one');
+});
+
 // An independent, goal-outward BFS gives the exact distance at every start.
 // Deliberately do not call the A* engine or reuse its neighbor/route helpers.
 function distancesFromGoal(cols, rows, goal, walls) {

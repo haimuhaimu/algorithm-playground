@@ -9,6 +9,14 @@
 .cat-route-cats button[aria-pressed=true]{border-color:var(--cat-mark);box-shadow:inset 0 0 0 1px var(--cat-mark);font-weight:700}
 .cat-route-cats img{width:30px;height:30px;object-fit:contain}
 .cat-route-reset:disabled{color:var(--muted);background:var(--soft)}
+.cat-route-challenge,.cat-route-trial button{min-height:44px;padding:10px 14px;border:1px solid var(--cat-mark);border-radius:8px;background:var(--surface);color:var(--cat-mark);font:inherit;font-size:13px;font-weight:650}
+.cat-route-challenge{margin-top:6px}
+.cat-route-challenge[aria-pressed=true]{border-color:var(--line);color:var(--muted)}
+.cat-route-trial{margin-top:10px}
+.cat-route-trial[hidden]{display:none}
+.cat-route-trial button{width:100%;background:var(--cat-path);color:var(--surface)}
+.cat-route-trial button:disabled{background:var(--soft);border-color:var(--line);color:var(--muted);cursor:default}
+.cat-route-trial p{margin:8px 0 0;font-size:13px;line-height:1.6}
 .cat-route-notice{display:flex;flex-wrap:wrap;align-items:baseline;gap:1px 14px;margin:12px 0;padding:9px 12px;background:var(--soft);border-radius:8px}
 #cat-route-winner{font-size:15px;font-weight:700}#cat-route-edit{font-size:12px;color:var(--muted)}
 .cat-route-workspace{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"original current" "legend legend" "evidence evidence";gap:8px 14px}
