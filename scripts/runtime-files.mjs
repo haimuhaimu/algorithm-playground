@@ -180,6 +180,7 @@ const groups = {
     "neural-cat-lesson.mjs",
     "neural-cat-quick-ui.mjs",
     "neural-core.mjs",
+    "neural-field.mjs",
     "neural-generalization-ui.mjs",
     "neural-generalization-view.mjs",
     "neural-generalization.css",
