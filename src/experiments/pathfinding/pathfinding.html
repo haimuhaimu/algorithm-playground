@@ -8,9 +8,9 @@
  <script type="module" src="./pathfinding.mjs?v=cancel-results-v1"></script>
  <title>算法游乐场 · 寻路竞技场</title>
  <link rel="stylesheet" href="./navigation.css?v=three-cat-brand-v1"><script type="module" src="./navigation.mjs?v=cats-in-scenes-v1"></script>
- <link rel="stylesheet" href="./pathfinding-cats.css?v=snack-landing-v1">
+ <link rel="stylesheet" href="./pathfinding-cats.css?v=snack-predict-v1">
  <link rel="stylesheet" href="./space-theme.css">
- <script type="module" src="./pathfinding-cats-ui.mjs?v=snack-feedback-v2"></script>
+ <script type="module" src="./pathfinding-cats-ui.mjs?v=snack-predict-v1"></script>
  <link rel="stylesheet" href="./experiment-showcase.css?v=home-aligned-v1">
 </head>
 <body class="play-showcase">
@@ -109,6 +109,7 @@
   </div>
   <section class="cat-route-lab" id="cat-route-lab" aria-labelledby="cat-route-title">
    <header class="cat-route-header"><p class="eyebrow">三猫小场景 · 只改一格</p><h2 id="cat-route-title">同一个零食点，谁的路更短？</h2><p>嘿姆、波比、臭臭从不同的地方出发。点一格就能加墙或拆墙，看看谁要绕路、谁捡到了近路。</p></header>
+   <button class="cat-route-challenge" id="cat-route-challenge" type="button" aria-pressed="false" aria-controls="cat-route-trial">挑战：帮波比找近路</button>
    <div class="cat-route-controls">
     <div class="cat-route-cats" role="group" aria-label="在两张图上看哪只猫的路线">
      <button id="cat-route-heim" type="button" aria-pressed="false"><img src="./studio-heim-portrait.png" alt="" width="208" height="208" loading="lazy">嘿姆</button>
@@ -117,11 +118,12 @@
     </div>
     <button class="cat-route-reset" id="cat-route-reset" type="button" disabled>恢复原图</button>
    </div>
-   <p class="cat-route-instructions" id="cat-route-help">每次只改一格，不叠加。可以先拆掉地图中间那格墙，再看看步数。键盘用方向键移动，空格或 Enter 改一格。</p>
+   <p class="cat-route-instructions" id="cat-route-help">每次只改一格，不叠加。点墙拆开，点空地加墙，再比较三只猫的路。键盘用方向键移动，空格或 Enter 改一格。</p>
    <div class="cat-route-notice" id="cat-route-notice" role="status" aria-atomic="true"><p id="cat-route-winner"></p><p id="cat-route-edit"></p><span class="sr-only" id="cat-route-edit-position"></span></div>
    <div class="cat-route-workspace">
-    <figure class="cat-route-current"><figcaption>改后 <span>在这张图点一格</span></figcaption>
+    <figure class="cat-route-current"><figcaption><strong id="cat-route-after-title">改后</strong> <span id="cat-route-after-hint">在这张图点一格</span></figcaption>
      <div class="cat-route-board"><div class="cat-route-grid" id="cat-route-after" role="group" aria-label="可编辑的三猫地图" aria-describedby="cat-route-help"></div><div class="cat-route-track" id="cat-route-after-track" aria-hidden="true"></div></div>
+     <div class="cat-route-trial" id="cat-route-trial" hidden><button id="cat-route-run" type="button" disabled>检验这一步</button><p id="cat-route-trial-status" role="status" aria-atomic="true"></p></div>
     </figure>
     <div class="cat-route-evidence">
      <table class="cat-route-table"><caption>三只猫各走几步？</caption><thead><tr><th scope="col">猫咪</th><th scope="col">原图</th><th scope="col">改后</th><th scope="col">变化</th></tr></thead><tbody id="cat-route-results"></tbody></table>

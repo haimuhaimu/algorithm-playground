@@ -14,16 +14,16 @@ export const CAT_ROUTE_SCENE = Object.freeze({
   walls: Object.freeze([4, 22, 31, 40, 58]),
 });
 
-function routeSnapshot(walls) {
+function routeSnapshot(walls, reveal = true) {
   const { cols, rows, goal, cats } = CAT_ROUTE_SCENE;
-  const routes = cats.map(({ id, start }) => {
+  const routes = reveal ? cats.map(({ id, start }) => {
     const { path, distance } = search({ cols, rows, start, goal, walls }, 'astar');
     return { id, path, distance };
-  });
+  }) : null;
   return { walls, routes };
 }
 
-export function compareCatRoutes(index = null) {
+export function compareCatRoutes(index = null, { reveal = true } = {}) {
   const { cols, rows, goal, cats, walls } = CAT_ROUTE_SCENE;
   const editable = Number.isInteger(index) && index >= 0 && index < cols * rows &&
     index !== goal && !cats.some(({ start }) => start === index);
@@ -35,6 +35,6 @@ export function compareCatRoutes(index = null) {
   return {
     change,
     before: routeSnapshot([...walls]),
-    after: routeSnapshot(afterWalls),
+    after: routeSnapshot(afterWalls, reveal),
   };
 }
