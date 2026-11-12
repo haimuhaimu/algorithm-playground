@@ -1,4 +1,4 @@
-import {feedback,rankPosts,scorePost,probability,metrics} from './core.mjs?v=cat-feedback-v1';
+import {feedback,rankPosts,scorePost,probability,metrics} from './core.mjs?v=feedback-prediction-v1';
 
 function freeze(value){
  if(value&&typeof value==='object'){

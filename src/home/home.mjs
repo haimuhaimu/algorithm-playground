@@ -95,6 +95,9 @@ if(!legacyRoute()){
  if(ctx){
   const scene=createShowcaseScene(),clock=createHeroClock(),reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const studioImages=new Map();
+  const observesHero='IntersectionObserver' in window;
+  // Keep the animation clock unchanged; only image requests wait for the viewport signal.
+  let heroInViewport=!observesHero;
   let raf=0,epoch=0,disposed=false,lastPaint=-Infinity;
   const col=i=>i%scene.map.cols,row=i=>Math.floor(i/scene.map.cols),depth=i=>col(i)+row(i);
   const walls=new Set(scene.map.walls),cells=Array.from({length:scene.map.cols*scene.map.rows},(_,i)=>i).sort((a,b)=>depth(a)-depth(b));
@@ -149,28 +152,42 @@ if(!legacyRoute()){
    const state=clock.read();canvas.dataset.motion=state.running?'playing':state.reduced?'reduced':'paused';
    motion.disabled=state.reduced;motion.setAttribute('aria-pressed',String(state.paused));motion.innerHTML=state.reduced?'静态展示 · 已减少动态效果':state.paused?'<span aria-hidden="true">▶</span> 播放动画':'<span aria-hidden="true">Ⅱ</span> 暂停动画';
    draw(state.reduced?scene.duration-1:state.elapsed);
-   if(state.running&&!disposed){const token=epoch;const tick=now=>{if(token!==epoch||disposed)return;const elapsed=clock.tick(now);if(now-lastPaint>=33){draw(elapsed);lastPaint=now;}raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);}
+   if(state.running&&!disposed){
+    // Prewarm during the search, before any cat needs its running pose.
+    if(heroInViewport&&!document.hidden&&!reduced.matches)loadArt('run');
+    const token=epoch;const tick=now=>{if(token!==epoch||disposed)return;const elapsed=clock.tick(now);if(now-lastPaint>=33){draw(elapsed);lastPaint=now;}raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);
+   }
   }
   const visibility=()=>{clock.set({visible:!document.hidden});sync();};
   const preference=()=>{clock.set({reduced:reduced.matches});sync();};
   const resize=()=>draw(clock.read().reduced?scene.duration-1:clock.read().elapsed);
   let artReady=0;
-  for(const src of studioMotionAssets){
-   const image=new Image();
-   studioImages.set(src,image);
-   image.addEventListener('load',()=>{
-    if(++artReady===studioMotionAssets.length)canvas.dataset.catArt='studio';
-    if(!disposed)resize();
-   },{once:true});
-   image.src=src;
+  function loadArt(pose){
+   for(const src of studioMotionAssets){
+    if(!src.endsWith(`-${pose}.png`)||studioImages.has(src))continue;
+    const image=new Image();
+    studioImages.set(src,image);
+    image.addEventListener('load',()=>{
+     if(++artReady===studioMotionAssets.length)canvas.dataset.catArt='studio';
+     if(!disposed)resize();
+    },{once:true});
+    image.src=src;
+   }
   }
+  loadArt('idle');
   motion.addEventListener('click',()=>{clock.set({paused:!clock.read().paused});sync();});
   document.addEventListener('visibilitychange',visibility);reduced.addEventListener('change',preference);
   let observer;
-  if('IntersectionObserver' in window){observer=new IntersectionObserver(entries=>{clock.set({inView:entries[0].isIntersecting});sync();},{threshold:0});observer.observe(canvas);}
+  if(observesHero){observer=new IntersectionObserver(entries=>{
+   if(disposed)return;
+   heroInViewport=entries.at(-1).isIntersecting;clock.set({inView:heroInViewport});sync();
+  },{threshold:0});observer.observe(canvas);}
   const sizeObserver='ResizeObserver' in window?new ResizeObserver(resize):null;
   sizeObserver?.observe(canvas);window.addEventListener('resize',resize);theme.addEventListener('click',resize);color.addEventListener('change',resize);
-  window.addEventListener('pagehide',()=>{disposed=true;epoch++;cancelAnimationFrame(raf);observer?.disconnect();sizeObserver?.disconnect();});
+  window.addEventListener('pagehide',()=>{
+   disposed=true;heroInViewport=!observesHero;epoch++;cancelAnimationFrame(raf);
+   observer?.disconnect();observer?.takeRecords();sizeObserver?.disconnect();
+  });
   window.addEventListener('pageshow',()=>{if(disposed){disposed=false;observer?.observe(canvas);sizeObserver?.observe(canvas);clock.set({visible:!document.hidden});sync();}});
   fallback.hidden=true;canvas.hidden=false;motion.hidden=false;clock.set({visible:!document.hidden,reduced:reduced.matches});sync();
  }

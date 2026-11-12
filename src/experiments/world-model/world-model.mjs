@@ -235,9 +235,12 @@ function animate(time,myToken){
  if(lastTime===null)lastTime=time;
  remainder+=Math.max(0,time-lastTime);lastTime=time;
  const count=Math.floor(remainder/100);remainder-=count*100;
- if(count)session=advanceFlight(session,Math.min(count,STEPS));
- if(session.flight?.done){complete();return;}
- render();frame=requestAnimationFrame(t=>animate(t,myToken));
+ if(count){
+  session=advanceFlight(session,Math.min(count,STEPS));
+  if(session.flight?.done){complete();return;}
+  render();
+ }
+ frame=requestAnimationFrame(t=>animate(t,myToken));
 }
 function play(){
  if(media.matches){session=advanceFlight(session,STEPS);complete();return;}

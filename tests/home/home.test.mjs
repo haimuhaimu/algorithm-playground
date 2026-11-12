@@ -63,10 +63,13 @@ test('legacy recommendation bookmarks preserve query and hash without taking ove
  assert.equal(legacyRecommendationTarget('#%66eed-section'), './recommendation.html#%66eed-section');
  for(const hash of ['','#experiments','#about','#top','#unknown','#%E0%A4%A'])assert.equal(legacyRecommendationTarget(hash),null);
 });
-test('every preserved recommendation element bookmark remains reachable except the new about section',async()=>{
+test('legacy recommendation bookmarks remain reachable without claiming newly introduced controls were homepage anchors',async()=>{
  const html=await readFile(new URL('../../dist/recommendation.html',import.meta.url),'utf8');
  for(const [,id] of html.matchAll(/\bid="([^"]+)"/g)){
   if(id==='about')continue;
+  // This optional flow was introduced after recommendation moved to its own URL.
+  // Do not extend the homepage redirect surface for controls that never lived there.
+  if(id.startsWith('feedback-prediction-')){assert.equal(legacyRecommendationTarget('#'+id),null);continue;}
   assert.equal(legacyRecommendationTarget('#'+id,'?v=saved'),`./recommendation.html?v=saved#${id}`,id);
  }
 });

@@ -11,8 +11,9 @@ test('Heim sits inside the one real ship and is introduced outside the trajector
  assert.match(html.replace(plot,''),/嘿姆[^<]*试飞/,'crew introduction must not be painted on top of evidence');
 });
 let serial=0;
-async function boot({reduced=false,height=568}={}){
- const html=await readFile(new URL('../../../dist/world-model.html',import.meta.url),'utf8');
+async function boot({reduced=false,height=568,source=false}={}){
+ const base=source?'../../../src/experiments/world-model/':'../../../dist/';
+ const html=await readFile(new URL(base+'world-model.html',import.meta.url),'utf8');
  class Element extends EventTarget{
   constructor(){super();this.dataset={};this.attrs={};this.value='';this.textContent='';this.hidden=false;this.disabled=false;this.style={setProperty(){}};this.bounds={top:0,bottom:0};this.scrolls=[];}
   setAttribute(k,v){this.attrs[k]=String(v);}getAttribute(k){return this.attrs[k];}getBoundingClientRect(){return this.bounds;}scrollIntoView(options){this.scrolls.push(options);}focus(){doc.activeElement=this;}
@@ -24,7 +25,7 @@ async function boot({reduced=false,height=568}={}){
  const old=new Map(Object.keys(globals).map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
  const restore=()=>{for(const[k,d]of old)d?Object.defineProperty(globalThis,k,d):delete globalThis[k];};
  for(const[k,value]of Object.entries(globals))Object.defineProperty(globalThis,k,{value,writable:true,configurable:true});
- try{await import(new URL('../../../dist/world-model.mjs?t='+ ++serial,import.meta.url));}catch(e){restore();throw e;}
+ try{await import(new URL(base+'world-model.mjs?t='+ ++serial,import.meta.url));}catch(e){restore();throw e;}
  const fire=(node,type)=>node.dispatchEvent(new Event(type));
  return {els,frames,doc,media,win,restore,click:id=>{const e=els.get(id);if(!e.disabled&&!e.hidden)fire(e,'click');},
   input:(id,value)=>{els.get(id).value=String(value);fire(els.get(id),'input');},
@@ -32,6 +33,28 @@ async function boot({reduced=false,height=568}={}){
   finish(){for(let i=0;i<=65;i++)this.tick(i*100);},
   hide(){doc.hidden=true;fire(doc,'visibilitychange');},show(){doc.hidden=false;fire(doc,'visibilitychange');}};
 }
+test('flight paints only when a simulation beat advances, even at 120Hz',async()=>{
+ const u=await boot({source:true});try{
+  const path=u.els.get('actual-path'),progress=u.els.get('progress');
+  u.click('fly');
+  const prediction=u.els.get('prediction-path').getAttribute('points');
+  const setAttribute=path.setAttribute.bind(path);let writes=0;
+  path.setAttribute=(key,value)=>{if(key==='points')writes++;setAttribute(key,value);};
+  for(let i=0;i<12;i++)u.tick(i*1000/120);
+  assert.equal(writes,0,'frames before the first 100ms beat must not rewrite the path');
+  assert.match(progress.textContent,/^0 \/ 60/);
+  u.tick(100);
+  assert.equal(writes,1);
+  assert.equal(path.getAttribute('points'),'12.000,45.000 12.160,45.021');
+  for(let i=13;i<=720;i++)u.tick(i*1000/120);
+  assert.equal(writes,60,'the entire flight paints once per beat, including completion');
+  assert.equal(u.frames.size,0);
+  assert.match(progress.textContent,/^60 \/ 60/);
+  assert.equal(u.els.get('prediction-path').getAttribute('points'),prediction);
+  assert.equal(u.els.get('prediction-error').textContent,'16.6 单位');
+  assert.equal(u.els.get('target-distance').textContent,'14.1 单位');
+ }finally{u.restore();}
+});
 test('Heim reports only the displayed flight stage and waits for actual completion before a result',async()=>{
  const u=await boot();try{
   const e=id=>u.els.get(id);
