@@ -1,0 +1,27 @@
+name: 改进已有实验 / Improve an experiment
+description: 把一处玩法、解释或参与方式改得更清楚 / A focused improvement.
+title: "[Idea] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        优先把已有实验打磨好。先搜索是否已有同类提议；不需要写产品方案。
+        这里的提议会公开，请不要附私密记录或无权使用的素材。
+        Please check existing issues first. Describe one concrete problem; a full design is not required. Chinese and English are welcome. Do not include private records or unlicensed artwork.
+  - type: textarea
+    id: problem
+    attributes:
+      label: 想改善哪个问题 / What problem should improve?
+      description: 哪个实验、哪一步、为什么影响玩或理解？/ Which experiment or step, and how does it affect playing or understanding?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: 一个可能的改法 / Possible change (optional)
+      description: 玩家会看到或做什么不同的事？/ What would the player see or do differently?
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 怎样知道变好了 / How could we check it? (optional)
+      description: 一个可复现例子、对照步骤或验收场景即可。/ A reproducible example or comparison is enough.

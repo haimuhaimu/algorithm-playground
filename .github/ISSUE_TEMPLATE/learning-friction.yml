@@ -1,0 +1,34 @@
+name: 没看懂或玩不顺 / Learning roadblock
+description: 不知道下一步，或看不懂结果为什么变 / A confusing step or result.
+title: "[Learning] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        不需要先证明自己懂算法，也不必提出解决方案。说说你当时怎么想的就好。
+        这里的反馈会公开，请不要附个人信息或私密学习记录。
+        You do not need to know the algorithm or propose a fix. Chinese and English are welcome. This report is public; omit personal information and private records.
+  - type: input
+    id: page
+    attributes:
+      label: 玩到哪里 / Experiment and step
+      placeholder: "例如：三猫分类，加了蓬松度以后 / Cat classification, after adding fluffiness"
+    validations:
+      required: true
+  - type: textarea
+    id: roadblock
+    attributes:
+      label: 哪一步卡住了 / Where did you get stuck?
+      description: 不知道点哪里、点了没反馈，还是结果和你的直觉不同？/ Was the next action unclear, was feedback missing, or did the result surprise you?
+    validations:
+      required: true
+  - type: textarea
+    id: expectation
+    attributes:
+      label: 你原本以为 / What you expected (optional)
+      description: 一句“我以为……因为……”也很有帮助。/ “I thought … because …” is enough.
+  - type: input
+    id: device
+    attributes:
+      label: 用什么玩的 / Device and browser (optional)
+      placeholder: "手机触摸 / Mobile touch; 电脑键盘 / Desktop keyboard"
