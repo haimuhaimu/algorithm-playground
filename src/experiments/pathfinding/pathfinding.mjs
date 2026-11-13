@@ -166,12 +166,16 @@ function render(){
   const visited=new Set(frame.visited),frontier=new Set(frame.frontier),path=new Set(frame.path);
   cells[name].forEach((cell,index)=>{
    const state=index===map.start?'start':index===map.goal?'goal':walls.has(index)?'wall':path.has(index)?'path':visited.has(index)?'visited':frontier.has(index)?'frontier':'';
-   cell.className=`cell ${state}${index===frame.current&&!frame.done?' current':''}`;
-   cell.textContent=index===map.start?'S':index===map.goal?'G':'';
+   const className=`cell ${state}${index===frame.current&&!frame.done?' current':''}`;
+   if(cell.className!==className)cell.className=className;
+   const text=index===map.start?'S':index===map.goal?'G':'';
+   if(cell.textContent!==text)cell.textContent=text;
    const label={start:'起点',goal:'终点',wall:'墙',path:'最终路径',visited:'已探索',frontier:'待探索','':'空地'}[state];
-   cell.setAttribute('aria-label',`第 ${Math.floor(index/map.cols)+1} 行，第 ${index%map.cols+1} 列，${label}`);
+   const ariaLabel=`第 ${Math.floor(index/map.cols)+1} 行，第 ${index%map.cols+1} 列，${label}`;
+   if(cell.getAttribute('aria-label')!==ariaLabel)cell.setAttribute('aria-label',ariaLabel);
    const candidate=guessing&&name===guessAlgorithm?guessRound?.decision.candidates.find(c=>c.index===index):null;
-   cell.setAttribute('aria-pressed',String(!!candidate&&guessRound.choice===index));
+   const pressed=String(!!candidate&&guessRound.choice===index);
+   if(cell.getAttribute('aria-pressed')!==pressed)cell.setAttribute('aria-pressed',pressed);
    if(candidate){
     cell.classList.toggle('guess-candidate',true);
     cell.classList.toggle('guess-picked',guessRound.choice===index);

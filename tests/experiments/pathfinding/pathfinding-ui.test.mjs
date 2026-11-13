@@ -13,7 +13,9 @@ async function boot(){
   }
   append(...children){for(const child of children){if(child.parent)child.parent.children=child.parent.children.filter(c=>c!==child);this.children.push(child);child.parent=this;}}
   replaceChildren(...children){this.children=[];this.append(...children);}
-  setAttribute(k,v){this.attributes.set(k,v);}getAttribute(k){return this.attributes.get(k);}
+  set className(value){this.writes=(this.writes??0)+1;this._className=value;}get className(){return this._className;}
+  set textContent(value){this.writes=(this.writes??0)+1;this._textContent=value;}get textContent(){return this._textContent;}
+  setAttribute(k,v){this.writes=(this.writes??0)+1;this.attributes.set(k,v);}getAttribute(k){return this.attributes.get(k);}
   closest(selector){return selector==='.cell'&&this.className.split(' ').includes('cell')?this:null;}
   contains(child){return this.children.includes(child);}
   getBoundingClientRect(){return {left:0,top:0,right:300,bottom:220,width:300,height:220};}
@@ -43,6 +45,55 @@ async function boot(){
   key(key,props={}){return fire(doc,'keydown',{key,target:els.get('bfs-grid').children[0],...props});},
   selected(){return presets.find(b=>b.getAttribute('aria-pressed')==='true')?.dataset.map;}};
 }
+
+function gridSnapshot(u,names=['bfs','astar']){
+ return names.flatMap(name=>u.els.get(name+'-grid').children.map(cell=>[
+  cell.className,cell.textContent,cell.getAttribute('aria-label'),cell.getAttribute('aria-pressed')
+ ]));
+}
+function gridWrites(u,names=['bfs','astar']){
+ return names.flatMap(name=>u.els.get(name+'-grid').children).reduce((sum,cell)=>sum+cell.writes,0);
+}
+
+test('playback writes only grid properties that actually change on each search step',async()=>{
+ const u=await boot();try{
+  u.click('play');
+  for(let step=1;step<=5;step++){
+   const before=gridSnapshot(u),writes=gridWrites(u);
+   const [id,tick]=u.timers.entries().next().value;u.timers.delete(id);tick();
+   const after=gridSnapshot(u),changes=after.reduce((sum,cell,i)=>sum+cell.filter((value,j)=>value!==before[i][j]).length,0);
+   assert.equal(u.els.get('bfs-explored').textContent,step);
+   assert.equal(u.els.get('astar-explored').textContent,step);
+   assert.ok(changes>0,'the visible search must advance');
+   assert.equal(gridWrites(u)-writes,changes,'unchanged cells must not receive redundant writes');
+  }
+ }finally{u.restore();}
+});
+
+test('a completed A-star board receives no writes while BFS keeps exploring',async()=>{
+ const u=await boot();try{
+  for(let i=0;i<60;i++)u.click('step');
+  assert.equal(u.els.get('astar-distance').textContent,20);
+  const before=gridSnapshot(u,['astar']),writes=gridWrites(u,['astar']);
+  u.click('step');
+  assert.equal(u.els.get('bfs-explored').textContent,61);
+  assert.deepEqual(gridSnapshot(u,['astar']),before);
+  assert.equal(gridWrites(u,['astar']),writes);
+ }finally{u.restore();}
+});
+
+test('leaving a revealed guess restores every normal grid property at the same step',async()=>{
+ let expected;const normal=await boot();try{
+  normal.click('step');normal.click('step');expected=gridSnapshot(normal);
+ }finally{normal.restore();}
+ const u=await boot();try{
+  u.click('guess-toggle');
+  const decision=decisionAt(search(makeMap(),'astar'),1);
+  u.edit(decision.candidates.find(c=>c.index!==decision.current).index,'astar');
+  u.click('guess-reveal');u.click('guess-toggle');
+  assert.deepEqual(gridSnapshot(u),expected,'candidate numbers, classes, labels and selection must all be cleared');
+ }finally{u.restore();}
+});
 
 test('first-run guidance waits for a complete real baseline before inviting a map edit',async()=>{
  const u=await boot();try{
