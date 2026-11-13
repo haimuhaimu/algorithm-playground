@@ -1,5 +1,5 @@
-import {WIDTH,HEIGHT,POPULATION,ROAD_RADIUS,presetTrack,makeTrack,createRace,nextGeneration,positionAt,changeObstacles,suggestRoadblock,compareRuns} from './evolution-core.mjs';
-import {createBirthView} from './evolution-birth.mjs?v=birth-cats-v1';
+import {WIDTH,HEIGHT,POPULATION,ROAD_RADIUS,presetTrack,makeTrack,createRace,nextGeneration,positionAt,changeObstacles,suggestRoadblock,compareRuns} from './evolution-core.mjs?v=road-distance-v1';
+import {createBirthView} from './evolution-birth.mjs?v=birth-cats-v1&perf=road-distance-v1';
 
 const $=id=>document.getElementById(id),field=$('race'),ctx=field.getContext('2d');
 const chart=$('history').getContext('2d'),geneCanvas=$('genes').getContext('2d');

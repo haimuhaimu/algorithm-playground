@@ -1,4 +1,4 @@
-import {WIDTH,HEIGHT,ROAD_RADIUS,CAR_RADIUS,inspectBirth,positionAt,compareRuns} from './evolution-core.mjs';
+import {WIDTH,HEIGHT,ROAD_RADIUS,CAR_RADIUS,inspectBirth,positionAt,compareRuns} from './evolution-core.mjs?v=road-distance-v1';
 
 const result=run=>run.finished?`${run.time.toFixed(2)} 秒 · 完赛`:`未完赛 · 走到 ${(run.progress*100).toFixed(0)}%`;
 function difference(before,after){
