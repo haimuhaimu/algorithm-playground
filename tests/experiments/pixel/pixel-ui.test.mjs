@@ -198,7 +198,7 @@ async function boot({ reduced = false, missingCanvas = false, storage = memorySt
   const html = await readFile(new URL('../../../dist/pixel.html', import.meta.url), 'utf8').catch(() => '');
   assert.ok(html.includes('id="editor"'), 'playable pixel page must exist');
   class Element extends EventTarget {
-    constructor() { super(); this.dataset = {}; this.style = {}; this.attributes = new Map(); this.hidden = false; this.disabled = false; this.open = false; this.textContent = ''; this.width = 512; this.height = 512; this.ctx = { pixels: new Map(), clearRect() { this.pixels.clear(); }, fillRect(x, y, w, h) { if (w === 32 && h === 32) this.pixels.set(`${x},${y}`, this.fillStyle); }, strokeRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {} }; }
+    constructor() { super(); this.dataset = {}; this.style = {}; this.attributes = new Map(); this.hidden = false; this.disabled = false; this.open = false; this.textContent = ''; this.width = 512; this.height = 512; this.ctx = { pixels: new Map(), paints: 0, clearRect() { this.paints++; this.pixels.clear(); }, fillRect(x, y, w, h) { if (w === 32 && h === 32) this.pixels.set(`${x},${y}`, this.fillStyle); }, strokeRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {} }; }
     getContext() { return missingCanvas ? null : this.ctx; }
     setAttribute(k, v) { this.attributes.set(k, String(v)); } getAttribute(k) { return this.attributes.get(k); }
     getBoundingClientRect() { return { left: 0, top: 0, width: 256, height: 256 }; }
@@ -371,6 +371,52 @@ test('delivery never reveals the legacy cat green cells before their actual code
   u.click('send');u.advance(0);u.advance(5250);
   assert.notEqual(u.pixels('receiver')[220],'#bdd754','bit 393 is required for this green pixel, not 378');
   assert.equal(u.els.get('delivery-preview')?.dataset.decoded,'216');
+ }finally{u.restore();}
+});
+test('high-refresh delivery skips unchanged bits but still verifies and saves the complete postcard',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  u.click('send');
+  const count=u.els.get('delivery-count'),canvas=u.els.get('delivery-preview').ctx;
+  const checkpoints=new Map([[0,'0 / 400 bit'],[180,'100 / 400 bit'],[360,'200 / 400 bit'],[540,'300 / 400 bit'],[720,'400 / 400 bit']]);
+  let unchanged=0;
+  for(let n=0;n<=720;n++){
+   const before=count.textContent,paints=canvas.paints,writes=count.textWrites;
+   u.advance(n*1000/120);
+   if(checkpoints.has(n))assert.equal(count.textContent,checkpoints.get(n),'skipping duplicate paints must not slow the six-second transfer');
+   if(count.textContent===before){
+    unchanged++;
+    assert.equal(canvas.paints,paints,'another refresh of the same bit must not redraw the postcard');
+    assert.equal(count.textWrites,writes,'the same bit must not refresh delivery text');
+   }
+  }
+  assert.ok(unchanged>100,'the fixture exercises repeated display frames between actual bits');
+  assert.equal(u.frames.size,0);
+  assert.equal(u.els.get('delivery-preview').dataset.decoded,'256');
+  assert.equal(u.els.get('first-letter-read').disabled,false);
+  assert.deepEqual(u.pixels('receiver'),u.pixels('editor'));
+  assert.deepEqual(JSON.parse(storage.records.get(DRAFT_KEYS.pixel)).value.received,preset('heim'));
+  assert.equal(storage.writes,1,'only the verified delivery saves the new receipt');
+ }finally{u.restore();}
+});
+test('same-bit pause and resume still update controls, and replay cannot overwrite the successful letter',async()=>{
+ const storage=memoryStorage(),u=await boot({storage});try{
+  u.click('send');u.finish();u.click('preset-bobby');
+  const drawing=u.pixels('editor'),receipt=u.pixels('receiver'),writes=storage.writes;
+  u.click('delivery-replay');
+  const count=u.els.get('delivery-count'),canvas=u.els.get('delivery-preview').ctx;
+  const start=count.textContent;
+  assert.equal(u.els.get('delivery-toggle').textContent,'继续播放');
+  u.click('delivery-toggle');assert.equal(u.els.get('delivery-toggle').textContent,'暂停');
+  const paints=canvas.paints;
+  u.advance(100);u.advance(101);
+  assert.equal(count.textContent,start);assert.equal(canvas.paints,paints);
+  u.click('delivery-toggle');assert.equal(u.els.get('delivery-toggle').textContent,'继续播放');
+  u.click('delivery-bit');assert.equal(parseInt(count.textContent),parseInt(start)+1);
+  u.click('delivery-toggle');u.advance(10000);u.advance(16000);
+  assert.equal(u.frames.size,0);assert.equal(u.els.get('delivery-controls').hidden,true);
+  assert.match(u.els.get('delivery-explanation').textContent,/回放读完/);
+  assert.deepEqual(u.pixels('editor'),drawing);assert.deepEqual(u.pixels('receiver'),receipt);
+  assert.equal(storage.writes,writes);
  }finally{u.restore();}
 });
 test('paused delivery reads one bit, guards queued frames, and resumes without catching up',async()=>{
