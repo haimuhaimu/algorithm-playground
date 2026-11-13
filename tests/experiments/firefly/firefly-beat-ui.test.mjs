@@ -1,13 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,access} from 'node:fs/promises';
-async function boot({reduced=false,hash='#listening-lesson'}={}){
+async function boot({reduced=false,hash='#listening-lesson',source=false}={}){
  const html=await readFile(new URL('../../../dist/firefly.html',import.meta.url),'utf8');
  assert.match(html,/id="beat-open"/,'the microscope needs a real user entry point');
- const file=new URL('../../../dist/firefly-beat-ui.mjs',import.meta.url);assert.ok(await access(file).then(()=>true,()=>false));
+ const file=new URL(`../../../${source?'src/experiments/firefly':'dist'}/firefly-beat-ui.mjs`,import.meta.url);assert.ok(await access(file).then(()=>true,()=>false));
  let doc,pauses=0,seq=0;
  class Element extends EventTarget{
-  constructor(){super();this.dataset={};this.attrs={};this.hidden=false;this.disabled=false;this.value='';this.textContent='';this.innerHTML='';}
+  constructor(){super();this.dataset={};this.attrs={};this.hidden=false;this.disabled=false;this.value='';this.textContent='';this.htmlWrites=0;this.innerHTML='';}
+  set innerHTML(value){this.html=value;this.htmlWrites++;}get innerHTML(){return this.html;}
   setAttribute(k,v){this.attrs[k]=String(v);}getAttribute(k){return this.attrs[k];}
   focus(){doc.activeElement=this;}scrollIntoView(options){doc.scrollTarget=this;doc.scrollOptions=options;}
  }
@@ -27,6 +28,26 @@ async function boot({reduced=false,hash='#listening-lesson'}={}){
   visible(value){doc.hidden=!value;doc.dispatchEvent(new Event('visibilitychange'));},
   reduce(value){media.matches=value;media.dispatchEvent(Object.assign(new Event('change'),{matches:value}));}};
 }
+test('slow replay draws each of its 30 recorded beats once on a 120Hz screen',async()=>{
+ const u=await boot({source:true});try{
+  const e=id=>u.els.get(id);
+  u.click('beat-open');u.click('beat-faster');u.click('beat-run');
+  const sealed=e('beat-numbers').textContent,finalDial=e('beat-after').innerHTML;
+  u.click('beat-replay');
+  const writes=e('beat-after').htmlWrites,before=e('beat-before').innerHTML;
+  assert.match(e('beat-replay').textContent,/暂停/);
+  u.frame(0);u.frame(1000/120);
+  assert.equal(e('beat-after').htmlWrites,writes,'no DOM replacement while the recorded beat is unchanged');
+  for(let i=2;i<=240;i++)u.frame(i*1000/120);
+  assert.equal(e('beat-after').htmlWrites-writes,30);
+  assert.equal(e('beat-scrub').value,'30');assert.equal(u.frames.size,0);
+  assert.equal(e('beat-after').innerHTML,finalDial);
+  assert.equal(e('beat-before').innerHTML,before);
+  assert.equal(e('beat-numbers').textContent,sealed,'slow playback cannot change the sealed experiment');
+  assert.match(e('beat-replay').textContent,/慢放/,'the final beat must restore the replay action');
+ }finally{u.restore();}
+});
+
 test('the listening heading offers one optional native link to the cat beat',async()=>{
  const html=await readFile(new URL('../../../dist/firefly.html',import.meta.url),'utf8');
  const links=[...html.matchAll(/<a\b[^>]*href="#cat-beat"[^>]*>/g)];
