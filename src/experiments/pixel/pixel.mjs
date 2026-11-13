@@ -404,8 +404,9 @@ function playDelivery(current) {
   function advance(time) {
     if (job !== current || current.paused || current.epoch !== epoch) return;
     if (current.start === null) current.start = time;
-    current.sent = Math.min(current.trace.bits.length,current.base+Math.floor(Math.max(0,time-current.start)/6000*current.trace.bits.length));
-    renderDelivery(current);
+    const sent = Math.min(current.trace.bits.length,current.base+Math.floor(Math.max(0,time-current.start)/6000*current.trace.bits.length));
+    // High-refresh frames may still show the same bit. Explicit controls render separately.
+    if (sent !== current.sent) { current.sent = sent; renderDelivery(current); }
     if (current.sent === current.trace.bits.length) finishDelivery(current);
     else frame = requestAnimationFrame(advance);
   }
