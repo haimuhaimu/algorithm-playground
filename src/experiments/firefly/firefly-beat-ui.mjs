@@ -1,4 +1,4 @@
-import {createBeatLesson,selectBeatCase,guessBeat,runBeat,retryBeat,createCatBeatScene,runCatBeat} from './firefly-beat.mjs?v=pond-bobby-v1';
+import {createBeatLesson,selectBeatCase,guessBeat,runBeat,retryBeat,createCatBeatScene,runCatBeat} from './firefly-beat.mjs?v=firefly-render-v1';
 
 const names={faster:'加快追上',slower:'放慢等一等',same:'照自己的节拍走'};
 const contexts={ahead:'三只邻居此刻领先 ¼ 圈。它们和金色这只的天生步速完全相同。',behind:'三只邻居此刻落后 ¼ 圈。它们和金色这只的天生步速完全相同。',out:'邻居仍领先 ¼ 圈，但距离在听见范围外。这只还会追上去吗？'};
@@ -99,7 +99,19 @@ export function mountBeatLesson({document=globalThis.document,onStart=()=>{}}={}
  });
  $('beat-retry').addEventListener('click',()=>{prepare();state=retryBeat(state);index=0;render();$('beat-faster').focus({preventScroll:true});});
  $('beat-scrub').addEventListener('input',()=>{if(!state.comparison)return;prepare();const value=Number($('beat-scrub').value);index=Number.isFinite(value)?Math.max(0,Math.min(30,Math.round(value))):0;renderFrames();});
- function schedule(){const current=token;raf=requestAnimationFrame(now=>{if(current!==token||document.hidden)return;raf=null;if(origin===null)origin=now;index=Math.min(30,startIndex+Math.floor((now-origin)*30/2000));if(index<30)schedule();renderFrames();});}
+ function schedule(){
+  const current=token;
+  raf=requestAnimationFrame(now=>{
+   if(current!==token||document.hidden)return;
+   raf=null;if(origin===null)origin=now;
+   const previous=index;
+   index=Math.min(30,startIndex+Math.floor((now-origin)*30/2000));
+   if(index<30)schedule();
+   // This replay shows recorded beats, not interpolated animation. Preserve
+   // the DOM until the beat changes, including the final stopped state.
+   if(index!==previous)renderFrames();
+  });
+ }
  $('beat-replay').addEventListener('click',()=>{
   if(!state.comparison||reduced||document.hidden)return;
   if(raf!==null){stop();renderFrames();return;}

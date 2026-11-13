@@ -1,5 +1,5 @@
-import {TAU,createSwarm,stepSwarm,coherence,configureSwarm,perturbSwarm,measureGroups,createListening,advanceListening,chooseListening,listeningOutcome,answerListening} from './firefly-core.mjs?v=pond-bobby-v1';
-import {mountBeatLesson} from './firefly-beat-ui.mjs?v=pond-bobby-v1&entry=bobby-tap';
+import {TAU,createSwarm,stepSwarm,coherence,configureSwarm,perturbSwarm,measureGroups,createListening,advanceListening,chooseListening,listeningOutcome,answerListening} from './firefly-core.mjs?v=firefly-render-v1';
+import {mountBeatLesson} from './firefly-beat-ui.mjs?v=firefly-render-v1&entry=bobby-tap';
 
 const $=id=>document.getElementById(id),field=$('fireflies'),ctx=field.getContext('2d');
 const clock=$('phase-clock').getContext('2d'),chart=$('history').getContext('2d');
@@ -152,8 +152,11 @@ if(!ctx||!clock||!chart){
  function frame(now){
   raf=null;if(!playing||document.hidden)return;
   if(last!==null)accumulator+=Math.min(.1,(now-last)/1000);last=now;
-  while(accumulator>=DT&&playing){tick();accumulator-=DT;}
-  draw();schedule();
+  let advanced=false;
+  while(accumulator>=DT&&playing){tick();accumulator-=DT;advanced=true;}
+  // Display refreshes may outnumber the fixed simulation steps. Inputs still
+  // draw immediately; an unchanged animation frame needs no duplicate paint.
+  if(advanced)draw();schedule();
  }
  function cancelGesture(){gesture=null;}
  function pause(message){document.dispatchEvent(new Event('firefly-world-action'));playing=false;cancelGesture();if(raf!==null)cancelAnimationFrame(raf);raf=null;last=null;accumulator=0;controls(message);draw();}

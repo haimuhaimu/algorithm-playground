@@ -12,11 +12,13 @@ test('mobile reading order reaches scene settings before secondary observation c
  }
 });
 let bootNumber=0;
-async function boot({hidden=false,reducedMotion=false}={}){
+async function boot({hidden=false,reducedMotion=false,source=false}={}){
  const frames=new Map();let nextFrame=0;
+ const paints={field:0,gradients:0};
  const arcs=[];
- const context={createRadialGradient:()=>({addColorStop(){}})};
+ const context={createRadialGradient:()=>{paints.gradients++;return {addColorStop(){}};}};
  for(const name of ['fillRect','beginPath','arc','fill','stroke','setLineDash','ellipse','moveTo','lineTo','clearRect','fillText'])context[name]=()=>{};
+ context.fillRect=()=>{paints.field++;};
  context.setLineDash=values=>{context.dash=[...values];};
  context.arc=(...args)=>arcs.push({args,dash:[...(context.dash||[])]});
  class Element extends EventTarget{
@@ -42,14 +44,31 @@ async function boot({hidden=false,reducedMotion=false}={}){
  const previous=new Map(Object.keys(globals).map(key=>[key,Object.getOwnPropertyDescriptor(globalThis,key)]));
  const restore=()=>{for(const [key,descriptor] of previous)if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];};
  Object.assign(globalThis,globals);
- try{await import(new URL(`../../../dist/firefly.mjs?lifecycle-test=${++bootNumber}`,import.meta.url));}
+ try{await import(new URL(`../../../${source?'src/experiments/firefly':'dist'}/firefly.mjs?lifecycle-test=${++bootNumber}`,import.meta.url));}
  catch(error){restore();throw error;}
- return {document,frames,elements,arcs,restore,visible(value){document.hidden=!value;document.dispatchEvent(new Event('visibilitychange'));}};
+ return {document,frames,elements,arcs,paints,restore,
+  frame(now){const pending=[...frames.values()];frames.clear();for(const callback of pending)callback(now);},
+  visible(value){document.hidden=!value;document.dispatchEvent(new Event('visibilitychange'));}};
 }
 const press=(field,key,repeat=false)=>field.dispatchEvent(Object.assign(new Event('keydown',{cancelable:true}),{key,repeat}));
 function tap(field,x,y){
  for(const name of ['pointerdown','pointerup'])field.dispatchEvent(Object.assign(new Event(name),{pointerId:1,pointerType:'touch',isPrimary:true,button:0,clientX:x,clientY:y}));
 }
+
+test('high-refresh playback redraws the pond only after a real simulation step',async()=>{
+ const ui=await boot({source:true});try{
+  const initial={...ui.paints};
+  ui.frame(0);ui.frame(1000/120);
+  assert.equal(ui.paints.field-initial.field,0,'unchanged 120Hz frames must not rebuild the pond');
+  assert.equal(ui.paints.gradients-initial.gradients,0);
+  for(let i=2;i<720;i++)ui.frame(i*1000/120);
+  ui.frame(6001);
+  assert.equal(ui.paints.field-initial.field,360,'six simulated seconds still run 360 original steps');
+  assert.equal(ui.paints.gradients-initial.gradients,360*81,'each changed frame keeps all 80 original fireflies and the backdrop');
+  assert.equal(ui.elements.get('elapsed').textContent,'6.0 秒');
+  assert.equal(ui.frames.size,1,'skipping a redraw must not stop the simulation clock');
+ }finally{ui.restore();}
+});
 
 test('range legend distinguishes the adjustable neighbor radius from the fixed direct intervention',async()=>{
  const ui=await boot({reducedMotion:true});
