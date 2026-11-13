@@ -7,6 +7,7 @@ const tips={splitter:'往屋顶尖端倒水，再擦掉一小段斜坡。两边�
 let scene='splitter',world=createWorld(scene),material=SAND,radius=2,stroke=null,cursor={x:36,y:5},showCursor=false;
 let playing=!document.hidden&&!matchMedia('(prefers-reduced-motion:reduce)').matches,raf=null,lastTick=performance.now(),lastPour=0;
 let history=createHistory(),pendingEdit=null,frameToken=0,activePaintKey=null;
+let hoverRaf=null,hoverToken=0,hoverDirty=false;
 const sceneNames={splitter:'分流器',hourglass:'沙漏',empty:'空白','cat-bowl':'臭臭的水碗'},editNames=['擦除','倒沙','倒水','筑墙'];
 const unit=canvas.width/world.width;
 const currentState=()=>snapshot(scene,world);
@@ -30,7 +31,21 @@ function applyPaint(from,to){
  if(changed){if(pendingEdit)pendingEdit.changed=true;history=discardFuture(history);}
 }
 function simulate(){history=discardFuture(history);world=stepWorld(world);}
+function cancelHoverRender(){
+ hoverToken++;if(hoverRaf!==null){cancelAnimationFrame(hoverRaf);hoverRaf=null;}
+}
+function scheduleHoverRender(){
+ if(hoverRaf!==null||document.hidden)return;
+ const token=hoverToken;
+ hoverRaf=requestAnimationFrame(()=>{
+  if(token!==hoverToken)return;
+  hoverRaf=null;if(!document.hidden)render();
+ });
+}
 function render(){
+ // A real edit or simulation frame already includes the latest cursor. Only
+ // hover previews may be deferred; paint segments and history stay synchronous.
+ cancelHoverRender();hoverDirty=false;
  const brushHint=names[material]+' · '+sizes[radius]+'笔刷'+(material===EMPTY?'，拖动擦除':material===WALL?'，拖动筑墙':'，按住持续倒下');
  if($('brush-preview').textContent!==brushHint)$('brush-preview').textContent=brushHint;
  ctx.fillStyle='#152023';ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -91,6 +106,7 @@ function frame(now){
  if(dirty)render();schedule();
 }
 function stop(){
+ cancelHoverRender();
  playing=false;frameToken++;if(raf!==null){cancelAnimationFrame(raf);raf=null;}controls();
 }
 function endStroke(){
@@ -123,7 +139,10 @@ canvas.addEventListener('pointermove',event=>{
  if(stroke){
   if(event.pointerId!==stroke.id)return;
   extendStroke(event);
- }else if(p&&event.pointerType==='mouse'){cursor=p;showCursor=true;render();}
+ }else if(p&&event.pointerType==='mouse'){
+  if(showCursor&&!hoverDirty&&cursor.x===p.x&&cursor.y===p.y)return;
+  cursor=p;showCursor=true;hoverDirty=true;scheduleHoverRender();
+ }
 });
 canvas.addEventListener('pointerup',event=>{
  if(!stroke||event.pointerId!==stroke.id)return;

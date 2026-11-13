@@ -37,10 +37,16 @@ export function presetTrack(name='sweep'){
  ]);
  throw Error('Unknown track preset');
 }
-function segmentDistance(p,a,b){
+function withinRoadBoundary(p,a,b){
  const dx=b.x-a.x,dy=b.y-a.y,den=dx*dx+dy*dy;
  const t=den?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/den,0,1):0;
- return Math.hypot(p.x-a.x-dx*t,p.y-a.y-dy*t);
+ const x=p.x-a.x-dx*t,y=p.y-a.y-dy*t,distance2=x*x+y*y;
+ const limit=ROAD_RADIUS-CAR_RADIUS-1,limit2=limit*limit;
+ // Away from the boundary, comparing squared distances avoids a norm for
+ // every sample/segment pair. In this conservative floating-point rounding
+ // band, keep the original hypot decision (including the inclusive edge).
+ if(Math.abs(distance2-limit2)>limit2*Number.EPSILON*16)return distance2<limit2;
+ return Math.hypot(x,y)<=limit;
 }
 function validateObstacles(obstacles){
  if(!Array.isArray(obstacles)||obstacles.length>12||obstacles.some(o=>!o||![o.x,o.y,o.radius].every(Number.isFinite)||o.x<0||o.x>WIDTH||o.y<0||o.y>HEIGHT||o.radius<=0||o.radius>60))throw Error('Invalid obstacle');
@@ -49,7 +55,8 @@ function blocked(p,track,obstacles){
  // Sampling is <=2 units apart. One unit of extra clearance is conservative:
  // distance-to-obstacle/road-boundary is 1-Lipschitz, including between samples.
  if(obstacles.some(o=>distance(p,o)<=o.radius+CAR_RADIUS+1))return true;
- return !track.points.slice(1).some((b,i)=>segmentDistance(p,track.points[i],b)<=ROAD_RADIUS-CAR_RADIUS-1);
+ for(let i=1;i<track.points.length;i++)if(withinRoadBoundary(p,track.points[i-1],track.points[i]))return false;
+ return true;
 }
 export function evaluateGenome(track,genes,obstacles=[]){
  if(!Array.isArray(genes)||genes.length!==GENES||genes.some(n=>!Number.isFinite(n)||Math.abs(n)>1))throw Error('Invalid genome');

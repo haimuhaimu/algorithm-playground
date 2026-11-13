@@ -4,8 +4,11 @@ import {readFile} from 'node:fs/promises';
 let serial=0;
 async function boot({reduced=true,hidden=false}={}){
  const html=await readFile(new URL('../../../dist/sand.html',import.meta.url),'utf8');let doc;
- const pixels=new Map();
- const ctx=new Proxy({fillRect(x,y,w,h){if(w===864&&h===576)pixels.clear();else if(w===12&&h===12)pixels.set(`${x},${y}`,this.fillStyle);}},{get:(o,k)=>o[k]??(()=>{})});
+ const pixels=new Map(),drawing={worlds:0,fills:0,cursor:null};
+ const ctx=new Proxy({
+  fillRect(x,y,w,h){drawing.fills++;if(w===864&&h===576){drawing.worlds++;drawing.cursor=null;pixels.clear();}else if(w===12&&h===12)pixels.set(`${x},${y}`,this.fillStyle);},
+  arc(x,y,r){drawing.cursor={x,y,r};}
+ },{get:(o,k)=>o[k]??(()=>{})});
  class Element extends EventTarget{
   constructor(){super();this.dataset={};this.attrs={};this.value='';this.width=864;this.height=576;this.disabled=false;this.captures=new Set();this.textContent='';}
   setAttribute(k,v){this.attrs[k]=String(v);}getAttribute(k){return this.attrs[k];}getContext(){return ctx;}
@@ -26,7 +29,7 @@ async function boot({reduced=true,hidden=false}={}){
  const restore=()=>{for(const[k,d]of old)d?Object.defineProperty(globalThis,k,d):delete globalThis[k];};
  try{await import(new URL('../../../dist/sand.mjs?history-test='+ ++serial,import.meta.url));}catch(e){restore();throw e;}
  const fire=(el,type,props={})=>{const e=Object.assign(new Event(type,{cancelable:true}),props);el.dispatchEvent(e);return e;};
- return {els,doc,frames,stage,win,restore,pixels:()=>new Map(pixels),
+ return {els,doc,frames,stage,win,restore,drawing,pixels:()=>new Map(pixels),
   click:id=>{const el=els.get(id);assert.ok(el,`missing control ${id}`);if(!el.disabled)fire(el,'click');},
   scene:name=>fire(scenes.find(e=>e.dataset.scene===name),'click'),
   material:value=>fire(materials.find(e=>e.dataset.material===String(value)),'click'),
@@ -38,6 +41,88 @@ async function boot({reduced=true,hidden=false}={}){
   count:key=>Number(els.get(key+'-count').textContent),
   stamp(x=8,y=10){this.pointer('pointerdown',x,y);this.pointer('pointerup',x,y);}};
 }
+
+test('mouse preview merges a burst into one frame at the final cell without changing the world',async()=>{
+ const u=await boot();try{
+  const before=u.pixels(),draws=u.drawing.worlds,counts=['sand','water','wall'].map(u.count);
+  for(let i=0;i<120;i++)u.pointer('pointermove',i%60,10);
+  assert.equal(u.drawing.worlds,draws,'hover should not synchronously redraw the whole world for every event');
+  assert.equal(u.frames.size,1,'a paused world only needs one pending preview frame');
+  u.tick(1000);
+  assert.equal(u.drawing.worlds,draws+1);assert.deepEqual(u.drawing.cursor,{x:714,y:126,r:30});
+  assert.deepEqual(u.pixels(),before);assert.deepEqual(['sand','water','wall'].map(u.count),counts);
+  assert.equal(u.els.get('tick-count').textContent,'第 0 拍');assert.equal(u.els.get('history-undo').disabled,true);
+  assert.equal(u.frames.size,0,'hover must not start a permanent loop or simulation');
+ }finally{u.restore();}
+});
+
+test('same-cell hover does no new painting, while leaving and returning restores the preview',async()=>{
+ const u=await boot();try{
+  u.pointer('pointermove');u.tick(1000);const draws=u.drawing.worlds,fills=u.drawing.fills;
+  for(let i=0;i<120;i++)u.pointer('pointermove');
+  assert.equal(u.frames.size,0);assert.equal(u.drawing.worlds,draws);assert.equal(u.drawing.fills,fills);
+  u.pointer('pointerleave');assert.equal(u.drawing.cursor,null);
+  u.pointer('pointermove');assert.equal(u.frames.size,1);u.tick(1100);
+  assert.deepEqual(u.drawing.cursor,{x:102,y:126,r:30});assert.equal(u.frames.size,0);
+ }finally{u.restore();}
+});
+
+test('a real stroke supersedes pending hover and preserves every painted segment and undo checkpoint',async()=>{
+ const u=await boot();try{
+  u.scene('empty');u.material(3);u.brush(0);const before=u.pixels();
+  u.pointer('pointermove',2,2);const stale=[...u.frames.values()];
+  assert.equal(stale.length,1);
+  u.pointer('pointerdown',8,10);u.pointer('pointermove',20,10);u.pointer('pointerup',25,10);
+  assert.equal(u.count('wall'),18,'paint and the final pointerup segment stay synchronous');
+  assert.deepEqual(u.drawing.cursor,{x:306,y:126,r:6});assert.equal(u.frames.size,0);
+  const after=u.pixels(),draws=u.drawing.worlds;stale.forEach(fn=>fn(1000));
+  assert.equal(u.drawing.worlds,draws);assert.deepEqual(u.pixels(),after);
+  u.click('history-undo');assert.deepEqual(u.pixels(),before);assert.equal(u.count('wall'),0);
+  u.click('history-redo');assert.deepEqual(u.pixels(),after);assert.equal(u.count('wall'),18);
+ }finally{u.restore();}
+});
+
+test('simulation render absorbs queued hover without an extra world redraw or simulation tick',async()=>{
+ const u=await boot({reduced:false});try{
+  const draws=u.drawing.worlds;u.pointer('pointermove',20,10);u.tick(10000);
+  assert.equal(u.drawing.worlds,draws+1);assert.equal(u.els.get('tick-count').textContent,'第 1 拍');
+  assert.deepEqual(u.drawing.cursor,{x:246,y:126,r:30});assert.equal(u.frames.size,1);
+  u.click('play');assert.equal(u.frames.size,0);
+ }finally{u.restore();}
+});
+
+test('hidden pages and pagehide cancel hover, including an already-dispatched stale callback',async()=>{
+ for(const event of ['visibilitychange','pagehide']){
+  const u=await boot();try{
+   u.pointer('pointermove',12,10);const stale=[...u.frames.values()],draws=u.drawing.worlds,before=u.pixels();
+   assert.equal(stale.length,1);
+   if(event==='visibilitychange'){u.doc.hidden=true;u.doc.dispatchEvent(new Event(event));}
+   else u.win.dispatchEvent(new Event(event));
+   assert.equal(u.frames.size,0);stale.forEach(fn=>fn(1000));
+   assert.equal(u.drawing.worlds,draws);assert.deepEqual(u.pixels(),before);
+   assert.equal(u.els.get('tick-count').textContent,'第 0 拍');assert.equal(u.els.get('history-undo').disabled,true);
+   u.doc.hidden=false;u.pointer('pointermove',12,10);assert.equal(u.frames.size,1,'the cancelled cursor has not actually been drawn, even in the same cell');u.tick(1100);
+   assert.deepEqual(u.drawing.cursor,{x:150,y:126,r:30});
+  }finally{u.restore();}
+ }
+});
+
+test('pausing before hover is drawn still allows the same-cell preview to appear',async()=>{
+ const u=await boot({reduced:false});try{
+  u.pointer('pointermove',12,10);u.click('play');assert.equal(u.frames.size,0);
+  u.pointer('pointermove',12,10);assert.equal(u.frames.size,1);u.tick(1000);
+  assert.deepEqual(u.drawing.cursor,{x:150,y:126,r:30});assert.equal(u.els.get('tick-count').textContent,'第 0 拍');
+ }finally{u.restore();}
+});
+
+test('keyboard preview updates immediately and invalidates pending mouse preview',async()=>{
+ const u=await boot();try{
+  u.pointer('pointermove',12,10);const stale=[...u.frames.values()];assert.equal(stale.length,1);u.key('ArrowRight');
+  assert.deepEqual(u.drawing.cursor,{x:162,y:126,r:30});assert.equal(u.frames.size,0);
+  const draws=u.drawing.worlds;stale.forEach(fn=>fn(1000));assert.equal(u.drawing.worlds,draws);
+  u.key('Enter');u.key('Enter',{},'keyup');assert.ok(u.count('sand')>0);
+ }finally{u.restore();}
+});
 
 test('a background initial load stays paused and starts with one Continue without losing its world',async()=>{
  const u=await boot({reduced:false,hidden:true});try{
