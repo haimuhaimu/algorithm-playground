@@ -1,6 +1,6 @@
 import {AGENT_FRAME_CLIP, runAgentFrames} from './agent-frames-tool.mjs?v=agent-frames-v1';
 import {createGenaiReturnUrl, readGenaiHandoffContext} from '../../integrations/genai-handoff.mjs?v=handoff-trust-v1';
-import {createAgentResultStore} from '../shared/agent-last-result.mjs?v=frames-saved-v1';
+import {createAgentResultStore} from '../shared/agent-last-result.mjs?v=engine-load-v1';
 
 const SOURCE = {producer: 'browser-session'};
 const SCENE = {
