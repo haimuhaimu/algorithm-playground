@@ -55,6 +55,56 @@ test('flight paints only when a simulation beat advances, even at 120Hz',async()
   assert.equal(u.els.get('target-distance').textContent,'14.1 单位');
  }finally{u.restore();}
 });
+function trackPanelWrites(els,prefix){
+ let writes=0;
+ for(const [id,el] of els){
+  if(!id.startsWith(prefix))continue;
+  let text=el.textContent;const set=el.setAttribute.bind(el);
+  Object.defineProperty(el,'textContent',{get:()=>text,set:value=>{text=value;writes++;},configurable:true});
+  el.setAttribute=(key,value)=>{writes++;set(key,value);};
+ }
+ return ()=>writes;
+}
+test('saved learning evidence is not rebuilt during the next real flight or pause',async()=>{
+ const u=await boot({source:true});try{
+  u.click('fly');u.finish();u.click('learn');u.click('plan');
+  const record=u.els.get('record-after-predicted').getAttribute('points');
+  const writes=trackPanelWrites(u.els,'record-');
+  u.click('fly');u.tick(0);for(let i=1;i<60;i++)u.tick(i*100);
+  u.click('pause');u.click('step');
+  assert.equal(writes(),0,'the saved flight has not changed during 60 new simulation beats');
+  assert.equal(u.els.get('record-after-predicted').getAttribute('points'),record);
+  assert.match(u.els.get('progress').textContent,/60 \/ 60/);
+  u.click('learn');
+  assert.ok(writes()>0,'learning a new flight must replace the saved evidence');
+  assert.match(u.els.get('record-context').textContent,/第 2 趟/);
+  u.click('reset');assert.equal(u.els.get('learning-record').hidden,true);
+ }finally{u.restore();}
+});
+test('frozen planning cards do not repaint on flight beats but completion and inspection refresh them',async()=>{
+ const u=await boot({source:true});try{
+  u.click('plan');u.click('planning-original');u.click('planning-launch');
+  const route=u.els.get('planning-map-route').getAttribute('points');
+  const writes=trackPanelWrites(u.els,'planning-');
+  u.tick(0);for(let i=1;i<59;i++)u.tick(i*100);
+  u.click('pause');u.click('step');
+  assert.equal(writes(),0,'only the actual flight is changing, not its frozen route candidates');
+  assert.equal(u.els.get('planning-map-route').getAttribute('points'),route);
+  assert.equal(u.els.get('planning-launch').disabled,true);
+  assert.equal(u.els.get('planning-result').hidden,true);
+  assert.match(u.els.get('progress').textContent,/59 \/ 60/);
+  u.click('step');
+  assert.ok(writes()>0,'completion must unlock controls and show the real result');
+  assert.equal(u.els.get('planning-launch').disabled,false);
+  assert.equal(u.els.get('planning-result').hidden,false);
+  assert.match(u.els.get('planning-result').textContent,/原路线.*实际/);
+  const completed=writes();u.click('planning-best');
+  assert.ok(writes()>completed,'inspecting another candidate must refresh the route comparison');
+  assert.equal(u.els.get('planning-best').getAttribute('aria-pressed'),'true');
+  assert.notEqual(u.els.get('planning-map-route').getAttribute('points'),route);
+  assert.match(u.els.get('planning-result').textContent,/原路线/,'inspection cannot relabel the actual flight');
+ }finally{u.restore();}
+});
 test('Heim reports only the displayed flight stage and waits for actual completion before a result',async()=>{
  const u=await boot();try{
   const e=id=>u.els.get(id);
