@@ -37,19 +37,19 @@ function collectedSample(record,threshold,{full=false,pushed=false}={}){
  return `<li data-draw="${record.index+1}" data-sample-value="${record.value}"><small>第 ${record.index+1} 次</small><data value="${record.value}">${value}</data><span>${comparison}</span></li>`;
 }
 
-function renderCollection($,row,threshold,pushed){
+function renderCollection($,row,threshold,pushed,setMarkup){
  const id=row.id,c=row.collection,n=c.outside.length;
  $('collection-title-'+id).textContent=`${operators[id]}的图外大数`;
  $('collection-'+id).hidden=false;
  $('collection-count-'+id).textContent=`${n} 个`;
  $('collection-empty-'+id).hidden=n>0;
  $('collection-empty-'+id).textContent=n?'':'这一批没有落在主图右边的数。没碰上，不代表不可能。';
- $('collection-preview-'+id).innerHTML=c.outside.slice(0,6).map(r=>collectedSample(r,threshold)).join('');
+ setMarkup('collection-preview-'+id,c.outside.slice(0,6).map(r=>collectedSample(r,threshold)).join(''));
  $('collection-preview-note-'+id).hidden=!n;
  $('collection-preview-note-'+id).textContent=n?`按抽取顺序，先看前 ${Math.min(6,n)} 个 / 共 ${n} 个。最大约 ${numbers(c.outsideMax)}。`:'';
  $('collection-details-'+id).hidden=!n;
  $('collection-summary-'+id).textContent=`核对${operators[id]}抽到的全部 ${n} 个图外数`;
- $('collection-all-'+id).innerHTML=c.outside.map(r=>collectedSample(r,threshold,{full:true,pushed})).join('');
+ setMarkup('collection-all-'+id,c.outside.map(r=>collectedSample(r,threshold,{full:true,pushed})).join(''));
  $('collection-split-'+id).hidden=!pushed;
  for(const [part,key]of [['inside','inChart'],['outside','outside']]){
   $('collection-'+part+'-before-'+id).textContent=String(c.before[key]);
@@ -74,6 +74,13 @@ export function initDistributions(){
  const doc=document,$=id=>doc.getElementById(id),media=matchMedia('(prefers-color-scheme: dark)');
  let state=createObservatory(),explicitTheme=false;
  const active=()=>!doc.hidden&&!$('guide').open;
+ // Keep unchanged evidence nodes when only the answer/lesson state changes.
+ // Compare source strings: browsers normalize SVG markup when reading it back.
+ const renderedMarkup=new Map();
+ function setMarkup(id,html){
+  if(renderedMarkup.get(id)===html)return;
+  $(id).innerHTML=html;renderedMarkup.set(id,html);
+ }
  function render(){
   const e=observatoryEvidence(state),pushed=['pushed','done'].includes(e.phase),done=e.phase==='done';
   const step=e.phase==='ready'?1:e.phase==='grown'?2:3;
@@ -102,21 +109,21 @@ export function initDistributions(){
    $('previous-label-'+id).textContent=pushed?'红线 +4':'最初 30 次';$('current-label-'+id).textContent=pushed?'红线 +16':'现在 3,030 次';
    $('previous-'+id).textContent=String((pushed?previous:old).tailCount);$('current-'+id).textContent=String(s.tailCount);
    $('max-'+id).textContent=numbers(s.max);$('mean-'+id).textContent=numbers(s.mean);
-   $('chart-'+id).innerHTML=histogram(s,e.phase==='ready'?null:old,e.threshold,ceiling);
+   setMarkup('chart-'+id,histogram(s,e.phase==='ready'?null:old,e.threshold,ceiling));
    $('chart-'+id).setAttribute('aria-label',`${MODEL_INFO[id].label}：抽了 ${s.n} 次，${s.tailCount} 次比 ${e.threshold} 大。图外左侧还有 ${s.below} 个，右侧 ${s.above} 个；最大的数是 ${numbers(s.max)}。`);
    $('overflow-'+id).textContent=`图外还有：左边 ${s.below} 个、右边 ${s.above} 个，也都算在内。`;
    $('before-'+id).textContent=`最开始 30 次里，比 4 大的有 ${old.tailCount} 个；最大的数是 ${numbers(old.max)}。`;
    $('probability-'+id).textContent=`理论上，比 ${e.threshold} 大的数出现的概率约是 ${probability(row.theoreticalTail)}。这是数学公式给出的，不是这批数里出现的比例；电脑抽数还有精度限制，见下方说明。`;
    $('latest-'+id).textContent=`${operators[id]}最近抽到：`+s.latest.map(numbers).join(' · ');
-   renderCollection($,row,e.threshold,pushed);
+   renderCollection($,row,e.threshold,pushed,setMarkup);
   }
   if(e.transfer){
-   const t=e.transfer,s=t.stats;$('transfer-model').textContent='对数正态';$('chart-lognormal').innerHTML=histogram(s,null,16,ceiling);
+   const t=e.transfer,s=t.stats;$('transfer-model').textContent='对数正态';setMarkup('chart-lognormal',histogram(s,null,16,ceiling));
    $('chart-lognormal').setAttribute('aria-label',`对数正态：抽了 ${s.n} 次，${s.tailCount} 次比 16 大；最大的数是 ${numbers(s.max)}。`);
    $('transfer-tail').textContent=`抽了 3,030 次，比 16 大的有 ${s.tailCount} 个`;
    $('transfer-probability').textContent=`这次有 ${frequency(s.tailRate)} 超过红线，公式算出的概率约是 ${probability(t.theoreticalTail)}。它的做法是先抽一个正态数 Z，再算 e 的 Z 次方。`;
    $('transfer-overflow').textContent=`和上面用同样的画法。图外左边还有 ${s.below} 个，右边 ${s.above} 个，也都算在内。最大的数是 ${numbers(s.max)}。`;
-  }else{$('chart-lognormal').innerHTML='';for(const id of ['transfer-tail','transfer-probability','transfer-overflow'])$(id).textContent='';}
+  }else{setMarkup('chart-lognormal','');for(const id of ['transfer-tail','transfer-probability','transfer-overflow'])$(id).textContent='';}
   $('answer-history').textContent=e.ending?(e.ending.firstAttemptCorrect?'你选了“只是这次没碰上”。对，没遇上，不等于以后不可能遇上。':'你一开始选了“没抽到就是不可能”，后来改选了“只是这次没碰上”。没遇上，确实不等于不可能。'):'';
   $('ending-summary').textContent=done?`三台各抽了 3,030 次。把红线从 4 挪到 16 后，超过它的次数变了：${e.rows.map((r,i)=>`${machineName(r.id)} ${e.comparison[i].stats.tailCount} → ${r.stats.tailCount} 次`).join('，')}。换一批数，具体次数可能不同。`:'';
  }
