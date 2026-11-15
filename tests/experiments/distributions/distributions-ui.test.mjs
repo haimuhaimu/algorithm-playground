@@ -239,11 +239,36 @@ test('reset or changing the seed closes stale collection disclosures and replace
  }finally{u.restore();}
 });
 
+test('answer feedback and optional inspection retain unchanged charts and collected sample nodes',async()=>{
+ const u=await boot();try{
+  u.click('next-step');u.click('next-step');u.get('collection-details-pareto').open=true;
+  const ids=['normal','exponential','pareto'].flatMap(id=>['chart-','collection-preview-','collection-all-'].map(prefix=>prefix+id));
+  const counts=()=>ids.map(id=>u.get(id).htmlWrites),before=counts();
+  const draws=u.get('collection-all-pareto').innerHTML;
+  u.click('answer-zero');
+  assert.ok(u.get('answer-feedback').textContent.length>0,'wrong-answer feedback still updates');
+  assert.deepEqual(counts(),before,'unchanged evidence must not rebuild on a wrong answer');
+  u.click('answer-sample');
+  assert.equal(u.get('ending').hidden,false);assert.match(u.get('answer-history').textContent,/一开始/);
+  assert.deepEqual(counts(),before,'the ending must not rebuild unchanged evidence');
+  const transferWrites=u.get('chart-lognormal').htmlWrites;
+  u.click('inspect-transfer');
+  assert.equal(u.get('chart-lognormal').htmlWrites,transferWrites+1);
+  assert.deepEqual(counts(),before,'this batch has an unchanged shared scale when inspecting');
+  assert.equal(u.get('collection-all-pareto').innerHTML,draws);assert.equal(u.get('collection-details-pareto').open,true);
+  u.click('reset-sample');
+  assert.ok(counts().some((n,i)=>n>before[i]),'reset must still redraw changed evidence');
+  assert.equal(u.get('chart-lognormal').innerHTML,'');assert.equal(u.get('collection-details-pareto').open,false);
+  assert.equal(u.writes.length,0);
+ }finally{u.restore();}
+});
+
 async function boot(){
  const html=await readFile(new URL('../../../dist/distributions.html',import.meta.url),'utf8').catch(()=>'');
  assert.ok(html.includes('id="distribution-app"'),'a standalone local distribution observatory must exist');
  class Element extends EventTarget{
-  constructor(){super();this.attributes=new Map();this.dataset={};this.hidden=false;this.disabled=false;this.open=false;this.textContent='';this.innerHTML='';}
+  constructor(){super();this.attributes=new Map();this.dataset={};this.hidden=false;this.disabled=false;this.open=false;this.textContent='';this.htmlWrites=0;this.innerHTML='';}
+  set innerHTML(value){this.htmlWrites++;this.html=String(value);}get innerHTML(){return this.html;}
   setAttribute(k,v){this.attributes.set(k,String(v));}getAttribute(k){return this.attributes.get(k);}
   focus(){doc.activeElement=this;}scrollIntoView(){}showModal(){this.open=true;}close(){this.open=false;}
  }
