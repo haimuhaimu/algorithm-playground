@@ -5,6 +5,7 @@ import {createLesson,nextLesson,recordLessonFlight,chooseLesson,CHOICES} from '.
 const $=id=>document.getElementById(id),media=matchMedia('(prefers-reduced-motion: reduce)');
 let session=createSession(),lesson=createLesson(),running=false,frame=null,token=0,lastTime=null,remainder=0,view='preview',comparisonEmphasis='after';
 let inspectedPlan=null,inspectedRoute='best';
+let renderedRecord=null,renderedPlanning=null;
 const routeNames={original:'原路线',direction:'只换方向',best:'再调推力'};
 const points=path=>path.map(p=>`${p.x.toFixed(3)},${p.y.toFixed(3)}`).join(' ');
 const windText=wind=>`${wind>0?'↓ 下吹':'↑ 上吹'} ${Math.abs(wind).toFixed(1)}`;
@@ -104,6 +105,9 @@ function renderComparison(c){
   $('comparison-hint').textContent=`正在突出${comparisonEmphasis==='before'?'学习前':'学习后'}预测。橙色实线始终是同一趟真实轨迹，坐标和原成绩不变。`;
  }
  const saved=session.comparison;$('learning-record').hidden=!saved;
+ // Session records are immutable; a new flight does not change the saved evidence.
+ if(saved===renderedRecord)return;
+ renderedRecord=saved;
  if(!saved)return;
  $('record-context').textContent=`${comparisonConditions(saved)} · M${saved.beforeVersion} → M${saved.afterVersion} · 起点、目标与整段推力相同`;
  const axes=bounds([saved.before,saved.after,saved.actual],saved.target);
@@ -118,8 +122,14 @@ function renderComparison(c){
 function renderPlanning(){
  const plan=session.plan,active=Boolean(session.flight&&!session.flight.done);
  $('planning-lab').hidden=!plan;$('planning-entry').hidden=!plan||active;
- if(!plan){inspectedPlan=null;return;}
+ if(!plan){inspectedPlan=null;renderedPlanning=null;return;}
  if(inspectedPlan!==plan){inspectedPlan=plan;inspectedRoute=plan.selectedKey;}
+ const f=session.flight,hasResult=view==='flight'&&f?.done&&f.modelVersion===plan.modelVersion;
+ const result=hasResult?f:null;
+ // Only simulation progress changes on a flight beat. Refresh this frozen panel
+ // when its route, interaction availability, or completed result actually changes.
+ if(renderedPlanning?.plan===plan&&renderedPlanning.route===inspectedRoute&&renderedPlanning.active===active&&renderedPlanning.result===result)return;
+ renderedPlanning={plan,route:inspectedRoute,active,result};
  const selected=plan.alternatives.find(c=>c.key===inspectedRoute),best=plan.alternatives.at(-1);
  const axes=bounds(plan.alternatives.map(c=>c.path),plan.target);
  const reference=plan.alternatives[inspectedRoute==='original'?2:0],end=selected.path.at(-1);
@@ -148,7 +158,6 @@ function renderPlanning(){
  const detail=`正在看「${routeNames[inspectedRoute]}」：预测${selected.distance<=plan.target.radius?'落在圈内':'没进圈'}。${why} 完整搜索选中的组合预测距靶心 ${errorText(best.distance)} 单位，但这不是实飞成绩。`;
  if($('planning-detail').textContent!==detail)$('planning-detail').textContent=detail;
  $('planning-launch').textContent=`用「${routeNames[inspectedRoute]}」实飞 ↗`;$('planning-launch').disabled=active;
- const f=session.flight,hasResult=view==='flight'&&f?.done&&f.modelVersion===plan.modelVersion;
  $('planning-result').hidden=!hasResult;
  if(hasResult)$('planning-result').textContent=`刚才实飞「${routeNames[plan.selectedKey]}」：出发时预测距靶心 ${errorText(plan.distance)} → 实际 ${errorText(f.distance)} 单位。${f.distance<=f.target.radius?'这次实际进圈了。':'这次实际没进圈。'}${f.error>3?'模型的轨迹预测仍有偏差；选得再认真，也需要真实经历来校准。':'预测和实际较接近；能否进圈还取决于选的路线。'}`;
 }
