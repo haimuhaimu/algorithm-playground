@@ -1,6 +1,6 @@
 import {runAgentToolLoop} from './agent-tool.mjs?v=agent-tool-loop-v1';
 import {readGenaiHandoffContext,createGenaiReturnUrl} from '../../integrations/genai-handoff.mjs?v=handoff-trust-v1';
-import {createAgentResultStore} from '../shared/agent-last-result.mjs?v=last-result-v1';
+import {createAgentResultStore} from '../shared/agent-last-result.mjs?v=engine-load-v1';
 
 const SOURCE={producer:'browser-session'};
 const RECEIPT={unknown:'未核验','not-delivered':'未签收',delivered:'已签收'};

@@ -1,6 +1,6 @@
 import {runAgentReroute} from './agent-reroute-tool.mjs?v=agent-reroute-v1';
 import {readGenaiHandoffContext,createGenaiReturnUrl} from '../../integrations/genai-handoff.mjs?v=handoff-trust-v1';
-import {createAgentResultStore} from '../shared/agent-last-result.mjs?v=last-result-v1';
+import {createAgentResultStore} from '../shared/agent-last-result.mjs?v=engine-load-v1';
 
 const SOURCE={producer:'browser-session'};
 const CONTROLS={advance:'advance',dispatch:'reroute','keep-old':'keep-old','verify-new':'verify-new','accept-old':'accept-old',stop:'stop'};

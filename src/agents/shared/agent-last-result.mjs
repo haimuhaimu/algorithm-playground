@@ -1,6 +1,7 @@
-import {replayAgentToolReceipt} from '../mission/agent-tool.mjs';
-import {replayAgentRerouteReceipt} from '../reroute/agent-reroute-tool.mjs';
-import {replayAgentFramesReceipt} from '../frames/agent-frames-tool.mjs';
+// Match the play and handoff imports so each engine has one module identity.
+import {replayAgentToolReceipt} from '../mission/agent-tool.mjs?v=agent-tool-loop-v1';
+import {replayAgentRerouteReceipt} from '../reroute/agent-reroute-tool.mjs?v=agent-reroute-v1';
+import {replayAgentFramesReceipt} from '../frames/agent-frames-tool.mjs?v=agent-frames-v1';
 
 const VERSION=1,MAX_RAW_LENGTH=32768;
 const isRecord=value=>Boolean(value&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value)));
