@@ -1,9 +1,9 @@
-import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs?v=route-return-v1';
+import {createLearningRoute,actLearningRoute,learningRouteEvidence} from './learning-route.mjs';
 import {paintGuide} from '../experiments/neural/neural-guide-view.mjs';
 import {paintGeneralization} from '../experiments/neural/neural-generalization-view.mjs';
-import {runLearningRoute} from '../integrations/learning-tool.mjs?v=learning-tool-v1';
+import {runLearningRoute} from '../integrations/learning-tool.mjs?v=agent-frames-v1';
 import {readGenaiHandoffContext,createGenaiReturnUrl} from '../integrations/genai-handoff.mjs?v=handoff-trust-v1';
-import {inspectLearningRouteTrials} from './learning-route-trials.mjs?v=handoff-trust-v1';
+import {inspectLearningRouteTrials} from './learning-route-trials.mjs?v=route-load-v1';
 import {saveRouteReturn,consumeRouteReturn} from './learning-route-return.mjs?v=route-return-v1';
 const shape=n=>n?'方':'圆';
 function markExample(canvas,p,dark){
