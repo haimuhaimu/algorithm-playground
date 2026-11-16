@@ -1,6 +1,6 @@
 import {createLearningRoute,actLearningRoute} from './learning-route.mjs';
 import {gradientEvidence} from '../experiments/neural/neural-gradient.mjs';
-import {replayLearningReceipt} from '../integrations/learning-tool.mjs';
+import {replayLearningReceipt} from '../integrations/learning-tool.mjs?v=agent-frames-v1';
 
 const wire=n=>Number(n.toPrecision(12));
 
