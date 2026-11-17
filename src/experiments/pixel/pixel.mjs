@@ -1,4 +1,4 @@
-import { encode, decode, preset, stroke, rearrangement, POSTCARD_COLORS, EDITOR_POSTCARD_PRESETS, STUDIO_POSTCARD_NAMES, POSTAGE_BYTE_STEPS, postageByteTrial } from './pixel-core.mjs?v=cat-postage-byte-v1';
+import { encode, decode, preset, stroke, rearrangement, POSTCARD_COLORS, EDITOR_POSTCARD_PRESETS, STUDIO_POSTCARD_NAMES, POSTAGE_BYTE_STEPS, postageByteTrial } from './pixel-core.mjs?v=recipient-1';
 import { setupRecipient } from './pixel-recipient-ui.mjs?v=recipient-resume-v1';
 import { setupCodeLesson } from './pixel-code-ui.mjs?v=code-1';
 import { createDelivery, deliveryAt } from './pixel-delivery.mjs?v=delivery-1';

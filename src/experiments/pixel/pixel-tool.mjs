@@ -1,4 +1,4 @@
-import {encode,preset,EDITOR_POSTCARD_PRESETS} from './pixel-core.mjs?v=studio-postcards-v2';
+import {encode,preset,EDITOR_POSTCARD_PRESETS} from './pixel-core.mjs?v=recipient-1';
 import {createDelivery,deliveryAt} from './pixel-delivery.mjs?v=delivery-1';
 
 const LEGACY_PRESETS=['chouchou','cat'];
