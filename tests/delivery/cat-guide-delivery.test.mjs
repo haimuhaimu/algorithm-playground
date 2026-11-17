@@ -9,7 +9,7 @@ test('built experiments keep shared navigation and studio sprites, without shipp
   const out = await mkdtemp(join(tmpdir(), 'cat-guides-'));
   try {
     const files = await build(undefined, out);
-    const labs = files.filter(file => file.endsWith('.html') && file!=='index.html');
+    const labs = files.filter(file => file.endsWith('.html') && file !== 'index.html' && !file.startsWith('cat-album'));
     for (const lab of labs) {
       const html = await readFile(join(out, lab), 'utf8');
       assert.match(html, /src="\.\/navigation\.mjs(?:\?[^"]*)?"/, lab);

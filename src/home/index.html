@@ -6,7 +6,7 @@
  <meta name="color-scheme" content="light dark">
  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 8h20v20H8zM36 8h20v20H36zM8 36h20v20H8zM36 36h20v20H36z' fill='%23c22973'/%3E%3C/svg%3E">
  <link rel="stylesheet" href="./home.css?v=cat-lesson-preview-v1"><script type="module" src="./home.mjs?v=hero-run-prewarm-v1"></script>
- <link rel="stylesheet" href="./navigation.css?v=three-cat-brand-v1"><link rel="stylesheet" href="./cat-album.css?v=collection"><script type="module" src="./cat-album.mjs?v=collection"></script>
+ <link rel="stylesheet" href="./navigation.css?v=three-cat-brand-v1"><link rel="stylesheet" href="./cat-album.css?v=complete-library-v1"><script type="module" src="./cat-album.mjs?v=complete-library-v1"></script>
  <title>算法游乐场 · 算法，玩着就懂了</title>
 </head>
 <body id="top">
@@ -24,9 +24,9 @@
      <figcaption><span><b class="demo-dot" aria-hidden="true"></b>A* 寻路演示<span id="hero-cat-stage"> · 找到路，三猫再出发</span></span><button id="hero-motion" type="button" aria-pressed="false" hidden><span aria-hidden="true">Ⅱ</span> 暂停动画</button></figcaption>
     </figure>
     <a class="hero-experiment" href="./pathfinding.html#cat-route-lab">改一格，给三猫找近路 <span aria-hidden="true">↗</span></a>
-    <a class="cat-album-entry" href="./cat-comic-standby-sound.jpg" id="cat-album-entry">
+    <a class="cat-album-entry" href="./cat-album.html" id="cat-album-entry">
      <span class="cat-album-print" aria-hidden="true"><span class="cat-album-crop"><img src="./cat-album-cover.jpg" width="224" height="280" alt="" decoding="async"></span></span>
-     <span class="cat-album-entry-copy"><strong>三猫小相册</strong><small>玩累了，翻一篇漫画</small></span>
+     <span class="cat-album-entry-copy"><strong>三猫小相册</strong><small data-album-total="24">24 篇漫画，选一篇歇歇</small></span>
      <span class="cat-album-entry-arrow" aria-hidden="true">›</span>
     </a>
    </div>
@@ -34,7 +34,7 @@
   <dialog class="cat-album-dialog" id="cat-album" aria-labelledby="cat-album-title">
    <div class="cat-album-sheet">
     <header class="cat-album-header">
-     <div><h2 id="cat-album-title">三猫小剧场</h2><p>玩累了，翻一篇漫画。</p></div>
+     <div><h2 id="cat-album-title">三猫小剧场</h2><p><a href="./cat-album.html" data-album-total="24">查看全部 24 篇</a></p></div>
      <button id="cat-album-close" class="cat-album-close" type="button" autofocus>合上 <span aria-hidden="true">×</span></button>
     </header>
     <div class="cat-album-nav" aria-label="翻看漫画">
