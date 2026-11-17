@@ -1,10 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { registerHooks } from 'node:module';
 import { memoryStorage } from '../../helpers/storage-helper.mjs';
 import { DRAFT_KEYS } from '../../../dist/local-drafts.mjs';
 import { preset } from '../../../dist/pixel-core.mjs';
 let serial = 0;
+// Keep the cold-load check before the UI scenarios: the module cache is shared
+// within this test file, while Node runs each test file in its own process.
+test('the postcard editor loads one codec across drawing, lessons, delivery and AI replay',async()=>{
+ const loaded=[];
+ const hook=registerHooks({load(url,context,next){
+  const result=next(url,context);
+  if(new URL(url).pathname.endsWith('/pixel-core.mjs'))loaded.push(url);
+  return result;
+ }});
+ let u;
+ try{
+  u=await boot({reduced:true});
+  assert.equal(loaded.length,1,`expected one actual codec load, got ${loaded.join(', ')}`);
+  u.click('preset-bobby');u.click('send');
+  assert.match(u.els.get('receipt').textContent,/256 \/ 256/);
+  u.click('delivery-replay');u.click('pixel-ai-generate');
+  const receipt=JSON.parse(u.els.get('pixel-ai-text').value);
+  assert.equal(receipt.fixture.id,'pixel-bobby-v1');
+ }finally{u?.restore();hook.deregister();}
+});
 function restoreRecipientCells(u, count) {
  for(let i=0;i<count;i++){
   for(let bit=0;bit<4&&!u.els.get('recipient-read').disabled;bit++)u.click('recipient-read');
