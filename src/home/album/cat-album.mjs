@@ -39,12 +39,17 @@ if (entry && typeof dialog?.showModal === 'function') {
   entry.addEventListener('click', event => {
     if (event.defaultPrevented || event.button !== 0 || event.altKey ||
         event.ctrlKey || event.metaKey || event.shiftKey) return;
-    event.preventDefault();
     if (!dialog.open) {
-      render();
-      dialog.showModal();
+      try {
+        render();
+        dialog.showModal();
+      } catch {
+        // Keep the real album link usable if this browser cannot open the dialog.
+        return;
+      }
       close.focus();
     }
+    event.preventDefault();
   });
   document.getElementById('cat-album-prev').addEventListener('click', () => turn(-1));
   document.getElementById('cat-album-next').addEventListener('click', () => turn(1));

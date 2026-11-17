@@ -95,7 +95,33 @@ files.push('sand-history.mjs');
 files.push('sand-bowl.mjs');
 files.push('firefly-beat.mjs','firefly-beat-ui.mjs','firefly-beat.css');
 files.push('rsi.html','rsi.css','rsi.mjs','rsi-core.mjs','rsi-session.mjs');files.push('recommendation.html','home.css','home.mjs','home-core.mjs','home-preview-sand.jpg','home-preview-neural.jpg','home-preview-recommendation.jpg','home-preview-pathfinding.jpg','home-preview-firefly.jpg','home-preview-evolution.jpg','home-preview-mining.jpg','home-preview-pixel.jpg','home-preview-world-model.jpg','home-preview-rsi.jpg');
-files.push('cat-album.css','cat-album.mjs','cat-album-cover.jpg','cat-comic-substitute.jpg','cat-comic-boss.jpg','cat-comic-warmth.jpg');
+files.push('cat-album.html','cat-album.css','cat-album.mjs','cat-album-cover.jpg','cat-comic-substitute.jpg','cat-comic-boss.jpg','cat-comic-warmth.jpg');
+files.push(
+ 'cat-album-standby-sound.html',
+ 'cat-album-third-exit.html',
+ 'cat-album-blanket-move.html',
+ 'cat-album-window-audience.html',
+ 'cat-album-open-is-enough.html',
+ 'cat-album-dont-throw.html',
+ 'cat-album-expression-check.html',
+ 'cat-album-grooming-service.html',
+ 'cat-album-squeeze-in.html',
+ 'cat-album-models-ready.html',
+ 'cat-album-same-destination.html',
+ 'cat-album-tail-please.html',
+ 'cat-album-on-time.html',
+ 'cat-album-all-innocent.html',
+ 'cat-album-got-it.html',
+ 'cat-album-air-burial.html',
+ 'cat-album-photo-retake.html',
+ 'cat-album-bedroom-edition.html',
+ 'cat-album-evening-show.html',
+ 'cat-album-last-bite.html',
+ 'cat-album-new-bed.html',
+ 'cat-album-substitute.html',
+ 'cat-album-boss.html',
+ 'cat-album-warmth.html',
+);
 files.push('cat-album-episodes.mjs',
  'cat-comic-standby-sound.jpg','cat-comic-third-exit.jpg','cat-comic-blanket-move.jpg',
  'cat-comic-window-audience.jpg','cat-comic-open-is-enough.jpg','cat-comic-dont-throw.jpg',
